@@ -197,26 +197,28 @@ function CheckoutPage() {
                  </div>
                  <Separator className="my-4" />
 
-                 <div className="space-y-2">
-                    <Label htmlFor="voucher">Apply Voucher</Label>
-                    <Select onValueChange={handleApplyVoucher} defaultValue="none">
-                        <SelectTrigger id="voucher">
-                            <SelectValue placeholder="Select a voucher" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">No Voucher</SelectItem>
-                            {collectedVouchers.map(v => (
-                                <SelectItem key={v.code} value={v.code}>{v.code} - {v.description}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                     {error && (
-                        <Alert variant="destructive" className="mt-2">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                    )}
-                 </div>
+                 {collectedVouchers.length > 0 && (
+                    <div className="space-y-2">
+                        <Label htmlFor="voucher">Apply Voucher</Label>
+                        <Select onValueChange={handleApplyVoucher} defaultValue="none">
+                            <SelectTrigger id="voucher">
+                                <SelectValue placeholder="Select a voucher" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">No Voucher</SelectItem>
+                                {collectedVouchers.map(v => (
+                                    <SelectItem key={v.code} value={v.code}>{v.code} - {v.description}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {error && (
+                            <Alert variant="destructive" className="mt-2">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
+                    </div>
+                 )}
 
                  <Separator className="my-4" />
                  <div className="space-y-2">
