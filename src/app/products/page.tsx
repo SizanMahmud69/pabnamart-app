@@ -14,10 +14,11 @@ function ProductsPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
+  const categoryQuery = searchParams.get('category') || 'All';
 
   const allCategories = useMemo(() => ['All', ...Array.from(new Set(allProducts.map(p => p.category)))], []);
   
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(categoryQuery);
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [rating, setRating] = useState(0);
 
