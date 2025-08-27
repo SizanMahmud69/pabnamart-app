@@ -2,40 +2,20 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, Tag, Truck, Gift, LogIn } from 'lucide-react';
-import type { LucideIcon } from "lucide-react";
-import { withAuth, useAuth } from "@/hooks/useAuth";
-import { useVouchers } from "@/hooks/useVouchers";
-import { useEffect, useState } from "react";
+import { Bell } from 'lucide-react';
+import { withAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
+import type { Notification } from "@/types";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-// This is mock data that would typically come from a database.
-const orders = [
-  { id: '12345', status: 'pending', date: '2023-10-26' },
-  { id: '12346', status: 'shipped', date: '2023-10-25' },
-];
-
-const availableVouchers = [
-    { code: "NEW100", description: "For your first purchase." },
-];
-
-interface Notification {
-    icon: LucideIcon;
-    title: string;
-    description: string;
-    time: string;
-    read: boolean;
-    href?: string;
-}
-
-const NotificationItem = ({ notification }: { notification: Notification }) => {
+const NotificationItem = ({ notification, onClick }: { notification: Notification, onClick: () => void }) => {
     const content = (
         <div className={cn(
             "p-4 rounded-lg flex items-start gap-4 transition-colors",
             !notification.read ? 'bg-primary/10' : 'bg-muted/50',
             notification.href && 'hover:bg-primary/20'
-        )}>
+        )} onClick={onClick}>
             <div className={cn(
                 'mt-1 flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center',
                 !notification.read ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
@@ -60,64 +40,7 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
 
 
 function NotificationsPage() {
-  const { user } = useAuth();
-  const { collectedVouchers } = useVouchers();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-
-  useEffect(() => {
-    const generatedNotifications: Notification[] = [];
-
-    // Welcome notification
-    generatedNotifications.push({
-      icon: LogIn,
-      title: "Welcome to PabnaMart!",
-      description: `Hello ${user?.displayName || 'there'}, welcome to your account.`,
-      time: "Just now",
-      read: false,
-      href: "/account"
-    });
-    
-    // Order status notifications
-    orders.forEach(order => {
-        if (order.status === 'shipped') {
-            generatedNotifications.push({
-                icon: Truck,
-                title: "Order Shipped",
-                description: `Your order #${order.id} has been shipped.`,
-                time: "1d ago",
-                read: true,
-                href: "/account/orders?status=shipped"
-            });
-        }
-    });
-
-    // Voucher notifications
-    if (availableVouchers.length > collectedVouchers.length) {
-         generatedNotifications.push({
-            icon: Gift,
-            title: "New Vouchers Available",
-            description: "Exclusive vouchers just for you! Collect them now for extra savings.",
-            time: "2d ago",
-            read: true,
-            href: "/vouchers"
-        });
-    }
-
-    // Flash sale notification
-    generatedNotifications.push({
-        icon: Tag,
-        title: "Flash Sale Alert!",
-        description: "Don't miss out! Our biggest flash sale is ending soon.",
-        time: "1h ago",
-        read: false,
-        href: "/flash-sale"
-    });
-
-    setNotifications(generatedNotifications);
-
-  }, [user, collectedVouchers]);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { notifications, unreadCount, markAsRead } = useNotifications();
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
@@ -135,8 +58,12 @@ function NotificationsPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-2">
-                        {notifications.map((notification, index) => (
-                            <NotificationItem key={index} notification={notification} />
+                        {notifications.map((notification) => (
+                            <NotificationItem 
+                                key={notification.id} 
+                                notification={notification} 
+                                onClick={() => markAsRead(notification.id)}
+                            />
                         ))}
                     </div>
                 </CardContent>

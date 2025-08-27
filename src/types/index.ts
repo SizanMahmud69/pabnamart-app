@@ -1,3 +1,6 @@
+
+import type { LucideIcon } from "lucide-react";
+
 export interface Review {
   user: string;
   comment: string;
@@ -27,4 +30,14 @@ export interface Voucher {
     description: string;
     minSpend?: number;
     discountType?: 'order' | 'shipping';
+}
+
+export interface Notification {
+    id: string;
+    icon: LucideIcon;
+    title: string;
+    description: string;
+    time: string;
+    read: boolean;
+    href?: string;
 }

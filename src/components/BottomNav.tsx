@@ -8,26 +8,22 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-
-// Mocked unread count. In a real app, this would come from a global state or API.
-const getUnreadNotificationsCount = () => 2;
+import { useNotifications } from '@/hooks/useNotifications';
 
 export default function BottomNav() {
   const { cartCount } = useCart();
   const { user } = useAuth();
+  const { unreadCount } = useNotifications();
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
-    // In a real application, you would fetch this from your backend/state management
-    setUnreadNotifications(getUnreadNotificationsCount());
   }, []);
 
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
-    { href: '/notifications', icon: Bell, label: 'Notifications', count: unreadNotifications },
+    { href: '/notifications', icon: Bell, label: 'Notifications', count: unreadCount },
     { href: '/cart', icon: ShoppingCart, label: 'Cart', count: cartCount },
     { 
       href: user ? '/account' : '/login', 

@@ -8,6 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import { Inter } from 'next/font/google'
 import { VoucherProvider } from '@/hooks/useVouchers';
 import { AuthProvider } from '@/hooks/useAuth';
+import { NotificationProvider } from '@/hooks/useNotifications';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -27,10 +28,12 @@ export default function RootLayout({
         <AuthProvider>
           <VoucherProvider>
             <CartProvider>
-              <Header />
-              <main className="pb-16 md:pb-0">{children}</main>
-              <Toaster />
-              <BottomNav />
+              <NotificationProvider>
+                <Header />
+                <main className="pb-16 md:pb-0">{children}</main>
+                <Toaster />
+                <BottomNav />
+              </NotificationProvider>
             </CartProvider>
           </VoucherProvider>
         </AuthProvider>
