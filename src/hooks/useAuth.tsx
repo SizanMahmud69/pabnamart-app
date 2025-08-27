@@ -14,6 +14,7 @@ import {
 } from 'firebase/auth';
 import app from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const auth = getAuth(app);
 
@@ -49,7 +50,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(userCredential.user, { displayName });
     // Manually update the user state because onAuthStateChanged might not fire immediately
-    setUser({ ...userCredential.user, displayName });
+    const authInstance = getAuth(app);
+    if (authInstance.currentUser) {
+        await updateProfile(authInstance.currentUser, { displayName });
+        setUser({ ...authInstance.currentUser });
+    }
     return userCredential;
   };
 
@@ -70,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sendPasswordReset,
   };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
@@ -93,10 +98,11 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>) =>
     }, [user, loading, router]);
 
     if (loading || !user) {
-      return <div>Loading...</div>; // Or a spinner component
+      return <LoadingSpinner />;
     }
 
     return <Component {...props} />;
   };
+  AuthComponent.displayName = `WithAuth(${Component.displayName || Component.name || 'Component'})`;
   return AuthComponent;
 };

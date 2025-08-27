@@ -11,6 +11,7 @@ import { useVouchers } from "@/hooks/useVouchers";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface OrderStatusProps {
     icon: LucideIcon;
@@ -48,7 +49,7 @@ const ServiceItem = ({ icon: Icon, label, href }: ServiceItemProps) => (
 
 export default function AccountPage() {
     const { voucherCount } = useVouchers();
-    const { user, logout } = useAuth();
+    const { user, logout, loading } = useAuth();
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -56,6 +57,10 @@ export default function AccountPage() {
         router.push('/login');
     };
     
+    if (loading) {
+        return <LoadingSpinner />
+    }
+
     if (!user) {
         return (
             <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
