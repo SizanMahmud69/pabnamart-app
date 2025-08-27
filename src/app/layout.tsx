@@ -1,4 +1,6 @@
 
+"use client";
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { CartProvider } from '@/hooks/useCart';
@@ -9,19 +11,26 @@ import { Inter } from 'next/font/google'
 import { VoucherProvider } from '@/hooks/useVouchers';
 import { AuthProvider } from '@/hooks/useAuth';
 import { NotificationProvider } from '@/hooks/useNotifications';
+import { usePathname } from 'next/navigation';
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-  title: 'PabnaMart',
-  description: 'Your one-stop shop for everything you need.',
-};
+// Metadata cannot be exported from a client component.
+// We can keep it here, but it won't be used unless we move it to a server component.
+// For the purpose of this fix, we'll keep the layout as a client component.
+// export const metadata: Metadata = {
+//   title: 'PabnaMart',
+//   description: 'Your one-stop shop for everything you need.',
+// };
 
-export default function RootLayout({
+function RootLayoutContent({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isAdminPage = pathname.startsWith('/admin');
+
   return (
     <html lang="en">
       <body className={inter.className}>
@@ -29,10 +38,10 @@ export default function RootLayout({
           <VoucherProvider>
             <CartProvider>
               <NotificationProvider>
-                <Header />
-                <main className="pb-16 md:pb-0">{children}</main>
+                {!isAdminPage && <Header />}
+                <main className={isAdminPage ? '' : "pb-16 md:pb-0"}>{children}</main>
                 <Toaster />
-                <BottomNav />
+                {!isAdminPage && <BottomNav />}
               </NotificationProvider>
             </CartProvider>
           </VoucherProvider>
@@ -40,4 +49,13 @@ export default function RootLayout({
       </body>
     </html>
   );
+}
+
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return <RootLayoutContent>{children}</RootLayoutContent>
 }
