@@ -51,7 +51,7 @@ export default function SignUpPage() {
     setIsLoading(true);
     setError(null);
     try {
-      await signup(email, password);
+      await signup(email, password, username);
       toast({
         title: "Account Created",
         description: "You have been successfully signed up.",
