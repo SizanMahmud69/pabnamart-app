@@ -100,7 +100,7 @@ function CheckoutPage() {
 
 
   const shippingFee = 50;
-  const subtotalWithDiscount = cartTotal - orderDiscount;
+  const subtotalWithDiscount = cartTotal - orderDiscount > 0 ? cartTotal - orderDiscount : 0;
   const shippingFeeWithDiscount = shippingFee - shippingDiscount > 0 ? shippingFee - shippingDiscount : 0;
   const finalTotal = subtotalWithDiscount + shippingFeeWithDiscount;
 
