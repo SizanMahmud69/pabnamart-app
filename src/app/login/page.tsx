@@ -44,7 +44,7 @@ export default function LoginPage() {
         title: "Login Successful",
         description: "Welcome back!",
       });
-      router.push("/account");
+      router.push("/");
     } catch (error: any) {
       setError(error.message || "Failed to log in.");
     } finally {
