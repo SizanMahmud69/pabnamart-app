@@ -22,21 +22,21 @@ const heroBanners = [
     title: "Mega Electronics Sale",
     description: "Up to 40% off on the latest gadgets and electronics.",
     image: "https://picsum.photos/seed/electronics/1200/400",
-    link: "/products?category=Electronics",
+    link: "/category/Electronics",
     aiHint: "electronics gadgets"
   },
   {
     title: "Fresh Groceries Daily",
     description: "Get the best quality groceries delivered to your door.",
     image: "https://picsum.photos/seed/groceries/1200/400",
-    link: "/products?category=Groceries",
+    link: "/category/Groceries",
     aiHint: "fresh food"
   },
   {
     title: "New Fashion Arrivals",
     description: "Check out the latest trends in our apparel section.",
     image: "https://picsum.photos/seed/fashion/1200/400",
-    link: "/products?category=Apparel",
+    link: "/category/Apparel",
     aiHint: "stylish clothes"
   }
 ];
