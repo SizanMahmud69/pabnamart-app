@@ -10,16 +10,18 @@ import {
   signOut,
   sendPasswordResetEmail,
   updateProfile,
-  User,
+  User as FirebaseUser,
 } from 'firebase/auth';
 import app from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 interface AuthContextType {
-  user: User | null;
+  user: FirebaseUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<any>;
   signup: (email: string, password: string, displayName: string) => Promise<any>;
@@ -30,7 +32,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,7 +50,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = async (email: string, password: string, displayName: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(userCredential.user, { displayName });
+    const firebaseUser = userCredential.user;
+    
+    await updateProfile(firebaseUser, { displayName });
+    
+    // Create user document in Firestore
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    await setDoc(userDocRef, {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: displayName,
+        status: 'active',
+        joined: new Date().toISOString(),
+    });
+
     // Manually update the user state because onAuthStateChanged might not fire immediately
     const authInstance = getAuth(app);
     if (authInstance.currentUser) {

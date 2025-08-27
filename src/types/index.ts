@@ -45,3 +45,11 @@ export interface Notification {
     read: boolean;
     href?: string;
 }
+
+export interface User {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  status: 'active' | 'banned';
+  joined: string;
+}
