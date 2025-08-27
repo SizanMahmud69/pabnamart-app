@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Voucher } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
-import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 interface VoucherContextType {
@@ -29,7 +29,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       await setDoc(voucherRef, { vouchers });
     }
   }, [user]);
-  
+
   useEffect(() => {
     if (user) {
       const voucherRef = doc(db, 'userVouchers', user.uid);
@@ -37,11 +37,12 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
         if (docSnap.exists()) {
           setCollectedVouchers(docSnap.data().vouchers || []);
         } else {
-            setCollectedVouchers([]);
+          setCollectedVouchers([]);
         }
       });
       return () => unsubscribe();
     } else {
+      // Clear vouchers for logged-out users
       setCollectedVouchers([]);
     }
   }, [user]);
@@ -62,7 +63,6 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Already Collected",
         description: "You have already collected this voucher.",
-        variant: "destructive"
       });
       return;
     }
@@ -75,7 +75,6 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       description: `Voucher ${voucher.code} has been added to your account.`,
     });
   }, [collectedVouchers, toast, user, updateFirestoreVouchers]);
-
 
   const voucherCount = collectedVouchers.length;
 

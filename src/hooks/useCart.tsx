@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect,
 import type { CartItem, Product } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 interface CartContextType {
@@ -13,6 +13,7 @@ interface CartContextType {
   addToCart: (product: Product) => void;
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
+  clearCart: () => void;
   cartCount: number;
   cartTotal: number;
   shippingFee: number;
@@ -50,6 +51,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       });
       return () => unsubscribe();
     } else {
+      // Clear cart for logged-out users
       setCartItems([]);
     }
   }, [user]);
@@ -103,6 +105,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     updateFirestoreCart(newCartItems);
   }, [cartItems, removeFromCart, updateFirestoreCart, user]);
 
+  const clearCart = useCallback(() => {
+    if (!user) return;
+    setCartItems([]);
+    updateFirestoreCart([]);
+  }, [user, updateFirestoreCart]);
+
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -126,6 +134,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         addToCart,
         removeFromCart,
         updateQuantity,
+        clearCart,
         cartCount,
         cartTotal,
         shippingFee,

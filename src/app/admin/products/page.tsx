@@ -10,11 +10,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default function AdminProductManagement() {
-  const { products, setProducts } = useProducts();
+  const { products, deleteProduct } = useProducts();
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      setProducts(products.filter(p => p.id !== id));
+      await deleteProduct(id);
     }
   };
 

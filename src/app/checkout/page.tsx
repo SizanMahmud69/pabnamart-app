@@ -51,7 +51,7 @@ const paymentMethods = [
 ]
 
 function CheckoutPage() {
-  const { cartItems, cartTotal, cartCount, updateQuantity, shippingFee } = useCart();
+  const { cartItems, cartTotal, cartCount, updateQuantity, shippingFee, clearCart } = useCart();
   const { user } = useAuth();
   const { collectedVouchers } = useVouchers();
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
@@ -116,7 +116,7 @@ function CheckoutPage() {
             title: "Order Placed!",
             description: "Thank you for your purchase.",
         });
-        // In a real app, you would clear the cart here.
+        clearCart();
         router.push('/account/orders');
     }, 2000);
   }
