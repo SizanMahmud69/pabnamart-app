@@ -36,12 +36,18 @@ export default function Header() {
     router.push(`${targetPath}?${params.toString()}`);
   };
 
-  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password';
+  const isSimpleHeaderPage = 
+    pathname === '/login' || 
+    pathname === '/signup' || 
+    pathname === '/forgot-password' ||
+    pathname === '/notifications' ||
+    pathname === '/cart' ||
+    pathname === '/checkout';
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4 transition-all duration-300">
-        {isAuthPage ? (
+        {isSimpleHeaderPage ? (
             <div className="flex w-full items-center justify-center">
                  <Link href="/">
                     <span className="text-2xl font-bold text-primary whitespace-nowrap">PabnaMart</span>
