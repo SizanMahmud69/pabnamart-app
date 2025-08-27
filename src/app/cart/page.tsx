@@ -9,9 +9,21 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Trash2, ShoppingBag } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleCheckout = () => {
+    if (user) {
+      router.push('/checkout');
+    } else {
+      router.push('/login');
+    }
+  };
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
@@ -93,8 +105,8 @@ export default function CartPage() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button asChild size="lg" className="w-full">
-                        <Link href="/checkout">Proceed to Checkout</Link>
+                    <Button size="lg" className="w-full" onClick={handleCheckout}>
+                        Proceed to Checkout
                     </Button>
                 </CardFooter>
                 </Card>

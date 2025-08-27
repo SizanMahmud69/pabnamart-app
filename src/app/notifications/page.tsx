@@ -1,6 +1,9 @@
 
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell, Tag, Truck } from 'lucide-react';
+import { withAuth } from "@/hooks/useAuth";
 
 const notifications = [
     {
@@ -26,7 +29,7 @@ const notifications = [
     },
 ];
 
-export default function NotificationsPage() {
+function NotificationsPage() {
   return (
     <div className="bg-purple-50/30 min-h-screen">
         <div className="container mx-auto px-4 py-8">
@@ -64,3 +67,5 @@ export default function NotificationsPage() {
     </div>
   );
 }
+
+export default withAuth(NotificationsPage);
