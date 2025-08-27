@@ -45,6 +45,12 @@ export default function ProductCard({ product }: ProductCardProps) {
               <span className="text-white text-lg font-bold">Sold Out</span>
             </div>
           )}
+           {product.freeShipping && !isSoldOut && (
+            <div className="absolute bottom-2 left-2 bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 w-fit">
+                <Truck className="h-3 w-3" />
+                <span>Free Delivery</span>
+            </div>
+        )}
         </div>
       </Link>
       <CardContent className="flex flex-col flex-grow p-3 space-y-2">
@@ -54,12 +60,6 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {product.name}
             </Link>
         </h3>
-        {product.freeShipping && !isSoldOut && (
-            <div className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 w-fit">
-                <Truck className="h-3 w-3" />
-                <span>Free Delivery</span>
-            </div>
-        )}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Star className="w-4 h-4 fill-accent text-accent" />
           <span>{product.rating.toFixed(1)}</span>
