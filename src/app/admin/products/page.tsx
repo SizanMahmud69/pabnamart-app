@@ -10,6 +10,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 export default function AdminProductManagement() {
   const { products, deleteProduct } = useProducts();
@@ -55,13 +56,16 @@ export default function AdminProductManagement() {
                 </CardHeader>
                 <CardContent>
                     <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <TabsList className="mb-4">
-                            {categories.map(category => (
-                                <TabsTrigger key={category} value={category}>
-                                    {category}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
+                        <ScrollArea className="w-full whitespace-nowrap rounded-md">
+                            <TabsList className="inline-flex w-max mb-4">
+                                {categories.map(category => (
+                                    <TabsTrigger key={category} value={category}>
+                                        {category}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
+                            <ScrollBar orientation="horizontal" />
+                        </ScrollArea>
                         <TabsContent value={selectedCategory}>
                             <Table>
                                 <TableHeader>
