@@ -9,18 +9,39 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Voucher } from "@/types";
-import { CreditCard, Banknote, Truck, AlertCircle } from "lucide-react";
+import { CreditCard, Banknote, Truck, AlertCircle, Home, Building } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
-import { withAuth } from "@/hooks/useAuth";
+import { withAuth, useAuth } from "@/hooks/useAuth";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { cn } from "@/lib/utils";
+
+const addresses = [
+    {
+        id: 'home',
+        type: 'Home Address',
+        details: '123 Test Street, Mocktown, USA',
+        default: true,
+        icon: Home
+    },
+    {
+        id: 'office',
+        type: 'Office Address',
+        details: '456 Work Ave, Business City, USA',
+        default: false,
+        icon: Building
+    }
+]
 
 function CheckoutPage() {
   const { cartItems, cartTotal, cartCount } = useCart();
+  const { user } = useAuth();
   const { collectedVouchers } = useVouchers();
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
   const [discount, setDiscount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState(addresses.find(a => a.default)?.id || addresses[0].id);
 
   const handleApplyVoucher = (code: string) => {
     const voucher = collectedVouchers.find(v => v.code === code);
@@ -69,7 +90,40 @@ function CheckoutPage() {
     <div className="bg-purple-50/30 min-h-screen">
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-3xl font-bold mb-6">Checkout</h1>
-        <div className="grid grid-cols-1 gap-8">
+        <div className="space-y-6">
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>Shipping Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div>
+                        <Label>Full Name</Label>
+                        <p className="font-semibold text-lg">{user?.displayName || "New User"}</p>
+                    </div>
+                    <div>
+                        <Label>Select Address</Label>
+                        <RadioGroup value={selectedAddress} onValueChange={setSelectedAddress} className="mt-2 space-y-3">
+                            {addresses.map((address) => (
+                                <Label key={address.id} htmlFor={address.id} className={cn(
+                                    "flex flex-col p-4 rounded-lg border cursor-pointer transition-colors",
+                                    selectedAddress === address.id ? "border-primary ring-2 ring-primary" : "border-border"
+                                )}>
+                                    <div className="flex items-center gap-4">
+                                        <RadioGroupItem value={address.id} id={address.id} />
+                                        <address.icon className="h-5 w-5 text-muted-foreground" />
+                                        <div className="flex-grow">
+                                            <p className="font-semibold">{address.type} {address.default && '(Default)'}</p>
+                                            <p className="text-sm text-muted-foreground">{address.details}</p>
+                                        </div>
+                                    </div>
+                                </Label>
+                            ))}
+                        </RadioGroup>
+                    </div>
+                </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Order Summary</CardTitle>
@@ -152,3 +206,5 @@ function CheckoutPage() {
 }
 
 export default withAuth(CheckoutPage);
+
+    
