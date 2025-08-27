@@ -1,13 +1,9 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { LogOut, Package, Users, ShoppingCart, Undo2, ArrowRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Package, Users, ShoppingCart, Undo2, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import LoadingSpinner from '@/components/LoadingSpinner';
 
 const menuItems = [
     {
@@ -37,37 +33,8 @@ const menuItems = [
 ];
 
 const AdminDashboard = () => {
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const isAdmin = localStorage.getItem('isAdmin');
-        if (isAdmin !== 'true') {
-            router.replace('/admin/login');
-        } else {
-            setIsLoading(false);
-        }
-    }, [router]);
-
-    const handleLogout = () => {
-        localStorage.removeItem('isAdmin');
-        router.push('/admin/login');
-    };
-    
-    if (isLoading) {
-        return <LoadingSpinner />;
-    }
-
     return (
         <div className="container mx-auto max-w-2xl p-4">
-            <header className="flex items-center justify-between py-4">
-                <h1 className="text-2xl font-bold text-primary">PabnaMart</h1>
-                <Button variant="outline" onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log Out
-                </Button>
-            </header>
-
             <main className="mt-6">
                 <h2 className="text-3xl font-bold mb-6">Welcome, Admin!</h2>
                 <div className="space-y-4">

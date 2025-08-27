@@ -1,5 +1,63 @@
+
+"use client";
+
 import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from "@/components/ui/button";
+import { LogOut, Settings } from "lucide-react";
+import Link from "next/link";
+
+function AdminHeader() {
+    const router = useRouter();
+    const handleLogout = () => {
+        localStorage.removeItem('isAdmin');
+        router.push('/admin/login');
+    };
+
+    return (
+        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container mx-auto flex h-16 items-center justify-between px-4">
+                <Link href="/admin">
+                    <span className="text-2xl font-bold text-primary whitespace-nowrap">PabnaMart</span>
+                </Link>
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon">
+                        <Settings className="h-6 w-6" />
+                    </Button>
+                    <Button variant="outline" onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log Out
+                    </Button>
+                </div>
+            </div>
+        </header>
+    );
+}
+
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  return <div className="bg-slate-50 min-h-screen">{children}</div>;
+    const router = useRouter();
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const isAdmin = localStorage.getItem('isAdmin');
+        if (isAdmin !== 'true') {
+            router.replace('/admin/login');
+        } else {
+            setIsLoading(false);
+        }
+    }, [router]);
+    
+    if (isLoading) {
+        return <LoadingSpinner />;
+    }
+
+    return (
+        <div className="bg-slate-50 min-h-screen">
+            <AdminHeader />
+            {children}
+        </div>
+    );
 }
