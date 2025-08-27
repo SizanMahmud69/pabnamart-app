@@ -56,11 +56,29 @@ export interface User {
 
 export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned';
 
+export interface OrderItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+}
+
+export interface ShippingAddress {
+    id: string;
+    type: string;
+    details: string;
+    default: boolean;
+    icon: LucideIcon;
+}
+
 export interface Order {
   id: string;
-  customer: string;
-  date: string;
+  userId: string;
+  items: OrderItem[];
   total: number;
   status: OrderStatus;
-  userId: string;
+  date: string;
+  shippingAddress: Omit<ShippingAddress, 'icon'>;
+  paymentMethod: string;
 }

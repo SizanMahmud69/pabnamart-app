@@ -3,7 +3,9 @@
 import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai/flows/product-recommendations";
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import admin from '@/lib/firebase-admin';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import type { CartItem, Order, ShippingAddress } from "@/types";
+import { revalidatePath } from "next/cache";
 
 const db = getFirestore();
 
@@ -34,4 +36,50 @@ export async function deleteUserAccount(uid: string) {
         console.error("Error deleting user:", error);
         return { success: false, message: error.message || 'Failed to delete user.' };
     }
+}
+
+export async function placeOrder(
+  userId: string,
+  cartItems: CartItem[],
+  totalAmount: number,
+  shippingAddress: ShippingAddress,
+  paymentMethod: string
+) {
+  if (!userId || !cartItems || cartItems.length === 0) {
+    return { success: false, message: 'Invalid order data.' };
+  }
+
+  try {
+    const orderRef = db.collection('orders').doc();
+    const orderData: Omit<Order, 'id'> = {
+      userId,
+      items: cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.images[0]
+      })),
+      total: totalAmount,
+      status: 'pending',
+      date: Timestamp.now().toDate().toISOString(),
+      shippingAddress,
+      paymentMethod,
+    };
+
+    await orderRef.set(orderData);
+
+    // After creating order, we might want to clear the user's cart in firestore
+    const cartRef = db.collection('carts').doc(userId);
+    await cartRef.set({ items: [] });
+    
+    // Revalidate paths to show new order data
+    revalidatePath('/account/orders');
+    revalidatePath('/admin/orders');
+
+    return { success: true, message: 'Order placed successfully.', orderId: orderRef.id };
+  } catch (error: any) {
+    console.error("Error placing order:", error);
+    return { success: false, message: error.message || 'Failed to place order.' };
+  }
 }

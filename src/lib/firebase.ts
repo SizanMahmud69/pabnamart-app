@@ -1,12 +1,12 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk",
+  authDomain: "pabnamart.firebaseapp.com",
+  projectId: "pabnamart",
+  storageBucket: "pabnamart.firebasestorage.app",
+  messagingSenderId: "600614180848",
+  appId: "1:600614180848:web:6f4e21fb4f5b6cd42a6f35",
   measurementId: "YOUR_MEASUREMENT_ID" // Optional: Add your measurement ID
 };
 

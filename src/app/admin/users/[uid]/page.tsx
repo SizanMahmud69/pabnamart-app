@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, User as UserIcon, Mail, Calendar, CheckCircle, XCircle, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { User as AppUser, Order } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -16,15 +16,6 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const db = getFirestore(app);
-
-// Mock order data for demonstration
-const mockOrders: Order[] = [
-  { id: '12345', customer: 'John Doe', date: '2023-10-26', total: 450, status: 'Delivered', userId: 'FakedUIDForJohnDoe' },
-  { id: '12346', customer: 'Jane Smith', date: '2023-10-25', total: 250, status: 'Delivered', userId: 'FakedUIDForJaneSmith' },
-  { id: '12347', customer: 'Mike Johnson', date: '2023-10-24', total: 150, status: 'Delivered', userId: 'FakedUIDForMikeJohnson' },
-  { id: '12348', customer: 'John Doe', date: '2023-11-01', total: 300, status: 'Pending', userId: 'FakedUIDForJohnDoe' },
-];
-
 
 export default function UserDetailsPage() {
     const [user, setUser] = useState<AppUser | null>(null);
@@ -46,12 +37,6 @@ export default function UserDetailsPage() {
                 if (userDocSnap.exists()) {
                     const userData = userDocSnap.data() as AppUser;
                     setUser(userData);
-                    
-                    // Filter mock orders based on the user's name (since we don't have userId in mock data)
-                    // In a real app, you'd query orders by `userId`.
-                    const orders = mockOrders.filter(order => order.customer === userData.displayName);
-                    setUserOrders(orders);
-
                 } else {
                     toast({ title: "Error", description: "User not found.", variant: "destructive" });
                 }
@@ -62,11 +47,29 @@ export default function UserDetailsPage() {
                 setLoading(false);
             }
         };
+        
+        const fetchUserOrders = () => {
+             const ordersRef = collection(db, 'orders');
+             const q = query(ordersRef, where('userId', '==', uid));
+
+             const unsubscribe = onSnapshot(q, (snapshot) => {
+                 const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+                 setUserOrders(orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+             }, (error) => {
+                 console.error("Error fetching orders:", error);
+                 toast({ title: "Error", description: "Failed to fetch user orders.", variant: "destructive" });
+             });
+             return unsubscribe;
+        }
 
         fetchUserData();
+        const unsubscribeOrders = fetchUserOrders();
+        
+        return () => unsubscribeOrders();
+
     }, [uid, toast]);
 
-    const completedOrders = userOrders.filter(order => order.status === 'Delivered').length;
+    const completedOrders = userOrders.filter(order => order.status === 'delivered').length;
 
     if (loading) {
         return <LoadingSpinner />;
@@ -158,10 +161,10 @@ export default function UserDetailsPage() {
                                     userOrders.map(order => (
                                         <TableRow key={order.id}>
                                             <TableCell className="font-medium">#{order.id}</TableCell>
-                                            <TableCell>{order.date}</TableCell>
+                                            <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                                             <TableCell>৳{order.total.toFixed(2)}</TableCell>
                                             <TableCell>
-                                                <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}>{order.status}</Badge>
+                                                <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>{order.status}</Badge>
                                             </TableCell>
                                         </TableRow>
                                     ))

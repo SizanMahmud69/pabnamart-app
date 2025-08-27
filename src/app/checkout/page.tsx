@@ -5,10 +5,10 @@ import { useState, useMemo } from "react";
 import { useCart } from "@/hooks/useCart";
 import { useVouchers } from "@/hooks/useVouchers";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Voucher } from "@/types";
+import type { Voucher, ShippingAddress } from "@/types";
 import { CreditCard, Truck, AlertCircle, Home, Building, Minus, Plus, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
@@ -19,8 +19,9 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { placeOrder } from "@/app/actions";
 
-const addresses = [
+const addresses: ShippingAddress[] = [
     {
         id: 'home',
         type: 'Home Address',
@@ -56,7 +57,7 @@ function CheckoutPage() {
   const { collectedVouchers } = useVouchers();
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedAddress, setSelectedAddress] = useState(addresses.find(a => a.default)?.id || addresses[0].id);
+  const [selectedAddressId, setSelectedAddressId] = useState(addresses.find(a => a.default)?.id || addresses[0].id);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const router = useRouter();
@@ -108,17 +109,37 @@ function CheckoutPage() {
   const shippingFeeWithDiscount = shippingFee - shippingDiscount > 0 ? shippingFee - shippingDiscount : 0;
   const finalTotal = subtotalWithDiscount + shippingFeeWithDiscount;
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
+    if (!user) return;
     setIsPlacingOrder(true);
-    // Simulate order placement process
-    setTimeout(() => {
+    
+    const selectedAddress = addresses.find(a => a.id === selectedAddressId);
+    if (!selectedAddress) {
+        toast({ title: "Error", description: "Please select a shipping address.", variant: "destructive"});
+        setIsPlacingOrder(false);
+        return;
+    }
+    
+    // Remove icon from address object before sending to server action
+    const { icon, ...shippingAddressData } = selectedAddress;
+
+    const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, selectedPaymentMethod);
+
+    if (result.success) {
         toast({
             title: "Order Placed!",
             description: "Thank you for your purchase.",
         });
-        clearCart();
+        clearCart(); // This now only clears local state, Firestore cart is cleared by server action
         router.push('/account/orders');
-    }, 2000);
+    } else {
+        toast({
+            title: "Order Failed",
+            description: result.message,
+            variant: "destructive"
+        });
+        setIsPlacingOrder(false);
+    }
   }
 
   if (cartCount === 0) {
@@ -152,11 +173,11 @@ function CheckoutPage() {
                     </div>
                     <div>
                         <Label>Select Address</Label>
-                        <RadioGroup value={selectedAddress} onValueChange={setSelectedAddress} className="mt-2 space-y-3">
+                        <RadioGroup value={selectedAddressId} onValueChange={setSelectedAddressId} className="mt-2 space-y-3">
                             {addresses.map((address) => (
                                 <Label key={address.id} htmlFor={address.id} className={cn(
                                     "flex flex-col p-4 rounded-lg border cursor-pointer transition-colors",
-                                    selectedAddress === address.id ? "border-primary ring-2 ring-primary" : "border-border"
+                                    selectedAddressId === address.id ? "border-primary ring-2 ring-primary" : "border-border"
                                 )}>
                                     <div className="flex items-center gap-4">
                                         <RadioGroupItem value={address.id} id={address.id} />

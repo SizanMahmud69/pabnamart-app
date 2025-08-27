@@ -6,16 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShoppingBag, Package, Truck, PackageCheck, Undo2 } from "lucide-react";
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import type { OrderStatus } from '@/types';
+import type { Order, OrderStatus } from '@/types';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
+import app from '@/lib/firebase';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
-const orders = [
-  { id: '12345', status: 'pending' as OrderStatus, total: 450, date: '2023-10-26', items: 2 },
-  { id: '12346', status: 'shipped' as OrderStatus, total: 250, date: '2023-10-25', items: 1 },
-  { id: '12347', status: 'in-transit' as OrderStatus, total: 150, date: '2023-10-24', items: 1 },
-  { id: '12348', status: 'delivered' as OrderStatus, total: 800, date: '2023-10-20', items: 3 },
-  { id: '12349', status: 'returned' as OrderStatus, total: 120, date: '2023-10-15', items: 1 },
-  { id: '12350', status: 'pending' as OrderStatus, total: 600, date: '2023-10-27', items: 4 },
-];
+const db = getFirestore(app);
 
 const TABS: { value: OrderStatus | 'all', label: string, icon: React.ElementType }[] = [
   { value: 'all', label: 'All Orders', icon: ShoppingBag },
@@ -29,10 +27,35 @@ const TABS: { value: OrderStatus | 'all', label: string, icon: React.ElementType
 export default function OrdersPage() {
   const searchParams = useSearchParams();
   const status = (searchParams.get('status') as OrderStatus | 'all') || 'all';
+  const { user } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+        setLoading(false);
+        return;
+    }
+    setLoading(true);
+    const ordersRef = collection(db, 'orders');
+    const q = query(ordersRef, where('userId', '==', user.uid));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const userOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+        setOrders(userOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const filteredOrders = status === 'all' 
     ? orders 
     : orders.filter(order => order.status === status);
+    
+  if (loading) {
+      return <LoadingSpinner />;
+  }
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
@@ -51,37 +74,35 @@ export default function OrdersPage() {
                 <ScrollBar orientation="horizontal" />
             </ScrollArea>
             
-            {TABS.map(tab => (
-                 <TabsContent key={tab.value} value={tab.value}>
-                    {filteredOrders.length > 0 ? (
-                        <div className="space-y-4">
-                        {filteredOrders.map(order => (
-                            <Card key={order.id}>
-                            <CardHeader>
-                                <CardTitle>Order #{order.id}</CardTitle>
-                                <CardDescription>Date: {order.date}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <p>Items: {order.items}</p>
-                                        <p className="font-bold">Total: ৳{order.total}</p>
-                                    </div>
-                                    <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">{order.status.replace('-', ' ')}</p>
+            <TabsContent value={status}>
+                {filteredOrders.length > 0 ? (
+                    <div className="space-y-4">
+                    {filteredOrders.map(order => (
+                        <Card key={order.id}>
+                        <CardHeader>
+                            <CardTitle>Order #{order.id}</CardTitle>
+                            <CardDescription>Date: {new Date(order.date).toLocaleDateString()}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p>Items: {order.items.reduce((acc, item) => acc + item.quantity, 0)}</p>
+                                    <p className="font-bold">Total: ৳{order.total.toFixed(2)}</p>
                                 </div>
-                            </CardContent>
-                            </Card>
-                        ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-16">
-                            <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
-                            <h2 className="mt-4 text-xl font-semibold">No Orders Found</h2>
-                            <p className="text-muted-foreground">You have no orders with this status.</p>
-                        </div>
-                    )}
-                 </TabsContent>
-            ))}
+                                <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">{order.status.replace('-', ' ')}</p>
+                            </div>
+                        </CardContent>
+                        </Card>
+                    ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-16">
+                        <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
+                        <h2 className="mt-4 text-xl font-semibold">No Orders Found</h2>
+                        <p className="text-muted-foreground">You have no orders with this status.</p>
+                    </div>
+                )}
+                </TabsContent>
         </Tabs>
         </div>
     </div>
