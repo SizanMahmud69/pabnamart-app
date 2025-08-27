@@ -51,13 +51,15 @@ function HomePageContent() {
   const flashSaleProducts = allProducts.slice(-2).map(p => ({...p, originalPrice: p.price + 50}));
 
   useEffect(() => {
-    // New arrivals: sort by ID descending (assuming higher ID is newer)
-    const sortedNew = [...allProducts].sort((a, b) => b.id - a.id);
-    setNewArrivals(sortedNew.slice(0, 5));
+    if (allProducts.length > 0) {
+      // New arrivals: sort by ID descending (assuming higher ID is newer)
+      const sortedNew = [...allProducts].sort((a, b) => b.id - a.id);
+      setNewArrivals(sortedNew.slice(0, 5));
 
-    // Top rated: sort by rating descending
-    const sortedRated = [...allProducts].sort((a, b) => b.rating - a.rating);
-    setTopRated(sortedRated.slice(0, 5));
+      // Top rated: sort by rating descending
+      const sortedRated = [...allProducts].sort((a, b) => b.rating - a.rating);
+      setTopRated(sortedRated.slice(0, 5));
+    }
   }, [allProducts]);
   
   const showRecommendations = searchQuery.trim().length > 0;
