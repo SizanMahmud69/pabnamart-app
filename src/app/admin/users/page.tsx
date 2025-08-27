@@ -14,6 +14,7 @@ import app from '@/lib/firebase';
 import type { User as AppUser } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const db = getFirestore(app);
 
@@ -22,6 +23,7 @@ export default function AdminUserManagement() {
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     const router = useRouter();
+    const [userToDelete, setUserToDelete] = useState<AppUser | null>(null);
 
     useEffect(() => {
         const usersCollectionRef = collection(db, 'users');
@@ -53,103 +55,118 @@ export default function AdminUserManagement() {
         }
     };
 
-    const handleDeleteUser = async (user: AppUser) => {
-        if (confirm(`Are you sure you want to delete the user ${user.displayName}? This action cannot be undone.`)) {
-            const userDocRef = doc(db, 'users', user.uid);
-            try {
-                await deleteDoc(userDocRef);
-                toast({
-                    title: "User Deleted",
-                    description: `${user.displayName} has been permanently deleted.`
-                });
-            } catch (error) {
-                console.error("Error deleting user:", error);
-                toast({ title: "Error", description: "Failed to delete user.", variant: "destructive" });
-            }
+    const confirmDeleteUser = async () => {
+        if (!userToDelete) return;
+        
+        const userDocRef = doc(db, 'users', userToDelete.uid);
+        try {
+            await deleteDoc(userDocRef);
+            toast({
+                title: "User Deleted",
+                description: `${userToDelete.displayName} has been permanently deleted.`
+            });
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            toast({ title: "Error", description: "Failed to delete user.", variant: "destructive" });
+        } finally {
+            setUserToDelete(null);
         }
     };
     
     return (
-        <div className="container mx-auto p-4">
-            <header className="py-4">
-                <Button asChild variant="outline">
-                    <Link href="/admin">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Dashboard
-                    </Link>
-                </Button>
-            </header>
-            <main>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>User Management</CardTitle>
-                        <CardDescription>View and manage user accounts.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                       <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead>Joined Date</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? (
+        <>
+            <div className="container mx-auto p-4">
+                <header className="py-4">
+                    <Button asChild variant="outline">
+                        <Link href="/admin">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Dashboard
+                        </Link>
+                    </Button>
+                </header>
+                <main>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>User Management</CardTitle>
+                            <CardDescription>View and manage user accounts.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center">Loading users...</TableCell>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Email</TableHead>
+                                        <TableHead>Joined Date</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
-                                ) : (
-                                    users.map(user => (
-                                        <TableRow key={user.uid}>
-                                            <TableCell className="font-medium">{user.displayName}</TableCell>
-                                            <TableCell>{user.email}</TableCell>
-                                            <TableCell>{user.joined ? new Date(user.joined).toLocaleDateString() : 'N/A'}</TableCell>
-                                            <TableCell>
-                                                <Badge variant={user.status === 'active' ? 'secondary' : 'destructive'}>{user.status}</Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem onClick={() => router.push(`/admin/users/${user.uid}`)}>
-                                                            <Eye className="mr-2 h-4 w-4" />
-                                                            View Details
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleBanUser(user)}>
-                                                            <Ban className="mr-2 h-4 w-4" />
-                                                            {user.status === 'active' ? 'Ban User' : 'Unban User'}
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem 
-                                                            className="text-destructive" 
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDeleteUser(user);
-                                                            }}
-                                                        >
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            <span>Delete User</span>
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
+                                </TableHeader>
+                                <TableBody>
+                                    {loading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="text-center">Loading users...</TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            </main>
-        </div>
+                                    ) : (
+                                        users.map(user => (
+                                            <TableRow key={user.uid}>
+                                                <TableCell className="font-medium">{user.displayName}</TableCell>
+                                                <TableCell>{user.email}</TableCell>
+                                                <TableCell>{user.joined ? new Date(user.joined).toLocaleDateString() : 'N/A'}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant={user.status === 'active' ? 'secondary' : 'destructive'}>{user.status}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                            <DropdownMenuItem onClick={() => router.push(`/admin/users/${user.uid}`)}>
+                                                                <Eye className="mr-2 h-4 w-4" />
+                                                                View Details
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => handleBanUser(user)}>
+                                                                <Ban className="mr-2 h-4 w-4" />
+                                                                {user.status === 'active' ? 'Ban User' : 'Unban User'}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem 
+                                                                className="text-destructive" 
+                                                                onSelect={() => setUserToDelete(user)}
+                                                            >
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <span>Delete User</span>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </main>
+            </div>
+            <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the user account for <span className="font-bold">{userToDelete?.displayName}</span> and remove their data from our servers.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteUser}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }
