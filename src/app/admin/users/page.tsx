@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Ban, Eye } from 'lucide-react';
+import { ArrowLeft, Ban, Eye, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const mockUsers = [
   { id: '1', name: 'John Doe', email: 'john.d@example.com', status: 'Active', joined: '2023-10-01' },
@@ -42,7 +43,7 @@ export default function AdminUserManagement() {
                                     <TableHead>Email</TableHead>
                                     <TableHead>Joined Date</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead>Actions</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -54,15 +55,26 @@ export default function AdminUserManagement() {
                                         <TableCell>
                                             <Badge variant={user.status === 'Active' ? 'secondary' : 'destructive'}>{user.status}</Badge>
                                         </TableCell>
-                                        <TableCell>
-                                            <div className="flex gap-2">
-                                                <Button variant="outline" size="icon">
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="destructive" size="icon">
-                                                    <Ban className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+                                        <TableCell className="text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem>
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        View Details
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-destructive">
+                                                        <Ban className="mr-2 h-4 w-4" />
+                                                        Ban User
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))}

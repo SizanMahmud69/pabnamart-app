@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Eye, Truck } from 'lucide-react';
+import { ArrowLeft, Eye, Truck, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const mockOrders = [
   { id: '12345', customer: 'John Doe', date: '2023-10-26', total: 450, status: 'Pending' },
@@ -43,7 +44,7 @@ export default function AdminOrderManagement() {
                                     <TableHead>Date</TableHead>
                                     <TableHead>Total</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead>Actions</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -56,17 +57,28 @@ export default function AdminOrderManagement() {
                                         <TableCell>
                                             <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}>{order.status}</Badge>
                                         </TableCell>
-                                        <TableCell>
-                                            <div className="flex gap-2">
-                                                <Button variant="outline" size="icon">
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                {order.status === 'Pending' && (
-                                                    <Button variant="outline" size="icon">
-                                                        <Truck className="h-4 w-4" />
+                                        <TableCell className="text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
-                                                )}
-                                            </div>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem>
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        View Details
+                                                    </DropdownMenuItem>
+                                                    {order.status === 'Pending' && (
+                                                        <DropdownMenuItem>
+                                                            <Truck className="mr-2 h-4 w-4" />
+                                                            Mark as Shipped
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))}
