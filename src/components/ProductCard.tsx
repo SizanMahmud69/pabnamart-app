@@ -1,12 +1,13 @@
+
 "use client";
 
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Product } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Star } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -29,23 +30,30 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </div>
       </Link>
-      <CardContent className="flex-grow p-3">
-        <h3 className="text-sm font-semibold text-gray-800 truncate">
+      <CardContent className="flex-grow p-3 space-y-2">
+        <p className="text-xs text-muted-foreground">{product.category}</p>
+        <h3 className="text-sm font-semibold text-gray-800 leading-snug">
             <Link href={`/products/${product.id}`} className="hover:text-primary">
                 {product.name}
             </Link>
         </h3>
-        <p className="text-lg font-bold text-primary mt-1">৳{product.price.toFixed(2)}</p>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Star className="w-4 h-4 fill-accent text-accent" />
+          <span>{product.rating.toFixed(1)}</span>
+          {product.reviews.length > 0 && <span>|</span>}
+          {product.reviews.length > 0 && <span>Sold {product.reviews.length * 15}</span>}
+        </div>
+        <div className="flex justify-between items-center">
+          <p className="text-lg font-bold text-primary">৳{product.price.toFixed(2)}</p>
+          <Button
+            onClick={() => addToCart(product)}
+            size="icon"
+            className="h-9 w-9"
+          >
+            <ShoppingCart className="h-4 w-4" />
+          </Button>
+        </div>
       </CardContent>
-      <CardFooter className="p-2 pt-0">
-        <Button
-          onClick={() => addToCart(product)}
-          className="w-full"
-          size="sm"
-        >
-          <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
-        </Button>
-      </CardFooter>
     </Card>
   );
 }
