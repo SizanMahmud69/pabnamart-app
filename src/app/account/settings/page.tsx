@@ -10,10 +10,10 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const settingsItems = [
-    { label: "Account Information", href: "#" },
-    { label: "Shipping Addresses", href: "#" },
-    { label: "Account Security", href: "#" },
-    { label: "Privacy Policy", href: "#" },
+    { label: "Account Information", href: "/account/settings/information" },
+    { label: "Shipping Addresses", href: "/account/settings/addresses" },
+    { label: "Account Security", href: "/account/settings/security" },
+    { label: "Privacy Policy", href: "/account/settings/privacy" },
 ]
 
 export default function AccountSettingsPage() {
