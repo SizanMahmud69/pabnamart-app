@@ -12,11 +12,30 @@ import { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
+const CATEGORY_ORDER = [
+    "Men's Fashion",
+    "Women's Fashion",
+    "Cosmetics",
+    "Groceries",
+    "Mobile & Computers",
+    "Electronics",
+];
+
 export default function AdminProductManagement() {
   const { products, deleteProduct } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  const categories = useMemo(() => ['All', ...Array.from(new Set(products.map(p => p.category)))], [products]);
+  const categories = useMemo(() => {
+    const existingCategories = Array.from(new Set(products.map(p => p.category)));
+    const sortedCategories = CATEGORY_ORDER.filter(cat => existingCategories.includes(cat));
+    // Add any categories from products that are not in the predefined order
+    existingCategories.forEach(cat => {
+        if (!sortedCategories.includes(cat)) {
+            sortedCategories.push(cat);
+        }
+    });
+    return ['All', ...sortedCategories];
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     if (selectedCategory === 'All') {
