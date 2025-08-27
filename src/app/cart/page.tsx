@@ -1,13 +1,14 @@
 
 "use client";
 
+import { useState } from "react";
 import { useCart } from "@/hooks/useCart";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Trash2, ShoppingBag, Minus, Plus } from "lucide-react";
+import { Trash2, ShoppingBag, Minus, Plus, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
@@ -16,13 +17,16 @@ export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
   const { user } = useAuth();
   const router = useRouter();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const handleCheckout = () => {
+    setIsCheckingOut(true);
     if (user) {
       router.push('/checkout');
     } else {
       router.push('/login');
     }
+    // No need to set isCheckingOut to false as we are navigating away
   };
 
   return (
@@ -120,8 +124,15 @@ export default function CartPage() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button size="lg" className="w-full" onClick={handleCheckout}>
-                        Proceed to Checkout
+                    <Button size="lg" className="w-full" onClick={handleCheckout} disabled={isCheckingOut}>
+                        {isCheckingOut ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Processing...
+                            </>
+                        ) : (
+                            'Proceed to Checkout'
+                        )}
                     </Button>
                 </CardFooter>
                 </Card>
