@@ -57,8 +57,8 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Star className="w-4 h-4 fill-accent text-accent" />
           <span>{product.rating.toFixed(1)}</span>
-          {product.reviews.length > 0 && <span>|</span>}
-          {product.reviews.length > 0 && <span>Sold {product.reviews.length * 15}</span>}
+          <span>|</span>
+          <span>Sold {product.reviews.length > 0 ? product.reviews.length * 15 : 0}</span>
         </div>
         <div className="flex justify-between items-center mt-auto">
           <div>
