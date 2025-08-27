@@ -38,7 +38,7 @@ const CountdownTimer = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setTimeLeft(calculateTimeLeft());
+      setTimeLeft(calculateTimelefa());
     }, 1000);
 
     return () => clearTimeout(timer);
@@ -73,8 +73,8 @@ export default function FlashSale({ products }: FlashSaleProps) {
     return (
         <Card className="bg-purple-50/50">
             <CardContent className="p-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-                    <div className='flex-1'>
+                <div className="flex flex-col items-center text-center mb-4 gap-4">
+                    <div>
                         <h2 className="text-2xl font-bold text-primary">Flash Sale</h2>
                         <p className="text-gray-600">Don't miss out on these amazing deals, ending soon!</p>
                     </div>
