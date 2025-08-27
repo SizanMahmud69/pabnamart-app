@@ -28,9 +28,11 @@ export default function AdminProductManagement() {
                     Back to Dashboard
                 </Link>
             </Button>
-            <Button size="xs">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add New Product
+            <Button asChild size="xs">
+                <Link href="/admin/products/new">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add New Product
+                </Link>
             </Button>
         </header>
         <main>

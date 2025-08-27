@@ -28,9 +28,11 @@ export default function AdminVoucherManagement() {
                     Back to Dashboard
                 </Link>
             </Button>
-            <Button size="xs">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create New Voucher
+            <Button asChild size="xs">
+                <Link href="/admin/vouchers/new">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create New Voucher
+                </Link>
             </Button>
         </header>
         <main>
