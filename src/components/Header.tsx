@@ -1,16 +1,12 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, User, Search, Store } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Search, Store } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import ShoppingCartSheet from './ShoppingCart';
-import { useCart } from '@/hooks/useCart';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useState, useEffect } from 'react';
 
 export default function Header() {
-  const { cartCount } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -44,29 +40,11 @@ export default function Header() {
             <Input
               type="search"
               placeholder="Search products..."
-              className="w-full rounded-full pl-10"
+              className="w-full rounded-full pl-10 md:text-base"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </form>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Button variant="ghost" size="icon">
-            <User className="h-5 w-5" />
-            <span className="sr-only">My Account</span>
-          </Button>
-          <ShoppingCartSheet>
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                  {cartCount}
-                </span>
-              )}
-              <span className="sr-only">Shopping Cart</span>
-            </Button>
-          </ShoppingCartSheet>
         </div>
       </div>
     </header>
