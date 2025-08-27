@@ -1,6 +1,8 @@
+
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { Product } from '@/types';
 import { products as allProducts } from '@/lib/products';
 import ProductCard from '@/components/ProductCard';
@@ -10,8 +12,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, ShoppingBag, Ticket } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
+import AiRecommendations from '@/components/AiRecommendations';
 
-export default function Home() {
+function HomePageContent() {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const flashSaleProducts = allProducts.slice(0, 4);
@@ -20,62 +26,82 @@ export default function Home() {
     setIsLoading(true);
     // Simulate fetching products
     setTimeout(() => {
-      setProducts(allProducts);
+      if (searchQuery) {
+        const filteredProducts = allProducts.filter(product =>
+          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.category.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setProducts(filteredProducts);
+      } else {
+        setProducts(allProducts);
+      }
       setIsLoading(false);
     }, 500);
-  }, []);
+  }, [searchQuery]);
+
+  const showRecommendations = searchQuery.trim().length > 0;
 
   return (
     <div className="bg-gray-50">
       <div className="container mx-auto px-4 py-6 space-y-8">
-        {/* Hero Section */}
-        <div className="relative text-white rounded-lg overflow-hidden">
-          <Image
-            src="https://picsum.photos/seed/electronics/1200/400"
-            alt="Electronics Sale"
-            width={1200}
-            height={400}
-            className="object-cover w-full h-48 md:h-64"
-            data-ai-hint="electronics gadgets"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Mega Electronics Sale</h1>
-            <p className="text-lg md:text-xl mb-4">Up to 40% off on the latest gadgets and electronics.</p>
-            <Button asChild className="w-fit bg-primary hover:bg-primary/90">
-              <Link href="/products">
-                <ShoppingBag className="mr-2 h-5 w-5" />
-                Shop Now
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Collect Vouchers Section */}
-        <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-0">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Ticket className="h-8 w-8 text-primary" />
-              <div>
-                <h2 className="font-bold text-lg">Collect Vouchers!</h2>
-                <p className="text-sm text-gray-600">Get extra savings on your next purchase.</p>
+        {!searchQuery && (
+          <>
+            {/* Hero Section */}
+            <div className="relative text-white rounded-lg overflow-hidden">
+              <Image
+                src="https://picsum.photos/seed/electronics/1200/400"
+                alt="Electronics Sale"
+                width={1200}
+                height={400}
+                className="object-cover w-full h-48 md:h-64"
+                data-ai-hint="electronics gadgets"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6">
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">Mega Electronics Sale</h1>
+                <p className="text-lg md:text-xl mb-4">Up to 40% off on the latest gadgets and electronics.</p>
+                <Button asChild className="w-fit bg-primary hover:bg-primary/90">
+                  <Link href="/products">
+                    <ShoppingBag className="mr-2 h-5 w-5" />
+                    Shop Now
+                  </Link>
+                </Button>
               </div>
             </div>
-            <Link href="/vouchers">
-              <ArrowRight className="h-6 w-6 text-gray-700" />
-            </Link>
-          </CardContent>
-        </Card>
 
-        {/* Flash Sale Section */}
-        <FlashSale products={flashSaleProducts} />
+            {/* Collect Vouchers Section */}
+            <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-0">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Ticket className="h-8 w-8 text-primary" />
+                  <div>
+                    <h2 className="font-bold text-lg">Collect Vouchers!</h2>
+                    <p className="text-sm text-gray-600">Get extra savings on your next purchase.</p>
+                  </div>
+                </div>
+                <Link href="/vouchers">
+                  <ArrowRight className="h-6 w-6 text-gray-700" />
+                </Link>
+              </CardContent>
+            </Card>
 
-        {/* All Products Section */}
+            {/* Flash Sale Section */}
+            <FlashSale products={flashSaleProducts} />
+          </>
+        )}
+
+        {/* AI Recommendations Section */}
+        {showRecommendations && <AiRecommendations searchQuery={searchQuery} currentProducts={products} />}
+
+        {/* All Products / Search Results Section */}
         <div>
            <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">All Products</h2>
-            <Link href="/products" className="text-primary font-semibold hover:underline">
-              View All
-            </Link>
+            <h2 className="text-2xl font-bold">{searchQuery ? `Results for "${searchQuery}"` : "All Products"}</h2>
+            {!searchQuery && (
+              <Link href="/products" className="text-primary font-semibold hover:underline">
+                View All
+              </Link>
+            )}
           </div>
           {isLoading ? (
              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -89,15 +115,28 @@ export default function Home() {
                 </Card>
               ))}
             </div>
-          ) : (
+          ) : products.length > 0 ? (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {products.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
+          ) : (
+             <div className="text-center py-10">
+              <p className="text-lg text-gray-600">No products found for "{searchQuery}".</p>
+            </div>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }

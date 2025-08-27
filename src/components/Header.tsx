@@ -1,18 +1,21 @@
+
 "use client";
 
 import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { FormEvent, useState, useEffect } from 'react';
 import { Button } from './ui/button';
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
 
   useEffect(() => {
+    // Update search query in header if it changes in URL, e.g. via navigation
     setSearchQuery(searchParams.get('q') || '');
   }, [searchParams]);
 
@@ -24,7 +27,11 @@ export default function Header() {
     } else {
       params.delete('q');
     }
-    router.push(`/?${params.toString()}`);
+
+    // If we are already on a products page, stay there. Otherwise, go to the main products page.
+    const targetPath = pathname.startsWith('/products') ? pathname.split('/[')[0] : '/products';
+    
+    router.push(`${targetPath}?${params.toString()}`);
   };
 
   return (
