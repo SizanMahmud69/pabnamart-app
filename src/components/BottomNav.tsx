@@ -9,19 +9,25 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
+// Mocked unread count. In a real app, this would come from a global state or API.
+const getUnreadNotificationsCount = () => 2;
+
 export default function BottomNav() {
   const { cartCount } = useCart();
   const { user } = useAuth();
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
+    // In a real application, you would fetch this from your backend/state management
+    setUnreadNotifications(getUnreadNotificationsCount());
   }, []);
 
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
-    { href: '/notifications', icon: Bell, label: 'Notifications' },
+    { href: '/notifications', icon: Bell, label: 'Notifications', count: unreadNotifications },
     { href: '/cart', icon: ShoppingCart, label: 'Cart', count: cartCount },
     { 
       href: user ? '/account' : '/login', 
@@ -50,7 +56,7 @@ export default function BottomNav() {
             >
               <div className="relative">
                 <item.icon className={cn("h-6 w-6", { "fill-primary/20": isActive })} />
-                {item.label === 'Cart' && item.count > 0 && (
+                {item.count && item.count > 0 && (
                    <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                     {item.count}
                   </span>
