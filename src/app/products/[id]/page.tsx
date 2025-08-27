@@ -16,8 +16,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [product, setProduct] = useState<Product | undefined | null>(null);
   
   useEffect(() => {
-    if (products.length > 0) {
-        const foundProduct = products.find(p => p.id === parseInt(params.id));
+    const productId = params.id;
+    if (products.length > 0 && productId) {
+        const foundProduct = products.find(p => p.id === parseInt(productId));
         setProduct(foundProduct);
     }
   }, [products, params.id]);

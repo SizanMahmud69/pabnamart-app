@@ -6,11 +6,23 @@ import ProductCard from '@/components/ProductCard';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
+import type { Product } from '@/types';
 
 export default function CategoryPage({ params }: { params: { name: string } }) {
     const { products: allProducts } = useProducts();
-    const categoryName = decodeURIComponent(params.name);
-    const products = allProducts.filter(p => p.category.toLowerCase() === categoryName.toLowerCase());
+    const [products, setProducts] = useState<Product[]>([]);
+    const [categoryName, setCategoryName] = useState('');
+
+    useEffect(() => {
+        const name = params.name;
+        if (name) {
+            const decodedName = decodeURIComponent(name);
+            setCategoryName(decodedName);
+            const filteredProducts = allProducts.filter(p => p.category.toLowerCase() === decodedName.toLowerCase());
+            setProducts(filteredProducts);
+        }
+    }, [params.name, allProducts]);
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
