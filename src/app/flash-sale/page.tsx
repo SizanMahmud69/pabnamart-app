@@ -1,7 +1,7 @@
 
 "use client";
 
-import { products as allProducts } from '@/lib/products';
+import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import { useState, useEffect } from 'react';
 import type { Product } from '@/types';
@@ -57,6 +57,7 @@ const CountdownTimer = () => {
 };
 
 export default function FlashSalePage() {
+  const { products: allProducts } = useProducts();
   const flashSaleProducts: Product[] = allProducts.map(p => ({
     ...p,
     originalPrice: p.price + 50, // Example discount

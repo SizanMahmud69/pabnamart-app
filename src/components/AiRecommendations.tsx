@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useTransition } from 'react';
@@ -11,7 +12,7 @@ import {
 } from '@/components/ui/carousel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getProductRecommendations } from '@/app/actions';
-import { products as allProducts } from '@/lib/products';
+import { useProducts } from '@/hooks/useProducts';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Lightbulb } from 'lucide-react';
@@ -26,6 +27,7 @@ export default function AiRecommendations({ searchQuery, currentProducts }: AiRe
   const [recommendations, setRecommendations] = useState<Product[]>([]);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const { products: allProducts } = useProducts();
 
   useEffect(() => {
     if (searchQuery.trim().length < 3) {
@@ -64,7 +66,7 @@ export default function AiRecommendations({ searchQuery, currentProducts }: AiRe
         setRecommendations([]);
       }
     });
-  }, [searchQuery, currentProducts]);
+  }, [searchQuery, currentProducts, allProducts]);
 
   if (isPending) {
     return (

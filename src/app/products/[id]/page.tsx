@@ -1,4 +1,7 @@
-import { products } from '@/lib/products';
+
+"use client";
+
+import { useProducts } from '@/hooks/useProducts';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,10 +11,20 @@ import AddToCartButton from './AddToCartButton';
 import { Separator } from '@/components/ui/separator';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
+  const { products } = useProducts();
   const product = products.find(p => p.id === parseInt(params.id));
 
   if (!product) {
-    notFound();
+    // We can't use notFound() in a client component directly in this way.
+    // A better approach would be to handle the "not found" state within the component's render logic.
+    return (
+        <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
+            <div className="text-center">
+                <h1 className="text-4xl font-bold">Product not found</h1>
+                <p className="text-muted-foreground mt-4">The product you are looking for does not exist.</p>
+            </div>
+        </div>
+    );
   }
 
   return (

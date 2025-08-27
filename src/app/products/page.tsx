@@ -3,20 +3,21 @@
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import type { Product } from '@/types';
-import { products as allProducts } from '@/lib/products';
+import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import ProductFilters from '@/components/ProductFilters';
 import { useSearchParams } from 'next/navigation';
 import AiRecommendations from '@/components/AiRecommendations';
 
 function ProductsPageContent() {
+  const { products: allProducts } = useProducts();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
   const categoryQuery = searchParams.get('category') || 'All';
 
-  const allCategories = useMemo(() => ['All', ...Array.from(new Set(allProducts.map(p => p.category)))], []);
+  const allCategories = useMemo(() => ['All', ...Array.from(new Set(allProducts.map(p => p.category)))], [allProducts]);
   
   const [selectedCategory, setSelectedCategory] = useState(categoryQuery);
   const [priceRange, setPriceRange] = useState([0, 1000]);
@@ -54,7 +55,7 @@ function ProductsPageContent() {
         setIsLoading(false);
     }, 300);
 
-  }, [selectedCategory, priceRange, rating, searchQuery]);
+  }, [selectedCategory, priceRange, rating, searchQuery, allProducts]);
   
   const showRecommendations = searchQuery.trim().length > 0;
 

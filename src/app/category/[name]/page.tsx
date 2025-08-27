@@ -1,19 +1,16 @@
 
-import { products as allProducts } from '@/lib/products';
+"use client";
+
+import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
-import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default function CategoryPage({ params }: { params: { name: string } }) {
+    const { products: allProducts } = useProducts();
     const categoryName = decodeURIComponent(params.name);
     const products = allProducts.filter(p => p.category.toLowerCase() === categoryName.toLowerCase());
-
-    if (products.length === 0) {
-        // Optional: you could show a "not found" page or a "no products in this category" message.
-        // For now, let's just show a message.
-    }
 
     return (
         <div className="bg-purple-50/30 min-h-screen">

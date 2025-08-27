@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
-import { products as initialProducts } from '@/lib/products';
+import { useProducts } from '@/hooks/useProducts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default function AdminProductManagement() {
-  const [products, setProducts] = useState(initialProducts);
+  const { products, setProducts } = useProducts();
 
   const handleDelete = (id: number) => {
     if (confirm('Are you sure you want to delete this product?')) {

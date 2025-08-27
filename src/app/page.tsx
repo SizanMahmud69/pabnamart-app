@@ -4,7 +4,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { Product } from '@/types';
-import { products as allProducts } from '@/lib/products';
+import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -44,6 +44,7 @@ const heroBanners = [
 function HomePageContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
+  const { products: allProducts } = useProducts();
 
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [topRated, setTopRated] = useState<Product[]>([]);
@@ -57,7 +58,7 @@ function HomePageContent() {
     // Top rated: sort by rating descending
     const sortedRated = [...allProducts].sort((a, b) => b.rating - a.rating);
     setTopRated(sortedRated.slice(0, 5));
-  }, []);
+  }, [allProducts]);
   
   const showRecommendations = searchQuery.trim().length > 0;
 
@@ -164,6 +165,7 @@ function HomePageContent() {
 function SearchPageContent({ searchQuery }: { searchQuery: string }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { products: allProducts } = useProducts();
 
   useEffect(() => {
     setIsLoading(true);
@@ -176,7 +178,7 @@ function SearchPageContent({ searchQuery }: { searchQuery: string }) {
       setProducts(filteredProducts);
       setIsLoading(false);
     }, 500);
-  }, [searchQuery]);
+  }, [searchQuery, allProducts]);
 
   return (
      <div className="bg-purple-50/30 min-h-screen">

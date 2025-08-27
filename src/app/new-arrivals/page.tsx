@@ -1,5 +1,7 @@
 
-import { products as allProducts } from '@/lib/products';
+"use client";
+
+import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import Link from 'next/link';
@@ -7,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import type { Product } from '@/types';
 
 export default function NewArrivalsPage() {
+    const { products: allProducts } = useProducts();
     const newArrivals: Product[] = [...allProducts].sort((a, b) => b.id - a.id);
 
     return (

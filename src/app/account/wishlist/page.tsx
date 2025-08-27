@@ -1,12 +1,15 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
+
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Heart } from "lucide-react";
-import { products } from "@/lib/products";
+import { useProducts } from "@/hooks/useProducts";
 import ProductCard from "@/components/ProductCard";
 
 export default function WishlistPage() {
+    const { products } = useProducts();
     const wishlistItems = products.slice(0, 3); // Mock data
 
     return (
