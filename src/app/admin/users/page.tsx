@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import type { User as AppUser } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { deleteUserAccount } from '@/app/actions';
 
 const db = getFirestore(app);
 
@@ -24,6 +25,7 @@ export default function AdminUserManagement() {
     const { toast } = useToast();
     const router = useRouter();
     const [userToDelete, setUserToDelete] = useState<AppUser | null>(null);
+    const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
         const usersCollectionRef = collection(db, 'users');
@@ -55,22 +57,26 @@ export default function AdminUserManagement() {
         }
     };
 
-    const confirmDeleteUser = async () => {
+    const confirmDeleteUser = () => {
         if (!userToDelete) return;
-        
-        const userDocRef = doc(db, 'users', userToDelete.uid);
-        try {
-            await deleteDoc(userDocRef);
-            toast({
-                title: "User Deleted",
-                description: `${userToDelete.displayName} has been permanently deleted.`
-            });
-        } catch (error) {
-            console.error("Error deleting user:", error);
-            toast({ title: "Error", description: "Failed to delete user.", variant: "destructive" });
-        } finally {
+
+        startTransition(async () => {
+            const result = await deleteUserAccount(userToDelete.uid);
+            
+            if (result.success) {
+                toast({
+                    title: "User Deleted",
+                    description: `${userToDelete.displayName} has been permanently deleted.`
+                });
+            } else {
+                toast({
+                    title: "Error",
+                    description: result.message,
+                    variant: "destructive"
+                });
+            }
             setUserToDelete(null);
-        }
+        });
     };
     
     return (
@@ -136,7 +142,7 @@ export default function AdminUserManagement() {
                                                             <DropdownMenuSeparator />
                                                             <DropdownMenuItem 
                                                                 className="text-destructive" 
-                                                                onClick={() => setUserToDelete(user)}
+                                                                onSelect={() => setUserToDelete(user)}
                                                             >
                                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                                 <span>Delete User</span>
@@ -158,12 +164,14 @@ export default function AdminUserManagement() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the user account for <span className="font-bold">{userToDelete?.displayName}</span> and remove their data from our servers.
+                            This action cannot be undone. This will permanently delete the user account for <span className="font-bold">{userToDelete?.displayName}</span> from Authentication and Firestore.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteUser}>Continue</AlertDialogAction>
+                        <AlertDialogAction onClick={confirmDeleteUser} disabled={isPending}>
+                            {isPending ? "Deleting..." : "Continue"}
+                        </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
