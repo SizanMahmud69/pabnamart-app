@@ -18,6 +18,9 @@ export interface Product {
   reviews: Review[];
   stock: number;
   details?: string;
+  freeShipping?: boolean;
+  shippingTime?: string;
+  returnPolicy?: string;
 }
 
 export interface CartItem extends Product {

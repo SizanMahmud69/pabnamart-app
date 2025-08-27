@@ -19,7 +19,10 @@ export const products: Product[] = [
     reviews: [
       { user: 'John D.', comment: 'Incredible sound quality and very long battery life. Highly recommended!' },
     ],
-    details: 'Bluetooth 5.0, Active Noise Cancellation, 20-Hour Battery Life, Built-in Microphone, Foldable Design.'
+    details: 'Bluetooth 5.0, Active Noise Cancellation, 20-Hour Battery Life, Built-in Microphone, Foldable Design.',
+    freeShipping: true,
+    shippingTime: '2-3 business days',
+    returnPolicy: '30-day return policy'
   },
   {
     id: 4,
@@ -37,7 +40,10 @@ export const products: Product[] = [
         { user: 'Sarah', comment: 'The best green tea I have ever tasted.' },
         { user: 'Tom', comment: 'Very high quality and great taste.' },
     ],
-    details: '100% Organic, Non-GMO, 50 Tea Bags, Sourced from Japan, Rich in Antioxidants.'
+    details: '100% Organic, Non-GMO, 50 Tea Bags, Sourced from Japan, Rich in Antioxidants.',
+    freeShipping: true,
+    shippingTime: '1-2 business days',
+    returnPolicy: '15-day return policy'
   },
   {
     id: 5,
@@ -56,7 +62,10 @@ export const products: Product[] = [
     reviews: [
         { user: 'Mike', comment: 'Super comfortable and great for long runs.' },
     ],
-    details: 'Breathable Mesh Upper, Cushioned Midsole, Durable Rubber Outsole, Lightweight Design.'
+    details: 'Breathable Mesh Upper, Cushioned Midsole, Durable Rubber Outsole, Lightweight Design.',
+    freeShipping: false,
+    shippingTime: '3-5 business days',
+    returnPolicy: '30-day return policy'
   },
   {
     id: 6,
@@ -74,7 +83,10 @@ export const products: Product[] = [
     reviews: [
         { user: 'David', comment: 'Makes managing my smart home so much easier.' },
     ],
-    details: 'Wi-Fi and Bluetooth Connectivity, Voice Control, Supports over 1000+ devices, Easy Setup.'
+    details: 'Wi-Fi and Bluetooth Connectivity, Voice Control, Supports over 1000+ devices, Easy Setup.',
+    freeShipping: true,
+    shippingTime: '2-3 business days',
+    returnPolicy: '30-day return policy'
   },
   {
     id: 7,
@@ -91,7 +103,10 @@ export const products: Product[] = [
     reviews: [
         { user: 'Emily', comment: 'Amazing coffee! Will definitely buy again.' },
     ],
-    details: '100% Arabica Beans, Medium Roast, 12 oz Bag, Sourced from Colombia, Whole Bean.'
+    details: '100% Arabica Beans, Medium Roast, 12 oz Bag, Sourced from Colombia, Whole Bean.',
+    freeShipping: true,
+    shippingTime: '1-2 business days',
+    returnPolicy: 'No returns'
   },
   {
     id: 9,
@@ -109,7 +124,10 @@ export const products: Product[] = [
     reviews: [
         { user: 'Chris', comment: 'A beast for gaming. Runs everything flawlessly.' },
     ],
-    details: '15.6" 144Hz Display, NVIDIA GeForce RTX 4060, Intel Core i7, 16GB DDR5 RAM, 1TB NVMe SSD.'
+    details: '15.6" 144Hz Display, NVIDIA GeForce RTX 4060, Intel Core i7, 16GB DDR5 RAM, 1TB NVMe SSD.',
+    freeShipping: true,
+    shippingTime: '2-4 business days',
+    returnPolicy: '30-day return policy'
   },
   {
     id: 13,
@@ -127,7 +145,10 @@ export const products: Product[] = [
     reviews: [
         { user: 'Grace', comment: 'Flawless coverage and feels so light on the skin!' },
     ],
-    details: '30ml / 1.0 fl oz, Available in 20 shades, SPF 15, Paraben-free, Cruelty-free.'
+    details: '30ml / 1.0 fl oz, Available in 20 shades, SPF 15, Paraben-free, Cruelty-free.',
+    freeShipping: true,
+    shippingTime: '2-3 business days',
+    returnPolicy: '30-day return policy'
   },
    {
     id: 14,
@@ -145,6 +166,9 @@ export const products: Product[] = [
     reviews: [
         { user: 'Chloe', comment: 'I love this dress! The fit is perfect and the fabric is so comfortable.' },
     ],
-    details: '100% Cotton, Floral Print, A-Line Silhouette, Midi Length, Available in S, M, L, XL.'
+    details: '100% Cotton, Floral Print, A-Line Silhouette, Midi Length, Available in S, M, L, XL.',
+    freeShipping: true,
+    shippingTime: '3-5 business days',
+    returnPolicy: '30-day return policy'
   }
 ];

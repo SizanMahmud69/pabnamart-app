@@ -111,18 +111,24 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                         <Separator className="my-4"/>
 
                         <div className="space-y-3 text-muted-foreground">
-                            <div className="flex items-center gap-3">
-                                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                                <span>Eligible for free shipping</span>
-                            </div>
-                             <div className="flex items-center gap-3">
-                                <Truck className="h-5 w-5 text-blue-500" />
-                                <span>Ships in 2-3 business days</span>
-                            </div>
-                             <div className="flex items-center gap-3">
-                                <Package className="h-5 w-5 text-orange-500" />
-                                <span>30-day return policy</span>
-                            </div>
+                            {product.freeShipping && (
+                                <div className="flex items-center gap-3">
+                                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                    <span>Eligible for free shipping</span>
+                                </div>
+                            )}
+                            {product.shippingTime && (
+                                <div className="flex items-center gap-3">
+                                    <Truck className="h-5 w-5 text-blue-500" />
+                                    <span>Ships in {product.shippingTime}</span>
+                                </div>
+                            )}
+                            {product.returnPolicy && (
+                                <div className="flex items-center gap-3">
+                                    <Package className="h-5 w-5 text-orange-500" />
+                                    <span>{product.returnPolicy}</span>
+                                </div>
+                            )}
                         </div>
 
                         {product.details && (

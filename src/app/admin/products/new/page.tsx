@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const categories = [
   "Men's Fashion",
@@ -31,6 +32,7 @@ export default function NewProductPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [category, setCategory] = useState('');
     const [imageUrls, setImageUrls] = useState(['']);
+    const [freeShipping, setFreeShipping] = useState(false);
 
     const handleImageChange = (index: number, value: string) => {
         const newImageUrls = [...imageUrls];
@@ -69,6 +71,9 @@ export default function NewProductPage() {
             rating: 0,
             reviews: [],
             details: formData.get('details') as string,
+            freeShipping: freeShipping,
+            shippingTime: formData.get('shippingTime') as string,
+            returnPolicy: formData.get('returnPolicy') as string,
         };
 
         try {
@@ -149,7 +154,31 @@ export default function NewProductPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-2">
+                            
+                            <div className="space-y-4 border-t pt-4">
+                                <Label className="text-base font-semibold">Shipping & Returns</Label>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox id="free-shipping" checked={freeShipping} onCheckedChange={(checked) => setFreeShipping(checked as boolean)} />
+                                    <label
+                                        htmlFor="free-shipping"
+                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    >
+                                        Eligible for free shipping
+                                    </label>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="shipping-time">Shipping Time</Label>
+                                        <Input id="shipping-time" name="shippingTime" placeholder="e.g., 2-3 business days" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="return-policy">Return Policy</Label>
+                                        <Input id="return-policy" name="returnPolicy" placeholder="e.g., 30-day return policy" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 border-t pt-4">
                                 <Label>Image URLs</Label>
                                 <div className="space-y-2">
                                     {imageUrls.map((url, index) => (
