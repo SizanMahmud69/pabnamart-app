@@ -13,12 +13,23 @@ import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const categories = [
+  "Men's Fashion",
+  "Women's Fashion",
+  "Cosmetics",
+  "Groceries",
+  "Mobile & Computers",
+  "Electronics",
+];
 
 export default function NewProductPage() {
     const router = useRouter();
     const { toast } = useToast();
     const { addProduct } = useProducts();
     const [isLoading, setIsLoading] = useState(false);
+    const [category, setCategory] = useState('');
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -29,10 +40,11 @@ export default function NewProductPage() {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             price: parseFloat(formData.get('price') as string),
+            originalPrice: parseFloat(formData.get('originalPrice') as string) || undefined,
             stock: parseInt(formData.get('stock') as string, 10),
-            category: formData.get('category') as string,
+            category: category,
             images: [(formData.get('images') as string) || 'https://picsum.photos/600/600'],
-            rating: 0, // Default rating for new products
+            rating: 0,
             reviews: [],
         };
 
@@ -81,10 +93,14 @@ export default function NewProductPage() {
                                 <Label htmlFor="description">Description</Label>
                                 <Textarea id="description" name="description" placeholder="Describe the product" required />
                             </div>
-                             <div className="grid grid-cols-2 gap-4">
+                             <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Price (৳)</Label>
                                     <Input id="price" name="price" type="number" placeholder="e.g., 99.99" required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="originalPrice">Discount Price (৳)</Label>
+                                    <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 79.99" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="stock">Stock</Label>
@@ -93,7 +109,18 @@ export default function NewProductPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="category">Category</Label>
-                                <Input id="category" name="category" placeholder="e.g., Electronics" required />
+                                <Select onValueChange={setCategory} required value={category}>
+                                    <SelectTrigger id="category">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map(cat => (
+                                            <SelectItem key={cat} value={cat}>
+                                                {cat}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="images">Image URL</Label>

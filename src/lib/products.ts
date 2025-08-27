@@ -1,3 +1,4 @@
+
 import type { Product } from '@/types';
 
 export const products: Product[] = [
@@ -7,6 +8,7 @@ export const products: Product[] = [
     description:
       'Experience immersive sound with these high-fidelity wireless headphones. With up to 20 hours of battery life and a comfortable over-ear design, they are perfect for music lovers.',
     price: 99.99,
+    originalPrice: 129.99,
     rating: 4.8,
     category: 'Electronics',
     stock: 0,
@@ -59,6 +61,7 @@ export const products: Product[] = [
     description:
       'Control all your smart devices from one central hub. Compatible with Alexa, Google Assistant, and Apple HomeKit, it simplifies your smart home experience.',
     price: 89.99,
+    originalPrice: 110.0,
     rating: 4.4,
     category: 'Electronics',
     stock: 12,
@@ -108,6 +111,7 @@ export const products: Product[] = [
     description:
       'A lightweight, full-coverage foundation that leaves a natural, radiant finish. Formulated with skin-loving ingredients to improve your complexion over time.',
     price: 55.0,
+    originalPrice: 65.0,
     rating: 4.8,
     category: 'Cosmetics',
     stock: 15,
