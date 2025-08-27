@@ -100,12 +100,12 @@ export default function AccountPage() {
                 {/* User Info */}
                 <Card className="shadow-sm">
                     <CardContent className="p-4 flex items-center gap-4">
-                        <Avatar className="h-16 w-16">
+                        <Avatar className="h-16 w-16 flex-shrink-0">
                             <AvatarImage src="https://picsum.photos/seed/avatar/200" alt="User Avatar" data-ai-hint="user avatar" />
                             <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div>
-                            <h2 className="text-xl font-bold">{user.email}</h2>
+                        <div className="min-w-0 flex-1">
+                            <h2 className="text-xl font-bold truncate">{user.email}</h2>
                             <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                                 <Link href="/account/wishlist" className="flex items-center gap-1 hover:text-primary">
                                     <Heart className="h-4 w-4" /> 0 Wishlist
