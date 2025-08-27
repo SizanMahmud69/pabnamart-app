@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, PlusCircle, Edit, Trash2, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 const mockVouchers = [
   { id: '1', code: 'PABNA50', type: 'Fixed', value: '৳50', status: 'Active', minSpend: '৳500' },
@@ -19,6 +20,7 @@ const mockVouchers = [
 
 export default function AdminVoucherManagement() {
   const [vouchers, setVouchers] = useState(mockVouchers);
+  const router = useRouter();
 
   const handleDelete = (id: string) => {
     if(confirm('Are you sure you want to delete this voucher?')) {
@@ -80,7 +82,7 @@ export default function AdminVoucherManagement() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => router.push(`/admin/vouchers/edit/${voucher.id}`)}>
                                                     <Edit className="mr-2 h-4 w-4" />
                                                     <span>Edit</span>
                                                 </DropdownMenuItem>

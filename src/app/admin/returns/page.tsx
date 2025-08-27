@@ -77,13 +77,13 @@ export default function AdminReturnManagement() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => handleStatusChange(request.id, 'Approved')}>
+                                                    <DropdownMenuItem onSelect={() => handleStatusChange(request.id, 'Approved')}>
                                                         <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
                                                         <span>Approve</span>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem 
                                                         className="text-destructive"
-                                                        onClick={() => handleStatusChange(request.id, 'Rejected')}
+                                                        onSelect={() => handleStatusChange(request.id, 'Rejected')}
                                                     >
                                                         <XCircle className="mr-2 h-4 w-4" />
                                                         <span>Reject</span>

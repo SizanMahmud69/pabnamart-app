@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, PlusCircle, Edit, Trash2, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 const mockOffers = [
   { id: '1', name: 'Mega Electronics Sale', discount: '40%', status: 'Active', period: '2023-10-20 to 2023-10-31' },
@@ -18,6 +19,7 @@ const mockOffers = [
 
 export default function AdminOfferManagement() {
   const [offers, setOffers] = useState(mockOffers);
+  const router = useRouter();
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this offer?')) {
@@ -77,7 +79,7 @@ export default function AdminOfferManagement() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => router.push(`/admin/offers/edit/${offer.id}`)}>
                                                     <Edit className="mr-2 h-4 w-4" />
                                                     <span>Edit</span>
                                                 </DropdownMenuItem>
