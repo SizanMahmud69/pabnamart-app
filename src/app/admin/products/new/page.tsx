@@ -128,14 +128,14 @@ export default function NewProductPage() {
                              <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Discount Price</Label>
-                                    <Input id="price" name="price" type="number" placeholder="e.g., 79 (Discounted Price)" required />
+                                    <Input id="price" name="price" type="number" placeholder="e.g., 79" required />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="originalPrice">Original Price</Label>
-                                    <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 99 (Before Discount)" />
+                                    <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 99" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="stock">Stock</Label>
+                                    <Label htmlFor="stock">Product Stock</Label>
                                     <Input id="stock" name="stock" type="number" placeholder="e.g., 50" required />
                                 </div>
                             </div>
