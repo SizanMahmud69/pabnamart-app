@@ -125,6 +125,18 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                             </div>
                         </div>
 
+                        {product.details && (
+                            <>
+                                <Separator className="my-4"/>
+                                <div>
+                                    <h2 className="text-xl font-bold mb-4">Product Details</h2>
+                                    <div className="prose prose-sm max-w-none text-muted-foreground">
+                                        <p>{product.details}</p>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
                         <Separator className="my-4"/>
 
                         <div>

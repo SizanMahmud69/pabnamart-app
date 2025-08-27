@@ -68,6 +68,7 @@ export default function NewProductPage() {
             images: finalImageUrls,
             rating: 0,
             reviews: [],
+            details: formData.get('details') as string,
         };
 
         try {
@@ -114,6 +115,10 @@ export default function NewProductPage() {
                             <div className="space-y-2">
                                 <Label htmlFor="description">Description</Label>
                                 <Textarea id="description" name="description" placeholder="Describe the product" required />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="details">Product Details</Label>
+                                <Textarea id="details" name="details" placeholder="Add detailed specifications or features" />
                             </div>
                              <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
