@@ -5,10 +5,16 @@ import { Home, Bell, ShoppingCart, User } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 export default function BottomNav() {
   const { cartCount } = useCart();
   const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
@@ -16,6 +22,10 @@ export default function BottomNav() {
     { href: '/cart', icon: ShoppingCart, label: 'Cart', count: cartCount },
     { href: '/account', icon: User, label: 'Account' },
   ];
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-0 left-0 z-50 w-full border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
