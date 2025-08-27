@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -16,7 +17,6 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { login, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -29,20 +29,7 @@ export default function AdminLoginPage() {
     const ADMIN_EMAIL = "admin@pabnamart.com";
     const ADMIN_PASSWORD = "@Admin#PabnaMart";
 
-    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-        // Attempt a "fake" login to a non-existent account to simulate a login failure
-        // This is a simple way to avoid exposing which field was wrong.
-        try {
-            await login('invalid-admin-credentials@test.com', 'invalidpassword');
-        } catch (error) {
-             // We expect this to fail
-        }
-        setError("Invalid email or password.");
-        setIsLoading(false);
-        return;
-    }
-
-    try {
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
         // Since we can't create a real user with these credentials via standard signup,
         // we'll simulate a logged-in state for the admin.
         // A better approach would be custom claims with Firebase functions.
@@ -53,11 +40,11 @@ export default function AdminLoginPage() {
             description: "Welcome to the Admin Panel!",
         });
         router.push("/admin");
-    } catch (error: any) {
-        setError(error.message || "An unexpected error occurred.");
-    } finally {
-        setIsLoading(false);
+    } else {
+        setError("Invalid email or password.");
     }
+
+    setIsLoading(false);
   };
 
   return (
