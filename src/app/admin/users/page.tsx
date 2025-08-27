@@ -13,6 +13,7 @@ import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from 
 import app from '@/lib/firebase';
 import type { User as AppUser } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const db = getFirestore(app);
 
@@ -20,6 +21,7 @@ export default function AdminUserManagement() {
     const [users, setUsers] = useState<AppUser[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const router = useRouter();
 
     useEffect(() => {
         const usersCollectionRef = collection(db, 'users');
@@ -118,7 +120,7 @@ export default function AdminUserManagement() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={() => router.push(`/admin/users/${user.uid}`)}>
                                                             <Eye className="mr-2 h-4 w-4" />
                                                             View Details
                                                         </DropdownMenuItem>

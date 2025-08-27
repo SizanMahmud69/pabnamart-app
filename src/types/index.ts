@@ -53,3 +53,12 @@ export interface User {
   status: 'active' | 'banned';
   joined: string;
 }
+
+export interface Order {
+  id: string;
+  customer: string;
+  date: string;
+  total: number;
+  status: 'Pending' | 'Shipped' | 'Delivered';
+  userId: string;
+}
