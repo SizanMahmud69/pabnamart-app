@@ -92,19 +92,19 @@ export default function AdminOrderManagement() {
                                                         View Details
                                                     </DropdownMenuItem>
                                                     {order.status === 'pending' && (
-                                                        <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'shipped')}>
+                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order.id, 'shipped')}>
                                                             <Truck className="mr-2 h-4 w-4" />
                                                             Mark as Shipped
                                                         </DropdownMenuItem>
                                                     )}
                                                      {order.status === 'shipped' && (
-                                                        <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'in-transit')}>
+                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order.id, 'in-transit')}>
                                                             <Truck className="mr-2 h-4 w-4" />
                                                             Mark as In-Transit
                                                         </DropdownMenuItem>
                                                     )}
                                                      {order.status === 'in-transit' && (
-                                                        <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'delivered')}>
+                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order.id, 'delivered')}>
                                                             <PackageCheck className="mr-2 h-4 w-4" />
                                                             Mark as Delivered
                                                         </DropdownMenuItem>
