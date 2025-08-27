@@ -7,6 +7,8 @@ import type { LucideIcon } from "lucide-react";
 import { withAuth, useAuth } from "@/hooks/useAuth";
 import { useVouchers } from "@/hooks/useVouchers";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 // This is mock data that would typically come from a database.
 const orders = [
@@ -24,7 +26,38 @@ interface Notification {
     description: string;
     time: string;
     read: boolean;
+    href?: string;
 }
+
+const NotificationItem = ({ notification }: { notification: Notification }) => {
+    const content = (
+        <div className={cn(
+            "p-4 rounded-lg flex items-start gap-4 transition-colors",
+            !notification.read ? 'bg-primary/10' : 'bg-muted/50',
+            notification.href && 'hover:bg-primary/20'
+        )}>
+            <div className={cn(
+                'mt-1 flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center',
+                !notification.read ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
+            )}>
+                <notification.icon className="h-5 w-5" />
+            </div>
+            <div className="flex-grow">
+                <p className="font-semibold">{notification.title}</p>
+                <p className="text-sm text-muted-foreground">{notification.description}</p>
+                <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
+            </div>
+            {!notification.read && <div className="mt-1 flex-shrink-0 h-3 w-3 rounded-full bg-primary" />}
+        </div>
+    );
+
+    if (notification.href) {
+        return <Link href={notification.href}>{content}</Link>;
+    }
+
+    return content;
+};
+
 
 function NotificationsPage() {
   const { user } = useAuth();
@@ -41,6 +74,7 @@ function NotificationsPage() {
       description: `Hello ${user?.displayName || 'there'}, welcome to your account.`,
       time: "Just now",
       read: false,
+      href: "/account"
     });
     
     // Order status notifications
@@ -52,6 +86,7 @@ function NotificationsPage() {
                 description: `Your order #${order.id} has been shipped.`,
                 time: "1d ago",
                 read: true,
+                href: "/account/orders?status=shipped"
             });
         }
     });
@@ -64,6 +99,7 @@ function NotificationsPage() {
             description: "Exclusive vouchers just for you! Collect them now for extra savings.",
             time: "2d ago",
             read: true,
+            href: "/vouchers"
         });
     }
 
@@ -74,6 +110,7 @@ function NotificationsPage() {
         description: "Don't miss out! Our biggest flash sale is ending soon.",
         time: "1h ago",
         read: false,
+        href: "/flash-sale"
     });
 
     setNotifications(generatedNotifications);
@@ -97,19 +134,9 @@ function NotificationsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                         {notifications.map((notification, index) => (
-                            <div key={index} className={`p-4 rounded-lg flex items-start gap-4 ${!notification.read ? 'bg-primary/10' : 'bg-muted/50'}`}>
-                                <div className={`mt-1 flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${!notification.read ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
-                                    <notification.icon className="h-5 w-5" />
-                                </div>
-                                <div className="flex-grow">
-                                    <p className="font-semibold">{notification.title}</p>
-                                    <p className="text-sm text-muted-foreground">{notification.description}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
-                                </div>
-                                {!notification.read && <div className="mt-1 flex-shrink-0 h-3 w-3 rounded-full bg-primary" />}
-                            </div>
+                            <NotificationItem key={index} notification={notification} />
                         ))}
                     </div>
                 </CardContent>
