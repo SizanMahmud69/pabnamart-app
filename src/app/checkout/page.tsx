@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Voucher } from "@/types";
-import { CreditCard, Truck, AlertCircle, Home, Building, Minus, Plus } from "lucide-react";
+import { CreditCard, Truck, AlertCircle, Home, Building, Minus, Plus, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,8 @@ import { withAuth, useAuth } from "@/hooks/useAuth";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 const addresses = [
     {
@@ -56,6 +58,9 @@ function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedAddress, setSelectedAddress] = useState(addresses.find(a => a.default)?.id || addresses[0].id);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
   const handleApplyVoucher = (code: string) => {
     if (!code || code === "none") {
@@ -103,6 +108,19 @@ function CheckoutPage() {
   const subtotalWithDiscount = cartTotal - orderDiscount > 0 ? cartTotal - orderDiscount : 0;
   const shippingFeeWithDiscount = shippingFee - shippingDiscount > 0 ? shippingFee - shippingDiscount : 0;
   const finalTotal = subtotalWithDiscount + shippingFeeWithDiscount;
+
+  const handlePlaceOrder = () => {
+    setIsPlacingOrder(true);
+    // Simulate order placement process
+    setTimeout(() => {
+        toast({
+            title: "Order Placed!",
+            description: "Thank you for your purchase.",
+        });
+        // In a real app, you would clear the cart here.
+        router.push('/account/orders');
+    }, 2000);
+  }
 
   if (cartCount === 0) {
     return (
@@ -264,8 +282,15 @@ function CheckoutPage() {
                         <p className="text-sm text-muted-foreground">Total to Pay</p>
                         ৳{finalTotal.toFixed(2)}
                     </div>
-                    <Button size="lg" className="w-1/2">
-                        Place Order
+                    <Button size="lg" className="w-1/2" onClick={handlePlaceOrder} disabled={isPlacingOrder}>
+                        {isPlacingOrder ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Placing Order...
+                            </>
+                        ) : (
+                            'Place Order'
+                        )}
                     </Button>
                 </div>
             </div>
