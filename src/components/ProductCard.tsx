@@ -7,7 +7,7 @@ import type { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
-import { ShoppingCart, Star } from 'lucide-react';
+import { ShoppingCart, Star, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
@@ -40,6 +40,15 @@ export default function ProductCard({ product }: ProductCardProps) {
               - ৳{discountAmount.toFixed(0)}
             </div>
           )}
+           {product.freeShipping && !isSoldOut && (
+             <div className={cn(
+                "absolute left-2 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1",
+                hasDiscount ? "top-9" : "top-2"
+             )}>
+                <Truck className="h-3 w-3" />
+                <span>Free Delivery</span>
+            </div>
+           )}
           {isSoldOut && (
              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <span className="text-white text-lg font-bold">Sold Out</span>
