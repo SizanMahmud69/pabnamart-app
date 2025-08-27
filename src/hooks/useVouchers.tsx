@@ -18,23 +18,23 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   const collectVoucher = useCallback((voucher: Voucher) => {
-    setCollectedVouchers(prevVouchers => {
-      const isAlreadyCollected = prevVouchers.some(v => v.code === voucher.code);
-      if (isAlreadyCollected) {
-        toast({
-          title: "Already Collected",
-          description: "You have already collected this voucher.",
-          variant: "destructive"
-        });
-        return prevVouchers;
-      }
+    const isAlreadyCollected = collectedVouchers.some(v => v.code === voucher.code);
+
+    if (isAlreadyCollected) {
       toast({
-        title: "Voucher Collected!",
-        description: `Voucher ${voucher.code} has been added to your account.`,
+        title: "Already Collected",
+        description: "You have already collected this voucher.",
+        variant: "destructive"
       });
-      return [...prevVouchers, voucher];
+      return;
+    }
+
+    setCollectedVouchers(prevVouchers => [...prevVouchers, voucher]);
+    toast({
+      title: "Voucher Collected!",
+      description: `Voucher ${voucher.code} has been added to your account.`,
     });
-  }, [toast]);
+  }, [collectedVouchers, toast]);
 
 
   const voucherCount = collectedVouchers.length;
