@@ -22,13 +22,13 @@ export default function AdminProductManagement() {
   return (
     <div className="container mx-auto p-4">
         <header className="py-4 flex justify-between items-center">
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" size="sm">
                 <Link href="/admin">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Dashboard
                 </Link>
             </Button>
-            <Button>
+            <Button size="sm">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add New Product
             </Button>
