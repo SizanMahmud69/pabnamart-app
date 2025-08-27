@@ -3,6 +3,7 @@ import './globals.css';
 import { CartProvider } from '@/hooks/useCart';
 import Header from '@/components/Header';
 import { Toaster } from "@/components/ui/toaster";
+import BottomNav from '@/components/BottomNav';
 
 export const metadata: Metadata = {
   title: 'PabnaMart',
@@ -24,8 +25,9 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <CartProvider>
           <Header />
-          <main>{children}</main>
+          <main className="pb-16 md:pb-0">{children}</main>
           <Toaster />
+          <BottomNav />
         </CartProvider>
       </body>
     </html>

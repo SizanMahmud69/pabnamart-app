@@ -1,0 +1,46 @@
+"use client";
+
+import Link from 'next/link';
+import { Home, Bell, ShoppingCart, User } from 'lucide-react';
+import { useCart } from '@/hooks/useCart';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+
+export default function BottomNav() {
+  const { cartCount } = useCart();
+  const pathname = usePathname();
+
+  const navItems = [
+    { href: '/', icon: Home, label: 'Home' },
+    { href: '/notifications', icon: Bell, label: 'Notifications' },
+    { href: '/cart', icon: ShoppingCart, label: 'Cart', count: cartCount },
+    { href: '/account', icon: User, label: 'Account' },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 z-50 w-full border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+      <div className="grid h-16 grid-cols-4">
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              'inline-flex flex-col items-center justify-center px-5 hover:bg-muted',
+              pathname === item.href ? 'text-primary' : 'text-muted-foreground'
+            )}
+          >
+            <div className="relative">
+              <item.icon className="h-6 w-6" />
+              {item.label === 'Cart' && item.count > 0 && (
+                 <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                  {item.count}
+                </span>
+              )}
+            </div>
+            <span className="text-xs">{item.label}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
