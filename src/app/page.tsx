@@ -15,6 +15,7 @@ import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
+import Categories from '@/components/Categories';
 
 const heroBanners = [
   {
@@ -127,6 +128,9 @@ function HomePageContent() {
 
             {/* Flash Sale Section */}
             <FlashSale products={flashSaleProducts} />
+
+            {/* Categories Section */}
+            <Categories />
           </>
         )}
 
