@@ -52,7 +52,7 @@ export default function BottomNav() {
             >
               <div className="relative">
                 <item.icon className={cn("h-6 w-6", { "fill-primary/20": isActive })} />
-                {item.count && item.count > 0 && (
+                {item.count !== undefined && item.count > 0 && (
                    <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                     {item.count}
                   </span>
