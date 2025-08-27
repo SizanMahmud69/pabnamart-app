@@ -111,20 +111,20 @@ function HomePageContent() {
             
 
             {/* Collect Vouchers Section */}
-            <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-0">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Ticket className="h-8 w-8 text-primary" />
-                  <div>
-                    <h2 className="font-bold text-lg">Collect Vouchers!</h2>
-                    <p className="text-sm text-gray-600">Get extra savings on your next purchase.</p>
+            <Link href="/vouchers" className="block hover:shadow-lg transition-shadow rounded-lg">
+              <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-0">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Ticket className="h-8 w-8 text-primary" />
+                    <div>
+                      <h2 className="font-bold text-lg">Collect Vouchers!</h2>
+                      <p className="text-sm text-gray-600">Get extra savings on your next purchase.</p>
+                    </div>
                   </div>
-                </div>
-                <Link href="/vouchers">
                   <ArrowRight className="h-6 w-6 text-gray-700" />
-                </Link>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
             {/* Flash Sale Section */}
             <FlashSale products={flashSaleProducts} />
