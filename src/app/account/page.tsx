@@ -1,10 +1,13 @@
 
+"use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Ticket, Settings, Wallet, Box, Truck, PackageCheck, Undo2, HelpCircle, Headphones, Star, Users } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from 'lucide-react';
+import { useVouchers } from "@/hooks/useVouchers";
 
 interface OrderStatusProps {
     icon: LucideIcon;
@@ -41,6 +44,8 @@ const ServiceItem = ({ icon: Icon, label, href }: ServiceItemProps) => (
 )
 
 export default function AccountPage() {
+    const { voucherCount } = useVouchers();
+
     const orderStatuses: OrderStatusProps[] = [
         { icon: Wallet, label: "To Pay", count: 2, href: "/account/orders?status=pending" },
         { icon: Box, label: "To Ship", count: 2, href: "/account/orders?status=shipped" },
@@ -82,7 +87,7 @@ export default function AccountPage() {
                                     <Heart className="h-4 w-4" /> 0 Wishlist
                                 </Link>
                                 <Link href="/vouchers" className="flex items-center gap-1 hover:text-primary">
-                                    <Ticket className="h-4 w-4" /> 0 Vouchers
+                                    <Ticket className="h-4 w-4" /> {voucherCount} Vouchers
                                 </Link>
                             </div>
                         </div>

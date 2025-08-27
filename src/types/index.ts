@@ -19,3 +19,11 @@ export interface Product {
 export interface CartItem extends Product {
   quantity: number;
 }
+
+export interface Voucher {
+    code: string;
+    discount: number;
+    type: 'fixed' | 'percentage';
+    description: string;
+    minSpend?: number;
+}
