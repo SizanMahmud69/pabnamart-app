@@ -2,34 +2,86 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, Tag, Truck } from 'lucide-react';
-import { withAuth } from "@/hooks/useAuth";
+import { Bell, Tag, Truck, Gift, LogIn } from 'lucide-react';
+import type { LucideIcon } from "lucide-react";
+import { withAuth, useAuth } from "@/hooks/useAuth";
+import { useVouchers } from "@/hooks/useVouchers";
+import { useEffect, useState } from "react";
 
-const notifications = [
-    {
-        icon: Tag,
-        title: "Flash Sale Alert!",
-        description: "Don't miss out! Our biggest flash sale of the season is ending in 3 hours.",
-        time: "1h ago",
-        read: false,
-    },
-    {
-        icon: Truck,
-        title: "Order Shipped",
-        description: "Your order #12345 has been shipped and is on its way to you.",
-        time: "1d ago",
-        read: true,
-    },
-    {
-        icon: Tag,
-        title: "New Vouchers Available",
-        description: "Exclusive vouchers just for you! Collect them now for extra savings.",
-        time: "2d ago",
-        read: true,
-    },
+// This is mock data that would typically come from a database.
+const orders = [
+  { id: '12345', status: 'pending', date: '2023-10-26' },
+  { id: '12346', status: 'shipped', date: '2023-10-25' },
 ];
 
+const availableVouchers = [
+    { code: "NEW100", description: "For your first purchase." },
+];
+
+interface Notification {
+    icon: LucideIcon;
+    title: string;
+    description: string;
+    time: string;
+    read: boolean;
+}
+
 function NotificationsPage() {
+  const { user } = useAuth();
+  const { collectedVouchers } = useVouchers();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    const generatedNotifications: Notification[] = [];
+
+    // Welcome notification
+    generatedNotifications.push({
+      icon: LogIn,
+      title: "Welcome to PabnaMart!",
+      description: `Hello ${user?.displayName || 'there'}, welcome to your account.`,
+      time: "Just now",
+      read: false,
+    });
+    
+    // Order status notifications
+    orders.forEach(order => {
+        if (order.status === 'shipped') {
+            generatedNotifications.push({
+                icon: Truck,
+                title: "Order Shipped",
+                description: `Your order #${order.id} has been shipped.`,
+                time: "1d ago",
+                read: true,
+            });
+        }
+    });
+
+    // Voucher notifications
+    if (availableVouchers.length > collectedVouchers.length) {
+         generatedNotifications.push({
+            icon: Gift,
+            title: "New Vouchers Available",
+            description: "Exclusive vouchers just for you! Collect them now for extra savings.",
+            time: "2d ago",
+            read: true,
+        });
+    }
+
+    // Flash sale notification
+    generatedNotifications.push({
+        icon: Tag,
+        title: "Flash Sale Alert!",
+        description: "Don't miss out! Our biggest flash sale is ending soon.",
+        time: "1h ago",
+        read: false,
+    });
+
+    setNotifications(generatedNotifications);
+
+  }, [user, collectedVouchers]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   return (
     <div className="bg-purple-50/30 min-h-screen">
         <div className="container mx-auto px-4 py-8">
@@ -41,7 +93,7 @@ function NotificationsPage() {
                         Notifications
                     </CardTitle>
                     <CardDescription>
-                        You have {notifications.filter(n => !n.read).length} unread messages.
+                        You have {unreadCount} unread message{unreadCount !== 1 ? 's' : ''}.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
