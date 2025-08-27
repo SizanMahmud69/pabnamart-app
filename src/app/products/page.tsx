@@ -58,51 +58,53 @@ function ProductsPageContent() {
   const showRecommendations = searchQuery.trim().length > 0;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-        <div className="lg:col-span-1">
-          <ProductFilters
-            categories={allCategories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            priceRange={priceRange}
-            onPriceChange={setPriceRange}
-            rating={rating}
-            onRatingChange={setRating}
-          />
+    <div className="bg-purple-50/30 min-h-screen">
+        <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+            <div className="lg:col-span-1">
+            <ProductFilters
+                categories={allCategories}
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+                priceRange={priceRange}
+                onPriceChange={setPriceRange}
+                rating={rating}
+                onRatingChange={setRating}
+            />
+            </div>
+            <div className="lg:col-span-3">
+            <div className="space-y-6">
+                {showRecommendations && <AiRecommendations searchQuery={searchQuery} currentProducts={products} />}
+                
+                <h1 className="text-3xl font-bold">
+                {searchQuery ? `Results for "${searchQuery}"` : (selectedCategory === 'All' ? 'All Products' : selectedCategory)}
+                </h1>
+                
+                {isLoading ? (
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                        <div className="aspect-square bg-gray-200 rounded-md animate-pulse" />
+                        <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
+                        <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+                        </div>
+                    ))}
+                </div>
+                ) : products.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+                    {products.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                    ))}
+                </div>
+                ) : (
+                <div className="text-center py-10">
+                    <p className="text-lg text-gray-600">No products found matching your criteria.</p>
+                </div>
+                )}
+            </div>
+            </div>
         </div>
-        <div className="lg:col-span-3">
-          <div className="space-y-6">
-            {showRecommendations && <AiRecommendations searchQuery={searchQuery} currentProducts={products} />}
-            
-            <h1 className="text-3xl font-bold">
-              {searchQuery ? `Results for "${searchQuery}"` : (selectedCategory === 'All' ? 'All Products' : selectedCategory)}
-            </h1>
-            
-            {isLoading ? (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, i) => (
-                   <div key={i} className="space-y-2">
-                      <div className="aspect-square bg-gray-200 rounded-md animate-pulse" />
-                      <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
-                      <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
-                    </div>
-                ))}
-              </div>
-            ) : products.length > 0 ? (
-               <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-                {products.map(product => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-lg text-gray-600">No products found matching your criteria.</p>
-              </div>
-            )}
-          </div>
         </div>
-      </div>
     </div>
   );
 }

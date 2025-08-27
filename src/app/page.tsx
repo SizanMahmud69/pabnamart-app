@@ -69,7 +69,7 @@ function HomePageContent() {
   const showRecommendations = searchQuery.trim().length > 0;
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-purple-50/30 min-h-screen">
       <div className="container mx-auto px-4 py-6 space-y-8">
         {!searchQuery && (
           <>

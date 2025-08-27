@@ -34,50 +34,52 @@ export default function OrdersPage() {
     : orders.filter(order => order.status === status);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">My Orders</h1>
-      <Tabs defaultValue={status} className="w-full">
-        <ScrollArea className="w-full whitespace-nowrap">
-            <TabsList className="inline-flex w-max mb-4">
-                {TABS.map(tab => (
-                     <TabsTrigger key={tab.value} value={tab.value}>
-                        <tab.icon className="w-4 h-4 mr-2" />
-                        {tab.label}
-                     </TabsTrigger>
-                ))}
-            </TabsList>
-        </ScrollArea>
-        
-        <TabsContent value={status}>
-          {filteredOrders.length > 0 ? (
-            <div className="space-y-4">
-              {filteredOrders.map(order => (
-                <Card key={order.id}>
-                  <CardHeader>
-                    <CardTitle>Order #{order.id}</CardTitle>
-                    <CardDescription>Date: {order.date}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <p>Items: {order.items}</p>
-                            <p className="font-bold">Total: ৳{order.total}</p>
+    <div className="bg-purple-50/30 min-h-screen">
+        <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">My Orders</h1>
+        <Tabs defaultValue={status} className="w-full">
+            <ScrollArea className="w-full whitespace-nowrap">
+                <TabsList className="inline-flex w-max mb-4">
+                    {TABS.map(tab => (
+                        <TabsTrigger key={tab.value} value={tab.value}>
+                            <tab.icon className="w-4 h-4 mr-2" />
+                            {tab.label}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </ScrollArea>
+            
+            <TabsContent value={status}>
+            {filteredOrders.length > 0 ? (
+                <div className="space-y-4">
+                {filteredOrders.map(order => (
+                    <Card key={order.id}>
+                    <CardHeader>
+                        <CardTitle>Order #{order.id}</CardTitle>
+                        <CardDescription>Date: {order.date}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p>Items: {order.items}</p>
+                                <p className="font-bold">Total: ৳{order.total}</p>
+                            </div>
+                            <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">{order.status}</p>
                         </div>
-                        <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">{order.status}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-                <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
-                <h2 className="mt-4 text-xl font-semibold">No Orders Found</h2>
-                <p className="text-muted-foreground">You have no orders with this status.</p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                    </CardContent>
+                    </Card>
+                ))}
+                </div>
+            ) : (
+                <div className="text-center py-16">
+                    <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
+                    <h2 className="mt-4 text-xl font-semibold">No Orders Found</h2>
+                    <p className="text-muted-foreground">You have no orders with this status.</p>
+                </div>
+            )}
+            </TabsContent>
+        </Tabs>
+        </div>
     </div>
   );
 }

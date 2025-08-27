@@ -24,27 +24,29 @@ const faqs = [
 
 export default function HelpCenterPage() {
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="max-w-3xl mx-auto">
-                <Card>
-                    <CardHeader className="text-center">
-                        <HelpCircle className="mx-auto h-12 w-12 text-primary" />
-                        <CardTitle className="text-3xl mt-2">Help Center</CardTitle>
-                        <CardDescription>Find answers to frequently asked questions.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Accordion type="single" collapsible className="w-full">
-                            {faqs.map((faq, index) => (
-                                <AccordionItem key={index} value={`item-${index}`}>
-                                    <AccordionTrigger>{faq.question}</AccordionTrigger>
-                                    <AccordionContent>
-                                        {faq.answer}
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
-                    </CardContent>
-                </Card>
+        <div className="bg-purple-50/30 min-h-screen">
+            <div className="container mx-auto px-4 py-8">
+                <div className="max-w-3xl mx-auto">
+                    <Card>
+                        <CardHeader className="text-center">
+                            <HelpCircle className="mx-auto h-12 w-12 text-primary" />
+                            <CardTitle className="text-3xl mt-2">Help Center</CardTitle>
+                            <CardDescription>Find answers to frequently asked questions.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Accordion type="single" collapsible className="w-full">
+                                {faqs.map((faq, index) => (
+                                    <AccordionItem key={index} value={`item-${index}`}>
+                                        <AccordionTrigger>{faq.question}</AccordionTrigger>
+                                        <AccordionContent>
+                                            {faq.answer}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     )

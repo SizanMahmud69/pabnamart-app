@@ -26,35 +26,37 @@ const vouchers = [
 
 export default function VouchersPage() {
     return (
-        <div className="container mx-auto px-4 py-8">
-            <Card className="max-w-2xl mx-auto">
-                <CardHeader className="text-center">
-                    <CardTitle className="text-3xl flex items-center justify-center gap-2">
-                        <Ticket className="h-8 w-8 text-primary" />
-                        Available Vouchers
-                    </CardTitle>
-                    <CardDescription>
-                        Collect these vouchers to get extra savings on your purchases!
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {vouchers.map((voucher, index) => (
-                        <div key={index} className="border-2 border-dashed rounded-lg p-4 flex items-center justify-between gap-4 bg-purple-50/30">
-                            <div className="flex items-center gap-4">
-                                <div className="text-primary">
-                                    <Ticket className="h-12 w-12" />
+        <div className="bg-purple-50/30 min-h-screen">
+            <div className="container mx-auto px-4 py-8">
+                <Card className="max-w-2xl mx-auto">
+                    <CardHeader className="text-center">
+                        <CardTitle className="text-3xl flex items-center justify-center gap-2">
+                            <Ticket className="h-8 w-8 text-primary" />
+                            Available Vouchers
+                        </CardTitle>
+                        <CardDescription>
+                            Collect these vouchers to get extra savings on your purchases!
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {vouchers.map((voucher, index) => (
+                            <div key={index} className="border-2 border-dashed rounded-lg p-4 flex items-center justify-between gap-4 bg-purple-50/30">
+                                <div className="flex items-center gap-4">
+                                    <div className="text-primary">
+                                        <Ticket className="h-12 w-12" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-primary">{voucher.discount}</h3>
+                                        <p className="text-sm text-muted-foreground">{voucher.description}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">{voucher.expiry}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-primary">{voucher.discount}</h3>
-                                    <p className="text-sm text-muted-foreground">{voucher.description}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">{voucher.expiry}</p>
-                                </div>
+                                <Button>Collect</Button>
                             </div>
-                            <Button>Collect</Button>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
+                        ))}
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }

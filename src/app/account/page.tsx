@@ -57,7 +57,7 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="bg-gray-50 min-h-screen">
+        <div className="bg-purple-50/30 min-h-screen">
             <div className="container mx-auto max-w-2xl px-4 py-6 space-y-6">
                 
                 {/* My Account Header */}
