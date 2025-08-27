@@ -84,7 +84,7 @@ export default function AdminOfferManagement() {
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem 
                                                     className="text-destructive"
-                                                    onClick={() => handleDelete(offer.id)}
+                                                    onSelect={() => handleDelete(offer.id)}
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     <span>Delete</span>

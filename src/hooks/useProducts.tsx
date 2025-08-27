@@ -9,7 +9,7 @@ import { products as initialProducts } from '@/lib/products';
 
 interface ProductContextType {
   products: Product[];
-  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews'>) => Promise<void>;
   deleteProduct: (productId: number) => Promise<void>;
   loading: boolean;
 }
@@ -44,15 +44,21 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       }
     }, (error) => {
       console.error("Error fetching products:", error);
+      setProducts(initialProducts); // Fallback to initial products on error
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const addProduct = async (productData: Omit<Product, 'id'>) => {
+  const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews'>) => {
     const newId = new Date().getTime(); // Simple way to generate a unique ID
-    const newProduct: Product = { ...productData, id: newId };
+    const newProduct: Product = { 
+      ...productData, 
+      id: newId,
+      rating: 0,
+      reviews: [] 
+    };
     const productDoc = doc(db, 'products', newId.toString());
     await setDoc(productDoc, newProduct);
   };

@@ -87,7 +87,7 @@ export default function AdminVoucherManagement() {
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem 
                                                     className="text-destructive"
-                                                    onClick={() => handleDelete(voucher.id)}
+                                                    onSelect={() => handleDelete(voucher.id)}
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     <span>Delete</span>

@@ -60,7 +60,7 @@ export default function NewProductPage() {
             finalImageUrls.push('https://picsum.photos/600/600');
         }
 
-        const newProductData: Omit<Product, 'id'> = {
+        const newProductData: Omit<Product, 'id' | 'rating' | 'reviews'> = {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             price: parseFloat(formData.get('price') as string),
@@ -68,8 +68,6 @@ export default function NewProductPage() {
             stock: parseInt(formData.get('stock') as string, 10),
             category: category,
             images: finalImageUrls,
-            rating: 0,
-            reviews: [],
             details: formData.get('details') as string,
             freeShipping: freeShipping,
             shippingTime: formData.get('shippingTime') as string,
