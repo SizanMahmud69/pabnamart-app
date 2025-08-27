@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product } from '@/types';
@@ -30,20 +30,42 @@ export default function NewProductPage() {
     const { addProduct } = useProducts();
     const [isLoading, setIsLoading] = useState(false);
     const [category, setCategory] = useState('');
+    const [imageUrls, setImageUrls] = useState(['']);
+
+    const handleImageChange = (index: number, value: string) => {
+        const newImageUrls = [...imageUrls];
+        newImageUrls[index] = value;
+        setImageUrls(newImageUrls);
+    };
+
+    const addImageUrlInput = () => {
+        setImageUrls([...imageUrls, '']);
+    };
+
+    const removeImageUrlInput = (index: number) => {
+        const newImageUrls = imageUrls.filter((_, i) => i !== index);
+        setImageUrls(newImageUrls);
+    };
+
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsLoading(true);
         const formData = new FormData(e.currentTarget);
         
+        const finalImageUrls = imageUrls.map(url => url.trim()).filter(url => url !== '');
+        if (finalImageUrls.length === 0) {
+            finalImageUrls.push('https://picsum.photos/600/600');
+        }
+
         const newProductData: Omit<Product, 'id'> = {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             price: parseFloat(formData.get('price') as string),
-            originalPrice: parseFloat(formData.get('originalPrice') as string) || undefined,
+            originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
             stock: parseInt(formData.get('stock') as string, 10),
             category: category,
-            images: [(formData.get('images') as string) || 'https://picsum.photos/600/600'],
+            images: finalImageUrls,
             rating: 0,
             reviews: [],
         };
@@ -93,7 +115,7 @@ export default function NewProductPage() {
                                 <Label htmlFor="description">Description</Label>
                                 <Textarea id="description" name="description" placeholder="Describe the product" required />
                             </div>
-                             <div className="grid grid-cols-3 gap-4">
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Price (৳)</Label>
                                     <Input id="price" name="price" type="number" placeholder="e.g., 99.99" required />
@@ -123,8 +145,39 @@ export default function NewProductPage() {
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="images">Image URL</Label>
-                                <Input id="images" name="images" placeholder="https://picsum.photos/600/600" />
+                                <Label>Image URLs</Label>
+                                <div className="space-y-2">
+                                    {imageUrls.map((url, index) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                            <Input
+                                                name={`image-${index}`}
+                                                value={url}
+                                                onChange={(e) => handleImageChange(index, e.target.value)}
+                                                placeholder="https://example.com/image.png"
+                                            />
+                                            {imageUrls.length > 1 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="icon"
+                                                    onClick={() => removeImageUrlInput(index)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={addImageUrlInput}
+                                    className="mt-2"
+                                >
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Add Image URL
+                                </Button>
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">
