@@ -11,7 +11,7 @@ import { ShoppingCart, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
-  product: Product & { originalPrice?: number };
+  product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
