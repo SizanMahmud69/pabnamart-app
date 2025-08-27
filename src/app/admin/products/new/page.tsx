@@ -127,7 +127,7 @@ export default function NewProductPage() {
                             </div>
                              <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="price">ডিসকাউন্ট প্রাইস</Label>
+                                    <Label htmlFor="price">Discount Price</Label>
                                     <Input id="price" name="price" type="number" placeholder="e.g., 79 (Discounted Price)" required />
                                 </div>
                                 <div className="space-y-2">
