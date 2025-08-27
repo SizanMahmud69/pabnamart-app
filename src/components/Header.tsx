@@ -2,12 +2,13 @@
 "use client";
 
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Search, User, LogIn } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { FormEvent, useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Header() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function Header() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     setSearchQuery(searchParams.get('q') || '');
@@ -67,6 +69,13 @@ export default function Header() {
                 <Search className="h-5 w-5" />
             </Button>
           </form>
+        </div>
+        <div className="hidden md:flex items-center">
+            <Button asChild variant="ghost" size="icon">
+                <Link href={user ? "/account" : "/login"}>
+                    {user ? <User /> : <LogIn />}
+                </Link>
+            </Button>
         </div>
       </div>
     </header>

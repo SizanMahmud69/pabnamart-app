@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { CartProvider } from '@/hooks/useCart';
@@ -6,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import BottomNav from '@/components/BottomNav';
 import { Inter } from 'next/font/google'
 import { VoucherProvider } from '@/hooks/useVouchers';
+import { AuthProvider } from '@/hooks/useAuth';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,14 +24,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <VoucherProvider>
-          <CartProvider>
-            <Header />
-            <main className="pb-16 md:pb-0">{children}</main>
-            <Toaster />
-            <BottomNav />
-          </CartProvider>
-        </VoucherProvider>
+        <AuthProvider>
+          <VoucherProvider>
+            <CartProvider>
+              <Header />
+              <main className="pb-16 md:pb-0">{children}</main>
+              <Toaster />
+              <BottomNav />
+            </CartProvider>
+          </VoucherProvider>
+        </AuthProvider>
       </body>
     </html>
   );

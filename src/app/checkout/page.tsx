@@ -13,8 +13,9 @@ import { CreditCard, Banknote, Truck, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
+import { withAuth } from "@/hooks/useAuth";
 
-export default function CheckoutPage() {
+function CheckoutPage() {
   const { cartItems, cartTotal, cartCount } = useCart();
   const { collectedVouchers } = useVouchers();
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
@@ -149,3 +150,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+export default withAuth(CheckoutPage);

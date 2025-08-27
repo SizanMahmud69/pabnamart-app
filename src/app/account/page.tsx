@@ -4,10 +4,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Ticket, Settings, Wallet, Box, Truck, PackageCheck, Undo2, HelpCircle, Headphones, Star, Users } from "lucide-react";
+import { Heart, Ticket, Settings, Wallet, Box, Truck, PackageCheck, Undo2, HelpCircle, Headphones, Star, Users, LogOut } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from 'lucide-react';
 import { useVouchers } from "@/hooks/useVouchers";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 interface OrderStatusProps {
     icon: LucideIcon;
@@ -45,6 +48,27 @@ const ServiceItem = ({ icon: Icon, label, href }: ServiceItemProps) => (
 
 export default function AccountPage() {
     const { voucherCount } = useVouchers();
+    const { user, logout } = useAuth();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await logout();
+        router.push('/login');
+    };
+    
+    if (!user) {
+        return (
+            <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold mb-4">Please log in</h1>
+                    <p className="text-muted-foreground mb-6">You need to be logged in to view your account.</p>
+                    <Button asChild>
+                        <Link href="/login">Login</Link>
+                    </Button>
+                </div>
+            </div>
+        )
+    }
 
     const orderStatuses: OrderStatusProps[] = [
         { icon: Wallet, label: "To Pay", count: 2, href: "/account/orders?status=pending" },
@@ -78,10 +102,10 @@ export default function AccountPage() {
                     <CardContent className="p-4 flex items-center gap-4">
                         <Avatar className="h-16 w-16">
                             <AvatarImage src="https://picsum.photos/seed/avatar/200" alt="User Avatar" data-ai-hint="user avatar" />
-                            <AvatarFallback>T</AvatarFallback>
+                            <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <h2 className="text-xl font-bold">New User</h2>
+                            <h2 className="text-xl font-bold">{user.email}</h2>
                             <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                                 <Link href="/account/wishlist" className="flex items-center gap-1 hover:text-primary">
                                     <Heart className="h-4 w-4" /> 0 Wishlist
@@ -116,6 +140,13 @@ export default function AccountPage() {
                        {services.map(service => <ServiceItem key={service.label} {...service} />)}
                     </CardContent>
                 </Card>
+
+                <div className="text-center pt-4">
+                    <Button variant="outline" onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                    </Button>
+                </div>
 
             </div>
         </div>

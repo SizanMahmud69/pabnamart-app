@@ -1,14 +1,17 @@
+
 "use client";
 
 import Link from 'next/link';
-import { Home, Bell, ShoppingCart, User } from 'lucide-react';
+import { Home, Bell, ShoppingCart, User, LogIn } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function BottomNav() {
   const { cartCount } = useCart();
+  const { user } = useAuth();
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -20,7 +23,11 @@ export default function BottomNav() {
     { href: '/', icon: Home, label: 'Home' },
     { href: '/notifications', icon: Bell, label: 'Notifications' },
     { href: '/cart', icon: ShoppingCart, label: 'Cart', count: cartCount },
-    { href: '/account', icon: User, label: 'Account' },
+    { 
+      href: user ? '/account' : '/login', 
+      icon: user ? User : LogIn, 
+      label: user ? 'Account' : 'Login' 
+    },
   ];
 
   if (!isMounted) {
