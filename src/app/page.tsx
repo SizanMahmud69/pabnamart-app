@@ -48,7 +48,8 @@ function HomePageContent() {
 
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [topRated, setTopRated] = useState<Product[]>([]);
-  const flashSaleProducts = allProducts.slice(-2).map(p => ({...p, originalPrice: p.price + 50}));
+  const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
+
 
   useEffect(() => {
     if (allProducts.length > 0) {
@@ -59,6 +60,13 @@ function HomePageContent() {
       // Top rated: sort by rating descending
       const sortedRated = [...allProducts].sort((a, b) => b.rating - a.rating);
       setTopRated(sortedRated.slice(0, 5));
+
+      // Flash sale products with mock discount
+      const saleProducts = allProducts.slice(-2).map(p => ({
+        ...p,
+        originalPrice: p.originalPrice || p.price + 50,
+      }));
+      setFlashSaleProducts(saleProducts);
     }
   }, [allProducts]);
   
