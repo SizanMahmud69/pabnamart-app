@@ -9,13 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Voucher } from "@/types";
-import { CreditCard, Banknote, Truck, AlertCircle, Home, Building } from "lucide-react";
+import { CreditCard, Truck, AlertCircle, Home, Building, Minus, Plus } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { withAuth, useAuth } from "@/hooks/useAuth";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const addresses = [
     {
@@ -34,14 +35,28 @@ const addresses = [
     }
 ]
 
+const paymentMethods = [
+    {
+        id: 'cod',
+        label: 'Cash on Delivery',
+        icon: Truck
+    },
+    {
+        id: 'online',
+        label: 'Online Payment',
+        icon: CreditCard
+    }
+]
+
 function CheckoutPage() {
-  const { cartItems, cartTotal, cartCount } = useCart();
+  const { cartItems, cartTotal, cartCount, updateQuantity } = useCart();
   const { user } = useAuth();
   const { collectedVouchers } = useVouchers();
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
   const [discount, setDiscount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [selectedAddress, setSelectedAddress] = useState(addresses.find(a => a.default)?.id || addresses[0].id);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
 
   const handleApplyVoucher = (code: string) => {
     const voucher = collectedVouchers.find(v => v.code === code);
@@ -125,80 +140,82 @@ function CheckoutPage() {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-                <CardDescription>You have {cartCount} item(s) in your cart.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                 <div className="space-y-4">
-                    {cartItems.map(item => (
-                        <div key={item.id} className="flex justify-between items-center text-sm">
-                            <span>{item.name} x {item.quantity}</span>
-                            <span>৳{(item.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                    ))}
-                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
                 <CardHeader>
-                    <CardTitle>Apply Voucher</CardTitle>
+                    <CardTitle>Payment Method</CardTitle>
+                    <CardDescription>Select how you want to pay for your order.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid w-full items-center gap-1.5">
-                        <Label htmlFor="voucher">Select a voucher</Label>
-                        <Select onValueChange={handleApplyVoucher} disabled={collectedVouchers.length === 0}>
-                            <SelectTrigger id="voucher">
-                                <SelectValue placeholder={collectedVouchers.length > 0 ? "Select a voucher" : "No vouchers collected"} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {collectedVouchers.map(v => (
-                                    <SelectItem key={v.code} value={v.code}>{v.code} - {v.description}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    {error && (
-                        <Alert variant="destructive">
-                           <AlertCircle className="h-4 w-4" />
-                           <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                    )}
+                <CardContent>
+                    <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod} className="grid grid-cols-2 gap-4">
+                        {paymentMethods.map(method => (
+                             <Label key={method.id} htmlFor={method.id} className={cn(
+                                    "flex flex-col items-center justify-center p-4 rounded-lg border cursor-pointer transition-colors h-28",
+                                    selectedPaymentMethod === method.id ? "border-primary ring-2 ring-primary" : "border-border"
+                                )}>
+                                    <RadioGroupItem value={method.id} id={method.id} className="sr-only" />
+                                    <method.icon className="h-8 w-8 text-primary mb-2" />
+                                    <span className="font-semibold">{method.label}</span>
+                                </Label>
+                        ))}
+                    </RadioGroup>
                 </CardContent>
             </Card>
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Payment Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <CardHeader>
+                <CardTitle>Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                 <div className="space-y-4">
+                    {cartItems.map(item => (
+                        <div key={item.id} className="flex justify-between items-center text-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="relative h-16 w-16 rounded-md overflow-hidden border">
+                                    <Image src={item.images[0]} alt={item.name} fill className="object-cover" data-ai-hint="product image" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold">{item.name}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.id, item.quantity - 1)}><Minus className="h-3 w-3" /></Button>
+                                        <span>{item.quantity}</span>
+                                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.id, item.quantity + 1)}><Plus className="h-3 w-3" /></Button>
+                                    </div>
+                                </div>
+                            </div>
+                            <span className="font-semibold">৳{(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                    ))}
+                 </div>
+                 <Separator className="my-4" />
+                 <div className="space-y-2">
                     <div className="flex justify-between">
                         <span>Subtotal</span>
                         <span>৳{cartTotal.toFixed(2)}</span>
                     </div>
-                    {selectedVoucher && (
-                        <div className="flex justify-between text-green-600">
-                            <span>Discount ({selectedVoucher.code})</span>
-                            <span>- ৳{discount.toFixed(2)}</span>
-                        </div>
-                    )}
-                    <div className="flex justify-between">
-                        <span>Shipping Fee</span>
+                     <div className="flex justify-between">
+                        <span>Shipping</span>
                         <span>৳{shippingFee.toFixed(2)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
-                        <span>Total to Pay</span>
-                        <span>৳{(finalTotal + shippingFee).toFixed(2)}</span>
+                        <span>Total</span>
+                        <span>৳{(cartTotal + shippingFee).toFixed(2)}</span>
                     </div>
-                </CardContent>
-                <CardFooter>
-                    <Button size="lg" className="w-full">
+                 </div>
+              </CardContent>
+            </Card>
+
+            <div className="sticky bottom-0 bg-background py-4 border-t">
+                <div className="container mx-auto max-w-3xl flex items-center justify-between">
+                    <div className="text-lg font-bold">
+                        <p className="text-sm text-muted-foreground">Total to Pay</p>
+                        ৳{(cartTotal + shippingFee).toFixed(2)}
+                    </div>
+                    <Button size="lg" className="w-1/2">
                         Place Order
                     </Button>
-                </CardFooter>
-            </Card>
+                </div>
+            </div>
+
         </div>
       </div>
     </div>
@@ -206,5 +223,3 @@ function CheckoutPage() {
 }
 
 export default withAuth(CheckoutPage);
-
-    
