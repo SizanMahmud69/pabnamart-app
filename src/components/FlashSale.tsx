@@ -15,6 +15,8 @@ interface FlashSaleProps {
 }
 
 const CountdownTimer = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
   const calculateTimeLeft = () => {
     // Set a future date for the countdown
     const difference = +new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 1) - +new Date();
@@ -37,12 +39,17 @@ const CountdownTimer = () => {
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
   useEffect(() => {
+    setIsMounted(true);
     const timer = setTimeout(() => {
-      setTimeLeft(calculateTimelefa());
+      setTimeLeft(calculateTimeLeft());
     }, 1000);
 
     return () => clearTimeout(timer);
   });
+
+  if (!isMounted) {
+    return null;
+  }
 
   const formatTime = (time: number) => String(time).padStart(2, '0');
 
