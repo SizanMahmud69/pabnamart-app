@@ -20,7 +20,7 @@ export interface Product {
   details?: string;
   freeShipping?: boolean;
   shippingTime?: string;
-  returnPolicy?: string;
+  returnPolicy?: number;
 }
 
 export interface CartItem extends Product {

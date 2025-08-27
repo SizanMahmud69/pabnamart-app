@@ -73,7 +73,7 @@ export default function NewProductPage() {
             details: formData.get('details') as string,
             freeShipping: freeShipping,
             shippingTime: formData.get('shippingTime') as string,
-            returnPolicy: formData.get('returnPolicy') as string,
+            returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,
         };
 
         try {
@@ -168,12 +168,12 @@ export default function NewProductPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="shipping-time">Shipping Time</Label>
-                                        <Input id="shipping-time" name="shippingTime" placeholder="e.g., 2-3 business days" />
+                                        <Label htmlFor="shipping-time">Shipping Time (e.g., 2-3)</Label>
+                                        <Input id="shipping-time" name="shippingTime" placeholder="e.g., 2-3" />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="return-policy">Return Policy</Label>
-                                        <Input id="return-policy" name="returnPolicy" placeholder="e.g., 30-day return policy" />
+                                        <Label htmlFor="return-policy">Return Policy (in days)</Label>
+                                        <Input id="return-policy" name="returnPolicy" type="number" placeholder="e.g., 30" />
                                     </div>
                                 </div>
                             </div>

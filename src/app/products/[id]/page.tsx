@@ -120,13 +120,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                             {product.shippingTime && (
                                 <div className="flex items-center gap-3">
                                     <Truck className="h-5 w-5 text-blue-500" />
-                                    <span>Ships in {product.shippingTime}</span>
+                                    <span>Ships in {product.shippingTime} business days</span>
                                 </div>
                             )}
                             {product.returnPolicy && (
                                 <div className="flex items-center gap-3">
                                     <Package className="h-5 w-5 text-orange-500" />
-                                    <span>{product.returnPolicy}</span>
+                                    <span>{product.returnPolicy}-day return policy</span>
                                 </div>
                             )}
                         </div>

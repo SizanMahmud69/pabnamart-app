@@ -21,8 +21,8 @@ export const products: Product[] = [
     ],
     details: 'Bluetooth 5.0, Active Noise Cancellation, 20-Hour Battery Life, Built-in Microphone, Foldable Design.',
     freeShipping: true,
-    shippingTime: '2-3 business days',
-    returnPolicy: '30-day return policy'
+    shippingTime: '2-3',
+    returnPolicy: 30
   },
   {
     id: 4,
@@ -42,8 +42,8 @@ export const products: Product[] = [
     ],
     details: '100% Organic, Non-GMO, 50 Tea Bags, Sourced from Japan, Rich in Antioxidants.',
     freeShipping: true,
-    shippingTime: '1-2 business days',
-    returnPolicy: '15-day return policy'
+    shippingTime: '1-2',
+    returnPolicy: 15
   },
   {
     id: 5,
@@ -64,8 +64,8 @@ export const products: Product[] = [
     ],
     details: 'Breathable Mesh Upper, Cushioned Midsole, Durable Rubber Outsole, Lightweight Design.',
     freeShipping: false,
-    shippingTime: '3-5 business days',
-    returnPolicy: '30-day return policy'
+    shippingTime: '3-5',
+    returnPolicy: 30
   },
   {
     id: 6,
@@ -85,8 +85,8 @@ export const products: Product[] = [
     ],
     details: 'Wi-Fi and Bluetooth Connectivity, Voice Control, Supports over 1000+ devices, Easy Setup.',
     freeShipping: true,
-    shippingTime: '2-3 business days',
-    returnPolicy: '30-day return policy'
+    shippingTime: '2-3',
+    returnPolicy: 30
   },
   {
     id: 7,
@@ -105,8 +105,8 @@ export const products: Product[] = [
     ],
     details: '100% Arabica Beans, Medium Roast, 12 oz Bag, Sourced from Colombia, Whole Bean.',
     freeShipping: true,
-    shippingTime: '1-2 business days',
-    returnPolicy: 'No returns'
+    shippingTime: '1-2',
+    returnPolicy: 0
   },
   {
     id: 9,
@@ -126,8 +126,8 @@ export const products: Product[] = [
     ],
     details: '15.6" 144Hz Display, NVIDIA GeForce RTX 4060, Intel Core i7, 16GB DDR5 RAM, 1TB NVMe SSD.',
     freeShipping: true,
-    shippingTime: '2-4 business days',
-    returnPolicy: '30-day return policy'
+    shippingTime: '2-4',
+    returnPolicy: 30
   },
   {
     id: 13,
@@ -147,8 +147,8 @@ export const products: Product[] = [
     ],
     details: '30ml / 1.0 fl oz, Available in 20 shades, SPF 15, Paraben-free, Cruelty-free.',
     freeShipping: true,
-    shippingTime: '2-3 business days',
-    returnPolicy: '30-day return policy'
+    shippingTime: '2-3',
+    returnPolicy: 30
   },
    {
     id: 14,
@@ -168,7 +168,7 @@ export const products: Product[] = [
     ],
     details: '100% Cotton, Floral Print, A-Line Silhouette, Midi Length, Available in S, M, L, XL.',
     freeShipping: true,
-    shippingTime: '3-5 business days',
-    returnPolicy: '30-day return policy'
+    shippingTime: '3-5',
+    returnPolicy: 30
   }
 ];
