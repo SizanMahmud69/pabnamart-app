@@ -5,6 +5,9 @@ import type { Product } from '@/types';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from './ui/button';
+import { ArrowRight } from 'lucide-react';
+import ProductCard from './ProductCard';
 
 interface FlashSaleProps {
   products: Product[];
@@ -12,8 +15,13 @@ interface FlashSaleProps {
 
 const CountdownTimer = () => {
   const calculateTimeLeft = () => {
-    const difference = +new Date("2025-01-01") - +new Date();
-    let timeLeft = {};
+    // Set a future date for the countdown
+    const difference = +new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 1) - +new Date();
+    let timeLeft = {
+        hours: 0,
+        minutes: 0,
+        seconds: 0
+    };
 
     if (difference > 0) {
       timeLeft = {
@@ -35,33 +43,22 @@ const CountdownTimer = () => {
     return () => clearTimeout(timer);
   });
 
-  const timerComponents: JSX.Element[] = [];
-
-  Object.keys(timeLeft).forEach((interval) => {
-    if (!timeLeft[interval as keyof typeof timeLeft]) {
-      return;
-    }
-
-    timerComponents.push(
-      <span key={interval} className="bg-primary text-primary-foreground text-lg font-bold p-2 rounded-md">
-        {String(timeLeft[interval as keyof typeof timeLeft]).padStart(2, '0')}
-      </span>
-    );
-  });
+  const formatTime = (time: number) => String(time).padStart(2, '0');
 
   return (
     <div className="flex items-center gap-2">
-      {timerComponents.length ? (
-        <>
-            {timerComponents[0]}
-            <span className="font-bold text-xl">:</span>
-            {timerComponents[1]}
-            <span className="font-bold text-xl">:</span>
-            {timerComponents[2]}
-        </>
-      ) : (
-        <span>Time's up!</span>
-      )}
+        <span className="text-gray-600">Ending in:</span>
+        <span className="bg-primary text-primary-foreground text-lg font-bold p-2 rounded-md w-10 text-center">
+            {formatTime(timeLeft.hours)}
+        </span>
+        <span className="font-bold text-xl">:</span>
+        <span className="bg-primary text-primary-foreground text-lg font-bold p-2 rounded-md w-10 text-center">
+            {formatTime(timeLeft.minutes)}
+        </span>
+        <span className="font-bold text-xl">:</span>
+        <span className="bg-primary text-primary-foreground text-lg font-bold p-2 rounded-md w-10 text-center">
+            {formatTime(timeLeft.seconds)}
+        </span>
     </div>
   );
 };
@@ -73,41 +70,26 @@ export default function FlashSale({ products }: FlashSaleProps) {
     }
 
     return (
-        <Card className="bg-gradient-to-b from-purple-100 to-white">
+        <Card className="bg-purple-50/50">
             <CardContent className="p-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                    <div>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+                    <div className='flex-1'>
                         <h2 className="text-2xl font-bold text-primary">Flash Sale</h2>
-                        <p className="text-gray-600">Limited time offers, grab them fast!</p>
+                        <p className="text-gray-600">Don't miss out on these amazing deals, ending soon!</p>
                     </div>
                     <CountdownTimer />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    {products.map(product => (
-                        <Link key={product.id} href={`/products/${product.id}`} className="block group">
-                            <Card className="overflow-hidden h-full">
-                                <CardContent className="p-2">
-                                    <div className="relative aspect-square w-full">
-                                        <Image
-                                            src={product.images[0]}
-                                            alt={product.name}
-                                            fill
-                                            className="object-cover rounded-md group-hover:scale-105 transition-transform duration-300"
-                                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                                            data-ai-hint="product lifestyle"
-                                        />
-                                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                            - ৳{Math.round(product.price * 0.2)}
-                                        </div>
-                                    </div>
-                                    <div className="mt-2">
-                                        <h3 className="text-sm font-semibold text-gray-800 truncate">{product.name}</h3>
-                                        <p className="text-md font-bold text-primary">৳{(product.price * 0.8).toFixed(2)}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
+                    {products.slice(0, 4).map(product => (
+                        <ProductCard key={product.id} product={{...product, originalPrice: product.price + 50}} />
                     ))}
+                </div>
+                 <div className="mt-6 text-center">
+                    <Button asChild variant="outline">
+                        <Link href="/flash-sale">
+                            See More <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                    </Button>
                 </div>
             </CardContent>
         </Card>

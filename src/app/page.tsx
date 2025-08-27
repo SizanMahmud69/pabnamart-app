@@ -46,22 +46,21 @@ function HomePageContent() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const flashSaleProducts = allProducts.slice(0, 4);
+  const flashSaleProducts = allProducts.map(p => ({...p, originalPrice: p.price + 50}));
 
   useEffect(() => {
     setIsLoading(true);
     // Simulate fetching products
     setTimeout(() => {
+      let filteredProducts = allProducts;
       if (searchQuery) {
-        const filteredProducts = allProducts.filter(product =>
+        filteredProducts = allProducts.filter(product =>
           product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.category.toLowerCase().includes(searchQuery.toLowerCase())
         );
-        setProducts(filteredProducts);
-      } else {
-        setProducts(allProducts);
       }
+      setProducts(filteredProducts);
       setIsLoading(false);
     }, 500);
   }, [searchQuery]);
