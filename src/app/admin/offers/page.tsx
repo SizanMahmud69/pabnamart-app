@@ -21,13 +21,13 @@ export default function AdminOfferManagement() {
   return (
     <div className="container mx-auto p-4">
         <header className="py-4 flex justify-between items-center">
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="xs">
                 <Link href="/admin">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Dashboard
                 </Link>
             </Button>
-            <Button size="sm">
+            <Button size="xs">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Create New Offer
             </Button>
