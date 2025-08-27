@@ -13,7 +13,7 @@ function AdminHeader() {
     const router = useRouter();
     const handleLogout = () => {
         localStorage.removeItem('isAdmin');
-        router.push('/admin/login');
+        router.push('/login');
     };
 
     return (
@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     useEffect(() => {
         const isAdmin = localStorage.getItem('isAdmin');
         if (isAdmin !== 'true') {
-            router.replace('/admin/login');
+            router.replace('/login');
         } else {
             setIsLoading(false);
         }
