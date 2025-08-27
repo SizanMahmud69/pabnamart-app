@@ -64,7 +64,7 @@ export default function NewProductPage() {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             price: parseFloat(formData.get('price') as string),
-            originalPrice: formData.get('discount') ? parseFloat(formData.get('discount') as string) : undefined,
+            originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
             stock: parseInt(formData.get('stock') as string, 10),
             category: category,
             images: finalImageUrls,
@@ -128,11 +128,11 @@ export default function NewProductPage() {
                              <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Price (৳)</Label>
-                                    <Input id="price" name="price" type="number" placeholder="e.g., 99" required />
+                                    <Input id="price" name="price" type="number" placeholder="e.g., 79 (Discounted Price)" required />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="discount">Discount (৳)</Label>
-                                    <Input id="discount" name="discount" type="number" placeholder="e.g., 79" />
+                                    <Label htmlFor="originalPrice">Original Price (৳)</Label>
+                                    <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 99 (Before Discount)" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="stock">Stock</Label>
