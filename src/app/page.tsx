@@ -13,6 +13,32 @@ import { ArrowRight, ShoppingBag, Ticket } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import Autoplay from "embla-carousel-autoplay";
+
+const heroBanners = [
+  {
+    title: "Mega Electronics Sale",
+    description: "Up to 40% off on the latest gadgets and electronics.",
+    image: "https://picsum.photos/seed/electronics/1200/400",
+    link: "/products?category=Electronics",
+    aiHint: "electronics gadgets"
+  },
+  {
+    title: "Fresh Groceries Daily",
+    description: "Get the best quality groceries delivered to your door.",
+    image: "https://picsum.photos/seed/groceries/1200/400",
+    link: "/products?category=Groceries",
+    aiHint: "fresh food"
+  },
+  {
+    title: "New Fashion Arrivals",
+    description: "Check out the latest trends in our apparel section.",
+    image: "https://picsum.photos/seed/fashion/1200/400",
+    link: "/products?category=Apparel",
+    aiHint: "stylish clothes"
+  }
+];
 
 function HomePageContent() {
   const searchParams = useSearchParams();
@@ -48,26 +74,41 @@ function HomePageContent() {
         {!searchQuery && (
           <>
             {/* Hero Section */}
-            <div className="relative text-white rounded-lg overflow-hidden">
-              <Image
-                src="https://picsum.photos/seed/electronics/1200/400"
-                alt="Electronics Sale"
-                width={1200}
-                height={400}
-                className="object-cover w-full h-48 md:h-64"
-                data-ai-hint="electronics gadgets"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">Mega Electronics Sale</h1>
-                <p className="text-lg md:text-xl mb-4">Up to 40% off on the latest gadgets and electronics.</p>
-                <Button asChild className="w-fit bg-primary hover:bg-primary/90">
-                  <Link href="/products">
-                    <ShoppingBag className="mr-2 h-5 w-5" />
-                    Shop Now
-                  </Link>
-                </Button>
-              </div>
-            </div>
+            <Carousel
+              plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
+              opts={{ loop: true }}
+              className="w-full"
+            >
+              <CarouselContent>
+                {heroBanners.map((banner, index) => (
+                  <CarouselItem key={index}>
+                     <div className="relative text-white rounded-lg overflow-hidden">
+                        <Image
+                          src={banner.image}
+                          alt={banner.title}
+                          width={1200}
+                          height={400}
+                          className="object-cover w-full h-48 md:h-64"
+                          data-ai-hint={banner.aiHint}
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6">
+                          <h1 className="text-3xl md:text-4xl font-bold mb-2">{banner.title}</h1>
+                          <p className="text-lg md:text-xl mb-4">{banner.description}</p>
+                          <Button asChild className="w-fit bg-primary hover:bg-primary/90">
+                            <Link href={banner.link}>
+                              <ShoppingBag className="mr-2 h-5 w-5" />
+                              Shop Now
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-2" />
+              <CarouselNext className="right-2" />
+            </Carousel>
+            
 
             {/* Collect Vouchers Section */}
             <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-0">
