@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -29,12 +28,11 @@ export default function AdminLoginPage() {
     const ADMIN_EMAIL = "admin@pabnamart.com";
     const ADMIN_PASSWORD = "@Admin#PabnaMart";
 
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        // Since we can't create a real user with these credentials via standard signup,
-        // we'll simulate a logged-in state for the admin.
-        // A better approach would be custom claims with Firebase functions.
         localStorage.setItem('isAdmin', 'true');
-        
         toast({
             title: "Admin Login Successful",
             description: "Welcome to the Admin Panel!",
