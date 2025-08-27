@@ -121,7 +121,7 @@ export default function NewProductPage() {
                                     <Input id="price" name="price" type="number" placeholder="e.g., 99" required />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="originalPrice">Discount Price (৳)</Label>
+                                    <Label htmlFor="originalPrice">Discount (৳)</Label>
                                     <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 79" />
                                 </div>
                                 <div className="space-y-2">
