@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShoppingBag, Package, Truck, PackageCheck, Undo2 } from "lucide-react";
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const orders = [
   { id: '12345', status: 'pending', total: 450, date: '2023-10-26', items: 2 },
@@ -38,7 +38,7 @@ export default function OrdersPage() {
         <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">My Orders</h1>
         <Tabs defaultValue={status} className="w-full">
-            <ScrollArea className="w-full whitespace-nowrap">
+            <ScrollArea className="w-full whitespace-nowrap rounded-md">
                 <TabsList className="inline-flex w-max mb-4">
                     {TABS.map(tab => (
                         <TabsTrigger key={tab.value} value={tab.value}>
@@ -47,6 +47,7 @@ export default function OrdersPage() {
                         </TabsTrigger>
                     ))}
                 </TabsList>
+                <ScrollBar orientation="horizontal" />
             </ScrollArea>
             
             <TabsContent value={status}>
