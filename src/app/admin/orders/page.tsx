@@ -19,6 +19,12 @@ const mockOrders = [
 export default function AdminOrderManagement() {
     const [orders, setOrders] = useState(mockOrders);
 
+    const handleMarkAsShipped = (orderId: string) => {
+        setOrders(orders.map(order => 
+            order.id === orderId ? { ...order, status: 'Shipped' } : order
+        ));
+    };
+
     return (
         <div className="container mx-auto p-4">
             <header className="py-4">
@@ -72,7 +78,7 @@ export default function AdminOrderManagement() {
                                                         View Details
                                                     </DropdownMenuItem>
                                                     {order.status === 'Pending' && (
-                                                        <DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleMarkAsShipped(order.id)}>
                                                             <Truck className="mr-2 h-4 w-4" />
                                                             Mark as Shipped
                                                         </DropdownMenuItem>

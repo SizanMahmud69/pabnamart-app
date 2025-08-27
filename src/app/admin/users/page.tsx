@@ -18,6 +18,12 @@ const mockUsers = [
 
 export default function AdminUserManagement() {
     const [users, setUsers] = useState(mockUsers);
+
+    const handleBanUser = (userId: string) => {
+        setUsers(users.map(user => 
+            user.id === userId ? { ...user, status: user.status === 'Active' ? 'Banned' : 'Active' } : user
+        ));
+    };
     
     return (
         <div className="container mx-auto p-4">
@@ -69,9 +75,9 @@ export default function AdminUserManagement() {
                                                         <Eye className="mr-2 h-4 w-4" />
                                                         View Details
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive">
+                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleBanUser(user.id)}>
                                                         <Ban className="mr-2 h-4 w-4" />
-                                                        Ban User
+                                                        {user.status === 'Active' ? 'Ban User' : 'Unban User'}
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
