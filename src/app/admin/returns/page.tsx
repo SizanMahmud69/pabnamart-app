@@ -10,14 +10,20 @@ import { ArrowLeft, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
+type ReturnStatus = 'Pending' | 'Approved' | 'Rejected';
+
 const mockReturns = [
-  { id: 'R001', orderId: '12349', customer: 'Alice Brown', date: '2023-10-15', status: 'Pending' },
-  { id: 'R002', orderId: '12340', customer: 'Bob White', date: '2023-10-12', status: 'Approved' },
-  { id: 'R003', orderId: '12333', customer: 'Charlie Green', date: '2023-10-10', status: 'Rejected' },
+  { id: 'R001', orderId: '12349', customer: 'Alice Brown', date: '2023-10-15', status: 'Pending' as ReturnStatus },
+  { id: 'R002', orderId: '12340', customer: 'Bob White', date: '2023-10-12', status: 'Approved' as ReturnStatus },
+  { id: 'R003', orderId: '12333', customer: 'Charlie Green', date: '2023-10-10', status: 'Rejected' as ReturnStatus },
 ];
 
 export default function AdminReturnManagement() {
   const [returns, setReturns] = useState(mockReturns);
+
+  const handleStatusChange = (id: string, status: ReturnStatus) => {
+    setReturns(returns.map(r => r.id === id ? { ...r, status } : r));
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -71,11 +77,14 @@ export default function AdminReturnManagement() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem>
+                                                    <DropdownMenuItem onSelect={() => handleStatusChange(request.id, 'Approved')}>
                                                         <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
                                                         <span>Approve</span>
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive">
+                                                    <DropdownMenuItem 
+                                                        className="text-destructive"
+                                                        onSelect={() => handleStatusChange(request.id, 'Rejected')}
+                                                    >
                                                         <XCircle className="mr-2 h-4 w-4" />
                                                         <span>Reject</span>
                                                     </DropdownMenuItem>

@@ -20,6 +20,12 @@ const mockVouchers = [
 export default function AdminVoucherManagement() {
   const [vouchers, setVouchers] = useState(mockVouchers);
 
+  const handleDelete = (id: string) => {
+    if(confirm('Are you sure you want to delete this voucher?')) {
+        setVouchers(vouchers.filter(voucher => voucher.id !== id));
+    }
+  }
+
   return (
     <div className="container mx-auto p-4">
         <header className="py-4 flex justify-between items-center">
@@ -79,7 +85,10 @@ export default function AdminVoucherManagement() {
                                                     <span>Edit</span>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-destructive">
+                                                <DropdownMenuItem 
+                                                    className="text-destructive"
+                                                    onSelect={() => handleDelete(voucher.id)}
+                                                >
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     <span>Delete</span>
                                                 </DropdownMenuItem>

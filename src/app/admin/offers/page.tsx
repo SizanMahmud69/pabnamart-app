@@ -19,6 +19,12 @@ const mockOffers = [
 export default function AdminOfferManagement() {
   const [offers, setOffers] = useState(mockOffers);
 
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this offer?')) {
+        setOffers(offers.filter(offer => offer.id !== id));
+    }
+  }
+
   return (
     <div className="container mx-auto p-4">
         <header className="py-4 flex justify-between items-center">
@@ -76,7 +82,10 @@ export default function AdminOfferManagement() {
                                                     <span>Edit</span>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-destructive">
+                                                <DropdownMenuItem 
+                                                    className="text-destructive"
+                                                    onSelect={() => handleDelete(offer.id)}
+                                                >
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     <span>Delete</span>
                                                 </DropdownMenuItem>
