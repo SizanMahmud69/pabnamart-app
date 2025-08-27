@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useCart } from "@/hooks/useCart";
 import { useVouchers } from "@/hooks/useVouchers";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,6 @@ function CheckoutPage() {
   const { user } = useAuth();
   const { collectedVouchers } = useVouchers();
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
-  const [discount, setDiscount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [selectedAddress, setSelectedAddress] = useState(addresses.find(a => a.default)?.id || addresses[0].id);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
@@ -61,7 +60,6 @@ function CheckoutPage() {
   const handleApplyVoucher = (code: string) => {
     if (!code || code === "none") {
         setSelectedVoucher(null);
-        setDiscount(0);
         setError(null);
         return;
     }
@@ -69,33 +67,42 @@ function CheckoutPage() {
     const voucher = collectedVouchers.find(v => v.code === code);
     if (!voucher) {
       setSelectedVoucher(null);
-      setDiscount(0);
       setError(null);
       return;
     }
 
     if (voucher.minSpend && cartTotal < voucher.minSpend) {
         setError(`You need to spend at least ৳${voucher.minSpend} to use this voucher.`);
-        setDiscount(0);
         setSelectedVoucher(null);
         return;
     }
 
     setError(null);
     setSelectedVoucher(voucher);
-
-    let calculatedDiscount = 0;
-    if (voucher.type === 'fixed') {
-      calculatedDiscount = voucher.discount;
-    } else {
-      calculatedDiscount = (cartTotal * voucher.discount) / 100;
-    }
-    setDiscount(calculatedDiscount);
   };
 
+  const { orderDiscount, shippingDiscount } = useMemo(() => {
+    if (!selectedVoucher) return { orderDiscount: 0, shippingDiscount: 0 };
+    
+    let calculatedDiscount = 0;
+    if (selectedVoucher.type === 'fixed') {
+      calculatedDiscount = selectedVoucher.discount;
+    } else { // percentage
+      calculatedDiscount = (cartTotal * selectedVoucher.discount) / 100;
+    }
+
+    if (selectedVoucher.discountType === 'shipping') {
+      return { orderDiscount: 0, shippingDiscount: calculatedDiscount };
+    }
+    
+    return { orderDiscount: calculatedDiscount, shippingDiscount: 0 };
+  }, [selectedVoucher, cartTotal]);
+
+
   const shippingFee = 50;
-  const totalBeforeDiscount = cartTotal + shippingFee;
-  const finalTotal = totalBeforeDiscount - discount > 0 ? totalBeforeDiscount - discount : 0;
+  const subtotalWithDiscount = cartTotal - orderDiscount;
+  const shippingFeeWithDiscount = shippingFee - shippingDiscount > 0 ? shippingFee - shippingDiscount : 0;
+  const finalTotal = subtotalWithDiscount + shippingFeeWithDiscount;
 
   if (cartCount === 0) {
     return (
@@ -226,14 +233,20 @@ function CheckoutPage() {
                         <span>Subtotal</span>
                         <span>৳{cartTotal.toFixed(2)}</span>
                     </div>
+                    {orderDiscount > 0 && (
+                        <div className="flex justify-between text-primary">
+                            <span>Discount ({selectedVoucher?.code})</span>
+                            <span>- ৳{orderDiscount.toFixed(2)}</span>
+                        </div>
+                    )}
                      <div className="flex justify-between">
                         <span>Shipping</span>
                         <span>৳{shippingFee.toFixed(2)}</span>
                     </div>
-                    {discount > 0 && (
+                    {shippingDiscount > 0 && (
                         <div className="flex justify-between text-primary">
-                            <span>Discount</span>
-                            <span>- ৳{discount.toFixed(2)}</span>
+                            <span>Shipping Discount ({selectedVoucher?.code})</span>
+                            <span>- ৳{shippingDiscount.toFixed(2)}</span>
                         </div>
                     )}
                     <Separator />

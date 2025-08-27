@@ -15,18 +15,21 @@ const availableVouchers: Voucher[] = [
         type: 'fixed',
         description: "On orders over ৳500",
         minSpend: 500,
+        discountType: 'order',
     },
     {
-        code: "ELEC10",
-        discount: 10,
-        type: 'percentage',
-        description: "On all electronics items",
+        code: "FREESHIP",
+        discount: 50,
+        type: 'fixed',
+        description: "Free Shipping on all orders",
+        discountType: 'shipping',
     },
     {
         code: "NEW100",
         discount: 100,
         type: 'fixed',
         description: "For your first purchase. No minimum spend.",
+        discountType: 'order',
     }
 ]
 
@@ -61,7 +64,7 @@ export default function VouchersPage() {
                                         <Ticket className="h-10 w-10 text-primary" />
                                         <div>
                                             <h3 className="text-xl font-bold text-primary">
-                                                {voucher.type === 'fixed' ? `৳${voucher.discount} Off` : `${voucher.discount}% Off`}
+                                                {voucher.discountType === 'shipping' ? 'Free Shipping' : (voucher.type === 'fixed' ? `৳${voucher.discount} Off` : `${voucher.discount}% Off`)}
                                             </h3>
                                             <p className="text-sm text-gray-600">{voucher.description}</p>
                                         </div>

@@ -26,4 +26,5 @@ export interface Voucher {
     type: 'fixed' | 'percentage';
     description: string;
     minSpend?: number;
+    discountType?: 'order' | 'shipping';
 }
