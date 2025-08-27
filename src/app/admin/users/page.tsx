@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Ban, Eye, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Ban, Eye, MoreHorizontal, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 const mockUsers = [
   { id: '1', name: 'John Doe', email: 'john.d@example.com', status: 'Active', joined: '2023-10-01' },
@@ -23,6 +23,12 @@ export default function AdminUserManagement() {
         setUsers(users.map(user => 
             user.id === userId ? { ...user, status: user.status === 'Active' ? 'Banned' : 'Active' } : user
         ));
+    };
+
+    const handleDeleteUser = (userId: string) => {
+        if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            setUsers(users.filter(user => user.id !== userId));
+        }
     };
     
     return (
@@ -75,9 +81,17 @@ export default function AdminUserManagement() {
                                                         <Eye className="mr-2 h-4 w-4" />
                                                         View Details
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleBanUser(user.id)}>
+                                                    <DropdownMenuItem onClick={() => handleBanUser(user.id)}>
                                                         <Ban className="mr-2 h-4 w-4" />
                                                         {user.status === 'Active' ? 'Ban User' : 'Unban User'}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem 
+                                                        className="text-destructive" 
+                                                        onClick={() => handleDeleteUser(user.id)}
+                                                    >
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        <span>Delete User</span>
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
