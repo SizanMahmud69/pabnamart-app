@@ -21,7 +21,7 @@ export default function TopRatedPage() {
                     </Button>
                     <h1 className="text-4xl font-bold text-center flex items-center justify-center gap-3">
                        <Star className="h-10 w-10 text-accent fill-accent" />
-                        Top Rated Products
+                        Top Rated
                     </h1>
                 </div>
 

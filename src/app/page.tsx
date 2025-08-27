@@ -145,7 +145,7 @@ function HomePageContent() {
          {/* Top Rated Products Section */}
         <div>
            <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2"><Star className="text-accent fill-accent" />Top Rated Products</h2>
+            <h2 className="text-2xl font-bold flex items-center gap-2"><Star className="text-accent fill-accent" />Top Rated</h2>
              <Link href="/top-rated" className="text-primary font-semibold hover:underline">
                 See More
             </Link>
