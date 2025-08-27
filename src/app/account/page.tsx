@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import type { OrderStatus } from "@/types";
 
 interface OrderStatusProps {
     icon: LucideIcon;
@@ -74,13 +75,22 @@ export default function AccountPage() {
             </div>
         )
     }
+    
+    // Mock order counts for demonstration
+    const orderCounts: Record<OrderStatus, number> = {
+        'pending': 2,
+        'shipped': 1,
+        'in-transit': 1,
+        'delivered': 5,
+        'returned': 0
+    };
 
     const orderStatuses: OrderStatusProps[] = [
-        { icon: Wallet, label: "To Pay", count: 2, href: "/account/orders?status=pending" },
-        { icon: Box, label: "To Ship", count: 2, href: "/account/orders?status=shipped" },
-        { icon: Truck, label: "To Receive", count: 2, href: "/account/orders?status=in-transit" },
-        { icon: PackageCheck, label: "Delivered", count: 0, href: "/account/orders?status=delivered" },
-        { icon: Undo2, label: "My Returns", count: 3, href: "/account/orders?status=returned" },
+        { icon: Wallet, label: "To Pay", count: orderCounts.pending, href: "/account/orders?status=pending" },
+        { icon: Box, label: "To Ship", count: orderCounts.shipped, href: "/account/orders?status=shipped" },
+        { icon: Truck, label: "To Receive", count: orderCounts['in-transit'], href: "/account/orders?status=in-transit" },
+        { icon: PackageCheck, label: "Delivered", count: orderCounts.delivered, href: "/account/orders?status=delivered" },
+        { icon: Undo2, label: "My Returns", count: orderCounts.returned, href: "/account/orders?status=returned" },
     ];
     
     const services: ServiceItemProps[] = [

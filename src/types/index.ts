@@ -54,11 +54,13 @@ export interface User {
   joined: string;
 }
 
+export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned';
+
 export interface Order {
   id: string;
   customer: string;
   date: string;
   total: number;
-  status: 'Pending' | 'Shipped' | 'Delivered';
+  status: OrderStatus;
   userId: string;
 }
