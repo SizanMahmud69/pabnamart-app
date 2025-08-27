@@ -1,0 +1,19 @@
+export interface Review {
+  user: string;
+  comment: string;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  rating: number;
+  category: string;
+  images: string[];
+  reviews: Review[];
+}
+
+export interface CartItem extends Product {
+  quantity: number;
+}
