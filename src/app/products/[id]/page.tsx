@@ -3,7 +3,7 @@
 
 import { useProducts } from '@/hooks/useProducts';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import StarRating from '@/components/StarRating';
 import AddToCartButton from './AddToCartButton';
@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import type { Product } from '@/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Truck, Package, Badge } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -77,55 +77,86 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     <CarouselNext className="right-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Carousel>
                 
-                <div className="bg-purple-50/30 p-6 md:rounded-b-lg">
-                    <p className="text-sm font-bold text-primary uppercase tracking-wider">{product.category}</p>
-                    <h1 className="text-4xl font-bold my-2">{product.name}</h1>
-                    <div className="flex items-center gap-2 mb-4">
-                        <StarRating rating={product.rating} />
-                        <span className="text-muted-foreground text-sm">({product.rating.toFixed(1)} stars)</span>
-                    </div>
-                    <CardDescription className="text-base leading-relaxed">{product.description}</CardDescription>
-                </div>
+                <Card className="rounded-t-3xl -mt-6 md:mt-0 md:rounded-t-none md:rounded-b-lg relative z-10 shadow-lg">
+                    <CardContent className="p-6 space-y-4">
+                        <p className="text-sm font-bold text-primary uppercase tracking-wider">{product.category}</p>
+                        <h1 className="text-2xl font-bold">{product.name}</h1>
+                        <div className="flex items-center gap-2">
+                            <StarRating rating={product.rating} />
+                            <span className="text-muted-foreground text-sm">({product.reviews.length} reviews)</span>
+                        </div>
+                        <p className="text-base text-muted-foreground leading-relaxed">{product.description}</p>
+                        
+                        <div className="flex items-baseline gap-2 pt-2">
+                            <span className="text-4xl font-bold text-primary">৳{product.price.toFixed(2)}</span>
+                            {hasDiscount && (
+                            <span className="text-2xl text-muted-foreground line-through">
+                                ৳{product.originalPrice!.toFixed(2)}
+                            </span>
+                            )}
+                        </div>
+                        
+                        <AddToCartButton product={product} />
 
-                 <div className="p-6 space-y-6">
-                    <div className="flex justify-between items-center">
+                        {product.stock > 0 ? (
+                             <div className="inline-flex items-center justify-center rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+                                In Stock ({product.stock} left)
+                            </div>
+                        ) : (
+                             <div className="inline-flex items-center justify-center rounded-full bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive">
+                                Out of Stock
+                            </div>
+                        )}
+
+                        <Separator className="my-4"/>
+
+                        <div className="space-y-3 text-muted-foreground">
+                            <div className="flex items-center gap-3">
+                                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                <span>Eligible for free shipping</span>
+                            </div>
+                             <div className="flex items-center gap-3">
+                                <Truck className="h-5 w-5 text-blue-500" />
+                                <span>Ships in 2-3 business days</span>
+                            </div>
+                             <div className="flex items-center gap-3">
+                                <Package className="h-5 w-5 text-orange-500" />
+                                <span>30-day return policy</span>
+                            </div>
+                        </div>
+
+                        <Separator className="my-4"/>
+
                         <div>
-                             <p className="text-sm text-muted-foreground">Price</p>
-                             <div className="flex items-baseline gap-2">
-                                <span className="text-3xl font-bold text-primary">৳{product.price.toFixed(2)}</span>
-                                {hasDiscount && (
-                                <span className="text-lg text-muted-foreground line-through">
-                                    ৳{product.originalPrice!.toFixed(2)}
-                                </span>
+                            <h2 className="text-xl font-bold mb-4">Customer Reviews</h2>
+                            <div className="space-y-6">
+                                {product.reviews.length > 0 ? (
+                                    product.reviews.map((review, index) => (
+                                        <div key={index} className="flex items-start gap-4">
+                                            <Avatar>
+                                                <AvatarFallback>{review.user.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1">
+                                                <div className="flex justify-between items-center">
+                                                    <p className="font-semibold">{review.user}</p>
+                                                </div>
+                                                <p className="text-muted-foreground mt-1">{review.comment}</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
+                                        <Avatar className="h-10 w-10">
+                                            <AvatarFallback>{product.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <p className="text-muted-foreground">This product has no reviews yet.</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
-                        <AddToCartButton product={product} />
-                    </div>
-                 </div>
 
-                <div className="p-6">
-                    <h2 className="text-2xl font-bold mb-4">Customer Reviews ({product.reviews.length})</h2>
-                    <div className="space-y-6">
-                        {product.reviews.length > 0 ? (
-                            product.reviews.map((review, index) => (
-                                <div key={index} className="flex items-start gap-4">
-                                    <Avatar>
-                                        <AvatarFallback>{review.user.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-center">
-                                            <p className="font-semibold">{review.user}</p>
-                                        </div>
-                                        <p className="text-muted-foreground mt-1">{review.comment}</p>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-muted-foreground">No reviews yet.</p>
-                        )}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     </div>
