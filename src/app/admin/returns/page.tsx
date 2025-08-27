@@ -1,9 +1,23 @@
+
+"use client";
+
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+
+const mockReturns = [
+  { id: 'R001', orderId: '12349', customer: 'Alice Brown', date: '2023-10-15', status: 'Pending' },
+  { id: 'R002', orderId: '12340', customer: 'Bob White', date: '2023-10-12', status: 'Approved' },
+  { id: 'R003', orderId: '12333', customer: 'Charlie Green', date: '2023-10-10', status: 'Rejected' },
+];
 
 export default function AdminReturnManagement() {
+  const [returns, setReturns] = useState(mockReturns);
+
   return (
     <div className="container mx-auto p-4">
         <header className="py-4">
@@ -18,10 +32,49 @@ export default function AdminReturnManagement() {
             <Card>
                 <CardHeader>
                     <CardTitle>Return Requests</CardTitle>
-                    <CardDescription>This feature is under construction.</CardDescription>
+                    <CardDescription>Manage and process return requests.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>Here you will be able to manage and process return requests.</p>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Request ID</TableHead>
+                                <TableHead>Order ID</TableHead>
+                                <TableHead>Customer</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {returns.map(request => (
+                                <TableRow key={request.id}>
+                                    <TableCell className="font-medium">{request.id}</TableCell>
+                                    <TableCell>#{request.orderId}</TableCell>
+                                    <TableCell>{request.customer}</TableCell>
+                                    <TableCell>{request.date}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={
+                                            request.status === 'Approved' ? 'default' : 
+                                            request.status === 'Rejected' ? 'destructive' : 'secondary'
+                                        }>{request.status}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        {request.status === 'Pending' && (
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="icon" className="text-green-600">
+                                                    <CheckCircle className="h-4 w-4" />
+                                                </Button>
+                                                <Button variant="outline" size="icon" className="text-red-600">
+                                                    <XCircle className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </main>
