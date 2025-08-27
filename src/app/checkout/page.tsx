@@ -59,7 +59,7 @@ function CheckoutPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
 
   const handleApplyVoucher = (code: string) => {
-    if (!code) {
+    if (!code || code === "none") {
         setSelectedVoucher(null);
         setDiscount(0);
         setError(null);
@@ -199,12 +199,12 @@ function CheckoutPage() {
 
                  <div className="space-y-2">
                     <Label htmlFor="voucher">Apply Voucher</Label>
-                    <Select onValueChange={handleApplyVoucher}>
+                    <Select onValueChange={handleApplyVoucher} defaultValue="none">
                         <SelectTrigger id="voucher">
                             <SelectValue placeholder="Select a voucher" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">No Voucher</SelectItem>
+                            <SelectItem value="none">No Voucher</SelectItem>
                             {collectedVouchers.map(v => (
                                 <SelectItem key={v.code} value={v.code}>{v.code} - {v.description}</SelectItem>
                             ))}
