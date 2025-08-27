@@ -52,6 +52,7 @@ export interface User {
   displayName: string | null;
   status: 'active' | 'banned';
   joined: string;
+  shippingAddresses?: ShippingAddress[];
 }
 
 export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned';
@@ -66,10 +67,13 @@ export interface OrderItem {
 
 export interface ShippingAddress {
     id: string;
-    type: string;
-    details: string;
+    type: 'Home' | 'Office';
+    fullName: string;
+    phone: string;
+    address: string;
+    city: string;
+    area: string;
     default: boolean;
-    icon: LucideIcon;
 }
 
 export interface Order {
@@ -79,6 +83,6 @@ export interface Order {
   total: number;
   status: OrderStatus;
   date: string;
-  shippingAddress: Omit<ShippingAddress, 'icon'>;
+  shippingAddress: Omit<ShippingAddress, 'id' | 'default'>;
   paymentMethod: string;
 }

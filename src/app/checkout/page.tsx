@@ -1,14 +1,14 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useCart } from "@/hooks/useCart";
 import { useVouchers } from "@/hooks/useVouchers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Voucher, ShippingAddress } from "@/types";
+import type { Voucher, ShippingAddress as ShippingAddressType } from "@/types";
 import { CreditCard, Truck, AlertCircle, Home, Building, Minus, Plus, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
@@ -20,23 +20,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { placeOrder } from "@/app/actions";
+import { doc, getFirestore, onSnapshot } from "firebase/firestore";
+import app from "@/lib/firebase";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
-const addresses: ShippingAddress[] = [
-    {
-        id: 'home',
-        type: 'Home Address',
-        details: '123 Test Street, Mocktown, USA',
-        default: true,
-        icon: Home
-    },
-    {
-        id: 'office',
-        type: 'Office Address',
-        details: '456 Work Ave, Business City, USA',
-        default: false,
-        icon: Building
-    }
-]
+const db = getFirestore(app);
 
 const paymentMethods = [
     {
@@ -55,13 +43,32 @@ function CheckoutPage() {
   const { cartItems, cartTotal, cartCount, updateQuantity, shippingFee, clearCart } = useCart();
   const { user } = useAuth();
   const { collectedVouchers } = useVouchers();
+  const [addresses, setAddresses] = useState<ShippingAddressType[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedAddressId, setSelectedAddressId] = useState(addresses.find(a => a.default)?.id || addresses[0].id);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | undefined>(undefined);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+      if (!user) return;
+      setLoadingAddresses(true);
+      const userDocRef = doc(db, 'users', user.uid);
+      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+              const userData = docSnap.data();
+              const userAddresses = userData.shippingAddresses || [];
+              setAddresses(userAddresses);
+              const defaultAddress = userAddresses.find((a: ShippingAddressType) => a.default);
+              setSelectedAddressId(defaultAddress?.id || (userAddresses[0] ? userAddresses[0].id : undefined));
+          }
+          setLoadingAddresses(false);
+      });
+      return () => unsubscribe();
+  }, [user]);
 
   const handleApplyVoucher = (code: string) => {
     if (!code || code === "none") {
@@ -120,8 +127,7 @@ function CheckoutPage() {
         return;
     }
     
-    // Remove icon from address object before sending to server action
-    const { icon, ...shippingAddressData } = selectedAddress;
+    const { id, default: isDefault, ...shippingAddressData } = selectedAddress;
 
     const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, selectedPaymentMethod);
 
@@ -130,7 +136,7 @@ function CheckoutPage() {
             title: "Order Placed!",
             description: "Thank you for your purchase.",
         });
-        clearCart(); // This now only clears local state, Firestore cart is cleared by server action
+        clearCart();
         router.push('/account/orders');
     } else {
         toast({
@@ -140,6 +146,10 @@ function CheckoutPage() {
         });
         setIsPlacingOrder(false);
     }
+  }
+  
+  if (loadingAddresses) {
+      return <LoadingSpinner />;
   }
 
   if (cartCount === 0) {
@@ -172,24 +182,38 @@ function CheckoutPage() {
                         <p className="font-semibold text-lg">{user?.displayName || "New User"}</p>
                     </div>
                     <div>
-                        <Label>Select Address</Label>
-                        <RadioGroup value={selectedAddressId} onValueChange={setSelectedAddressId} className="mt-2 space-y-3">
-                            {addresses.map((address) => (
-                                <Label key={address.id} htmlFor={address.id} className={cn(
-                                    "flex flex-col p-4 rounded-lg border cursor-pointer transition-colors",
-                                    selectedAddressId === address.id ? "border-primary ring-2 ring-primary" : "border-border"
-                                )}>
-                                    <div className="flex items-center gap-4">
-                                        <RadioGroupItem value={address.id} id={address.id} />
-                                        <address.icon className="h-5 w-5 text-muted-foreground" />
-                                        <div className="flex-grow">
-                                            <p className="font-semibold">{address.type} {address.default && '(Default)'}</p>
-                                            <p className="text-sm text-muted-foreground">{address.details}</p>
+                        <div className="flex justify-between items-center mb-2">
+                           <Label>Select Address</Label>
+                            <Button asChild variant="link" className="p-0 h-auto">
+                                <Link href="/account/settings/addresses">Manage Addresses</Link>
+                            </Button>
+                        </div>
+                        {addresses.length > 0 ? (
+                             <RadioGroup value={selectedAddressId} onValueChange={setSelectedAddressId} className="mt-2 space-y-3">
+                                {addresses.map((address) => (
+                                    <Label key={address.id} htmlFor={address.id} className={cn(
+                                        "flex flex-col p-4 rounded-lg border cursor-pointer transition-colors",
+                                        selectedAddressId === address.id ? "border-primary ring-2 ring-primary" : "border-border"
+                                    )}>
+                                        <div className="flex items-center gap-4">
+                                            <RadioGroupItem value={address.id} id={address.id} />
+                                            {address.type === 'Home' ? <Home className="h-5 w-5 text-muted-foreground" /> : <Building className="h-5 w-5 text-muted-foreground" />}
+                                            <div className="flex-grow">
+                                                <p className="font-semibold">{address.type} {address.default && '(Default)'}</p>
+                                                <p className="text-sm text-muted-foreground">{address.fullName}, {address.address}, {address.city}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </Label>
-                            ))}
-                        </RadioGroup>
+                                    </Label>
+                                ))}
+                            </RadioGroup>
+                        ) : (
+                             <div className="text-center py-6 border-2 border-dashed rounded-lg">
+                                <p className="text-muted-foreground">No shipping address found.</p>
+                                <Button asChild variant="link">
+                                    <Link href="/account/settings/addresses">Add an Address</Link>
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -302,7 +326,7 @@ function CheckoutPage() {
                         <p className="text-sm text-muted-foreground">Total to Pay</p>
                         ৳{finalTotal.toFixed(2)}
                     </div>
-                    <Button size="lg" className="w-1/2" onClick={handlePlaceOrder} disabled={isPlacingOrder}>
+                    <Button size="lg" className="w-1/2" onClick={handlePlaceOrder} disabled={isPlacingOrder || !selectedAddressId}>
                         {isPlacingOrder ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

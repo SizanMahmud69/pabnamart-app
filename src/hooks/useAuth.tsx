@@ -63,8 +63,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             throw new Error('Your account has been banned. Please contact support.');
         }
     } else {
-        // This case might happen if user was created in Auth but not in Firestore, or was deleted from Firestore.
-        // For security, we can deny login.
         await signOut(auth);
         throw new Error('User data not found. Please contact support.');
     }
@@ -86,9 +84,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         displayName: displayName,
         status: 'active',
         joined: new Date().toISOString(),
+        shippingAddresses: [],
     });
 
-    // Manually update the user state because onAuthStateChanged might not fire immediately
     const authInstance = getAuth(app);
     if (authInstance.currentUser) {
         await updateProfile(authInstance.currentUser, { displayName });

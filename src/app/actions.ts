@@ -1,3 +1,4 @@
+
 "use server";
 
 import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai/flows/product-recommendations";
@@ -24,10 +25,8 @@ export async function deleteUserAccount(uid: string) {
       return { success: false, message: 'User ID is missing.' };
     }
     try {
-        // Delete from Firebase Authentication
         await admin.auth().deleteUser(uid);
         
-        // Delete user document from Firestore
         const userDocRef = db.collection('users').doc(uid);
         await userDocRef.delete();
         
@@ -42,7 +41,7 @@ export async function placeOrder(
   userId: string,
   cartItems: CartItem[],
   totalAmount: number,
-  shippingAddress: ShippingAddress,
+  shippingAddress: Omit<ShippingAddress, 'id' | 'default'>,
   paymentMethod: string
 ) {
   if (!userId || !cartItems || cartItems.length === 0) {
@@ -69,11 +68,9 @@ export async function placeOrder(
 
     await orderRef.set(orderData);
 
-    // After creating order, we might want to clear the user's cart in firestore
     const cartRef = db.collection('carts').doc(userId);
     await cartRef.set({ items: [] });
     
-    // Revalidate paths to show new order data
     revalidatePath('/account/orders');
     revalidatePath('/admin/orders');
 
