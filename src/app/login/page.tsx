@@ -38,6 +38,21 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    const ADMIN_EMAIL = "admin@pabnamart.com";
+    const ADMIN_PASSWORD = "@Admin#PabnaMart";
+
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        localStorage.setItem('isAdmin', 'true');
+        toast({
+            title: "Admin Login Successful",
+            description: "Welcome to the Admin Panel!",
+        });
+        router.push("/admin");
+        setIsLoading(false);
+        return;
+    }
+
     try {
       await login(email, password);
       toast({

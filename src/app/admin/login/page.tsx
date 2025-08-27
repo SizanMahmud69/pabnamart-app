@@ -24,7 +24,6 @@ export default function AdminLoginPage() {
     setIsLoading(true);
     setError(null);
 
-    // Hardcoded admin credentials
     const ADMIN_EMAIL = "admin@pabnamart.com";
     const ADMIN_PASSWORD = "@Admin#PabnaMart";
 
