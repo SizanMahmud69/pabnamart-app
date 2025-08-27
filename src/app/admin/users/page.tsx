@@ -131,7 +131,10 @@ export default function AdminUserManagement() {
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem 
                                                             className="text-destructive" 
-                                                            onSelect={() => handleDeleteUser(user)}
+                                                            onSelect={(e) => {
+                                                                e.preventDefault();
+                                                                handleDeleteUser(user);
+                                                            }}
                                                         >
                                                             <Trash2 className="mr-2 h-4 w-4" />
                                                             <span>Delete User</span>
