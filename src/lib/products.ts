@@ -9,6 +9,7 @@ export const products: Product[] = [
     price: 150.0,
     rating: 4.5,
     category: 'Accessories',
+    stock: 10,
     images: [
       'https://picsum.photos/seed/watch1/600/600',
       'https://picsum.photos/seed/watch2/600/600',
@@ -27,6 +28,7 @@ export const products: Product[] = [
     price: 99.99,
     rating: 4.8,
     category: 'Electronics',
+    stock: 0,
     images: [
       'https://picsum.photos/seed/headphones1/600/600',
       'https://picsum.photos/seed/headphones2/600/600',
@@ -43,6 +45,7 @@ export const products: Product[] = [
     price: 45.5,
     rating: 4.2,
     category: 'Home Goods',
+    stock: 5,
     images: [
       'https://picsum.photos/seed/vase1/600/600',
     ],
@@ -56,6 +59,7 @@ export const products: Product[] = [
     price: 15.99,
     rating: 4.9,
     category: 'Groceries',
+    stock: 25,
     images: [
         'https://picsum.photos/seed/tea1/600/600',
     ],
@@ -72,6 +76,7 @@ export const products: Product[] = [
     price: 120.0,
     rating: 4.7,
     category: 'Apparel',
+    stock: 8,
     images: [
       'https://picsum.photos/seed/shoes1/600/600',
       'https://picsum.photos/seed/shoes2/600/600',
@@ -89,6 +94,7 @@ export const products: Product[] = [
     price: 89.99,
     rating: 4.4,
     category: 'Electronics',
+    stock: 12,
     images: [
       'https://picsum.photos/seed/hub1/600/600',
     ],
@@ -104,6 +110,7 @@ export const products: Product[] = [
     price: 22.5,
     rating: 4.9,
     category: 'Groceries',
+    stock: 0,
     images: [
       'https://picsum.photos/seed/coffee1/600/600',
     ],
@@ -119,6 +126,7 @@ export const products: Product[] = [
     price: 25.0,
     rating: 4.6,
     category: 'Home Goods',
+    stock: 20,
     images: [
       'https://picsum.photos/seed/candle1/600/600',
     ],
@@ -134,6 +142,7 @@ export const products: Product[] = [
     price: 49.99,
     rating: 4.7,
     category: 'Electronics',
+    stock: 15,
     images: [
       'https://picsum.photos/seed/powerbank1/600/600',
       'https://picsum.photos/seed/powerbank2/600/600',
@@ -150,6 +159,7 @@ export const products: Product[] = [
     price: 35.0,
     rating: 4.8,
     category: 'Sports',
+    stock: 30,
     images: [
       'https://picsum.photos/seed/yogamat1/600/600',
     ],
@@ -165,6 +175,7 @@ export const products: Product[] = [
     price: 180.0,
     rating: 4.9,
     category: 'Accessories',
+    stock: 7,
     images: [
       'https://picsum.photos/seed/sunglasses1/600/600',
     ],
@@ -180,6 +191,7 @@ export const products: Product[] = [
     price: 30.0,
     rating: 4.9,
     category: 'Sports',
+    stock: 18,
     images: [
       'https://picsum.photos/seed/bottle1/600/600',
     ],

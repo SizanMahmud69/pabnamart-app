@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
 import { ShoppingCart, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product & { originalPrice?: number };
@@ -17,6 +18,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
   const discountAmount = hasDiscount ? product.originalPrice! - product.price : 0;
+  const isSoldOut = product.stock === 0;
 
   return (
     <Card className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-shadow duration-300 hover:shadow-lg group">
@@ -26,13 +28,21 @@ export default function ProductCard({ product }: ProductCardProps) {
             src={product.images[0]}
             alt={product.name}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className={cn(
+              "object-cover transition-transform duration-300 group-hover:scale-105",
+              isSoldOut && "filter blur-sm"
+            )}
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
             data-ai-hint="product lifestyle"
           />
-           {hasDiscount && (
+           {hasDiscount && !isSoldOut && (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
               - ৳{discountAmount.toFixed(0)}
+            </div>
+          )}
+          {isSoldOut && (
+             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <span className="text-white text-lg font-bold">Sold Out</span>
             </div>
           )}
         </div>
@@ -63,6 +73,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             onClick={() => addToCart(product)}
             size="icon"
             className="h-9 w-9"
+            disabled={isSoldOut}
+            aria-label={isSoldOut ? "Sold Out" : "Add to Cart"}
           >
             <ShoppingCart className="h-4 w-4" />
           </Button>
