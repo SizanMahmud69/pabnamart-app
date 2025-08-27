@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 const CATEGORY_ORDER = [
     "Men's Fashion",
@@ -26,6 +27,7 @@ const CATEGORY_ORDER = [
 export default function AdminProductManagement() {
   const { products, deleteProduct } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const router = useRouter();
 
   const categories = useMemo(() => {
     const existingCategories = Array.from(new Set(products.map(p => p.category)));
@@ -132,14 +134,14 @@ export default function AdminProductManagement() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={() => router.push(`/admin/products/edit/${product.id}`)}>
                                                             <Edit className="mr-2 h-4 w-4" />
                                                             <span>Edit</span>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem 
                                                             className="text-destructive" 
-                                                            onClick={() => handleDelete(product.id)}
+                                                            onSelect={() => handleDelete(product.id)}
                                                         >
                                                             <Trash2 className="mr-2 h-4 w-4" />
                                                             <span>Delete</span>
