@@ -1,10 +1,11 @@
 "use client";
 
 import Link from 'next/link';
-import { Search, Store } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useState, useEffect } from 'react';
+import { Button } from './ui/button';
 
 export default function Header() {
   const router = useRouter();
@@ -28,22 +29,23 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4">
         <Link href="/" className="flex items-center gap-2">
-          <Store className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold">PabnaMart</span>
+          <span className="text-2xl font-bold text-primary">PabnaMart</span>
         </Link>
 
-        <div className="flex-1 px-4 sm:px-8 lg:px-16">
-           <form onSubmit={handleSearch} className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="flex-1">
+           <form onSubmit={handleSearch} className="relative flex w-full">
             <Input
               type="search"
-              placeholder="Search products..."
-              className="w-full rounded-full pl-10 md:text-base"
+              placeholder="Search for products..."
+              className="w-full rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <Button type="submit" className="rounded-l-none">
+                <Search className="h-5 w-5" />
+            </Button>
           </form>
         </div>
       </div>

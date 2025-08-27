@@ -18,28 +18,31 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 z-50 w-full border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+    <div className="fixed bottom-0 left-0 z-50 w-full border-t bg-background md:hidden">
       <div className="grid h-16 grid-cols-4">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'inline-flex flex-col items-center justify-center px-5 hover:bg-muted',
-              pathname === item.href ? 'text-primary' : 'text-muted-foreground'
-            )}
-          >
-            <div className="relative">
-              <item.icon className="h-6 w-6" />
-              {item.label === 'Cart' && item.count > 0 && (
-                 <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                  {item.count}
-                </span>
+        {navItems.map((item) => {
+          const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'inline-flex flex-col items-center justify-center px-5 hover:bg-muted group',
+                isActive ? 'text-primary' : 'text-gray-500'
               )}
-            </div>
-            <span className="text-xs">{item.label}</span>
-          </Link>
-        ))}
+            >
+              <div className="relative">
+                <item.icon className={cn("h-6 w-6", { "fill-primary/20": isActive })} />
+                {item.label === 'Cart' && item.count > 0 && (
+                   <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                    {item.count}
+                  </span>
+                )}
+              </div>
+              <span className={cn("text-xs", { "font-bold": isActive })}>{item.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,25 +1,20 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import type { Product } from '@/types';
 import { products as allProducts } from '@/lib/products';
 import ProductCard from '@/components/ProductCard';
-import ProductFilters from '@/components/ProductFilters';
-import AiRecommendations from '@/components/AiRecommendations';
-import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, ShoppingBag, Ticket } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import FlashSale from '@/components/FlashSale';
 
 export default function Home() {
-  const searchParams = useSearchParams();
-  const initialSearch = searchParams.get('q') || '';
-  
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [category, setCategory] = useState('all');
-  const [priceRange, setPriceRange] = useState([0, 1000]);
-  const [rating, setRating] = useState(0);
+  const flashSaleProducts = allProducts.slice(0, 4);
 
   useEffect(() => {
     setIsLoading(true);
@@ -30,76 +25,78 @@ export default function Home() {
     }, 500);
   }, []);
 
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .filter(product =>
-        category === 'all' ? true : product.category === category
-      )
-      .filter(
-        product => product.price >= priceRange[0] && product.price <= priceRange[1]
-      )
-      .filter(product => product.rating >= rating);
-  }, [products, searchQuery, category, priceRange, rating]);
-
-  const categories = useMemo(() => ['all', ...Array.from(new Set(allProducts.map(p => p.category)))], []);
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-        <aside className="lg:col-span-1">
-          <ProductFilters
-            categories={categories}
-            selectedCategory={category}
-            onCategoryChange={setCategory}
-            priceRange={priceRange}
-            onPriceChange={setPriceRange}
-            rating={rating}
-            onRatingChange={setRating}
+    <div className="bg-gray-50">
+      <div className="container mx-auto px-4 py-6 space-y-8">
+        {/* Hero Section */}
+        <div className="relative text-white rounded-lg overflow-hidden">
+          <Image
+            src="https://picsum.photos/seed/electronics/1200/400"
+            alt="Electronics Sale"
+            width={1200}
+            height={400}
+            className="object-cover w-full h-48 md:h-64"
+            data-ai-hint="electronics gadgets"
           />
-        </aside>
-
-        <main className="lg:col-span-3">
-          <div className="mb-8">
-            <AiRecommendations 
-              searchQuery={searchQuery}
-              currentProducts={filteredProducts}
-            />
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Mega Electronics Sale</h1>
+            <p className="text-lg md:text-xl mb-4">Up to 40% off on the latest gadgets and electronics.</p>
+            <Button asChild className="w-fit bg-primary hover:bg-primary/90">
+              <Link href="/products">
+                <ShoppingBag className="mr-2 h-5 w-5" />
+                Shop Now
+              </Link>
+            </Button>
           </div>
+        </div>
 
+        {/* Collect Vouchers Section */}
+        <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-0">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Ticket className="h-8 w-8 text-primary" />
+              <div>
+                <h2 className="font-bold text-lg">Collect Vouchers!</h2>
+                <p className="text-sm text-gray-600">Get extra savings on your next purchase.</p>
+              </div>
+            </div>
+            <Link href="/vouchers">
+              <ArrowRight className="h-6 w-6 text-gray-700" />
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* Flash Sale Section */}
+        <FlashSale products={flashSaleProducts} />
+
+        {/* All Products Section */}
+        <div>
+           <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">All Products</h2>
+            <Link href="/products" className="text-primary font-semibold hover:underline">
+              View All
+            </Link>
+          </div>
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="flex flex-col space-y-3">
-                  <Skeleton className="h-[250px] w-full rounded-lg" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-4/5" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                </div>
+             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-2">
+                    <div className="aspect-square bg-gray-200 rounded-md animate-pulse" />
+                    <div className="mt-2 h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
+                    <div className="mt-1 h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+                  </CardContent>
+                </Card>
               ))}
             </div>
           ) : (
-            <>
-              {filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                  {filteredProducts.map(product => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-card p-12 text-center">
-                  <h3 className="text-xl font-bold tracking-tight">No products found</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Try adjusting your search or filters.
-                  </p>
-                </div>
-              )}
-            </>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {products.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
           )}
-        </main>
+        </div>
       </div>
     </div>
   );
