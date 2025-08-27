@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 const mockReturns = [
   { id: 'R001', orderId: '12349', customer: 'Alice Brown', date: '2023-10-15', status: 'Pending' },
@@ -43,7 +44,7 @@ export default function AdminReturnManagement() {
                                 <TableHead>Customer</TableHead>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Actions</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -59,16 +60,27 @@ export default function AdminReturnManagement() {
                                             request.status === 'Rejected' ? 'destructive' : 'secondary'
                                         }>{request.status}</Badge>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="text-right">
                                         {request.status === 'Pending' && (
-                                            <div className="flex gap-2">
-                                                <Button variant="outline" size="icon" className="text-green-600">
-                                                    <CheckCircle className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="outline" size="icon" className="text-red-600">
-                                                    <XCircle className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem>
+                                                        <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                                                        <span>Approve</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-destructive">
+                                                        <XCircle className="mr-2 h-4 w-4" />
+                                                        <span>Reject</span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         )}
                                     </TableCell>
                                 </TableRow>
