@@ -52,10 +52,10 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
-      <Card className="mx-auto max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Sign Up</CardTitle>
+    <div className="bg-purple-50/30 min-h-screen flex items-center justify-center p-4">
+      <Card className="mx-auto max-w-sm w-full shadow-lg">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-primary">Create an Account</CardTitle>
           <CardDescription>
             Enter your information to create an account
           </CardDescription>
@@ -89,6 +89,7 @@ export default function SignUpPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
+                placeholder="••••••••"
               />
             </div>
              <div className="grid gap-2">
@@ -100,6 +101,7 @@ export default function SignUpPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
+                placeholder="••••••••"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -108,7 +110,7 @@ export default function SignUpPage() {
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
-            <Link href="/login" passHref className="underline">
+            <Link href="/login" passHref className="font-semibold text-primary hover:underline">
               Login
             </Link>
           </div>
