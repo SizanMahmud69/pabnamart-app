@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useTransition } from 'react';
@@ -9,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Ban, Eye, MoreHorizontal, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { User as AppUser } from '@/types';
 import { useToast } from '@/hooks/use-toast';

@@ -18,6 +18,9 @@ export async function getProductRecommendations(input: ProductRecommendationsInp
 }
 
 export async function deleteUserAccount(uid: string) {
+    if (!uid) {
+      return { success: false, message: 'User ID is missing.' };
+    }
     try {
         // Delete from Firebase Authentication
         await admin.auth().deleteUser(uid);
