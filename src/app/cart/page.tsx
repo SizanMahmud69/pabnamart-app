@@ -50,14 +50,14 @@ export default function CartPage() {
                                     data-ai-hint="product image"
                                     />
                                 </div>
-                                <div className="flex-grow">
-                                    <h3 className="font-semibold">{item.name}</h3>
+                                <div className="flex-grow min-w-0">
+                                    <h3 className="font-semibold truncate">{item.name}</h3>
                                     <p className="text-sm text-muted-foreground">
                                     Price: ৳{item.price.toFixed(2)}
                                     </p>
                                     <div className="mt-2 flex items-center gap-2">
                                         <Button 
-                                            variant="outline" size="icon" className="h-8 w-8"
+                                            variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                             disabled={item.quantity <= 1}
                                         >
@@ -67,19 +67,19 @@ export default function CartPage() {
                                             type="number"
                                             value={item.quantity}
                                             onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                                            className="h-8 w-16 text-center"
+                                            className="h-8 w-14 text-center px-1"
                                             aria-label={`Quantity for ${item.name}`}
                                         />
                                         <Button 
-                                            variant="outline" size="icon" className="h-8 w-8"
+                                            variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                         >
                                             <Plus className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="font-semibold text-lg">
+                                <div className="text-right flex flex-col items-end">
+                                    <p className="font-semibold text-lg whitespace-nowrap">
                                         ৳{(item.price * item.quantity).toFixed(2)}
                                     </p>
                                     <Button
