@@ -1,7 +1,7 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA_...Your_API_Key", // This is a placeholder, you should use your actual API key
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "pabnamart.firebaseapp.com",
   projectId: "pabnamart",
   storageBucket: "pabnamart.appspot.com",
