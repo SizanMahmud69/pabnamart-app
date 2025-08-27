@@ -40,15 +40,6 @@ export default function ProductCard({ product }: ProductCardProps) {
               - ৳{discountAmount.toFixed(0)}
             </div>
           )}
-           {product.freeShipping && !isSoldOut && (
-             <div className={cn(
-                "absolute left-2 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1",
-                hasDiscount ? "top-10" : "top-2"
-             )}>
-                <Truck className="h-3 w-3" />
-                <span>Free Delivery</span>
-            </div>
-           )}
           {isSoldOut && (
              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <span className="text-white text-lg font-bold">Sold Out</span>
@@ -63,6 +54,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {product.name}
             </Link>
         </h3>
+        {product.freeShipping && !isSoldOut && (
+            <div className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 w-fit">
+                <Truck className="h-3 w-3" />
+                <span>Free Delivery</span>
+            </div>
+        )}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Star className="w-4 h-4 fill-accent text-accent" />
           <span>{product.rating.toFixed(1)}</span>
