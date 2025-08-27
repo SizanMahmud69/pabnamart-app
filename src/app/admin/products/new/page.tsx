@@ -115,14 +115,14 @@ export default function NewProductPage() {
                                 <Label htmlFor="description">Description</Label>
                                 <Textarea id="description" name="description" placeholder="Describe the product" required />
                             </div>
-                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                             <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Price (৳)</Label>
-                                    <Input id="price" name="price" type="number" placeholder="e.g., 99.99" required />
+                                    <Input id="price" name="price" type="number" placeholder="e.g., 99" required />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="originalPrice">Discount Price (৳)</Label>
-                                    <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 79.99" />
+                                    <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 79" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="stock">Stock</Label>
