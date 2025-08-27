@@ -111,7 +111,7 @@ export default function AiRecommendations({ searchQuery, currentProducts }: AiRe
                         </div>
                         <div>
                           <h4 className="font-semibold">{product.name}</h4>
-                          <p className="text-sm text-primary">${product.price.toFixed(2)}</p>
+                          <p className="text-sm text-primary">৳{product.price.toFixed(2)}</p>
                         </div>
                       </CardContent>
                     </Card>

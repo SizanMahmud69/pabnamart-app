@@ -45,7 +45,7 @@ export default function ShoppingCartSheet({ children }: { children: ReactNode })
                     <div className="flex-grow">
                       <h4 className="font-semibold">{item.name}</h4>
                       <p className="text-sm text-muted-foreground">
-                        ${item.price.toFixed(2)}
+                        ৳{item.price.toFixed(2)}
                       </p>
                       <div className="mt-2 flex items-center gap-2">
                         <Input
@@ -70,7 +70,7 @@ export default function ShoppingCartSheet({ children }: { children: ReactNode })
                       </div>
                     </div>
                     <p className="font-semibold">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ৳{(item.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
                 ))}
@@ -80,7 +80,7 @@ export default function ShoppingCartSheet({ children }: { children: ReactNode })
               <div className="flex w-full flex-col gap-4">
                 <div className="flex justify-between font-bold">
                   <span>Subtotal</span>
-                  <span>${cartTotal.toFixed(2)}</span>
+                  <span>৳{cartTotal.toFixed(2)}</span>
                 </div>
                 <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                   Proceed to Checkout

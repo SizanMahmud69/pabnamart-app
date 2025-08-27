@@ -51,7 +51,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-primary mb-4">${product.price.toFixed(2)}</p>
+              <p className="text-3xl font-bold text-primary mb-4">৳{product.price.toFixed(2)}</p>
               <CardDescription className="text-base leading-relaxed">{product.description}</CardDescription>
               <div className="mt-6">
                 <AddToCartButton product={product} />

@@ -39,7 +39,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             </Link>
         </CardTitle>
         <div className="flex items-center justify-between">
-          <p className="text-xl font-semibold text-primary">${product.price.toFixed(2)}</p>
+          <p className="text-xl font-semibold text-primary">৳{product.price.toFixed(2)}</p>
           <StarRating rating={product.rating} />
         </div>
       </CardContent>
