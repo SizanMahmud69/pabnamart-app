@@ -47,7 +47,7 @@ function HomePageContent() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const flashSaleProducts = allProducts.map(p => ({...p, originalPrice: p.price + 50}));
+  const flashSaleProducts = allProducts.slice(-2).map(p => ({...p, originalPrice: p.price + 50}));
 
   useEffect(() => {
     setIsLoading(true);
