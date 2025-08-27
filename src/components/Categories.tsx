@@ -1,14 +1,14 @@
 
 import Link from 'next/link';
-import { Shirt, Heart, ShoppingBasket, Smartphone, Tv2 } from 'lucide-react';
+import { Shirt, Heart, ShoppingBasket, Smartphone, Tv2, Laptop } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const categories = [
-  { name: "Men's\nFashion", icon: Shirt, href: "/category/Apparel", color: "bg-blue-100 text-blue-600" },
-  { name: "Women's\nFashion", icon: Shirt, href: "/category/Apparel", color: "bg-purple-100 text-purple-600" },
+  { name: "Men's Fashion", icon: Shirt, href: "/category/Men's Fashion", color: "bg-blue-100 text-blue-600" },
+  { name: "Women's Fashion", icon: Shirt, href: "/category/Women's Fashion", color: "bg-purple-100 text-purple-600" },
   { name: "Cosmetics", icon: Heart, href: "/category/Cosmetics", color: "bg-pink-100 text-pink-600" },
-  { name: "Grocery", icon: ShoppingBasket, href: "/category/Groceries", color: "bg-green-100 text-green-600" },
-  { name: "Mobile", icon: Smartphone, href: "/category/Electronics", color: "bg-cyan-100 text-cyan-600" },
+  { name: "Groceries", icon: ShoppingBasket, href: "/category/Groceries", color: "bg-green-100 text-green-600" },
+  { name: "Mobile & Computers", icon: Laptop, href: "/category/Mobile & Computers", color: "bg-cyan-100 text-cyan-600" },
   { name: "Electronics", icon: Tv2, href: "/category/Electronics", color: "bg-indigo-100 text-indigo-600" },
 ];
 

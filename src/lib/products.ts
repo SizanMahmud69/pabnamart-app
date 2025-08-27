@@ -42,7 +42,7 @@ export const products: Product[] = [
       'Achieve your best performance with these lightweight and comfortable running shoes. Designed for maximum support and durability, they are perfect for your daily run.',
     price: 120.0,
     rating: 4.7,
-    category: 'Apparel',
+    category: 'Men\'s Fashion',
     stock: 8,
     images: [
       'https://picsum.photos/seed/shoes1/600/600',
@@ -87,19 +87,19 @@ export const products: Product[] = [
   },
   {
     id: 9,
-    name: 'Portable Power Bank',
+    name: 'Gaming Laptop',
     description:
-      'Never run out of battery again with this high-capacity portable power bank. Its compact design makes it easy to carry, and it can charge your phone multiple times.',
-    price: 49.99,
-    rating: 4.7,
-    category: 'Electronics',
-    stock: 15,
+      'High-performance gaming laptop with the latest graphics card and a high-refresh-rate display for a smooth gaming experience.',
+    price: 1499.99,
+    rating: 4.9,
+    category: 'Mobile & Computers',
+    stock: 10,
     images: [
-      'https://picsum.photos/seed/powerbank1/600/600',
-      'https://picsum.photos/seed/powerbank2/600/600',
+      'https://picsum.photos/seed/laptop1/600/600',
+      'https://picsum.photos/seed/laptop2/600/600',
     ],
     reviews: [
-        { user: 'Chris', comment: 'A lifesaver for traveling. Charges my devices quickly.' },
+        { user: 'Chris', comment: 'A beast for gaming. Runs everything flawlessly.' },
     ]
   },
   {
@@ -125,7 +125,7 @@ export const products: Product[] = [
       'Stay cool and stylish in this beautiful floral summer dress. Made from breathable cotton, it\'s perfect for warm weather and casual outings.',
     price: 75.0,
     rating: 4.6,
-    category: 'Apparel',
+    category: 'Women\'s Fashion',
     stock: 20,
     images: [
       'https://picsum.photos/seed/dress1/600/600',

@@ -36,7 +36,7 @@ const heroBanners = [
     title: "New Fashion Arrivals",
     description: "Check out the latest trends in our apparel section.",
     image: "https://picsum.photos/seed/fashion/1200/400",
-    link: "/category/Apparel",
+    link: "/category/Women's Fashion",
     aiHint: "stylish clothes"
   }
 ];
