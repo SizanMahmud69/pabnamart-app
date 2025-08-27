@@ -2,25 +2,6 @@ import type { Product } from '@/types';
 
 export const products: Product[] = [
   {
-    id: 1,
-    name: 'Classic Leather Watch',
-    description:
-      'A timeless piece that combines classic design with modern functionality. Featuring a genuine leather strap and a stainless steel case, this watch is perfect for any occasion.',
-    price: 150.0,
-    rating: 4.5,
-    category: 'Accessories',
-    stock: 10,
-    images: [
-      'https://picsum.photos/seed/watch1/600/600',
-      'https://picsum.photos/seed/watch2/600/600',
-      'https://picsum.photos/seed/watch3/600/600',
-    ],
-    reviews: [
-      { user: 'Alex', comment: 'Absolutely love this watch! Great quality and looks amazing.' },
-      { user: 'Maria', comment: 'Very stylish and comfortable to wear.' },
-    ],
-  },
-  {
     id: 2,
     name: 'Wireless Bluetooth Headphones',
     description:
@@ -36,20 +17,6 @@ export const products: Product[] = [
     reviews: [
       { user: 'John D.', comment: 'Incredible sound quality and very long battery life. Highly recommended!' },
     ],
-  },
-  {
-    id: 3,
-    name: 'Modern Ceramic Vase',
-    description:
-      'Add a touch of elegance to your home with this beautifully crafted ceramic vase. Its minimalist design complements any decor, making it a perfect centerpiece.',
-    price: 45.5,
-    rating: 4.2,
-    category: 'Home Goods',
-    stock: 5,
-    images: [
-      'https://picsum.photos/seed/vase1/600/600',
-    ],
-    reviews: [],
   },
   {
     id: 4,
@@ -119,22 +86,6 @@ export const products: Product[] = [
     ]
   },
   {
-    id: 8,
-    name: 'Scented Soy Candle',
-    description:
-      'Create a relaxing atmosphere with this lavender-scented soy candle. Made from natural soy wax, it provides a clean and long-lasting burn.',
-    price: 25.0,
-    rating: 4.6,
-    category: 'Home Goods',
-    stock: 20,
-    images: [
-      'https://picsum.photos/seed/candle1/600/600',
-    ],
-    reviews: [
-        { user: 'Jessica', comment: 'The scent is so calming and it burns evenly.' },
-    ]
-  },
-  {
     id: 9,
     name: 'Portable Power Bank',
     description:
@@ -152,51 +103,36 @@ export const products: Product[] = [
     ]
   },
   {
-    id: 10,
-    name: 'Yoga Mat',
+    id: 13,
+    name: 'Luxury Foundation',
     description:
-      'Enhance your yoga practice with this non-slip and eco-friendly yoga mat. It provides excellent cushioning and support for all your poses.',
-    price: 35.0,
+      'A lightweight, full-coverage foundation that leaves a natural, radiant finish. Formulated with skin-loving ingredients to improve your complexion over time.',
+    price: 55.0,
     rating: 4.8,
-    category: 'Sports',
-    stock: 30,
+    category: 'Cosmetics',
+    stock: 15,
     images: [
-      'https://picsum.photos/seed/yogamat1/600/600',
+      'https://picsum.photos/seed/foundation1/600/600',
     ],
     reviews: [
-        { user: 'Anna', comment: 'Great grip and very comfortable. Perfect for my daily yoga sessions.' },
+        { user: 'Grace', comment: 'Flawless coverage and feels so light on the skin!' },
     ]
   },
-  {
-    id: 11,
-    name: 'Designer Sunglasses',
+   {
+    id: 14,
+    name: 'Women\'s Summer Dress',
     description:
-      'Protect your eyes in style with these chic designer sunglasses. Featuring UV400 protection and a modern frame, they are a must-have accessory.',
-    price: 180.0,
-    rating: 4.9,
-    category: 'Accessories',
-    stock: 7,
+      'Stay cool and stylish in this beautiful floral summer dress. Made from breathable cotton, it\'s perfect for warm weather and casual outings.',
+    price: 75.0,
+    rating: 4.6,
+    category: 'Apparel',
+    stock: 20,
     images: [
-      'https://picsum.photos/seed/sunglasses1/600/600',
+      'https://picsum.photos/seed/dress1/600/600',
+      'https://picsum.photos/seed/dress2/600/600'
     ],
     reviews: [
-        { user: 'Laura', comment: 'Love these sunglasses! They are so stylish and well-made.' },
+        { user: 'Chloe', comment: 'I love this dress! The fit is perfect and the fabric is so comfortable.' },
     ]
-  },
-  {
-    id: 12,
-    name: 'Insulated Water Bottle',
-    description:
-      'Keep your drinks cold for 24 hours or hot for 12 hours with this stainless steel insulated water bottle. It\'s leak-proof and perfect for on-the-go hydration.',
-    price: 30.0,
-    rating: 4.9,
-    category: 'Sports',
-    stock: 18,
-    images: [
-      'https://picsum.photos/seed/bottle1/600/600',
-    ],
-    reviews: [
-        { user: 'Mark', comment: 'Works like a charm. Keeps my water cold all day long.' },
-    ]
-  },
+  }
 ];
