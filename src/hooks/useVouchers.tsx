@@ -4,6 +4,9 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import type { Voucher } from '@/types';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from './useAuth';
+import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import app from '@/lib/firebase';
 
 interface VoucherContextType {
   collectedVouchers: Voucher[];
@@ -13,30 +16,46 @@ interface VoucherContextType {
 
 const VoucherContext = createContext<VoucherContextType | undefined>(undefined);
 
+const db = getFirestore(app);
+
 export const VoucherProvider = ({ children }: { children: ReactNode }) => {
-  const [collectedVouchers, setCollectedVouchers] = useState<Voucher[]>(() => {
-    if (typeof window === 'undefined') {
-      return [];
-    }
-    try {
-      const savedVouchers = window.localStorage.getItem('collectedVouchers');
-      return savedVouchers ? JSON.parse(savedVouchers) : [];
-    } catch (error) {
-      console.error("Error reading vouchers from localStorage", error);
-      return [];
-    }
-  });
+  const [collectedVouchers, setCollectedVouchers] = useState<Voucher[]>([]);
+  const { user } = useAuth();
   const { toast } = useToast();
+
+  const updateFirestoreVouchers = useCallback(async (vouchers: Voucher[]) => {
+    if (user) {
+      const voucherRef = doc(db, 'userVouchers', user.uid);
+      await setDoc(voucherRef, { vouchers });
+    }
+  }, [user]);
   
   useEffect(() => {
-    try {
-      window.localStorage.setItem('collectedVouchers', JSON.stringify(collectedVouchers));
-    } catch (error) {
-      console.error("Error saving vouchers to localStorage", error);
+    if (user) {
+      const voucherRef = doc(db, 'userVouchers', user.uid);
+      const unsubscribe = onSnapshot(voucherRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setCollectedVouchers(docSnap.data().vouchers || []);
+        } else {
+            setCollectedVouchers([]);
+        }
+      });
+      return () => unsubscribe();
+    } else {
+      setCollectedVouchers([]);
     }
-  }, [collectedVouchers]);
+  }, [user]);
 
   const collectVoucher = useCallback((voucher: Voucher) => {
+    if (!user) {
+        toast({
+            title: "Please log in",
+            description: "You need to be logged in to collect vouchers.",
+            variant: "destructive"
+        });
+        return;
+    }
+      
     const isAlreadyCollected = collectedVouchers.some(v => v.code === voucher.code);
 
     if (isAlreadyCollected) {
@@ -47,13 +66,15 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       });
       return;
     }
-
-    setCollectedVouchers(prevVouchers => [...prevVouchers, voucher]);
+    
+    const newVouchers = [...collectedVouchers, voucher];
+    setCollectedVouchers(newVouchers);
+    updateFirestoreVouchers(newVouchers);
     toast({
       title: "Voucher Collected!",
       description: `Voucher ${voucher.code} has been added to your account.`,
     });
-  }, [collectedVouchers, toast]);
+  }, [collectedVouchers, toast, user, updateFirestoreVouchers]);
 
 
   const voucherCount = collectedVouchers.length;

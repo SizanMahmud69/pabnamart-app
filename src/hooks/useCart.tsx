@@ -4,6 +4,9 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import type { CartItem, Product } from '@/types';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from './useAuth';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import app from '@/lib/firebase';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -16,66 +19,84 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const db = getFirestore(app);
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    if (typeof window === 'undefined') {
-      return [];
-    }
-    try {
-      const savedCart = window.localStorage.getItem('cartItems');
-      return savedCart ? JSON.parse(savedCart) : [];
-    } catch (error) {
-      console.error("Error reading cart from localStorage", error);
-      return [];
-    }
-  });
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { user } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    try {
-      window.localStorage.setItem('cartItems', JSON.stringify(cartItems));
-    } catch (error) {
-      console.error("Error saving cart to localStorage", error);
+  const updateFirestoreCart = useCallback(async (items: CartItem[]) => {
+    if (user) {
+      const cartRef = doc(db, 'carts', user.uid);
+      await setDoc(cartRef, { items });
     }
-  }, [cartItems]);
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      const cartRef = doc(db, 'carts', user.uid);
+      const unsubscribe = onSnapshot(cartRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setCartItems(docSnap.data().items || []);
+        } else {
+          setCartItems([]);
+        }
+      });
+      return () => unsubscribe();
+    } else {
+      setCartItems([]);
+    }
+  }, [user]);
 
   const addToCart = useCallback((product: Product) => {
-    setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prevItems, { ...product, quantity: 1 }];
-    });
+    if (!user) {
+        toast({
+            title: "Please log in",
+            description: "You need to be logged in to add items to your cart.",
+            variant: "destructive"
+        });
+        return;
+    }
+
+    const newCartItems = [...cartItems];
+    const existingItem = newCartItems.find(item => item.id === product.id);
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      newCartItems.push({ ...product, quantity: 1 });
+    }
+    setCartItems(newCartItems);
+    updateFirestoreCart(newCartItems);
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
     });
-  }, [toast]);
+  }, [cartItems, updateFirestoreCart, toast, user]);
 
   const removeFromCart = useCallback((productId: number) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+    if (!user) return;
+    const newCartItems = cartItems.filter(item => item.id !== productId);
+    setCartItems(newCartItems);
+    updateFirestoreCart(newCartItems);
     toast({
       title: "Removed from cart",
       description: `The item has been removed from your cart.`,
     });
-  }, [toast]);
+  }, [cartItems, updateFirestoreCart, toast, user]);
 
   const updateQuantity = useCallback((productId: number, quantity: number) => {
+    if (!user) return;
     if (quantity <= 0) {
       removeFromCart(productId);
       return;
     }
-    setCartItems(prevItems =>
-      prevItems.map(item =>
+    const newCartItems = cartItems.map(item =>
         item.id === productId ? { ...item, quantity } : item
-      )
     );
-  }, [removeFromCart]);
+    setCartItems(newCartItems);
+    updateFirestoreCart(newCartItems);
+  }, [cartItems, removeFromCart, updateFirestoreCart, user]);
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cartItems.reduce(
