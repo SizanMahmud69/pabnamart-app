@@ -44,18 +44,18 @@ export default function VouchersPage() {
                     <h2 className="text-xl font-bold mb-4">Available Vouchers</h2>
                     <div className="space-y-4">
                         {vouchers.map((voucher, index) => (
-                            <div key={index} className="rounded-lg bg-white shadow-sm overflow-hidden">
+                            <div key={index} className="rounded-lg bg-gradient-to-r from-purple-100 to-pink-100 shadow-sm overflow-hidden border-0">
                                 <div className="p-4">
                                     <div className="flex items-center gap-4">
                                         <Ticket className="h-10 w-10 text-primary" />
                                         <div>
                                             <h3 className="text-xl font-bold text-primary">{voucher.discount}</h3>
-                                            <p className="text-sm text-muted-foreground">{voucher.description}</p>
+                                            <p className="text-sm text-gray-600">{voucher.description}</p>
                                         </div>
                                     </div>
                                 </div>
                                 <Separator />
-                                <div className="p-4 bg-purple-50/30 flex justify-between items-center">
+                                <div className="p-4 bg-white/50 flex justify-between items-center">
                                     <div>
                                         <p className="text-xs text-muted-foreground">Voucher Code</p>
                                         <p className="font-mono font-bold">{voucher.code}</p>
