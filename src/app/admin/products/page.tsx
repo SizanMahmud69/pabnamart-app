@@ -5,12 +5,13 @@ import { useProducts } from '@/hooks/useProducts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit, PlusCircle, Star, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 const CATEGORY_ORDER = [
     "Men's Fashion",
@@ -91,8 +92,11 @@ export default function AdminProductManagement() {
                                     <TableRow>
                                         <TableHead>Image</TableHead>
                                         <TableHead>Name</TableHead>
+                                        <TableHead>Category</TableHead>
                                         <TableHead>Price</TableHead>
+                                        <TableHead>Original Price</TableHead>
                                         <TableHead>Stock</TableHead>
+                                        <TableHead>Rating</TableHead>
                                         <TableHead>Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -103,8 +107,20 @@ export default function AdminProductManagement() {
                                                 <Image src={product.images[0]} alt={product.name} width={40} height={40} className="rounded-md object-cover" data-ai-hint="product image" />
                                             </TableCell>
                                             <TableCell className="font-medium">{product.name}</TableCell>
+                                            <TableCell>{product.category}</TableCell>
                                             <TableCell>৳{product.price.toFixed(2)}</TableCell>
-                                            <TableCell>{product.stock}</TableCell>
+                                            <TableCell>{product.originalPrice ? `৳${product.originalPrice.toFixed(2)}` : 'N/A'}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={product.stock > 10 ? 'default' : product.stock > 0 ? 'secondary' : 'destructive'}>
+                                                    {product.stock > 0 ? `${product.stock} in stock` : 'Out of Stock'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1">
+                                                    <Star className="h-4 w-4 text-accent fill-accent" />
+                                                    {product.rating.toFixed(1)}
+                                                </div>
+                                            </TableCell>
                                             <TableCell>
                                                 <div className="flex gap-2">
                                                     <Button variant="outline" size="icon">
