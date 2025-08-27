@@ -2,7 +2,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Ticket, Settings, Wallet, Box, Truck, PackageCheck, Undo2, HelpCircle, Headphones, Star, Users } from "lucide-react";
 import Link from "next/link";
