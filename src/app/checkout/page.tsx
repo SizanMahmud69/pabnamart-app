@@ -59,6 +59,13 @@ function CheckoutPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
 
   const handleApplyVoucher = (code: string) => {
+    if (!code) {
+        setSelectedVoucher(null);
+        setDiscount(0);
+        setError(null);
+        return;
+    }
+
     const voucher = collectedVouchers.find(v => v.code === code);
     if (!voucher) {
       setSelectedVoucher(null);
@@ -77,15 +84,18 @@ function CheckoutPage() {
     setError(null);
     setSelectedVoucher(voucher);
 
+    let calculatedDiscount = 0;
     if (voucher.type === 'fixed') {
-      setDiscount(voucher.discount);
+      calculatedDiscount = voucher.discount;
     } else {
-      setDiscount((cartTotal * voucher.discount) / 100);
+      calculatedDiscount = (cartTotal * voucher.discount) / 100;
     }
+    setDiscount(calculatedDiscount);
   };
 
-  const finalTotal = cartTotal - discount > 0 ? cartTotal - discount : 0;
   const shippingFee = 50;
+  const totalBeforeDiscount = cartTotal + shippingFee;
+  const finalTotal = totalBeforeDiscount - discount > 0 ? totalBeforeDiscount - discount : 0;
 
   if (cartCount === 0) {
     return (
@@ -186,6 +196,29 @@ function CheckoutPage() {
                     ))}
                  </div>
                  <Separator className="my-4" />
+
+                 <div className="space-y-2">
+                    <Label htmlFor="voucher">Apply Voucher</Label>
+                    <Select onValueChange={handleApplyVoucher}>
+                        <SelectTrigger id="voucher">
+                            <SelectValue placeholder="Select a voucher" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="">No Voucher</SelectItem>
+                            {collectedVouchers.map(v => (
+                                <SelectItem key={v.code} value={v.code}>{v.code} - {v.description}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                     {error && (
+                        <Alert variant="destructive" className="mt-2">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    )}
+                 </div>
+
+                 <Separator className="my-4" />
                  <div className="space-y-2">
                     <div className="flex justify-between">
                         <span>Subtotal</span>
@@ -195,10 +228,16 @@ function CheckoutPage() {
                         <span>Shipping</span>
                         <span>৳{shippingFee.toFixed(2)}</span>
                     </div>
+                    {discount > 0 && (
+                        <div className="flex justify-between text-primary">
+                            <span>Discount</span>
+                            <span>- ৳{discount.toFixed(2)}</span>
+                        </div>
+                    )}
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                         <span>Total</span>
-                        <span>৳{(cartTotal + shippingFee).toFixed(2)}</span>
+                        <span>৳{finalTotal.toFixed(2)}</span>
                     </div>
                  </div>
               </CardContent>
@@ -208,7 +247,7 @@ function CheckoutPage() {
                 <div className="container mx-auto max-w-3xl flex items-center justify-between">
                     <div className="text-lg font-bold">
                         <p className="text-sm text-muted-foreground">Total to Pay</p>
-                        ৳{(cartTotal + shippingFee).toFixed(2)}
+                        ৳{finalTotal.toFixed(2)}
                     </div>
                     <Button size="lg" className="w-1/2">
                         Place Order
