@@ -15,7 +15,8 @@ import {
 import app from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import type { User as AppUser } from '@/types';
 
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -44,8 +45,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
-  const login = (email: string, password: string) => {
-    return signInWithEmailAndPassword(auth, email, password);
+  const login = async (email: string, password: string) => {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
+
+    // Check user status in Firestore before allowing login
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (userDocSnap.exists()) {
+        const userData = userDocSnap.data() as AppUser;
+        if (userData.status === 'banned') {
+            await signOut(auth);
+            throw new Error('Your account has been banned. Please contact support.');
+        }
+    } else {
+        // This case might happen if user was created in Auth but not in Firestore, or was deleted from Firestore.
+        // For security, we can deny login.
+        await signOut(auth);
+        throw new Error('User data not found. Please contact support.');
+    }
+
+    return userCredential;
   };
 
   const signup = async (email: string, password: string, displayName: string) => {
