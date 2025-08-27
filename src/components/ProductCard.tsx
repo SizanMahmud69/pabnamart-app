@@ -43,7 +43,7 @@ export default function ProductCard({ product }: ProductCardProps) {
            {product.freeShipping && !isSoldOut && (
              <div className={cn(
                 "absolute left-2 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1",
-                hasDiscount ? "top-9" : "top-2"
+                hasDiscount ? "top-10" : "top-2"
              )}>
                 <Truck className="h-3 w-3" />
                 <span>Free Delivery</span>
