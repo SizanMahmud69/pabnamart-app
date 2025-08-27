@@ -2,21 +2,37 @@
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
-import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import StarRating from '@/components/StarRating';
 import AddToCartButton from './AddToCartButton';
 import { Separator } from '@/components/ui/separator';
+import { useEffect, useState } from 'react';
+import type { Product } from '@/types';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const { products } = useProducts();
-  const product = products.find(p => p.id === parseInt(params.id));
+  const [product, setProduct] = useState<Product | undefined | null>(null);
+  
+  useEffect(() => {
+    if (products.length > 0) {
+        const foundProduct = products.find(p => p.id === parseInt(params.id));
+        setProduct(foundProduct);
+    }
+  }, [products, params.id]);
+
+  if (product === null) {
+    return (
+        <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
+            <div className="text-center">
+                <h1 className="text-4xl font-bold">Loading...</h1>
+            </div>
+        </div>
+    )
+  }
 
   if (!product) {
-    // We can't use notFound() in a client component directly in this way.
-    // A better approach would be to handle the "not found" state within the component's render logic.
     return (
         <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
             <div className="text-center">
