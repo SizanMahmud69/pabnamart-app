@@ -51,7 +51,7 @@ const paymentMethods = [
 ]
 
 function CheckoutPage() {
-  const { cartItems, cartTotal, cartCount, updateQuantity } = useCart();
+  const { cartItems, cartTotal, cartCount, updateQuantity, shippingFee } = useCart();
   const { user } = useAuth();
   const { collectedVouchers } = useVouchers();
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
@@ -104,7 +104,6 @@ function CheckoutPage() {
   }, [selectedVoucher, cartTotal]);
 
 
-  const shippingFee = 50;
   const subtotalWithDiscount = cartTotal - orderDiscount > 0 ? cartTotal - orderDiscount : 0;
   const shippingFeeWithDiscount = shippingFee - shippingDiscount > 0 ? shippingFee - shippingDiscount : 0;
   const finalTotal = subtotalWithDiscount + shippingFeeWithDiscount;

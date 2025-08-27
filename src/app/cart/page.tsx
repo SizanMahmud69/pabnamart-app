@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, cartTotal, cartCount, shippingFee } = useCart();
   const { user } = useAuth();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -28,6 +28,8 @@ export default function CartPage() {
     }
     // No need to set isCheckingOut to false as we are navigating away
   };
+
+  const finalTotal = cartTotal + shippingFee;
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
@@ -115,12 +117,12 @@ export default function CartPage() {
                     </div>
                     <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span className="text-primary font-semibold">Free</span>
+                    <span>৳{shippingFee.toFixed(2)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                     <span>Total Amount</span>
-                    <span>৳{cartTotal.toFixed(2)}</span>
+                    <span>৳{finalTotal.toFixed(2)}</span>
                     </div>
                 </CardContent>
                 <CardFooter>

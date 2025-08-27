@@ -1,7 +1,7 @@
 
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo } from 'react';
 import type { CartItem, Product } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
@@ -15,11 +15,16 @@ interface CartContextType {
   updateQuantity: (productId: number, quantity: number) => void;
   cartCount: number;
   cartTotal: number;
+  shippingFee: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const db = getFirestore(app);
+
+const BASE_SHIPPING_FEE = 50;
+const EXTRA_ITEM_FEE = 10;
+const FREE_SHIPPING_LIMIT = 5;
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -104,6 +109,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     0
   );
 
+  const shippingFee = useMemo(() => {
+    if (cartCount === 0) return 0;
+    if (cartCount <= FREE_SHIPPING_LIMIT) {
+        return BASE_SHIPPING_FEE;
+    }
+    const extraItems = cartCount - FREE_SHIPPING_LIMIT;
+    return BASE_SHIPPING_FEE + (extraItems * EXTRA_ITEM_FEE);
+  }, [cartCount]);
+
+
   return (
     <CartContext.Provider
       value={{
@@ -113,6 +128,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         updateQuantity,
         cartCount,
         cartTotal,
+        shippingFee,
       }}
     >
       {children}
