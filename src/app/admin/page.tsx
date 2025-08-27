@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ShoppingCart, Undo2, ArrowRight } from "lucide-react";
+import { Package, Users, ShoppingCart, Undo2, ArrowRight, Tag, Ticket } from "lucide-react";
 import Link from "next/link";
 
 const menuItems = [
@@ -29,6 +29,18 @@ const menuItems = [
         description: "Manage and process return requests.",
         icon: Undo2,
         href: "/admin/returns"
+    },
+    {
+        title: "Offer Management",
+        description: "Create and manage special offers.",
+        icon: Tag,
+        href: "/admin/offers"
+    },
+    {
+        title: "Voucher Management",
+        description: "Create and distribute vouchers.",
+        icon: Ticket,
+        href: "/admin/vouchers"
     }
 ];
 
