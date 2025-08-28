@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
-import { ArrowLeft, User as UserIcon, Mail, MapPin, CreditCard, ShoppingBag, Download, CircleDollarSign } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, CreditCard, ShoppingBag, Download } from 'lucide-react';
 import Link from 'next/link';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -227,5 +227,4 @@ export default function OrderDetailsPage() {
             </main>
         </div>
     );
-
-    
+}
