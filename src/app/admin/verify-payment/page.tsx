@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, MoreHorizontal, Eye } from 'lucide-react';
 import Link from 'next/link';
 import type { Order, User as AppUser } from '@/types';
 import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const db = getFirestore(app);
 
@@ -57,7 +58,7 @@ export default function VerifyPaymentPage() {
     }, [users]);
 
     const sortedOrders = useMemo(() => {
-        return [...pendingOrders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return [...pendingOrders].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [pendingOrders]);
 
     const handleVerifyPayment = async (orderId: string) => {
@@ -122,10 +123,25 @@ export default function VerifyPaymentPage() {
                                                 <Badge variant="secondary" className="capitalize">{order.status}</Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <Button size="sm" onClick={() => handleVerifyPayment(order.id)}>
-                                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                                    Verify Payment
-                                                </Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem onSelect={() => alert('View details feature coming soon!')}>
+                                                            <Eye className="mr-2 h-4 w-4" />
+                                                            View Details
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={() => handleVerifyPayment(order.id)}>
+                                                            <CheckCircle className="mr-2 h-4 w-4" />
+                                                            Verify Payment
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
                                     ))
