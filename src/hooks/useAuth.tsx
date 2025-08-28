@@ -141,7 +141,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userDocRef = doc(db, 'users', auth.currentUser.uid);
     await setDoc(userDocRef, { photoURL }, { merge: true });
 
-    setUser({ ...auth.currentUser });
+    // Force a refresh of the user object to get the new photoURL
+    await auth.currentUser.reload();
+    const refreshedUser = auth.currentUser;
+    setUser(refreshedUser ? { ...refreshedUser } : null);
   };
 
   const value = {
