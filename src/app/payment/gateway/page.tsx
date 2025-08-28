@@ -72,21 +72,29 @@ function PaymentGatewayPage() {
             merchantNumber: paymentMethods.find(m => m.name === selectedMethod)?.merchantNumber || ''
         };
 
-        // Place order with 'pending' status for verification
-        const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'online', paymentDetails);
+        try {
+            const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'online', paymentDetails);
 
-        if (result.success) {
-            toast({
-                title: "Order Placed!",
-                description: "Your payment will be verified within 10 minutes.",
-            });
-            clearCart();
-            sessionStorage.removeItem('orderDetails');
-            router.push('/account/orders?status=pending');
-        } else {
-            toast({
+            if (result.success) {
+                toast({
+                    title: "Order Placed!",
+                    description: "Your payment will be verified within 10 minutes.",
+                });
+                clearCart();
+                sessionStorage.removeItem('orderDetails');
+                router.push('/account/orders?status=pending');
+            } else {
+                toast({
+                    title: "Order Failed",
+                    description: result.message || "Something went wrong.",
+                    variant: "destructive"
+                });
+                setIsProcessing(false);
+            }
+        } catch (error) {
+             toast({
                 title: "Order Failed",
-                description: result.message || "Something went wrong.",
+                description: "An unexpected error occurred while placing your order.",
                 variant: "destructive"
             });
             setIsProcessing(false);

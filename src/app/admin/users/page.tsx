@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useTransition } from 'react';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Ban, Eye, MoreHorizontal, Trash2 } from 'lucide-react';
+import { ArrowLeft, Ban, Eye, MoreHorizontal, Trash2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { getFirestore, collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
@@ -169,6 +170,7 @@ export default function AdminUserManagement() {
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={confirmDeleteUser} disabled={isPending}>
+                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {isPending ? "Deleting..." : "Continue"}
                         </AlertDialogAction>
                     </AlertDialogFooter>

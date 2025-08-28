@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product } from '@/types';
@@ -113,33 +113,33 @@ export default function NewProductPage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Product Name</Label>
-                                <Input id="name" name="name" placeholder="e.g., Wireless Headphones" required />
+                                <Input id="name" name="name" placeholder="e.g., Wireless Headphones" required disabled={isLoading} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="description">Description</Label>
-                                <Textarea id="description" name="description" placeholder="Describe the product" required />
+                                <Textarea id="description" name="description" placeholder="Describe the product" required disabled={isLoading} />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="details">Product Details</Label>
-                                <Textarea id="details" name="details" placeholder="Add detailed specifications or features" />
+                                <Textarea id="details" name="details" placeholder="Add detailed specifications or features" disabled={isLoading} />
                             </div>
                              <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Discount Price</Label>
-                                    <Input id="price" name="price" type="number" placeholder="e.g., 79" required />
+                                    <Input id="price" name="price" type="number" placeholder="e.g., 79" required disabled={isLoading} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="originalPrice">Original Price</Label>
-                                    <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 99" />
+                                    <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 99" disabled={isLoading} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="stock">Product Stock</Label>
-                                    <Input id="stock" name="stock" type="number" placeholder="e.g., 50" required />
+                                    <Input id="stock" name="stock" type="number" placeholder="e.g., 50" required disabled={isLoading} />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="category">Category</Label>
-                                <Select onValueChange={setCategory} required value={category}>
+                                <Select onValueChange={setCategory} required value={category} disabled={isLoading}>
                                     <SelectTrigger id="category">
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
@@ -156,7 +156,7 @@ export default function NewProductPage() {
                             <div className="space-y-4 border-t pt-4">
                                 <Label className="text-base font-semibold">Shipping & Returns</Label>
                                 <div className="flex items-center space-x-2">
-                                    <Checkbox id="free-shipping" checked={freeShipping} onCheckedChange={(checked) => setFreeShipping(checked as boolean)} />
+                                    <Checkbox id="free-shipping" checked={freeShipping} onCheckedChange={(checked) => setFreeShipping(checked as boolean)} disabled={isLoading} />
                                     <label
                                         htmlFor="free-shipping"
                                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -167,11 +167,11 @@ export default function NewProductPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="shipping-time">Shipping Time (e.g., 2-3)</Label>
-                                        <Input id="shipping-time" name="shippingTime" placeholder="e.g., 2-3" />
+                                        <Input id="shipping-time" name="shippingTime" placeholder="e.g., 2-3" disabled={isLoading} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="return-policy">Return Policy (in days)</Label>
-                                        <Input id="return-policy" name="returnPolicy" type="number" placeholder="e.g., 30" />
+                                        <Input id="return-policy" name="returnPolicy" type="number" placeholder="e.g., 30" disabled={isLoading} />
                                     </div>
                                 </div>
                             </div>
@@ -186,6 +186,7 @@ export default function NewProductPage() {
                                                 value={url}
                                                 onChange={(e) => handleImageChange(index, e.target.value)}
                                                 placeholder="https://example.com/image.png"
+                                                disabled={isLoading}
                                             />
                                             {imageUrls.length > 1 && (
                                                 <Button
@@ -193,6 +194,7 @@ export default function NewProductPage() {
                                                     variant="destructive"
                                                     size="icon"
                                                     onClick={() => removeImageUrlInput(index)}
+                                                    disabled={isLoading}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
@@ -206,6 +208,7 @@ export default function NewProductPage() {
                                     size="sm"
                                     onClick={addImageUrlInput}
                                     className="mt-2"
+                                    disabled={isLoading}
                                 >
                                     <PlusCircle className="mr-2 h-4 w-4" />
                                     Add Image URL
@@ -215,6 +218,7 @@ export default function NewProductPage() {
                         <CardFooter className="flex justify-end gap-2">
                             <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>Cancel</Button>
                             <Button type="submit" disabled={isLoading}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {isLoading ? "Saving..." : "Save Product"}
                             </Button>
                         </CardFooter>

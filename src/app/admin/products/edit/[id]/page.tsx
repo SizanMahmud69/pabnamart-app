@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product } from '@/types';
@@ -131,33 +131,33 @@ export default function EditProductPage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Product Name</Label>
-                                <Input id="name" name="name" defaultValue={product.name} required />
+                                <Input id="name" name="name" defaultValue={product.name} required disabled={isLoading} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="description">Description</Label>
-                                <Textarea id="description" name="description" defaultValue={product.description} required />
+                                <Textarea id="description" name="description" defaultValue={product.description} required disabled={isLoading} />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="details">Product Details</Label>
-                                <Textarea id="details" name="details" defaultValue={product.details} />
+                                <Textarea id="details" name="details" defaultValue={product.details} disabled={isLoading} />
                             </div>
                              <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Discount Price</Label>
-                                    <Input id="price" name="price" type="number" defaultValue={product.price} required />
+                                    <Input id="price" name="price" type="number" defaultValue={product.price} required disabled={isLoading} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="originalPrice">Original Price</Label>
-                                    <Input id="originalPrice" name="originalPrice" type="number" defaultValue={product.originalPrice} />
+                                    <Input id="originalPrice" name="originalPrice" type="number" defaultValue={product.originalPrice} disabled={isLoading} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="stock">Product Stock</Label>
-                                    <Input id="stock" name="stock" type="number" defaultValue={product.stock} required />
+                                    <Input id="stock" name="stock" type="number" defaultValue={product.stock} required disabled={isLoading} />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="category">Category</Label>
-                                <Select onValueChange={setCategory} required value={category}>
+                                <Select onValueChange={setCategory} required value={category} disabled={isLoading}>
                                     <SelectTrigger id="category">
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
@@ -174,7 +174,7 @@ export default function EditProductPage() {
                             <div className="space-y-4 border-t pt-4">
                                 <Label className="text-base font-semibold">Shipping & Returns</Label>
                                 <div className="flex items-center space-x-2">
-                                    <Checkbox id="free-shipping" checked={freeShipping} onCheckedChange={(checked) => setFreeShipping(checked as boolean)} />
+                                    <Checkbox id="free-shipping" checked={freeShipping} onCheckedChange={(checked) => setFreeShipping(checked as boolean)} disabled={isLoading} />
                                     <label
                                         htmlFor="free-shipping"
                                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -185,11 +185,11 @@ export default function EditProductPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="shipping-time">Shipping Time (e.g., 2-3)</Label>
-                                        <Input id="shipping-time" name="shippingTime" defaultValue={product.shippingTime} />
+                                        <Input id="shipping-time" name="shippingTime" defaultValue={product.shippingTime} disabled={isLoading} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="return-policy">Return Policy (in days)</Label>
-                                        <Input id="return-policy" name="returnPolicy" type="number" defaultValue={product.returnPolicy} />
+                                        <Input id="return-policy" name="returnPolicy" type="number" defaultValue={product.returnPolicy} disabled={isLoading} />
                                     </div>
                                 </div>
                             </div>
@@ -204,6 +204,7 @@ export default function EditProductPage() {
                                                 value={url}
                                                 onChange={(e) => handleImageChange(index, e.target.value)}
                                                 placeholder="https://example.com/image.png"
+                                                disabled={isLoading}
                                             />
                                             {imageUrls.length > 1 && (
                                                 <Button
@@ -211,6 +212,7 @@ export default function EditProductPage() {
                                                     variant="destructive"
                                                     size="icon"
                                                     onClick={() => removeImageUrlInput(index)}
+                                                    disabled={isLoading}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
@@ -224,6 +226,7 @@ export default function EditProductPage() {
                                     size="sm"
                                     onClick={addImageUrlInput}
                                     className="mt-2"
+                                    disabled={isLoading}
                                 >
                                     <PlusCircle className="mr-2 h-4 w-4" />
                                     Add Image URL
@@ -233,6 +236,7 @@ export default function EditProductPage() {
                         <CardFooter className="flex justify-end gap-2">
                             <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>Cancel</Button>
                             <Button type="submit" disabled={isLoading}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {isLoading ? "Saving..." : "Save Changes"}
                             </Button>
                         </CardFooter>

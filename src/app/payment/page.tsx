@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, Loader2 } from "lucide-react";
 import type { CartItem, ShippingAddress, Voucher } from "@/types";
-import { useAuth, withAuth } from "@/hooks/useAuth";
+import { withAuth } from "@/hooks/useAuth";
 
 interface OrderDetails {
     cartItems: CartItem[];

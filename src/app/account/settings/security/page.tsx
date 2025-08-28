@@ -10,7 +10,6 @@ import { useAuth, withAuth } from "@/hooks/useAuth";
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
 
 function AccountSecurityPage() {
     const { updateUserPassword } = useAuth();
@@ -85,6 +84,7 @@ function AccountSecurityPage() {
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     placeholder="••••••••"
+                                    disabled={isLoading}
                                 />
                                 <Button
                                     type="button" variant="ghost" size="icon"
@@ -102,6 +102,7 @@ function AccountSecurityPage() {
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     placeholder="••••••••"
+                                    disabled={isLoading}
                                 />
                                 <Button
                                     type="button" variant="ghost" size="icon"

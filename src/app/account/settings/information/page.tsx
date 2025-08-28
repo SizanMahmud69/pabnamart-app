@@ -5,12 +5,11 @@ import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
 
 function AccountInformationPage() {
     const { user, updateUserDisplayName } = useAuth();
@@ -67,6 +66,7 @@ function AccountInformationPage() {
                                     id="displayName" 
                                     value={displayName} 
                                     onChange={(e) => setDisplayName(e.target.value)} 
+                                    disabled={isLoading}
                                 />
                             </div>
                             <div className="space-y-2">

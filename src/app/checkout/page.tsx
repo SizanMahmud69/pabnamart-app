@@ -142,23 +142,32 @@ function CheckoutPage() {
 
     const { id, default: isDefault, ...shippingAddressData } = selectedAddress;
 
-    const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, selectedPaymentMethod);
+    try {
+        const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, selectedPaymentMethod);
 
-    if (result.success) {
-        toast({
-            title: "Order Placed!",
-            description: "Thank you for your purchase.",
-        });
-        clearCart();
-        router.push('/account/orders?status=shipped');
-    } else {
-        toast({
+        if (result.success) {
+            toast({
+                title: "Order Placed!",
+                description: "Thank you for your purchase.",
+            });
+            clearCart();
+            router.push('/account/orders?status=shipped');
+        } else {
+            toast({
+                title: "Order Failed",
+                description: result.message,
+                variant: "destructive"
+            });
+        }
+    } catch(err) {
+         toast({
             title: "Order Failed",
-            description: result.message,
+            description: "An unexpected error occurred.",
             variant: "destructive"
         });
+    } finally {
+        setIsPlacingOrder(false);
     }
-    setIsPlacingOrder(false);
   }
   
   if (loadingAddresses) {
