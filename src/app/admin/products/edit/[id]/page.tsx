@@ -37,6 +37,7 @@ export default function EditProductPage() {
     const [category, setCategory] = useState('');
     const [imageUrls, setImageUrls] = useState(['']);
     const [freeShipping, setFreeShipping] = useState(false);
+    const [isFlashSale, setIsFlashSale] = useState(false);
 
     useEffect(() => {
         const productToEdit = products.find(p => p.id === productId);
@@ -45,6 +46,7 @@ export default function EditProductPage() {
             setCategory(productToEdit.category);
             setImageUrls(productToEdit.images.length > 0 ? productToEdit.images : ['']);
             setFreeShipping(productToEdit.freeShipping || false);
+            setIsFlashSale(productToEdit.isFlashSale || false);
         }
     }, [products, productId]);
 
@@ -84,6 +86,7 @@ export default function EditProductPage() {
             images: finalImageUrls,
             details: formData.get('details') as string,
             freeShipping: freeShipping,
+            isFlashSale: isFlashSale,
             shippingTime: formData.get('shippingTime') as string,
             returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,
         };
@@ -172,7 +175,7 @@ export default function EditProductPage() {
                             </div>
                             
                             <div className="space-y-4 border-t pt-4">
-                                <Label className="text-base font-semibold">Shipping & Returns</Label>
+                                <Label className="text-base font-semibold">Settings</Label>
                                 <div className="flex items-center space-x-2">
                                     <Checkbox id="free-shipping" checked={freeShipping} onCheckedChange={(checked) => setFreeShipping(checked as boolean)} disabled={isLoading} />
                                     <label
@@ -180,6 +183,15 @@ export default function EditProductPage() {
                                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                     >
                                         Eligible for free shipping
+                                    </label>
+                                </div>
+                                 <div className="flex items-center space-x-2">
+                                    <Checkbox id="flash-sale" checked={isFlashSale} onCheckedChange={(checked) => setIsFlashSale(checked as boolean)} disabled={isLoading} />
+                                    <label
+                                        htmlFor="flash-sale"
+                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    >
+                                        Add to Flash Sale
                                     </label>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">

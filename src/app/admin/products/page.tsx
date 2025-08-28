@@ -97,8 +97,8 @@ export default function AdminProductManagement() {
                                         <TableHead>Name</TableHead>
                                         <TableHead>Category</TableHead>
                                         <TableHead>Price</TableHead>
-                                        <TableHead>Original Price</TableHead>
                                         <TableHead>Stock</TableHead>
+                                        <TableHead>Flash Sale</TableHead>
                                         <TableHead>Rating</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
@@ -112,11 +112,13 @@ export default function AdminProductManagement() {
                                             <TableCell className="font-medium">{product.name}</TableCell>
                                             <TableCell>{product.category}</TableCell>
                                             <TableCell>৳{product.price.toFixed(2)}</TableCell>
-                                            <TableCell>{product.originalPrice ? `৳${product.originalPrice.toFixed(2)}` : 'N/A'}</TableCell>
                                             <TableCell>
                                                 <Badge variant={product.stock > 10 ? 'default' : product.stock > 0 ? 'secondary' : 'destructive'}>
                                                     {product.stock > 0 ? `${product.stock} in stock` : 'Out of Stock'}
                                                 </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                {product.isFlashSale && <Badge variant="secondary">Yes</Badge>}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-1">

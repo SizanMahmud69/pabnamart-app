@@ -89,7 +89,7 @@ export default function FlashSale({ products }: FlashSaleProps) {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4">
                     {products.slice(0, 2).map(product => (
-                        <ProductCard key={product.id} product={{...product, originalPrice: product.price + 50}} />
+                        <ProductCard key={product.id} product={product} />
                     ))}
                 </div>
                  <div className="mt-6 text-center">

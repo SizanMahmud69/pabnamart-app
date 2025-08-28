@@ -62,9 +62,9 @@ function HomePageContent() {
       setTopRated(sortedRated.slice(0, 5));
 
       // Flash sale products with mock discount
-      const saleProducts = allProducts.slice(-2).map(p => ({
+      const saleProducts = allProducts.filter(p => p.isFlashSale).map(p => ({
         ...p,
-        originalPrice: p.originalPrice || p.price + 50,
+        originalPrice: p.originalPrice || p.price + (p.price * 0.2), // Mock discount if not present
       }));
       setFlashSaleProducts(saleProducts);
     }

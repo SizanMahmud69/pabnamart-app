@@ -58,7 +58,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       ...productData, 
       id: newId,
       rating: 0,
-      reviews: [] 
+      reviews: [],
+      isFlashSale: productData.isFlashSale || false,
     };
     const productDoc = doc(db, 'products', newId.toString());
     await setDoc(productDoc, newProduct);
@@ -72,7 +73,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         ...productData,
         id: productId,
         rating: existingProduct?.rating || 0,
-        reviews: existingProduct?.reviews || []
+        reviews: existingProduct?.reviews || [],
+        isFlashSale: productData.isFlashSale || false,
     };
     await updateDoc(productDoc, dataToUpdate);
   };

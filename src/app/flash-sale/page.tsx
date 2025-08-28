@@ -58,9 +58,9 @@ const CountdownTimer = () => {
 
 export default function FlashSalePage() {
   const { products: allProducts } = useProducts();
-  const flashSaleProducts: Product[] = allProducts.map(p => ({
+  const flashSaleProducts: Product[] = allProducts.filter(p => p.isFlashSale).map(p => ({
     ...p,
-    originalPrice: p.price + 50, // Example discount
+    originalPrice: p.originalPrice || p.price + (p.price * 0.2), // Mock discount if not present
   }));
 
   return (

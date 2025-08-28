@@ -21,6 +21,7 @@ export interface Product {
   freeShipping?: boolean;
   shippingTime?: string;
   returnPolicy?: number;
+  isFlashSale?: boolean;
 }
 
 export interface CartItem extends Product {
@@ -105,5 +106,3 @@ export interface Order {
   paymentMethod: string;
   paymentDetails?: PaymentDetails;
 }
-
-    
