@@ -76,6 +76,13 @@ export interface ShippingAddress {
     default: boolean;
 }
 
+export interface PaymentDetails {
+  gateway: string;
+  transactionId: string;
+  payerNumber: string;
+  merchantNumber: string;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -86,6 +93,7 @@ export interface Order {
   date: string;
   shippingAddress: Omit<ShippingAddress, 'id' | 'default'>;
   paymentMethod: string;
+  paymentDetails?: PaymentDetails;
 }
 
     

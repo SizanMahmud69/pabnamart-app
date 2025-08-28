@@ -90,32 +90,46 @@ export default function OrderDetailsPage() {
                             Date: {new Date(order.date).toLocaleString()}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 className="font-semibold mb-2 flex items-center gap-2"><UserIcon className="h-5 w-5" /> Customer Details</h3>
-                            <div className="text-sm text-muted-foreground">
-                                <p><strong>Name:</strong> {customer?.displayName || 'N/A'}</p>
-                                <p><strong>Email:</strong> {customer?.email || 'N/A'}</p>
-                            </div>
-                        </div>
-                         <div>
-                            <h3 className="font-semibold mb-2 flex items-center gap-2"><MapPin className="h-5 w-5" /> Shipping Address</h3>
-                            <div className="text-sm text-muted-foreground">
-                                <p>{order.shippingAddress.fullName}</p>
-                                <p>{order.shippingAddress.address}, {order.shippingAddress.area}</p>
-                                <p>{order.shippingAddress.city}</p>
-                                <p>{order.shippingAddress.phone}</p>
-                            </div>
-                        </div>
-                         <div>
-                            <h3 className="font-semibold mb-2 flex items-center gap-2"><CreditCard className="h-5 w-5" /> Payment Details</h3>
-                            <div className="text-sm text-muted-foreground">
-                                <p><strong>Method:</strong> <span className="capitalize">{order.paymentMethod}</span></p>
-                                <p><strong>Total:</strong> <span className="font-bold text-foreground">৳{order.total.toFixed(2)}</span></p>
-                            </div>
-                        </div>
-                    </CardContent>
                 </Card>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-lg"><UserIcon className="h-5 w-5" /> Customer Details</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-sm space-y-2">
+                             <p><strong>Name:</strong> {customer?.displayName || 'N/A'}</p>
+                            <p><strong>Email:</strong> {customer?.email || 'N/A'}</p>
+                            <div>
+                                <h3 className="font-semibold mt-4 mb-1">Shipping Address</h3>
+                                <address className="not-italic text-muted-foreground">
+                                    {order.shippingAddress.fullName}<br />
+                                    {order.shippingAddress.address}, {order.shippingAddress.area}<br />
+                                    {order.shippingAddress.city}<br />
+                                    {order.shippingAddress.phone}
+                                </address>
+                            </div>
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-lg"><CreditCard className="h-5 w-5" /> Payment Details</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-sm space-y-2">
+                            <p><strong>Method:</strong> <span className="capitalize">{order.paymentMethod}</span></p>
+                            <p><strong>Total:</strong> <span className="font-bold text-foreground">৳{order.total.toFixed(2)}</span></p>
+                             {order.paymentMethod === 'online' && order.paymentDetails && (
+                                <div className="pt-2 border-t mt-2">
+                                    <p><strong>Gateway:</strong> {order.paymentDetails.gateway}</p>
+                                    <p><strong>Transaction ID:</strong> {order.paymentDetails.transactionId}</p>
+                                    <p><strong>Payer Number:</strong> {order.paymentDetails.payerNumber}</p>
+                                    <p><strong>Merchant Number:</strong> {order.paymentDetails.merchantNumber}</p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><ShoppingBag className="h-5 w-5" /> Order Items ({order.items.length})</CardTitle>

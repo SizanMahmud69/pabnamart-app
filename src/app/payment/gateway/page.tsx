@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Copy } from "lucide-react";
-import type { CartItem, ShippingAddress, Voucher } from "@/types";
+import type { CartItem, ShippingAddress, Voucher, PaymentDetails } from "@/types";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
@@ -52,10 +52,10 @@ function PaymentGatewayPage() {
     }, [router]);
 
     const handleConfirmPayment = async () => {
-        if (!orderDetails || !user || !trxId || !paymentNumber) {
+        if (!orderDetails || !user || !trxId || !paymentNumber || !selectedMethod) {
             toast({
                 title: "Information Missing",
-                description: "Please provide Transaction ID and your payment number.",
+                description: "Please select a method and provide all details.",
                 variant: "destructive"
             });
             return;
@@ -64,9 +64,16 @@ function PaymentGatewayPage() {
 
         const { cartItems, finalTotal, shippingAddress } = orderDetails;
         const { id, default: isDefault, ...shippingAddressData } = shippingAddress;
+        
+        const paymentDetails: PaymentDetails = {
+            gateway: selectedMethod,
+            transactionId: trxId,
+            payerNumber: paymentNumber,
+            merchantNumber: paymentMethods.find(m => m.name === selectedMethod)?.merchantNumber || ''
+        };
 
         // Place order with 'pending' status for verification
-        const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'online');
+        const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'online', paymentDetails);
 
         if (result.success) {
             toast({

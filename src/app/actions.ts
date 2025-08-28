@@ -5,7 +5,7 @@ import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import admin from '@/lib/firebase-admin';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
-import type { CartItem, Order, OrderStatus, ShippingAddress } from "@/types";
+import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails } from "@/types";
 import { revalidatePath } from "next/cache";
 
 const db = getFirestore();
@@ -49,7 +49,8 @@ export async function placeOrder(
   cartItems: CartItem[],
   totalAmount: number,
   shippingAddress: Omit<ShippingAddress, 'id' | 'default'>,
-  paymentMethod: string
+  paymentMethod: string,
+  paymentDetails?: PaymentDetails
 ) {
   if (!userId || !cartItems || cartItems.length === 0) {
     return { success: false, message: 'Invalid order data.' };
@@ -80,6 +81,7 @@ export async function placeOrder(
       date: Timestamp.now().toDate().toISOString(),
       shippingAddress,
       paymentMethod,
+      ...(paymentDetails && { paymentDetails }),
     };
 
     await orderRef.set(orderData);
@@ -90,6 +92,7 @@ export async function placeOrder(
     
     revalidatePath('/account/orders');
     revalidatePath('/admin/orders');
+    revalidatePath('/admin/verify-payment');
 
     return { success: true, message: 'Order placed successfully.', orderId: orderRef.id };
   } catch (error: any) {
