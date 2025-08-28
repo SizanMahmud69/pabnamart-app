@@ -60,6 +60,7 @@ export default function AccountPage() {
     const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [ordersLoading, setOrdersLoading] = useState(true);
+    const [viewedDeliveredOrders, setViewedDeliveredOrders] = useState<string[]>([]);
 
     useEffect(() => {
         if (!user) {
@@ -81,6 +82,13 @@ export default function AccountPage() {
 
         return () => unsubscribe();
     }, [user]);
+    
+    useEffect(() => {
+        const stored = localStorage.getItem('viewedDeliveredOrders');
+        if (stored) {
+            setViewedDeliveredOrders(JSON.parse(stored));
+        }
+    }, []);
 
     const handleLogout = async () => {
         await logout();
@@ -114,14 +122,6 @@ export default function AccountPage() {
     
     const getCount = (status: OrderStatus) => orderCounts[status] || 0;
     
-    const [viewedDeliveredOrders, setViewedDeliveredOrders] = useState<string[]>([]);
-    useEffect(() => {
-        const stored = localStorage.getItem('viewedDeliveredOrders');
-        if (stored) {
-            setViewedDeliveredOrders(JSON.parse(stored));
-        }
-    }, []);
-
     const newDeliveredCount = orders.filter(
         order => order.status === 'delivered' && !viewedDeliveredOrders.includes(order.id)
     ).length;
