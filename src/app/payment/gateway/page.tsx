@@ -51,9 +51,9 @@ function PaymentGatewayPage() {
             router.push('/checkout');
         }
 
-        const savedSettings = localStorage.getItem('siteSettings');
-        if (savedSettings) {
-            const parsedSettings = JSON.parse(savedSettings);
+        const savedSiteSettings = localStorage.getItem('siteSettings');
+        if (savedSiteSettings) {
+            const parsedSettings = JSON.parse(savedSiteSettings);
             setPaymentMethods(prevMethods => prevMethods.map(method => {
                 if (method.name === 'bKash' && parsedSettings.bkashLogo) return { ...method, logo: parsedSettings.bkashLogo };
                 if (method.name === 'Nagad' && parsedSettings.nagadLogo) return { ...method, logo: parsedSettings.nagadLogo };
@@ -61,6 +61,18 @@ function PaymentGatewayPage() {
                 return method;
             }));
         }
+
+        const savedPaymentSettings = localStorage.getItem('paymentSettings');
+        if (savedPaymentSettings) {
+            const parsedSettings = JSON.parse(savedPaymentSettings);
+            setPaymentMethods(prevMethods => prevMethods.map(method => {
+                if (method.name === 'bKash') return { ...method, merchantNumber: parsedSettings.bkashMerchantNumber };
+                if (method.name === 'Nagad') return { ...method, merchantNumber: parsedSettings.nagadMerchantNumber };
+                if (method.name === 'Rocket') return { ...method, merchantNumber: parsedSettings.rocketMerchantNumber };
+                return method;
+            }));
+        }
+
     }, [router]);
 
     const handleConfirmPayment = async () => {

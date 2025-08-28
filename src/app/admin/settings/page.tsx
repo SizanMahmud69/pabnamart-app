@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Image as ImageIcon, Truck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Image as ImageIcon, Truck, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +18,12 @@ const settingsItems = [
         description: "Set the standard delivery charge for orders.",
         icon: Truck,
         href: "/admin/settings/delivery"
+    },
+    {
+        title: "Payment Settings",
+        description: "Manage payment gateway merchant numbers.",
+        icon: CreditCard,
+        href: "/admin/settings/payment"
     }
 ];
 

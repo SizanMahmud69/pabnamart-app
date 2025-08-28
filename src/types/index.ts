@@ -125,3 +125,9 @@ export interface DeliverySettings {
   insidePabna: number;
   outsidePabna: number;
 }
+
+export interface PaymentSettings {
+  bkashMerchantNumber: string;
+  nagadMerchantNumber: string;
+  rocketMerchantNumber: string;
+}
