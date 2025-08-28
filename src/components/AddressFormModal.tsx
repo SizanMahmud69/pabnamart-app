@@ -72,11 +72,11 @@ export default function AddressFormModal({ isOpen, onClose, onSave, address }: A
                     <Label
                       htmlFor="home"
                       className={cn(
-                        "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                        "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground cursor-pointer h-20",
                         "peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                       )}
                     >
-                      <Home className="mb-2 h-5 w-5" />
+                      <Home className="mb-1 h-5 w-5" />
                       Home
                     </Label>
                   </div>
@@ -85,11 +85,11 @@ export default function AddressFormModal({ isOpen, onClose, onSave, address }: A
                     <Label
                       htmlFor="office"
                       className={cn(
-                        "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                        "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground cursor-pointer h-20",
                         "peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                       )}
                     >
-                      <Building className="mb-2 h-5 w-5" />
+                      <Building className="mb-1 h-5 w-5" />
                       Office
                     </Label>
                   </div>
@@ -113,15 +113,17 @@ export default function AddressFormModal({ isOpen, onClose, onSave, address }: A
             <Input id="address" {...register("address", { required: "Address is required" })} />
             {errors.address && <p className="text-red-500 text-xs">{errors.address.message}</p>}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="area">Area</Label>
-            <Input id="area" {...register("area", { required: "Area is required" })} />
-            {errors.area && <p className="text-red-500 text-xs">{errors.area.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="city">City</Label>
-            <Input id="city" {...register("city", { required: "City is required" })} />
-            {errors.city && <p className="text-red-500 text-xs">{errors.city.message}</p>}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="area">Area</Label>
+              <Input id="area" {...register("area", { required: "Area is required" })} />
+              {errors.area && <p className="text-red-500 text-xs">{errors.area.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input id="city" {...register("city", { required: "City is required" })} />
+              {errors.city && <p className="text-red-500 text-xs">{errors.city.message}</p>}
+            </div>
           </div>
           <DialogFooter className="pt-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
