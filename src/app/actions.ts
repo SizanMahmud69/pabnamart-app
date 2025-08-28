@@ -4,8 +4,8 @@
 import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai/flows/product-recommendations";
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import admin from '@/lib/firebase-admin';
-import { getFirestore, Timestamp } from 'firebase-admin/firestore';
-import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails } from "@/types";
+import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
+import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher } from "@/types";
 import { revalidatePath } from "next/cache";
 
 const db = getFirestore();
@@ -50,7 +50,8 @@ export async function placeOrder(
   totalAmount: number,
   shippingAddress: Omit<ShippingAddress, 'id' | 'default'>,
   paymentMethod: string,
-  paymentDetails?: PaymentDetails
+  paymentDetails?: PaymentDetails,
+  usedVoucher?: Voucher | null,
 ) {
   if (!userId || !cartItems || cartItems.length === 0) {
     return { success: false, message: 'Invalid order data.' };
@@ -86,9 +87,17 @@ export async function placeOrder(
 
     await orderRef.set(orderData);
     
-    // Clear cart after order is placed, regardless of payment method
+    // Clear cart after order is placed
     const cartRef = db.collection('carts').doc(userId);
     await cartRef.set({ items: [] });
+    
+    // Remove used voucher if it's a return voucher
+    if (usedVoucher?.isReturnVoucher) {
+        const voucherRef = db.collection('userVouchers').doc(userId);
+        await voucherRef.update({
+            vouchers: FieldValue.arrayRemove(usedVoucher)
+        });
+    }
     
     revalidatePath('/account/orders');
     revalidatePath('/admin/orders');

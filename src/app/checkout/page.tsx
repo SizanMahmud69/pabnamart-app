@@ -143,7 +143,7 @@ function CheckoutPage() {
     const { id, default: isDefault, ...shippingAddressData } = selectedAddress;
 
     try {
-        const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, selectedPaymentMethod);
+        const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, selectedPaymentMethod, undefined, selectedVoucher);
 
         if (result.success) {
             toast({

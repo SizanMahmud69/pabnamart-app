@@ -62,7 +62,7 @@ function PaymentGatewayPage() {
         }
         setIsProcessing(true);
 
-        const { cartItems, finalTotal, shippingAddress } = orderDetails;
+        const { cartItems, finalTotal, shippingAddress, voucher } = orderDetails;
         const { id, default: isDefault, ...shippingAddressData } = shippingAddress;
         
         const paymentDetails: PaymentDetails = {
@@ -73,7 +73,7 @@ function PaymentGatewayPage() {
         };
 
         try {
-            const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'online', paymentDetails);
+            const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'online', paymentDetails, voucher);
 
             if (result.success) {
                 toast({
