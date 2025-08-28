@@ -45,9 +45,11 @@ export default function OrdersPage() {
 
   const filteredOrders = status === 'all' 
     ? orders 
+    : status === 'return-requested'
+    ? orders.filter(order => order.status === 'return-requested' || order.status === 'returned')
     : orders.filter(order => order.status === status);
     
-  const pageTitle = status === 'all' ? 'My Orders' : `My ${status.charAt(0).toUpperCase() + status.slice(1)} Orders`;
+  const pageTitle = status === 'all' ? 'My Orders' : `My ${status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')} Orders`;
     
   if (loading) {
       return <LoadingSpinner />;

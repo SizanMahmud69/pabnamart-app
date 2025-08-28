@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { collection, query, where, onSnapshot, getFirestore, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getFirestore, doc, updateDoc, getDocs } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -22,7 +22,7 @@ export default function AdminReturnManagement() {
 
   useEffect(() => {
     const ordersRef = collection(db, 'orders');
-    const q = query(ordersRef, where('status', '==', 'return-requested'));
+    const q = query(ordersRef, where('status', 'in', ['return-requested', 'returned']));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
@@ -33,7 +33,7 @@ export default function AdminReturnManagement() {
     return () => unsubscribe();
   }, []);
 
-  const handleStatusChange = async (orderId: string, status: 'returned' | 'shipped') => {
+  const handleStatusChange = async (orderId: string, status: 'returned' | 'delivered') => {
     const orderDoc = doc(db, 'orders', orderId);
     await updateDoc(orderDoc, { status });
     // In a real app, you would also generate a voucher here if approved.
@@ -77,31 +77,37 @@ export default function AdminReturnManagement() {
                                     <TableCell>{request.shippingAddress.fullName}</TableCell>
                                     <TableCell>{new Date(request.date).toLocaleDateString()}</TableCell>
                                     <TableCell>
-                                        <Badge variant='secondary'>Pending</Badge>
+                                        {request.status === 'return-requested' ? (
+                                            <Badge variant='secondary'>Pending</Badge>
+                                        ) : (
+                                            <Badge className="bg-green-100 text-green-800 capitalize">{request.status}</Badge>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <span className="sr-only">Open menu</span>
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem onSelect={() => handleStatusChange(request.id, 'returned')}>
-                                                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-                                                    <span>Approve</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                    className="text-destructive"
-                                                    onSelect={() => handleStatusChange(request.id, 'shipped')}
-                                                >
-                                                    <XCircle className="mr-2 h-4 w-4" />
-                                                    <span>Reject</span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        {request.status === 'return-requested' && (
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem onSelect={() => handleStatusChange(request.id, 'returned')}>
+                                                        <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                                                        <span>Approve</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem 
+                                                        className="text-destructive"
+                                                        onSelect={() => handleStatusChange(request.id, 'delivered')}
+                                                    >
+                                                        <XCircle className="mr-2 h-4 w-4" />
+                                                        <span>Reject</span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             )) : (
