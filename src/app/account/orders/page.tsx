@@ -97,22 +97,22 @@ export default function OrdersPage() {
                               </CardContent>
                             </div>
                             
-                             <CardFooter className="bg-muted/30 p-4 flex justify-end gap-2">
+                            <CardFooter className="bg-muted/30 p-4">
                                 {order.status === 'delivered' && (
-                                    <>
-                                    <Button variant="outline" size="sm" asChild>
-                                        <Link href="#">
-                                            <Undo2 className="mr-2 h-4 w-4" />
-                                            Return
-                                        </Link>
-                                    </Button>
-                                    <Button variant="outline" size="sm" asChild>
-                                        <Link href="/account/reviews">
-                                            <Edit className="mr-2 h-4 w-4" />
-                                            Write a Review
-                                        </Link>
-                                    </Button>
-                                    </>
+                                    <div className="grid grid-cols-2 gap-2 w-full">
+                                        <Button variant="outline" size="sm" asChild className="bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900 border-red-200">
+                                            <Link href="#">
+                                                <Undo2 className="mr-2 h-4 w-4" />
+                                                Return
+                                            </Link>
+                                        </Button>
+                                        <Button variant="outline" size="sm" asChild className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 border-green-200">
+                                            <Link href="/account/reviews">
+                                                <Edit className="mr-2 h-4 w-4" />
+                                                Write a Review
+                                            </Link>
+                                        </Button>
+                                    </div>
                                 )}
                             </CardFooter>
                         </Card>
