@@ -19,7 +19,7 @@ import { useParams } from 'next/navigation';
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const { products, getFlashSalePrice } = useProducts();
+  const { products } = useProducts();
   const [product, setProduct] = useState<Product | undefined | null>(null);
   
   useEffect(() => {
@@ -30,28 +30,11 @@ export default function ProductDetailPage() {
     }
   }, [products, params.id]);
 
-  const displayProduct = useMemo(() => {
-    if (!product) return null;
-
-    const now = new Date();
-    const isFlashSaleActive = product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now;
-    
-    if (isFlashSaleActive) {
-      const flashPrice = getFlashSalePrice(product);
-      return {
-        ...product,
-        originalPrice: product.price,
-        price: flashPrice
-      };
-    }
-    return product;
-  }, [product, getFlashSalePrice]);
-
   if (product === null) {
     return <LoadingSpinner />;
   }
 
-  if (!displayProduct) {
+  if (!product) {
     return (
         <div className="bg-background min-h-screen flex items-center justify-center">
             <div className="text-center">
@@ -62,8 +45,8 @@ export default function ProductDetailPage() {
     );
   }
   
-  const hasDiscount = (displayProduct.originalPrice && displayProduct.originalPrice > displayProduct.price);
-  const approvedReviews = displayProduct.reviews?.filter(r => r.status === 'approved') || [];
+  const hasDiscount = (product.originalPrice && product.originalPrice > product.price);
+  const approvedReviews = product.reviews?.filter(r => r.status === 'approved') || [];
 
   return (
     <div className="bg-background min-h-screen">
@@ -78,12 +61,12 @@ export default function ProductDetailPage() {
                 </div>
                 <Carousel className="w-full md:rounded-lg md:overflow-hidden group">
                     <CarouselContent>
-                    {displayProduct.images.map((img, index) => (
+                    {product.images.map((img, index) => (
                         <CarouselItem key={index}>
                         <div className="aspect-square relative bg-muted">
                             <Image
                                 src={img}
-                                alt={`${displayProduct.name} image ${index + 1}`}
+                                alt={`${product.name} image ${index + 1}`}
                                 fill
                                 className="object-cover"
                                 sizes="(max-width: 768px) 100vw, 50vw"
@@ -99,28 +82,28 @@ export default function ProductDetailPage() {
                 
                 <Card className="rounded-t-3xl -mt-6 md:mt-0 md:rounded-t-none md:rounded-b-lg relative z-10 shadow-lg">
                     <CardContent className="p-6 space-y-4">
-                        <p className="text-sm font-bold text-primary uppercase tracking-wider">{displayProduct.category}</p>
-                        <h1 className="text-2xl font-bold">{displayProduct.name}</h1>
+                        <p className="text-sm font-bold text-primary uppercase tracking-wider">{product.category}</p>
+                        <h1 className="text-2xl font-bold">{product.name}</h1>
                         <div className="flex items-center gap-2">
-                            <StarRating rating={displayProduct.rating} />
+                            <StarRating rating={product.rating} />
                             <span className="text-muted-foreground text-sm">({approvedReviews.length} reviews)</span>
                         </div>
-                        <p className="text-base text-muted-foreground leading-relaxed">{displayProduct.description}</p>
+                        <p className="text-base text-muted-foreground leading-relaxed">{product.description}</p>
                         
                         <div className="flex items-baseline gap-2 pt-2">
-                            <span className="text-4xl font-bold text-primary">৳{displayProduct.price.toFixed(2)}</span>
+                            <span className="text-4xl font-bold text-primary">৳{product.price.toFixed(2)}</span>
                             {hasDiscount && (
                             <span className="text-2xl text-muted-foreground line-through">
-                                ৳{displayProduct.originalPrice!.toFixed(2)}
+                                ৳{product.originalPrice!.toFixed(2)}
                             </span>
                             )}
                         </div>
                         
-                        <AddToCartButton product={displayProduct} />
+                        <AddToCartButton product={product} />
 
-                        {displayProduct.stock > 0 ? (
+                        {product.stock > 0 ? (
                              <div className="inline-flex items-center justify-center rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
-                                In Stock ({displayProduct.stock} left)
+                                In Stock ({product.stock} left)
                             </div>
                         ) : (
                              <div className="inline-flex items-center justify-center rounded-full bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive">
@@ -131,33 +114,33 @@ export default function ProductDetailPage() {
                         <Separator className="my-4"/>
 
                         <div className="space-y-3 text-muted-foreground">
-                            {displayProduct.freeShipping && (
+                            {product.freeShipping && (
                                 <div className="flex items-center gap-3">
                                     <CheckCircle2 className="h-5 w-5 text-green-500" />
                                     <span>Eligible for free shipping</span>
                                 </div>
                             )}
-                            {displayProduct.shippingTime && (
+                            {product.shippingTime && (
                                 <div className="flex items-center gap-3">
                                     <Truck className="h-5 w-5 text-blue-500" />
-                                    <span>Ships in {displayProduct.shippingTime} business days</span>
+                                    <span>Ships in {product.shippingTime} business days</span>
                                 </div>
                             )}
-                            {displayProduct.returnPolicy && (
+                            {product.returnPolicy && (
                                 <div className="flex items-center gap-3">
                                     <Package className="h-5 w-5 text-orange-500" />
-                                    <span>{displayProduct.returnPolicy}-day return policy</span>
+                                    <span>{product.returnPolicy}-day return policy</span>
                                 </div>
                             )}
                         </div>
 
-                        {displayProduct.details && (
+                        {product.details && (
                             <>
                                 <Separator className="my-4"/>
                                 <div>
                                     <h2 className="text-xl font-bold mb-4">Product Details</h2>
                                     <div className="prose prose-sm max-w-none text-muted-foreground">
-                                        <p>{displayProduct.details}</p>
+                                        <p>{product.details}</p>
                                     </div>
                                 </div>
                             </>
@@ -186,7 +169,7 @@ export default function ProductDetailPage() {
                                 ) : (
                                     <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
                                         <Avatar className="h-10 w-10">
-                                            <AvatarFallback>{displayProduct.name.charAt(0)}</AvatarFallback>
+                                            <AvatarFallback>{product.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <p className="text-muted-foreground">This product has no reviews yet.</p>
                                     </div>
