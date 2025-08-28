@@ -15,13 +15,15 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, CheckCircle2, Truck, Package, Badge as BadgeIcon } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useParams } from 'next/navigation';
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage() {
+  const params = useParams();
   const { products } = useProducts();
   const [product, setProduct] = useState<Product | undefined | null>(null);
   
   useEffect(() => {
-    const productId = params.id;
+    const productId = params.id as string;
     if (products.length > 0 && productId) {
         const foundProduct = products.find(p => p.id === parseInt(productId));
         setProduct(foundProduct);
