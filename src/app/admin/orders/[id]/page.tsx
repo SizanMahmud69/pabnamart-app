@@ -17,6 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
+const db = getFirestore(app);
+
 const Stamp = ({ text, colorClass }: { text: string; colorClass: string }) => (
     <div className="w-28 h-28 flex-shrink-0 hidden md:flex items-center justify-center">
         <div className={cn(
@@ -225,4 +227,5 @@ export default function OrderDetailsPage() {
             </main>
         </div>
     );
-}
+
+    
