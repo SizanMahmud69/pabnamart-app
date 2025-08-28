@@ -114,11 +114,6 @@ export default function OrdersPage() {
                                     </Button>
                                     </>
                                 )}
-                                <Button variant="secondary" size="sm" asChild>
-                                    <Link href={`/account/orders/${order.id}`}>
-                                        View Details
-                                    </Link>
-                                </Button>
                             </CardFooter>
                         </Card>
                     ))}
