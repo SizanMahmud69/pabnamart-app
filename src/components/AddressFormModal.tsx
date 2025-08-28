@@ -4,9 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { ShippingAddress } from '@/types';
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { Home, Building } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type AddressFormInputs = Omit<ShippingAddress, 'id' | 'default'>;
 
@@ -18,20 +20,26 @@ interface AddressFormModalProps {
 }
 
 export default function AddressFormModal({ isOpen, onClose, onSave, address }: AddressFormModalProps) {
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<AddressFormInputs>();
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<AddressFormInputs>({
+    defaultValues: {
+      type: 'Home',
+    }
+  });
 
   useEffect(() => {
-    if (address) {
-      reset(address);
-    } else {
-      reset({
-        type: 'Home',
-        fullName: '',
-        phone: '',
-        address: '',
-        city: '',
-        area: '',
-      });
+    if (isOpen) {
+      if (address) {
+        reset(address);
+      } else {
+        reset({
+          type: 'Home',
+          fullName: '',
+          phone: '',
+          address: '',
+          city: '',
+          area: '',
+        });
+      }
     }
   }, [address, isOpen, reset]);
 
@@ -49,54 +57,72 @@ export default function AddressFormModal({ isOpen, onClose, onSave, address }: A
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="fullName" className="text-right">
-              Full Name
-            </Label>
-            <Input id="fullName" {...register("fullName", { required: "Full name is required" })} className="col-span-3" />
-            {errors.fullName && <p className="col-span-4 text-right text-red-500 text-xs">{errors.fullName.message}</p>}
+           <div className="space-y-2">
+            <Label>Address Type</Label>
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <div>
+                    <RadioGroupItem value="Home" id="home" className="peer sr-only" />
+                    <Label
+                      htmlFor="home"
+                      className={cn(
+                        "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                        "peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      )}
+                    >
+                      <Home className="mb-3 h-6 w-6" />
+                      Home
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="Office" id="office" className="peer sr-only" />
+                    <Label
+                      htmlFor="office"
+                      className={cn(
+                        "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                        "peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      )}
+                    >
+                      <Building className="mb-3 h-6 w-6" />
+                      Office
+                    </Label>
+                  </div>
+                </RadioGroup>
+              )}
+            />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="phone" className="text-right">
-              Phone
-            </Label>
-            <Input id="phone" {...register("phone", { required: "Phone number is required" })} className="col-span-3" />
-            {errors.phone && <p className="col-span-4 text-right text-red-500 text-xs">{errors.phone.message}</p>}
+
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Full Name</Label>
+            <Input id="fullName" {...register("fullName", { required: "Full name is required" })} />
+            {errors.fullName && <p className="text-red-500 text-xs">{errors.fullName.message}</p>}
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="type" className="text-right">
-              Type
-            </Label>
-             <Select onValueChange={(value: 'Home' | 'Office') => setValue('type', value)} defaultValue={address?.type || 'Home'}>
-                <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select address type" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="Home">Home</SelectItem>
-                    <SelectItem value="Office">Office</SelectItem>
-                </SelectContent>
-            </Select>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone</Label>
+            <Input id="phone" {...register("phone", { required: "Phone number is required" })} />
+            {errors.phone && <p className="text-red-500 text-xs">{errors.phone.message}</p>}
           </div>
-           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="address" className="text-right">
-              Address
-            </Label>
-            <Input id="address" {...register("address", { required: "Address is required" })} className="col-span-3" />
-            {errors.address && <p className="col-span-4 text-right text-red-500 text-xs">{errors.address.message}</p>}
+           <div className="space-y-2">
+            <Label htmlFor="address">Address</Label>
+            <Input id="address" {...register("address", { required: "Address is required" })} />
+            {errors.address && <p className="text-red-500 text-xs">{errors.address.message}</p>}
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="area" className="text-right">
-              Area
-            </Label>
-            <Input id="area" {...register("area", { required: "Area is required" })} className="col-span-3" />
-            {errors.area && <p className="col-span-4 text-right text-red-500 text-xs">{errors.area.message}</p>}
+          <div className="space-y-2">
+            <Label htmlFor="area">Area</Label>
+            <Input id="area" {...register("area", { required: "Area is required" })} />
+            {errors.area && <p className="text-red-500 text-xs">{errors.area.message}</p>}
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="city" className="text-right">
-              City
-            </Label>
-            <Input id="city" {...register("city", { required: "City is required" })} className="col-span-3" />
-            {errors.city && <p className="col-span-4 text-right text-red-500 text-xs">{errors.city.message}</p>}
+          <div className="space-y-2">
+            <Label htmlFor="city">City</Label>
+            <Input id="city" {...register("city", { required: "City is required" })} />
+            {errors.city && <p className="text-red-500 text-xs">{errors.city.message}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
