@@ -37,6 +37,10 @@ export default function VouchersPage() {
     const { collectedVouchers, collectVoucher } = useVouchers();
 
     const isCollected = (code: string) => collectedVouchers.some(v => v.code === code);
+    
+    const generalVouchers = availableVouchers.filter(v => !v.isReturnVoucher);
+    const returnVouchers = collectedVouchers.filter(v => v.isReturnVoucher);
+
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -54,10 +58,43 @@ export default function VouchersPage() {
                     </p>
                 </div>
 
+                {returnVouchers.length > 0 && (
+                    <div>
+                        <h2 className="text-xl font-bold mb-4">My Return Vouchers</h2>
+                        <div className="space-y-4">
+                            {returnVouchers.map((voucher) => (
+                                <div key={voucher.code} className="rounded-lg bg-gradient-to-r from-green-100 to-blue-100 shadow-sm overflow-hidden border-0">
+                                    <div className="p-4">
+                                        <div className="flex items-center gap-4">
+                                            <Ticket className="h-10 w-10 text-green-600" />
+                                            <div>
+                                                <h3 className="text-xl font-bold text-green-700">৳{voucher.discount} Off</h3>
+                                                <p className="text-sm text-gray-600">{voucher.description}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Separator />
+                                     <div className="p-4 bg-white/50 flex justify-between items-center">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">Voucher Code</p>
+                                            <p className="font-mono font-bold">{voucher.code}</p>
+                                        </div>
+                                         <div className="flex items-center gap-2 text-green-600 font-semibold">
+                                            <CheckCircle className="h-5 w-5" />
+                                            <span>Available</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+
                 <div>
-                    <h2 className="text-xl font-bold mb-4">Available Vouchers</h2>
+                    <h2 className="text-xl font-bold mb-4 mt-6">Available Vouchers</h2>
                     <div className="space-y-4">
-                        {availableVouchers.map((voucher) => (
+                        {generalVouchers.map((voucher) => (
                             <div key={voucher.code} className="rounded-lg bg-gradient-to-r from-purple-100 to-pink-100 shadow-sm overflow-hidden border-0">
                                 <div className="p-4">
                                     <div className="flex items-center gap-4">

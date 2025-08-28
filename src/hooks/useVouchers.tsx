@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Voucher } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
-import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 interface VoucherContextType {
@@ -47,7 +47,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  const collectVoucher = useCallback((voucher: Voucher) => {
+  const collectVoucher = useCallback(async (voucher: Voucher) => {
     if (!user) {
         toast({
             title: "Please log in",
@@ -57,7 +57,12 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
       
-    const isAlreadyCollected = collectedVouchers.some(v => v.code === voucher.code);
+    // Fetch latest vouchers to prevent race conditions
+    const voucherRef = doc(db, 'userVouchers', user.uid);
+    const docSnap = await getDoc(voucherRef);
+    const currentVouchers = docSnap.exists() ? docSnap.data().vouchers : [];
+
+    const isAlreadyCollected = currentVouchers.some((v: Voucher) => v.code === voucher.code);
 
     if (isAlreadyCollected) {
       toast({
@@ -67,16 +72,16 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     
-    const newVouchers = [...collectedVouchers, voucher];
-    setCollectedVouchers(newVouchers);
-    updateFirestoreVouchers(newVouchers);
+    const newVouchers = [...currentVouchers, voucher];
+    await updateFirestoreVouchers(newVouchers); // This will trigger the onSnapshot listener to update state
+    
     toast({
       title: "Voucher Collected!",
       description: `Voucher ${voucher.code} has been added to your account.`,
     });
-  }, [collectedVouchers, toast, user, updateFirestoreVouchers]);
+  }, [toast, user, updateFirestoreVouchers]);
 
-  const voucherCount = collectedVouchers.length;
+  const voucherCount = collectedVouchers.filter(v => !v.isReturnVoucher).length;
 
   return (
     <VoucherContext.Provider

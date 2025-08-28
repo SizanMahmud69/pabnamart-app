@@ -9,16 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { collection, query, where, onSnapshot, getFirestore, doc, updateDoc, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getFirestore, doc, updateDoc, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Order } from '@/types';
+import type { Order, Voucher } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useToast } from '@/hooks/use-toast';
 
 const db = getFirestore(app);
 
 export default function AdminReturnManagement() {
   const [returnRequests, setReturnRequests] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const ordersRef = collection(db, 'orders');
@@ -33,10 +35,51 @@ export default function AdminReturnManagement() {
     return () => unsubscribe();
   }, []);
 
-  const handleStatusChange = async (orderId: string, status: 'returned' | 'return-rejected') => {
-    const orderDoc = doc(db, 'orders', orderId);
+  const handleStatusChange = async (order: Order, status: 'returned' | 'return-rejected') => {
+    const orderDoc = doc(db, 'orders', order.id);
     await updateDoc(orderDoc, { status });
-    // In a real app, you would also generate a voucher here if approved.
+
+    if (status === 'returned') {
+      // Create a voucher for the user
+      const voucherCode = `RET-${order.orderNumber}`;
+      const newVoucher: Voucher = {
+        code: voucherCode,
+        discount: order.total,
+        type: 'fixed',
+        description: `Return credit for order #${order.orderNumber}`,
+        discountType: 'order',
+        isReturnVoucher: true,
+      };
+
+      const userVouchersRef = doc(db, 'userVouchers', order.userId);
+      // This part is tricky without a proper 'update' or 'arrayUnion' functionality on client-side state hooks.
+      // For now, we'll assume there is a 'vouchers' array field in the userVouchers document.
+      // A more robust solution would use a cloud function to prevent race conditions.
+       try {
+            const voucherSnap = await getDoc(userVouchersRef);
+            const existingVouchers = voucherSnap.exists() ? voucherSnap.data().vouchers : [];
+            
+            if (!existingVouchers.some((v: Voucher) => v.code === newVoucher.code)) {
+                await setDoc(userVouchersRef, { vouchers: [...existingVouchers, newVoucher] });
+                toast({
+                    title: "Return Approved",
+                    description: `A voucher for ৳${order.total} has been issued to the user.`
+                });
+            }
+        } catch (error) {
+            console.error("Error creating voucher:", error);
+            toast({
+                title: "Error",
+                description: "Failed to create return voucher.",
+                variant: "destructive"
+            });
+        }
+    } else {
+        toast({
+            title: "Return Rejected",
+            description: `The return request for order #${order.orderNumber} has been rejected.`
+        });
+    }
   };
 
   if (loading) {
@@ -96,13 +139,13 @@ export default function AdminReturnManagement() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onSelect={() => handleStatusChange(request.id, 'returned')}>
+                                                    <DropdownMenuItem onSelect={() => handleStatusChange(request, 'returned')}>
                                                         <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
                                                         <span>Approve</span>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem 
                                                         className="text-destructive"
-                                                        onSelect={() => handleStatusChange(request.id, 'return-rejected')}
+                                                        onSelect={() => handleStatusChange(request, 'return-rejected')}
                                                     >
                                                         <XCircle className="mr-2 h-4 w-4" />
                                                         <span>Reject</span>

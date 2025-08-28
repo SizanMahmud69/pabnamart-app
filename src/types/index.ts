@@ -34,6 +34,7 @@ export interface Voucher {
     description: string;
     minSpend?: number;
     discountType?: 'order' | 'shipping';
+    isReturnVoucher?: boolean;
 }
 
 export interface Notification {
