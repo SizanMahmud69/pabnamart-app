@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ export default function AdminOrderManagement() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [users, setUsers] = useState<Map<string, AppUser>>(new Map());
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         const ordersRef = collection(db, 'orders');
@@ -122,7 +124,7 @@ export default function AdminOrderManagement() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onSelect={() => alert('View details feature coming soon!')}>
+                                                    <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
                                                         <Eye className="mr-2 h-4 w-4" />
                                                         View Details
                                                     </DropdownMenuItem>

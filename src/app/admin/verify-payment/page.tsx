@@ -9,11 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, MoreHorizontal, Eye } from 'lucide-react';
 import Link from 'next/link';
 import type { Order, User as AppUser } from '@/types';
-import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 const db = getFirestore(app);
 
@@ -22,6 +23,7 @@ export default function VerifyPaymentPage() {
     const [users, setUsers] = useState<Map<string, AppUser>>(new Map());
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const router = useRouter();
 
     useEffect(() => {
         const ordersRef = collection(db, 'orders');
@@ -132,7 +134,7 @@ export default function VerifyPaymentPage() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem onSelect={() => alert('View details feature coming soon!')}>
+                                                        <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
                                                             <Eye className="mr-2 h-4 w-4" />
                                                             View Details
                                                         </DropdownMenuItem>
