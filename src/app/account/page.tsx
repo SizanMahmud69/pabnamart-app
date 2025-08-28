@@ -16,6 +16,7 @@ import type { Order, OrderStatus } from "@/types";
 import { useEffect, useState } from "react";
 import { collection, getFirestore, onSnapshot, query, where } from "firebase/firestore";
 import app from "@/lib/firebase";
+import { useWishlist } from "@/hooks/useWishlist";
 
 const db = getFirestore(app);
 
@@ -57,6 +58,7 @@ const ServiceItem = ({ icon: Icon, label, href }: ServiceItemProps) => (
 export default function AccountPage() {
     const { voucherCount } = useVouchers();
     const { user, logout, loading: authLoading } = useAuth();
+    const { wishlistItems } = useWishlist();
     const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [ordersLoading, setOrdersLoading] = useState(true);
@@ -164,7 +166,7 @@ export default function AccountPage() {
                             <h2 className="text-xl font-bold truncate">{user.displayName || user.email}</h2>
                             <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                                 <Link href="/account/wishlist" className="flex items-center gap-1 hover:text-primary">
-                                    <Heart className="h-4 w-4" /> 0 Wishlist
+                                    <Heart className="h-4 w-4" /> {wishlistItems.length} Wishlist
                                 </Link>
                                 <Link href="/vouchers" className="flex items-center gap-1 hover:text-primary">
                                     <Ticket className="h-4 w-4" /> {voucherCount} Vouchers
