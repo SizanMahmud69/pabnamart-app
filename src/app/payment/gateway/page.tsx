@@ -26,7 +26,7 @@ interface OrderDetails {
 
 const paymentMethods = [
     { name: 'bKash', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/BKash_logo.svg', merchantNumber: '01234567890', hint: 'bKash logo' },
-    { name: 'Nagad', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/89/Nagad_Logo.svg', merchantNumber: '01234567891', hint: 'Nagad logo' },
+    { name: 'Nagad', logo: 'https://pix1.wapkizfile.info/download/8a051c9b664e1f7de58fec071478a91c/sizan+wapkiz+click/nagad-logo-png-seeklogo-355240-(sizan.wapkiz.click).png', merchantNumber: '01234567891', hint: 'Nagad logo' },
     { name: 'Rocket', logo: 'https://picsum.photos/seed/rocket/100/60', merchantNumber: '01234567892', hint: 'Rocket logo' },
 ];
 
