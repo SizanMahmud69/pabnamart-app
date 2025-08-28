@@ -71,7 +71,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
           hasOffer: true,
         };
       }
-      return { ...product, originalPrice: product.originalPrice || p.price, hasOffer: false };
+      return { ...product, originalPrice: product.originalPrice || product.price, hasOffer: false };
     });
   }, [baseProducts, activeOffers]);
 
