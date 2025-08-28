@@ -113,12 +113,24 @@ export default function AccountPage() {
     }, {} as Record<OrderStatus, number>);
     
     const getCount = (status: OrderStatus) => orderCounts[status] || 0;
+    
+    const [viewedDeliveredOrders, setViewedDeliveredOrders] = useState<string[]>([]);
+    useEffect(() => {
+        const stored = localStorage.getItem('viewedDeliveredOrders');
+        if (stored) {
+            setViewedDeliveredOrders(JSON.parse(stored));
+        }
+    }, []);
+
+    const newDeliveredCount = orders.filter(
+        order => order.status === 'delivered' && !viewedDeliveredOrders.includes(order.id)
+    ).length;
 
     const orderStatuses: OrderStatusProps[] = [
         { icon: Wallet, label: "To Pay", count: getCount('pending'), href: "/account/orders?status=pending" },
         { icon: Box, label: "To Ship", count: getCount('shipped'), href: "/account/orders?status=shipped" },
         { icon: Truck, label: "To Receive", count: getCount('in-transit'), href: "/account/orders?status=in-transit" },
-        { icon: PackageCheck, label: "Delivered", count: getCount('delivered'), href: "/account/orders?status=delivered" },
+        { icon: PackageCheck, label: "Delivered", count: newDeliveredCount, href: "/account/orders?status=delivered" },
         { icon: Undo2, label: "My Returns", count: getCount('return-requested'), href: "/account/orders?status=return-requested" },
     ];
     

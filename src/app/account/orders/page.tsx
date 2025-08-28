@@ -51,6 +51,20 @@ export default function OrdersPage() {
     ? orders.filter(order => order.status === 'delivered' || order.status === 'return-rejected')
     : orders.filter(order => order.status === status);
     
+  useEffect(() => {
+    if (status === 'delivered') {
+      const deliveredOrderIds = filteredOrders
+        .filter(order => order.status === 'delivered')
+        .map(order => order.id);
+        
+      if (deliveredOrderIds.length > 0) {
+        const viewedOrders = JSON.parse(localStorage.getItem('viewedDeliveredOrders') || '[]');
+        const newViewedOrders = Array.from(new Set([...viewedOrders, ...deliveredOrderIds]));
+        localStorage.setItem('viewedDeliveredOrders', JSON.stringify(newViewedOrders));
+      }
+    }
+  }, [status, filteredOrders]);
+    
   const pageTitle = status === 'all' ? 'My Orders' : `My ${status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')} Orders`;
     
   if (loading) {
