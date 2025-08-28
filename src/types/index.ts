@@ -22,6 +22,7 @@ export interface Product {
   shippingTime?: string;
   returnPolicy?: number;
   isFlashSale?: boolean;
+  hasOffer?: boolean;
 }
 
 export interface CartItem extends Product {

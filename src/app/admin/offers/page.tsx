@@ -90,13 +90,13 @@ export default function AdminOfferManagement() {
               <Card>
                   <CardHeader>
                       <CardTitle>Offer Management</CardTitle>
-                      <CardDescription>Create and manage special offers for your store.</CardDescription>
+                      <CardDescription>Create and manage special offers for product categories.</CardDescription>
                   </CardHeader>
                   <CardContent>
                       <Table>
                           <TableHeader>
                               <TableRow>
-                                  <TableHead>Offer Name</TableHead>
+                                  <TableHead>Category Name</TableHead>
                                   <TableHead>Discount</TableHead>
                                   <TableHead>Active Period</TableHead>
                                   <TableHead>Status</TableHead>
@@ -153,7 +153,7 @@ export default function AdminOfferManagement() {
               <AlertDialogHeader>
                   <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the offer <span className="font-bold">{offerToDelete?.name}</span>.
+                      This action cannot be undone. This will permanently delete the offer for <span className="font-bold">{offerToDelete?.name}</span>.
                   </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

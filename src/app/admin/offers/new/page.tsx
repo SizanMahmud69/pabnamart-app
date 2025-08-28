@@ -12,13 +12,24 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { addDoc, collection, getFirestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const db = getFirestore(app);
+
+const categories = [
+  "Men's Fashion",
+  "Women's Fashion",
+  "Cosmetics",
+  "Groceries",
+  "Mobile & Computers",
+  "Electronics",
+];
 
 export default function NewOfferPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [isCreating, setIsCreating] = useState(false);
+    const [category, setCategory] = useState('');
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -26,7 +37,7 @@ export default function NewOfferPage() {
         const formData = new FormData(e.currentTarget);
         
         const offerData = {
-            name: formData.get('name') as string,
+            name: category,
             discount: Number(formData.get('discount')),
             startDate: formData.get('start-date') as string,
             endDate: formData.get('end-date') as string,
@@ -66,8 +77,19 @@ export default function NewOfferPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="name">Offer Name</Label>
-                                <Input id="name" name="name" placeholder="e.g., Mega Electronics Sale" required disabled={isCreating}/>
+                                <Label htmlFor="name">Category Name</Label>
+                                <Select onValueChange={setCategory} required value={category} disabled={isCreating}>
+                                    <SelectTrigger id="name">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map(cat => (
+                                            <SelectItem key={cat} value={cat}>
+                                                {cat}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="discount">Discount Percentage</Label>

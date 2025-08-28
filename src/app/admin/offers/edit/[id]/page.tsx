@@ -14,9 +14,18 @@ import { doc, getDoc, getFirestore, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Offer } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const db = getFirestore(app);
+
+const categories = [
+  "Men's Fashion",
+  "Women's Fashion",
+  "Cosmetics",
+  "Groceries",
+  "Mobile & Computers",
+  "Electronics",
+];
 
 export default function EditOfferPage() {
     const router = useRouter();
@@ -26,6 +35,7 @@ export default function EditOfferPage() {
     const [offer, setOffer] = useState<Offer | null>(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [category, setCategory] = useState('');
 
     useEffect(() => {
         if (!offerId) return;
@@ -35,7 +45,9 @@ export default function EditOfferPage() {
             const offerRef = doc(db, 'offers', offerId);
             const docSnap = await getDoc(offerRef);
             if (docSnap.exists()) {
-                setOffer({ id: docSnap.id, ...docSnap.data() } as Offer);
+                const offerData = { id: docSnap.id, ...docSnap.data() } as Offer;
+                setOffer(offerData);
+                setCategory(offerData.name);
             } else {
                 toast({ title: "Error", description: "Offer not found.", variant: "destructive" });
                 router.push('/admin/offers');
@@ -51,7 +63,7 @@ export default function EditOfferPage() {
         const formData = new FormData(e.currentTarget);
         
         const offerData = {
-            name: formData.get('name') as string,
+            name: category,
             discount: Number(formData.get('discount')),
             startDate: formData.get('start-date') as string,
             endDate: formData.get('end-date') as string,
@@ -100,8 +112,19 @@ export default function EditOfferPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="name">Offer Name</Label>
-                                <Input id="name" name="name" defaultValue={offer.name} required disabled={isSaving}/>
+                                <Label htmlFor="name">Category Name</Label>
+                                 <Select onValueChange={setCategory} required value={category} disabled={isSaving}>
+                                    <SelectTrigger id="name">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map(cat => (
+                                            <SelectItem key={cat} value={cat}>
+                                                {cat}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="discount">Discount Percentage</Label>

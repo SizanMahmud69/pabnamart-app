@@ -16,8 +16,8 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
-  const discountAmount = hasDiscount ? product.originalPrice! - product.price : 0;
+  const hasDiscount = (product.originalPrice && product.originalPrice > product.price) || product.hasOffer;
+  const discountAmount = hasDiscount ? (product.originalPrice ?? 0) - product.price : 0;
   const isSoldOut = product.stock === 0;
 
   return (
@@ -35,7 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
             data-ai-hint="product lifestyle"
           />
-           {hasDiscount && !isSoldOut && (
+           {hasDiscount && !isSoldOut && discountAmount > 0 && (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
               - ৳{discountAmount.toFixed(0)}
             </div>

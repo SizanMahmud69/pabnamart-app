@@ -43,7 +43,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     );
   }
   
-  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+  const hasDiscount = (product.originalPrice && product.originalPrice > product.price) || product.hasOffer;
 
   return (
     <div className="bg-background min-h-screen">
