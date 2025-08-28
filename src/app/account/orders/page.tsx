@@ -3,7 +3,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Star, Undo2 } from "lucide-react";
 import type { Order } from '@/types';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -68,7 +68,7 @@ export default function OrdersPage() {
                 {filteredOrders.length > 0 ? (
                     <div className="space-y-4">
                     {filteredOrders.map(order => (
-                        <Card key={order.id}>
+                        <Card key={order.id} className="shadow-sm">
                             <Link href={`/account/orders/${order.id}`} className="block hover:bg-muted/50 transition-colors rounded-t-lg">
                                 <CardHeader>
                                     <div className="flex justify-between items-center">
@@ -76,14 +76,14 @@ export default function OrdersPage() {
                                             <CardTitle>Order #{order.orderNumber}</CardTitle>
                                             <CardDescription>Date: {new Date(order.date).toLocaleDateString()}</CardDescription>
                                         </div>
-                                         <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">{order.status.replace('-', ' ')}</p>
+                                         <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">{order.status.replace('-', ' ')}</p>
                                     </div>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="flex justify-between items-center">
                                         <div>
-                                            <p>Items: {order.items.reduce((acc, item) => acc + item.quantity, 0)}</p>
-                                            <p className="font-bold">Total: ৳{order.total.toFixed(2)}</p>
+                                            <p className="text-sm text-muted-foreground">Items: {order.items.reduce((acc, item) => acc + item.quantity, 0)}</p>
+                                            <p className="font-bold text-lg">Total: ৳{order.total.toFixed(2)}</p>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -93,10 +93,16 @@ export default function OrdersPage() {
                                 <Separator />
                                 <div className="p-4 flex justify-end gap-2">
                                     <Button variant="outline" size="sm" asChild>
-                                        <Link href="/account/reviews">Write a Review</Link>
+                                        <Link href="/account/reviews">
+                                            <Star className="mr-2 h-4 w-4" />
+                                            Write a Review
+                                        </Link>
                                     </Button>
                                     <Button variant="secondary" size="sm" asChild>
-                                        <Link href="#">Return</Link>
+                                        <Link href="#">
+                                            <Undo2 className="mr-2 h-4 w-4" />
+                                            Return
+                                        </Link>
                                     </Button>
                                 </div>
                                 </>
