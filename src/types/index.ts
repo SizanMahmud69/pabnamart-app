@@ -1,5 +1,5 @@
 
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "react";
 
 export interface Review {
   user: string;
@@ -78,6 +78,7 @@ export interface ShippingAddress {
 
 export interface Order {
   id: string;
+  orderNumber: string;
   userId: string;
   items: OrderItem[];
   total: number;

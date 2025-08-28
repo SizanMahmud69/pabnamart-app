@@ -3,9 +3,9 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ShoppingBag, Package, Truck, PackageCheck, Undo2 } from "lucide-react";
-import type { Order, OrderStatus } from '@/types';
-import { useEffect, useState, useMemo } from 'react';
+import { ShoppingBag } from "lucide-react";
+import type { Order } from '@/types';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -16,18 +16,9 @@ import { ArrowLeft } from 'lucide-react';
 
 const db = getFirestore(app);
 
-const TABS: { value: OrderStatus | 'all', label: string, icon: React.ElementType }[] = [
-  { value: 'all', label: 'All Orders', icon: ShoppingBag },
-  { value: 'pending', label: 'To Pay', icon: Package },
-  { value: 'shipped', label: 'To Ship', icon: Truck },
-  { value: 'in-transit', label: 'To Receive', icon: Truck },
-  { value: 'delivered', label: 'Delivered', icon: PackageCheck },
-  { value: 'returned', label: 'Returned', icon: Undo2 },
-];
-
 export default function OrdersPage() {
   const searchParams = useSearchParams();
-  const status = (searchParams.get('status') as OrderStatus | 'all') || 'all';
+  const status = searchParams.get('status') || 'all';
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,10 +45,7 @@ export default function OrdersPage() {
     ? orders 
     : orders.filter(order => order.status === status);
     
-  const pageTitle = useMemo(() => {
-    const tab = TABS.find(t => t.value === status);
-    return tab ? tab.label : 'My Orders';
-  }, [status]);
+  const pageTitle = status === 'all' ? 'My Orders' : `My ${status.charAt(0).toUpperCase() + status.slice(1)} Orders`;
     
   if (loading) {
       return <LoadingSpinner />;
@@ -81,7 +69,7 @@ export default function OrdersPage() {
                     {filteredOrders.map(order => (
                         <Card key={order.id}>
                         <CardHeader>
-                            <CardTitle>Order #{order.id.slice(0, 8)}...</CardTitle>
+                            <CardTitle>Order #{order.orderNumber}</CardTitle>
                             <CardDescription>Date: {new Date(order.date).toLocaleDateString()}</CardDescription>
                         </CardHeader>
                         <CardContent>

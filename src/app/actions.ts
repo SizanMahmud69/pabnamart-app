@@ -37,6 +37,13 @@ export async function deleteUserAccount(uid: string) {
     }
 }
 
+function generateOrderNumber(): string {
+  const timestamp = Date.now().toString().slice(-4); // Last 4 digits of timestamp
+  const randomPart = Math.floor(1000 + Math.random() * 9000).toString(); // 4 random digits
+  return `${timestamp}${randomPart}`;
+}
+
+
 export async function placeOrder(
   userId: string,
   cartItems: CartItem[],
@@ -55,11 +62,11 @@ export async function placeOrder(
     if (paymentMethod === 'cod') {
         status = 'shipped';
     } else if (paymentMethod === 'online') {
-        // For online payments, we set to pending until payment is verified
         status = 'pending'; 
     }
 
     const orderData: Omit<Order, 'id'> = {
+      orderNumber: generateOrderNumber(),
       userId,
       items: cartItems.map(item => ({
         id: item.id,

@@ -83,7 +83,7 @@ export default function OrderDetailsPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex justify-between items-center">
-                            <span>Order #{order.id}</span>
+                            <span>Order #{order.orderNumber}</span>
                              <Badge variant="secondary" className="capitalize text-base">{order.status}</Badge>
                         </CardTitle>
                         <CardDescription>

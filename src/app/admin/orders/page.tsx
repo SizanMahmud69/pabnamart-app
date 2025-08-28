@@ -107,7 +107,7 @@ export default function AdminOrderManagement() {
                             <TableBody>
                                 {orders.map(order => (
                                     <TableRow key={order.id}>
-                                        <TableCell className="font-medium">#{order.id}</TableCell>
+                                        <TableCell className="font-medium">#{order.orderNumber}</TableCell>
                                         <TableCell>{users.get(order.userId)?.displayName || 'Unknown User'}</TableCell>
                                         <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                                         <TableCell>৳{order.total.toFixed(2)}</TableCell>

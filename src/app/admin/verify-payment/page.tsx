@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, MoreHorizontal, Eye } from 'lucide-react';
 import Link from 'next/link';
 import type { Order, User as AppUser } from '@/types';
-import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where, orderBy } from 'firebase/firestore';
+import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
@@ -117,7 +117,7 @@ export default function VerifyPaymentPage() {
                                 {sortedOrders.length > 0 ? (
                                     sortedOrders.map(order => (
                                         <TableRow key={order.id}>
-                                            <TableCell className="font-medium">#{order.id}</TableCell>
+                                            <TableCell className="font-medium">#{order.orderNumber}</TableCell>
                                             <TableCell>{users.get(order.userId)?.displayName || 'Unknown User'}</TableCell>
                                             <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                                             <TableCell>৳{order.total.toFixed(2)}</TableCell>

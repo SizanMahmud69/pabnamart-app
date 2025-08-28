@@ -160,7 +160,7 @@ export default function UserDetailsPage() {
                                 {userOrders.length > 0 ? (
                                     userOrders.map(order => (
                                         <TableRow key={order.id}>
-                                            <TableCell className="font-medium">#{order.id}</TableCell>
+                                            <TableCell className="font-medium">#{order.orderNumber}</TableCell>
                                             <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                                             <TableCell>৳{order.total.toFixed(2)}</TableCell>
                                             <TableCell>
