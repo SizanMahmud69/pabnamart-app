@@ -1,4 +1,3 @@
-
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo } from 'react';
@@ -8,10 +7,11 @@ import { useAuth } from './useAuth';
 import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { useDeliveryCharge } from './useDeliveryCharge';
+import { useProducts } from './useProducts';
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, isFlashSaleContext?: boolean) => void;
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
@@ -29,6 +29,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { chargeOutsidePabna } = useDeliveryCharge();
+  const { getFlashSalePrice } = useProducts();
+
 
   const updateFirestoreCart = useCallback(async (items: CartItem[]) => {
     if (user) {
@@ -54,7 +56,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  const addToCart = useCallback((product: Product) => {
+  const addToCart = useCallback((product: Product, isFlashSaleContext = false) => {
     if (!user) {
         toast({
             title: "Please log in",
@@ -64,12 +66,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
 
+    const price = isFlashSaleContext ? getFlashSalePrice(product) : product.price;
+    const originalPrice = product.originalPrice;
+
     const newCartItems = [...cartItems];
     const existingItem = newCartItems.find(item => item.id === product.id);
+
     if (existingItem) {
       existingItem.quantity += 1;
+      // If user adds from flash sale context, update price to flash sale price
+      if (isFlashSaleContext) {
+          existingItem.price = price;
+          existingItem.originalPrice = originalPrice;
+      }
     } else {
-      newCartItems.push({ ...product, quantity: 1 });
+      newCartItems.push({ 
+          ...product, 
+          quantity: 1,
+          price, // Use the determined price
+          originalPrice,
+      });
     }
     setCartItems(newCartItems);
     updateFirestoreCart(newCartItems);
@@ -77,7 +93,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
     });
-  }, [cartItems, updateFirestoreCart, toast, user]);
+  }, [cartItems, updateFirestoreCart, toast, user, getFlashSalePrice]);
 
   const removeFromCart = useCallback((productId: number) => {
     if (!user) return;

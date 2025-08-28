@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
@@ -45,7 +44,7 @@ export default function ProductDetailPage() {
     );
   }
   
-  const hasDiscount = (product.originalPrice && product.originalPrice > product.price) || product.hasOffer;
+  const hasDiscount = (product.originalPrice && product.originalPrice > product.price);
   const approvedReviews = product.reviews?.filter(r => r.status === 'approved') || [];
 
   return (

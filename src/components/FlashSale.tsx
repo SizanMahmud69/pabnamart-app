@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -8,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from './ui/button';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from './ProductCard';
+import { useProducts } from '@/hooks/useProducts';
 
 interface FlashSaleProps {
   products: Product[];
@@ -68,23 +68,17 @@ const CountdownTimer = ({ expiryDate }: { expiryDate: string | null }) => {
 };
 
 
-export default function FlashSale({ products }: FlashSaleProps) {
+export default function FlashSale({ products: flashSaleProducts }: FlashSaleProps) {
+    const { getFlashSaleProducts } = useProducts();
     const [closestExpiry, setClosestExpiry] = useState<string | null>(null);
 
     useEffect(() => {
-        if (products.length > 0) {
-            const closestDate = products.reduce((closest, current) => {
-                const closestTime = new Date(closest.flashSaleEndDate!).getTime();
-                const currentTime = new Date(current.flashSaleEndDate!).getTime();
-                return currentTime < closestTime ? current : closest;
-            }).flashSaleEndDate;
-            setClosestExpiry(closestDate || null);
-        } else {
-            setClosestExpiry(null);
-        }
-    }, [products]);
+        const { closestExpiry } = getFlashSaleProducts();
+        setClosestExpiry(closestExpiry);
+    }, [getFlashSaleProducts]);
 
-    if (!products || products.length === 0) {
+
+    if (!flashSaleProducts || flashSaleProducts.length === 0) {
         return null;
     }
 
@@ -99,8 +93,8 @@ export default function FlashSale({ products }: FlashSaleProps) {
                     <CountdownTimer expiryDate={closestExpiry} />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4">
-                    {products.slice(0, 2).map(product => (
-                        <ProductCard key={product.id} product={product} />
+                    {flashSaleProducts.slice(0, 2).map(product => (
+                        <ProductCard key={product.id} product={product} isFlashSaleContext={true} />
                     ))}
                 </div>
                  <div className="mt-6 text-center">

@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import type { Product } from '@/types';
 
 const CountdownTimer = ({ expiryDate }: { expiryDate: string | null }) => {
@@ -56,32 +55,16 @@ const CountdownTimer = ({ expiryDate }: { expiryDate: string | null }) => {
 };
 
 export default function FlashSalePage() {
-    const { products: allProducts } = useProducts();
+    const { getFlashSaleProducts } = useProducts();
     const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
     const [closestExpiry, setClosestExpiry] = useState<string | null>(null);
-
+    
     useEffect(() => {
-        const now = new Date();
-        const saleProducts = allProducts
-            .filter(p => p.isFlashSale && p.flashSaleEndDate && new Date(p.flashSaleEndDate) > now)
-            .map(p => ({
-                ...p,
-                originalPrice: p.originalPrice || p.price + (p.price * 0.2),
-            }));
+        const { products, closestExpiry } = getFlashSaleProducts();
+        setFlashSaleProducts(products);
+        setClosestExpiry(closestExpiry);
+    }, [getFlashSaleProducts]);
 
-        setFlashSaleProducts(saleProducts);
-
-        if (saleProducts.length > 0) {
-            const closestDate = saleProducts.reduce((closest, current) => {
-                const closestTime = new Date(closest.flashSaleEndDate!).getTime();
-                const currentTime = new Date(current.flashSaleEndDate!).getTime();
-                return currentTime < closestTime ? current : closest;
-            }).flashSaleEndDate;
-            setClosestExpiry(closestDate || null);
-        } else {
-            setClosestExpiry(null);
-        }
-    }, [allProducts]);
 
     return (
         <div className="bg-purple-50 min-h-screen">
@@ -99,7 +82,7 @@ export default function FlashSalePage() {
                 {flashSaleProducts.length > 0 ? (
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {flashSaleProducts.map(product => (
-                            <ProductCard key={product.id} product={product} />
+                            <ProductCard key={product.id} product={product} isFlashSaleContext={true} />
                         ))}
                     </div>
                 ) : (

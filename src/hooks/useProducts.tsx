@@ -1,4 +1,3 @@
-
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
@@ -15,6 +14,8 @@ interface ProductContextType {
   updateProduct: (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => Promise<void>;
   deleteProduct: (productId: number) => Promise<void>;
   loading: boolean;
+  getFlashSaleProducts: () => { products: Product[], closestExpiry: string | null };
+  getFlashSalePrice: (product: Product) => number;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -56,20 +57,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const productsWithOffers = useMemo(() => {
-    const now = new Date();
     return baseProducts.map(product => {
-      // Check for active flash sale first
-      if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
-        const discountAmount = (product.price * product.flashSaleDiscount) / 100;
-        return {
-          ...product,
-          originalPrice: product.price,
-          price: product.price - discountAmount,
-          hasOffer: true, 
-        };
-      }
-
-      // Then check for regular offers
       const applicableOffer = activeOffers.find(offer => offer.name === product.category);
       if (applicableOffer) {
         const discountAmount = (product.price * applicableOffer.discount) / 100;
@@ -77,13 +65,46 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
           ...product,
           originalPrice: product.price,
           price: product.price - discountAmount,
-          hasOffer: true,
         };
       }
-      
-      return { ...product, originalPrice: product.originalPrice || product.price, hasOffer: false };
+      return { ...product, originalPrice: product.originalPrice || product.price };
     });
   }, [baseProducts, activeOffers]);
+
+  const getFlashSalePrice = useCallback((product: Product): number => {
+    const now = new Date();
+    if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
+        const regularPrice = productsWithOffers.find(p => p.id === product.id)?.price || product.price;
+        const discountAmount = (regularPrice * product.flashSaleDiscount) / 100;
+        return regularPrice - discountAmount;
+    }
+    return productsWithOffers.find(p => p.id === product.id)?.price || product.price;
+  }, [productsWithOffers]);
+
+  const getFlashSaleProducts = useCallback(() => {
+    const now = new Date();
+    const saleProducts = productsWithOffers
+      .filter(p => p.isFlashSale && p.flashSaleEndDate && new Date(p.flashSaleEndDate) > now)
+      .map(p => {
+        const flashPrice = getFlashSalePrice(p);
+        return {
+          ...p,
+          originalPrice: p.price,
+          price: flashPrice,
+        };
+      });
+
+    let closestExpiry = null;
+    if (saleProducts.length > 0) {
+      closestExpiry = saleProducts.reduce((closest, current) => {
+        const closestTime = new Date(closest.flashSaleEndDate!).getTime();
+        const currentTime = new Date(current.flashSaleEndDate!).getTime();
+        return currentTime < closestTime ? current : closest;
+      }).flashSaleEndDate || null;
+    }
+
+    return { products: saleProducts, closestExpiry };
+  }, [productsWithOffers, getFlashSalePrice]);
 
 
   const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
@@ -155,7 +176,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <ProductContext.Provider value={{ products: productsWithOffers, addProduct, updateProduct, deleteProduct, loading }}>
+    <ProductContext.Provider value={{ products: productsWithOffers, addProduct, updateProduct, deleteProduct, loading, getFlashSaleProducts, getFlashSalePrice }}>
       {children}
     </ProductContext.Provider>
   );

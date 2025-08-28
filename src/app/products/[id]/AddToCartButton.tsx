@@ -7,7 +7,7 @@ import { ShoppingCart, CreditCard, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWishlist } from "@/hooks/useWishlist";
 
-export default function AddToCartButton({ product }: { product: Product }) {
+export default function AddToCartButton({ product, isFlashSaleContext = false }: { product: Product, isFlashSaleContext?: boolean }) {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function AddToCartButton({ product }: { product: Product }) {
   const isSoldOut = product.stock === 0;
 
   const handleBuyNow = () => {
-    addToCart(product);
+    addToCart(product, isFlashSaleContext);
     router.push('/checkout');
   }
   
@@ -34,7 +34,7 @@ export default function AddToCartButton({ product }: { product: Product }) {
 
   return (
     <div className="flex gap-4">
-      <Button size="lg" className="w-full" onClick={() => addToCart(product)}>
+      <Button size="lg" className="w-full" onClick={() => addToCart(product, isFlashSaleContext)}>
         <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
       </Button>
       <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow}>

@@ -39,9 +39,9 @@ function RootLayoutContent({
       <body className={inter.className}>
         <AuthProvider>
           <VoucherProvider>
-            <CartProvider>
-              <OfferProvider>
-                <ProductProvider>
+            <OfferProvider>
+              <ProductProvider>
+                <CartProvider>
                   <WishlistProvider>
                     <NotificationProvider>
                       {!isAdminPage && <Header />}
@@ -50,9 +50,9 @@ function RootLayoutContent({
                       {!isAdminPage && <BottomNav />}
                     </NotificationProvider>
                   </WishlistProvider>
-                </ProductProvider>
-              </OfferProvider>
-            </CartProvider>
+                </CartProvider>
+              </ProductProvider>
+            </OfferProvider>
           </VoucherProvider>
         </AuthProvider>
       </body>

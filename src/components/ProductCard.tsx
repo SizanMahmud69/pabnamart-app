@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -13,19 +12,28 @@ import { useWishlist } from '@/hooks/useWishlist';
 
 interface ProductCardProps {
   product: Product;
+  isFlashSaleContext?: boolean;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, isFlashSaleContext = false }: ProductCardProps) {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
-  const hasDiscount = (product.originalPrice && product.originalPrice > product.price) || product.hasOffer;
-  const discountAmount = hasDiscount ? (product.originalPrice ?? 0) - product.price : 0;
+
+  const price = product.price;
+  const originalPrice = product.originalPrice;
+  const hasDiscount = originalPrice && originalPrice > price;
+  const discountAmount = hasDiscount ? originalPrice - price : 0;
   const isSoldOut = product.stock === 0;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
     addToWishlist(product);
   };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+      e.preventDefault();
+      addToCart(product, isFlashSaleContext);
+  }
 
   return (
     <Card className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-shadow duration-300 hover:shadow-lg group">
@@ -75,10 +83,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
         <div className="flex justify-between items-center mt-auto">
           <div>
-            <p className="text-lg font-bold text-primary">৳{product.price.toFixed(2)}</p>
+            <p className="text-lg font-bold text-primary">৳{price.toFixed(2)}</p>
             {hasDiscount && (
               <p className="text-xs text-muted-foreground line-through">
-                ৳{product.originalPrice!.toFixed(2)}
+                ৳{originalPrice.toFixed(2)}
               </p>
             )}
           </div>
@@ -95,7 +103,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             </Button>
           ) : (
             <Button
-                onClick={() => addToCart(product)}
+                onClick={handleAddToCart}
                 size="icon"
                 className="h-9 w-9"
                 aria-label="Add to Cart"
