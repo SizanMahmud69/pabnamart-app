@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
         hostname: 'pix1.wapkizfile.info',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },

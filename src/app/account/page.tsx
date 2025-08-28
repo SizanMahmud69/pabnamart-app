@@ -159,7 +159,7 @@ export default function AccountPage() {
                 <Card className="shadow-sm">
                     <CardContent className="p-4 flex items-center gap-4">
                         <Avatar className="h-16 w-16 flex-shrink-0">
-                            <AvatarImage src="https://picsum.photos/seed/avatar/200" alt="User Avatar" data-ai-hint="user avatar" />
+                            <AvatarImage src={user.photoURL || "https://picsum.photos/seed/avatar/200"} alt="User Avatar" data-ai-hint="user avatar" />
                             <AvatarFallback>{user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">

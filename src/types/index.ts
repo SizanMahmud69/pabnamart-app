@@ -74,6 +74,7 @@ export interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
+  photoURL?: string | null;
   status: 'active' | 'banned';
   joined: string;
   shippingAddresses?: ShippingAddress[];

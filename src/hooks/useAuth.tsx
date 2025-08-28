@@ -18,9 +18,12 @@ import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import type { User as AppUser } from '@/types';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -31,6 +34,7 @@ interface AuthContextType {
   sendPasswordReset: (email: string) => Promise<void>;
   updateUserDisplayName: (displayName: string) => Promise<void>;
   updateUserPassword: (newPassword: string) => Promise<void>;
+  updateUserProfilePicture: (file: File) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -82,6 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         uid: firebaseUser.uid,
         email: firebaseUser.email,
         displayName: displayName,
+        photoURL: null,
         status: 'active',
         joined: new Date().toISOString(),
         shippingAddresses: [],
@@ -122,6 +127,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateUserProfilePicture = async (file: File) => {
+    if (!auth.currentUser) {
+        throw new Error("No user is signed in.");
+    }
+    
+    const storageRef = ref(storage, `profilePictures/${auth.currentUser.uid}`);
+    await uploadBytes(storageRef, file);
+    const photoURL = await getDownloadURL(storageRef);
+
+    await updateProfile(auth.currentUser, { photoURL });
+    
+    const userDocRef = doc(db, 'users', auth.currentUser.uid);
+    await setDoc(userDocRef, { photoURL }, { merge: true });
+
+    setUser({ ...auth.currentUser });
+  };
+
   const value = {
     user,
     loading,
@@ -131,6 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sendPasswordReset,
     updateUserDisplayName,
     updateUserPassword,
+    updateUserProfilePicture,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
