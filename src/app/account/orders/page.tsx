@@ -13,6 +13,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 const db = getFirestore(app);
 
@@ -67,11 +68,16 @@ export default function OrdersPage() {
                 {filteredOrders.length > 0 ? (
                     <div className="space-y-4">
                     {filteredOrders.map(order => (
-                        <Link href={`/account/orders/${order.id}`} key={order.id} className="block hover:shadow-lg transition-shadow rounded-lg">
-                            <Card>
+                        <Card key={order.id}>
+                            <Link href={`/account/orders/${order.id}`} className="block hover:bg-muted/50 transition-colors rounded-t-lg">
                                 <CardHeader>
-                                    <CardTitle>Order #{order.orderNumber}</CardTitle>
-                                    <CardDescription>Date: {new Date(order.date).toLocaleDateString()}</CardDescription>
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <CardTitle>Order #{order.orderNumber}</CardTitle>
+                                            <CardDescription>Date: {new Date(order.date).toLocaleDateString()}</CardDescription>
+                                        </div>
+                                         <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">{order.status.replace('-', ' ')}</p>
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="flex justify-between items-center">
@@ -79,11 +85,23 @@ export default function OrdersPage() {
                                             <p>Items: {order.items.reduce((acc, item) => acc + item.quantity, 0)}</p>
                                             <p className="font-bold">Total: ৳{order.total.toFixed(2)}</p>
                                         </div>
-                                        <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">{order.status.replace('-', ' ')}</p>
                                     </div>
                                 </CardContent>
-                            </Card>
-                        </Link>
+                            </Link>
+                             {order.status === 'delivered' && (
+                                <>
+                                <Separator />
+                                <div className="p-4 flex justify-end gap-2">
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href="/account/reviews">Write a Review</Link>
+                                    </Button>
+                                    <Button variant="secondary" size="sm" asChild>
+                                        <Link href="#">Return</Link>
+                                    </Button>
+                                </div>
+                                </>
+                            )}
+                        </Card>
                     ))}
                     </div>
                 ) : (
