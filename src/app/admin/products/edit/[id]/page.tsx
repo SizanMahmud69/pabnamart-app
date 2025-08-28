@@ -39,6 +39,8 @@ export default function EditProductPage() {
     const [freeShipping, setFreeShipping] = useState(false);
     const [isFlashSale, setIsFlashSale] = useState(false);
     const [flashSaleEndDate, setFlashSaleEndDate] = useState('');
+    const [flashSaleDiscount, setFlashSaleDiscount] = useState<number | undefined>(undefined);
+
 
     useEffect(() => {
         const productToEdit = products.find(p => p.id === productId);
@@ -49,6 +51,7 @@ export default function EditProductPage() {
             setFreeShipping(productToEdit.freeShipping || false);
             setIsFlashSale(productToEdit.isFlashSale || false);
             setFlashSaleEndDate(productToEdit.flashSaleEndDate || '');
+            setFlashSaleDiscount(productToEdit.flashSaleDiscount);
         }
     }, [products, productId]);
 
@@ -90,6 +93,7 @@ export default function EditProductPage() {
             freeShipping: freeShipping,
             isFlashSale: isFlashSale,
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
+            flashSaleDiscount: isFlashSale ? flashSaleDiscount : undefined,
             shippingTime: formData.get('shippingTime') as string,
             returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,
         };
@@ -199,17 +203,32 @@ export default function EditProductPage() {
                                         </label>
                                     </div>
                                     {isFlashSale && (
-                                        <div className="space-y-2 ml-6">
-                                            <Label htmlFor="flash-sale-end-date">Flash Sale End Date</Label>
-                                            <Input 
-                                                id="flash-sale-end-date" 
-                                                name="flashSaleEndDate" 
-                                                type="datetime-local" 
-                                                value={flashSaleEndDate}
-                                                onChange={(e) => setFlashSaleEndDate(e.target.value)}
-                                                required={isFlashSale} 
-                                                disabled={isLoading}
-                                            />
+                                        <div className="space-y-4 ml-6">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="flash-sale-end-date">Flash Sale End Date</Label>
+                                                <Input 
+                                                    id="flash-sale-end-date" 
+                                                    name="flashSaleEndDate" 
+                                                    type="datetime-local" 
+                                                    value={flashSaleEndDate}
+                                                    onChange={(e) => setFlashSaleEndDate(e.target.value)}
+                                                    required={isFlashSale} 
+                                                    disabled={isLoading}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="flash-sale-discount">Flash Sale Discount (%)</Label>
+                                                <Input 
+                                                    id="flash-sale-discount" 
+                                                    name="flashSaleDiscount" 
+                                                    type="number"
+                                                    value={flashSaleDiscount || ''}
+                                                    onChange={(e) => setFlashSaleDiscount(e.target.value ? Number(e.target.value) : undefined)}
+                                                    placeholder="e.g., 25"
+                                                    required={isFlashSale}
+                                                    disabled={isLoading}
+                                                />
+                                            </div>
                                         </div>
                                     )}
                                 </div>

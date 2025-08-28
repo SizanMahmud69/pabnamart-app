@@ -34,6 +34,7 @@ export interface Product {
   returnPolicy?: number;
   isFlashSale?: boolean;
   flashSaleEndDate?: string;
+  flashSaleDiscount?: number;
   hasOffer?: boolean;
 }
 

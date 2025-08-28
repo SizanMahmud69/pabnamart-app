@@ -56,11 +56,20 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const productsWithOffers = useMemo(() => {
-    if (!activeOffers.length) {
-      return baseProducts.map(p => ({ ...p, originalPrice: p.originalPrice || p.price, hasOffer: false }));
-    }
-
+    const now = new Date();
     return baseProducts.map(product => {
+      // Check for active flash sale first
+      if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
+        const discountAmount = (product.price * product.flashSaleDiscount) / 100;
+        return {
+          ...product,
+          originalPrice: product.price,
+          price: product.price - discountAmount,
+          hasOffer: true, 
+        };
+      }
+
+      // Then check for regular offers
       const applicableOffer = activeOffers.find(offer => offer.name === product.category);
       if (applicableOffer) {
         const discountAmount = (product.price * applicableOffer.discount) / 100;
@@ -71,6 +80,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
           hasOffer: true,
         };
       }
+      
       return { ...product, originalPrice: product.originalPrice || product.price, hasOffer: false };
     });
   }, [baseProducts, activeOffers]);
@@ -86,6 +96,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       sold: 0,
       isFlashSale: productData.isFlashSale || false,
       flashSaleEndDate: productData.flashSaleEndDate || '',
+      flashSaleDiscount: productData.flashSaleDiscount,
     };
     const productDoc = doc(db, 'products', newId.toString());
     await setDoc(productDoc, newProduct);
@@ -132,6 +143,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         sold: existingProduct?.sold || 0,
         isFlashSale: productData.isFlashSale || false,
         flashSaleEndDate: productData.flashSaleEndDate || '',
+        flashSaleDiscount: productData.flashSaleDiscount,
     };
     await updateDoc(productDocRef, dataToUpdate);
   };
