@@ -128,23 +128,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserProfilePicture = async (file: File) => {
-    if (!auth.currentUser) {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
         throw new Error("No user is signed in.");
     }
     
-    const storageRef = ref(storage, `profilePictures/${auth.currentUser.uid}`);
+    const storageRef = ref(storage, `profilePictures/${currentUser.uid}`);
     await uploadBytes(storageRef, file);
     const photoURL = await getDownloadURL(storageRef);
 
-    await updateProfile(auth.currentUser, { photoURL });
+    await updateProfile(currentUser, { photoURL });
     
-    const userDocRef = doc(db, 'users', auth.currentUser.uid);
+    const userDocRef = doc(db, 'users', currentUser.uid);
     await setDoc(userDocRef, { photoURL }, { merge: true });
 
-    // Force a refresh of the user object to get the new photoURL
-    await auth.currentUser.reload();
-    const refreshedUser = auth.currentUser;
-    setUser(refreshedUser ? { ...refreshedUser } : null);
+    // Update the user state directly to force a re-render with the new photoURL
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      // Create a new object to ensure React detects the state change
+      const newUser = { ...prevUser, photoURL: photoURL };
+      // Manually update the properties that might not be immediately available
+      // on the cloned object to match the official FirebaseUser type.
+      // This part is a bit of a workaround to satisfy TypeScript and React's state updates.
+      Object.assign(newUser, {
+        ...currentUser,
+        photoURL: photoURL
+      });
+      return newUser as FirebaseUser;
+    });
   };
 
   const value = {
