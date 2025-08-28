@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import type { Order, User as AppUser } from '@/types';
-import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where, orderBy } from 'firebase/firestore';
+import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
@@ -27,8 +27,7 @@ export default function VerifyPaymentPage() {
         const q = query(
             ordersRef, 
             where('paymentMethod', '==', 'online'), 
-            where('status', '==', 'pending'),
-            orderBy('date', 'desc')
+            where('status', '==', 'pending')
         );
 
         const unsubscribe = onSnapshot(q, async (snapshot) => {
@@ -56,6 +55,10 @@ export default function VerifyPaymentPage() {
 
         return () => unsubscribe();
     }, [users]);
+
+    const sortedOrders = useMemo(() => {
+        return [...pendingOrders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [pendingOrders]);
 
     const handleVerifyPayment = async (orderId: string) => {
         try {
@@ -108,8 +111,8 @@ export default function VerifyPaymentPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {pendingOrders.length > 0 ? (
-                                    pendingOrders.map(order => (
+                                {sortedOrders.length > 0 ? (
+                                    sortedOrders.map(order => (
                                         <TableRow key={order.id}>
                                             <TableCell className="font-medium">#{order.id}</TableCell>
                                             <TableCell>{users.get(order.userId)?.displayName || 'Unknown User'}</TableCell>
