@@ -28,6 +28,7 @@ export interface CartItem extends Product {
 }
 
 export interface Voucher {
+    id?: string;
     code: string;
     discount: number;
     type: 'fixed' | 'percentage';

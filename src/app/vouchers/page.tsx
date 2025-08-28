@@ -7,34 +7,25 @@ import { Download, Ticket, ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useVouchers } from "@/hooks/useVouchers";
 import type { Voucher } from "@/types";
+import { useEffect, useState } from "react";
+import { collection, getFirestore, onSnapshot } from "firebase/firestore";
+import app from "@/lib/firebase";
 
-const availableVouchers: Voucher[] = [
-    {
-        code: "PABNA50",
-        discount: 50,
-        type: 'fixed',
-        description: "On orders over ৳500",
-        minSpend: 500,
-        discountType: 'order',
-    },
-    {
-        code: "FREESHIP",
-        discount: 50,
-        type: 'fixed',
-        description: "Free Shipping on all orders",
-        discountType: 'shipping',
-    },
-    {
-        code: "NEW100",
-        discount: 100,
-        type: 'fixed',
-        description: "For your first purchase. No minimum spend.",
-        discountType: 'order',
-    }
-]
+const db = getFirestore(app);
 
 export default function VouchersPage() {
     const { collectedVouchers, collectVoucher, availableReturnVouchers } = useVouchers();
+    const [availableVouchers, setAvailableVouchers] = useState<Voucher[]>([]);
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, "vouchers"), (snapshot) => {
+            const vouchersData = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() } as Voucher))
+                .filter(v => !v.isReturnVoucher); // Filter out return vouchers
+            setAvailableVouchers(vouchersData);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const isCollected = (code: string) => collectedVouchers.some(v => v.code === code);
     

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -10,22 +10,42 @@ import { ArrowLeft, PlusCircle, Edit, Trash2, MoreHorizontal } from 'lucide-reac
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import { collection, deleteDoc, doc, getFirestore, onSnapshot } from 'firebase/firestore';
+import app from '@/lib/firebase';
+import type { Voucher } from '@/types';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { useToast } from '@/hooks/use-toast';
 
-const mockVouchers = [
-  { id: '1', code: 'PABNA50', type: 'Fixed', value: '৳50', status: 'Active', minSpend: '৳500' },
-  { id: '2', code: 'FREESHIP', type: 'Fixed', value: '৳50', status: 'Active', minSpend: 'N/A' },
-  { id: '3', code: 'NEW100', type: 'Fixed', value: '৳100', status: 'Active', minSpend: 'N/A' },
-  { id: '4', code: 'OLDVOUCHER', type: 'Percentage', value: '10%', status: 'Expired', minSpend: '৳1000' },
-];
+const db = getFirestore(app);
 
 export default function AdminVoucherManagement() {
-  const [vouchers, setVouchers] = useState(mockVouchers);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
 
-  const handleDelete = (id: string) => {
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'vouchers'), (snapshot) => {
+        const vouchersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Voucher));
+        setVouchers(vouchersData);
+        setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleDelete = async (id: string) => {
     if(confirm('Are you sure you want to delete this voucher?')) {
-        setVouchers(vouchers.filter(voucher => voucher.id !== id));
+        try {
+            await deleteDoc(doc(db, 'vouchers', id));
+            toast({ title: "Voucher Deleted", description: "The voucher has been successfully deleted." });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to delete voucher.", variant: "destructive" });
+        }
     }
+  }
+  
+  if (loading) {
+      return <LoadingSpinner />;
   }
 
   return (
@@ -55,10 +75,10 @@ export default function AdminVoucherManagement() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Voucher Code</TableHead>
+                                <TableHead>Description</TableHead>
                                 <TableHead>Type</TableHead>
                                 <TableHead>Value</TableHead>
                                 <TableHead>Min. Spend</TableHead>
-                                <TableHead>Status</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -66,12 +86,10 @@ export default function AdminVoucherManagement() {
                             {vouchers.map(voucher => (
                                 <TableRow key={voucher.id}>
                                     <TableCell className="font-mono">{voucher.code}</TableCell>
-                                    <TableCell>{voucher.type}</TableCell>
-                                    <TableCell>{voucher.value}</TableCell>
-                                    <TableCell>{voucher.minSpend}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={voucher.status === 'Active' ? 'default' : 'outline'}>{voucher.status}</Badge>
-                                    </TableCell>
+                                    <TableCell>{voucher.description}</TableCell>
+                                    <TableCell className="capitalize">{voucher.type}</TableCell>
+                                    <TableCell>{voucher.type === 'fixed' ? `৳${voucher.discount}` : `${voucher.discount}%`}</TableCell>
+                                    <TableCell>{voucher.minSpend ? `৳${voucher.minSpend}` : 'N/A'}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -89,7 +107,7 @@ export default function AdminVoucherManagement() {
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem 
                                                     className="text-destructive"
-                                                    onSelect={() => handleDelete(voucher.id)}
+                                                    onSelect={() => handleDelete(voucher.id!)}
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     <span>Delete</span>
