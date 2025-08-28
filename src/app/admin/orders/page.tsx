@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Eye, Truck, PackageCheck, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Eye, Truck, PackageCheck, MoreHorizontal, CircleDollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { Order, OrderStatus, User as AppUser } from '@/types';
@@ -100,6 +100,7 @@ export default function AdminOrderManagement() {
                                     <TableHead>Customer</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Total</TableHead>
+                                    <TableHead>Payment</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -111,6 +112,13 @@ export default function AdminOrderManagement() {
                                         <TableCell>{users.get(order.userId)?.displayName || 'Unknown User'}</TableCell>
                                         <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                                         <TableCell>৳{order.total.toFixed(2)}</TableCell>
+                                        <TableCell>
+                                            {order.paymentMethod === 'online' ? (
+                                                <Badge className="bg-green-100 text-green-800">Paid</Badge>
+                                            ) : (
+                                                <Badge variant="outline">COD</Badge>
+                                            )}
+                                        </TableCell>
                                         <TableCell>
                                             <Badge variant={getStatusBadgeVariant(order.status)} className="capitalize">{order.status}</Badge>
                                         </TableCell>

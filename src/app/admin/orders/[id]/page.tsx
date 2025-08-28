@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, User as UserIcon, Mail, MapPin, CreditCard, ShoppingBag, Download } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Mail, MapPin, CreditCard, ShoppingBag, Download, CircleDollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -73,6 +73,8 @@ export default function OrderDetailsPage() {
         return null;
     }
 
+    const isPaid = order.paymentMethod === 'online' && order.status !== 'pending';
+
     return (
         <div className="container mx-auto p-4">
             <header className="py-4 flex justify-between items-center print:hidden">
@@ -125,9 +127,20 @@ export default function OrderDetailsPage() {
                         </CardHeader>
                         <CardContent className="text-sm space-y-2">
                             <p><strong>Method:</strong> <span className="capitalize">{order.paymentMethod}</span></p>
+                            <div className="flex items-center justify-between">
+                                <p><strong>Status:</strong></p>
+                                {isPaid ? (
+                                    <Badge className="bg-green-100 text-green-800">Paid</Badge>
+                                ) : order.paymentMethod === 'online' ? (
+                                    <Badge variant="secondary">Pending Verification</Badge>
+                                ) : (
+                                     <Badge variant="outline">Cash on Delivery</Badge>
+                                )}
+                            </div>
                             <p><strong>Total:</strong> <span className="font-bold text-foreground">৳{order.total.toFixed(2)}</span></p>
                              {order.paymentMethod === 'online' && order.paymentDetails && (
                                 <div className="pt-2 border-t mt-2 space-y-1">
+                                    <h4 className="font-semibold text-foreground">Payment Info</h4>
                                     <p><strong>Gateway:</strong> {order.paymentDetails.gateway}</p>
                                     <p><strong>Transaction ID:</strong> {order.paymentDetails.transactionId}</p>
                                     <p><strong>Payer Number:</strong> {order.paymentDetails.payerNumber}</p>
