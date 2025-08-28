@@ -8,14 +8,16 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import type { Product } from '@/types';
+import { useParams } from 'next/navigation';
 
-export default function CategoryPage({ params }: { params: { name: string } }) {
+export default function CategoryPage() {
+    const params = useParams();
     const { products: allProducts } = useProducts();
     const [products, setProducts] = useState<Product[]>([]);
     const [categoryName, setCategoryName] = useState('');
 
     useEffect(() => {
-        const name = params.name;
+        const name = params.name as string;
         if (name) {
             const decodedName = decodeURIComponent(name);
             setCategoryName(decodedName);
