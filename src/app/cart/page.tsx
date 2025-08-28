@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "@/hooks/useCart";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,6 +18,11 @@ export default function CartPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleCheckout = () => {
     setIsCheckingOut(true);
@@ -29,7 +34,7 @@ export default function CartPage() {
     // No need to set isCheckingOut to false as we are navigating away
   };
 
-  const finalTotal = cartTotal + shippingFee;
+  const finalTotal = cartTotal + (shippingFee || 0);
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
@@ -118,14 +123,14 @@ export default function CartPage() {
                     <div className="flex justify-between">
                         <div>
                            <p>Shipping</p>
-                           <p className="text-xs text-muted-foreground">(Calculated at checkout)</p>
+                           <p className="text-xs text-muted-foreground">(Based on default address)</p>
                         </div>
-                        <span>৳{shippingFee.toFixed(2)}</span>
+                        <span>{isClient ? `৳${(shippingFee || 0).toFixed(2)}` : '...'}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                     <span>Total Amount</span>
-                    <span>৳{finalTotal.toFixed(2)}</span>
+                    <span>{isClient ? `৳${finalTotal.toFixed(2)}` : '...'}</span>
                     </div>
                 </CardContent>
                 <CardFooter>

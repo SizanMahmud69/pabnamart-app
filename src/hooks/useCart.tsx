@@ -1,7 +1,8 @@
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo } from 'react';
-import type { CartItem, Product } from '@/types';
+import type { CartItem, Product, ShippingAddress } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
 import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
@@ -17,7 +18,7 @@ interface CartContextType {
   clearCart: () => void;
   cartCount: number;
   cartTotal: number;
-  shippingFee: number;
+  shippingFee: number | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -28,8 +29,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { chargeOutsidePabna } = useDeliveryCharge();
+  const { chargeInsidePabna, chargeOutsidePabna } = useDeliveryCharge();
   const { getFlashSalePrice } = useProducts();
+  const [defaultAddress, setDefaultAddress] = useState<ShippingAddress | null>(null);
 
 
   const updateFirestoreCart = useCallback(async (items: CartItem[]) => {
@@ -42,17 +44,34 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (user) {
       const cartRef = doc(db, 'carts', user.uid);
-      const unsubscribe = onSnapshot(cartRef, (docSnap) => {
+      const cartUnsubscribe = onSnapshot(cartRef, (docSnap) => {
         if (docSnap.exists()) {
           setCartItems(docSnap.data().items || []);
         } else {
           setCartItems([]);
         }
       });
-      return () => unsubscribe();
+      
+      const userDocRef = doc(db, 'users', user.uid);
+      const userUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          const addresses = userData.shippingAddresses || [];
+          const defaultAddr = addresses.find((a: ShippingAddress) => a.default) || addresses[0] || null;
+          setDefaultAddress(defaultAddr);
+        } else {
+            setDefaultAddress(null);
+        }
+      });
+
+      return () => {
+          cartUnsubscribe();
+          userUnsubscribe();
+      };
     } else {
-      // Clear cart for logged-out users
+      // Clear cart and address for logged-out users
       setCartItems([]);
+      setDefaultAddress(null);
     }
   }, [user]);
 
@@ -140,10 +159,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return 0;
     }
     
-    // The final fee is calculated at checkout based on address.
-    // Here, we show a default/placeholder fee.
-    return chargeOutsidePabna;
-  }, [cartItems, cartCount, chargeOutsidePabna]);
+    if (!defaultAddress) {
+      return chargeOutsidePabna;
+    }
+
+    return defaultAddress.city.toLowerCase().trim() === 'pabna' ? chargeInsidePabna : chargeOutsidePabna;
+
+  }, [cartItems, cartCount, defaultAddress, chargeInsidePabna, chargeOutsidePabna]);
 
 
   return (
