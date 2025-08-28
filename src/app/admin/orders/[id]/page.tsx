@@ -15,8 +15,19 @@ import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 const db = getFirestore(app);
+
+const Stamp = ({ text, colorClass }: { text: string; colorClass: string }) => (
+    <div className={cn(
+        "absolute top-1/2 right-8 transform -translate-y-1/2 rotate-12 w-28 h-28 rounded-full border-4 flex items-center justify-center opacity-20 pointer-events-none",
+        colorClass
+    )}>
+        <span className="text-3xl font-bold uppercase">{text}</span>
+    </div>
+);
+
 
 export default function OrderDetailsPage() {
     const [order, setOrder] = useState<Order | null>(null);
@@ -157,7 +168,12 @@ export default function OrderDetailsPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><ShoppingBag className="h-5 w-5" /> Order Items ({order.items.length})</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="relative">
+                        {isPaid ? (
+                            <Stamp text="Paid" colorClass="border-green-500 text-green-500" />
+                        ) : order.paymentMethod === 'cod' ? (
+                            <Stamp text="Unpaid" colorClass="border-red-500 text-red-500" />
+                        ) : null}
                         <Table>
                             <TableHeader>
                                 <TableRow>
