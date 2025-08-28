@@ -84,7 +84,10 @@ export default function OrderDetailsPage() {
         return null;
     }
 
-    const isPaid = order.paymentMethod === 'online' && order.status !== 'pending';
+    const isPaidOnline = order.paymentMethod === 'online' && order.status !== 'pending';
+    const isPaidCOD = order.paymentMethod === 'cod' && order.status === 'delivered';
+    const isPaid = isPaidOnline || isPaidCOD;
+    
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const shippingFee = order.total - subtotal;
 
@@ -171,9 +174,9 @@ export default function OrderDetailsPage() {
                     <CardContent className="relative">
                         {isPaid ? (
                             <Stamp text="Paid" colorClass="border-green-500 text-green-500" />
-                        ) : order.paymentMethod === 'cod' ? (
+                        ) : (
                             <Stamp text="Unpaid" colorClass="border-red-500 text-red-500" />
-                        ) : null}
+                        )}
                         <Table>
                             <TableHeader>
                                 <TableRow>
