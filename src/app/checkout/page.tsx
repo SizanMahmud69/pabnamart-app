@@ -200,7 +200,7 @@ function CheckoutPage() {
                                             {address.type === 'Home' ? <Home className="h-5 w-5 text-muted-foreground" /> : <Building className="h-5 w-5 text-muted-foreground" />}
                                             <div className="flex-grow">
                                                 <p className="font-semibold">{address.type} {address.default && '(Default)'}</p>
-                                                <p className="text-sm text-muted-foreground">{address.fullName}, {address.address}, {address.area}, {address.city}</p>
+                                                <p className="text-xs text-muted-foreground">{address.fullName}, {address.address}, {address.area}, {address.city}</p>
                                             </div>
                                         </div>
                                     </Label>
