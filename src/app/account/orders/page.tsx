@@ -67,21 +67,23 @@ export default function OrdersPage() {
                 {filteredOrders.length > 0 ? (
                     <div className="space-y-4">
                     {filteredOrders.map(order => (
-                        <Card key={order.id}>
-                        <CardHeader>
-                            <CardTitle>Order #{order.orderNumber}</CardTitle>
-                            <CardDescription>Date: {new Date(order.date).toLocaleDateString()}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <p>Items: {order.items.reduce((acc, item) => acc + item.quantity, 0)}</p>
-                                    <p className="font-bold">Total: ৳{order.total.toFixed(2)}</p>
-                                </div>
-                                <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">{order.status.replace('-', ' ')}</p>
-                            </div>
-                        </CardContent>
-                        </Card>
+                        <Link href={`/account/orders/${order.id}`} key={order.id} className="block hover:shadow-lg transition-shadow rounded-lg">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Order #{order.orderNumber}</CardTitle>
+                                    <CardDescription>Date: {new Date(order.date).toLocaleDateString()}</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p>Items: {order.items.reduce((acc, item) => acc + item.quantity, 0)}</p>
+                                            <p className="font-bold">Total: ৳{order.total.toFixed(2)}</p>
+                                        </div>
+                                        <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">{order.status.replace('-', ' ')}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </Link>
                     ))}
                     </div>
                 ) : (
