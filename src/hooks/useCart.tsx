@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
 import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
+import { useDeliveryCharge } from './useDeliveryCharge';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -23,14 +24,11 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const db = getFirestore(app);
 
-const BASE_SHIPPING_FEE = 50;
-const EXTRA_ITEM_FEE = 10;
-const FREE_SHIPPING_LIMIT = 5;
-
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { deliveryCharge } = useDeliveryCharge();
 
   const updateFirestoreCart = useCallback(async (items: CartItem[]) => {
     if (user) {
@@ -119,12 +117,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const shippingFee = useMemo(() => {
     if (cartCount === 0) return 0;
-    if (cartCount <= FREE_SHIPPING_LIMIT) {
-        return BASE_SHIPPING_FEE;
+    
+    // If any item in the cart has free shipping, the entire order gets free shipping.
+    const hasFreeShippingItem = cartItems.some(item => item.freeShipping);
+    if (hasFreeShippingItem) {
+      return 0;
     }
-    const extraItems = cartCount - FREE_SHIPPING_LIMIT;
-    return BASE_SHIPPING_FEE + (extraItems * EXTRA_ITEM_FEE);
-  }, [cartCount]);
+    
+    return deliveryCharge;
+  }, [cartItems, cartCount, deliveryCharge]);
 
 
   return (
