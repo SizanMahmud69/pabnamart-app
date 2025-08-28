@@ -2,8 +2,8 @@
 "use client";
 
 import { useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ShoppingBag, Star, Undo2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { ShoppingBag, Star, Undo2, Edit } from "lucide-react";
 import type { Order } from '@/types';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +13,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 const db = getFirestore(app);
 
@@ -69,44 +69,42 @@ export default function OrdersPage() {
                     <div className="space-y-4">
                     {filteredOrders.map(order => (
                         <Card key={order.id} className="shadow-sm">
-                            <Link href={`/account/orders/${order.id}`} className="block hover:bg-muted/50 transition-colors rounded-t-lg">
-                                <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <CardTitle>Order #{order.orderNumber}</CardTitle>
-                                            <CardDescription>Date: {new Date(order.date).toLocaleDateString()}</CardDescription>
-                                        </div>
-                                         <p className="font-semibold capitalize px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">{order.status.replace('-', ' ')}</p>
+                            <CardContent className="p-4">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h2 className="text-lg font-bold">Order ID: #{order.orderNumber}</h2>
+                                        <p className="text-sm text-muted-foreground">Placed on: {new Date(order.date).toLocaleDateString()}</p>
                                     </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <p className="text-sm text-muted-foreground">Items: {order.items.reduce((acc, item) => acc + item.quantity, 0)}</p>
-                                            <p className="font-bold text-lg">Total: ৳{order.total.toFixed(2)}</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Link>
-                             {order.status === 'delivered' && (
-                                <>
-                                <Separator />
-                                <div className="p-4 flex justify-end gap-2">
+                                    <Badge className="capitalize bg-primary hover:bg-primary text-primary-foreground">{order.status.replace('-', ' ')}</Badge>
+                                </div>
+                                <div className="mt-4">
+                                    <p className="font-bold text-lg">Total Amount: ৳{order.total.toFixed(2)}</p>
+                                </div>
+                            </CardContent>
+                            
+                             <CardFooter className="bg-muted/30 p-4 flex justify-end gap-2">
+                                {order.status === 'delivered' && (
+                                    <>
                                     <Button variant="outline" size="sm" asChild>
-                                        <Link href="/account/reviews">
-                                            <Star className="mr-2 h-4 w-4" />
-                                            Write a Review
-                                        </Link>
-                                    </Button>
-                                    <Button variant="secondary" size="sm" asChild>
                                         <Link href="#">
                                             <Undo2 className="mr-2 h-4 w-4" />
                                             Return
                                         </Link>
                                     </Button>
-                                </div>
-                                </>
-                            )}
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href="/account/reviews">
+                                            <Edit className="mr-2 h-4 w-4" />
+                                            Write a Review
+                                        </Link>
+                                    </Button>
+                                    </>
+                                )}
+                                <Button variant="secondary" size="sm" asChild>
+                                    <Link href={`/account/orders/${order.id}`}>
+                                        View Details
+                                    </Link>
+                                </Button>
+                            </CardFooter>
                         </Card>
                     ))}
                     </div>
