@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ShoppingCart, Undo2, ArrowRight, Tag, Ticket } from "lucide-react";
+import { Package, Users, ShoppingCart, Undo2, ArrowRight, Tag, Ticket, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 const menuItems = [
@@ -23,6 +23,12 @@ const menuItems = [
         description: "Track and process customer orders.",
         icon: ShoppingCart,
         href: "/admin/orders"
+    },
+    {
+        title: "Verify Payments",
+        description: "Verify pending online payments.",
+        icon: ShieldCheck,
+        href: "/admin/verify-payment"
     },
     {
         title: "Return Requests",

@@ -26,7 +26,9 @@ export default function AdminOrderManagement() {
         const q = query(ordersRef, orderBy('date', 'desc'));
 
         const unsubscribe = onSnapshot(q, async (snapshot) => {
-            const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+            const ordersData = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() } as Order))
+                .filter(order => !(order.paymentMethod === 'online' && order.status === 'pending')); // Filter out pending online orders
             
             // Fetch user data for each order
             const userIds = new Set(ordersData.map(order => order.userId));
