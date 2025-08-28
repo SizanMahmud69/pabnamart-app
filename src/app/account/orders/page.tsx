@@ -101,7 +101,7 @@ export default function OrdersPage() {
                                 {order.status === 'delivered' && (
                                     <div className="grid grid-cols-2 gap-2 w-full">
                                         <Button variant="outline" size="sm" asChild className="bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900 border-red-200">
-                                            <Link href="#">
+                                            <Link href={`/account/returns/${order.id}`}>
                                                 <Undo2 className="mr-2 h-4 w-4" />
                                                 Return
                                             </Link>
