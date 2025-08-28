@@ -101,9 +101,14 @@ function PaymentGatewayPage() {
         <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
             <div className="container mx-auto max-w-md px-4 py-8">
                 <Card>
-                    <CardHeader>
-                        <CardTitle className="text-2xl text-center">Select Payment Method</CardTitle>
-                        <CardDescription className="text-center">Pay ৳{orderDetails.finalTotal.toFixed(2)} to complete your purchase.</CardDescription>
+                    <CardHeader className="items-center text-center">
+                        <CardTitle className="text-2xl">Select Payment Method</CardTitle>
+                        <CardDescription>
+                            Please pay the following amount to complete your purchase.
+                        </CardDescription>
+                        <p className="text-3xl font-bold text-primary pt-2">
+                            ৳{orderDetails.finalTotal.toFixed(2)}
+                        </p>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-3 gap-4">
