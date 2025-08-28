@@ -119,7 +119,7 @@ export default function OrderDetailsPage() {
                             <p><strong>Method:</strong> <span className="capitalize">{order.paymentMethod}</span></p>
                             <p><strong>Total:</strong> <span className="font-bold text-foreground">৳{order.total.toFixed(2)}</span></p>
                              {order.paymentMethod === 'online' && order.paymentDetails && (
-                                <div className="pt-2 border-t mt-2">
+                                <div className="pt-2 border-t mt-2 space-y-1">
                                     <p><strong>Gateway:</strong> {order.paymentDetails.gateway}</p>
                                     <p><strong>Transaction ID:</strong> {order.paymentDetails.transactionId}</p>
                                     <p><strong>Payer Number:</strong> {order.paymentDetails.payerNumber}</p>
