@@ -4,7 +4,7 @@
 import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai/flows/product-recommendations";
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import admin from '@/lib/firebase-admin';
-import { getFirestore, Timestamp, FieldValue, runTransaction } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher } from "@/types";
 import { revalidatePath } from "next/cache";
 
@@ -60,7 +60,7 @@ export async function placeOrder(
   try {
      const orderRef = db.collection('orders').doc();
 
-     await runTransaction(db, async (transaction) => {
+     await db.runTransaction(async (transaction) => {
         // 1. Update product stock and sold count
         for (const item of cartItems) {
             const productRef = db.collection('products').doc(item.id.toString());
