@@ -135,7 +135,18 @@ export default function AdminProductManagement() {
                                               </TableCell>
                                               <TableCell>{product.sold || 0}</TableCell>
                                               <TableCell>
-                                                  {product.isFlashSale && <Badge variant="secondary">Yes</Badge>}
+                                                  {(() => {
+                                                      if (!product.isFlashSale || !product.flashSaleEndDate) {
+                                                          return null;
+                                                      }
+                                                      const now = new Date();
+                                                      const endDate = new Date(product.flashSaleEndDate);
+                                                      if (endDate > now) {
+                                                          return <Badge variant="secondary" className="bg-green-100 text-green-800">Active</Badge>;
+                                                      } else {
+                                                          return <Badge variant="outline">Ended</Badge>;
+                                                      }
+                                                  })()}
                                               </TableCell>
                                               <TableCell>
                                                   <div className="flex items-center gap-1">
@@ -198,3 +209,4 @@ export default function AdminProductManagement() {
     </>
   );
 }
+
