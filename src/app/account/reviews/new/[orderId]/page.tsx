@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Star } from 'lucide-react';
 import Link from 'next/link';
-import { getFirestore, doc, getDoc, collection, writeBatch, Timestamp, runTransaction, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, runTransaction } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Order, OrderItem, Review, Product } from '@/types';
+import type { Order, Review, Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Image from 'next/image';
@@ -129,9 +129,7 @@ export default function WriteReviewPage() {
                     const productData = productDoc.data() as Product;
                     const existingReviews = productData.reviews || [];
     
-                    // Check if user already reviewed this product from this order
                     if (existingReviews.some(r => r.orderId === orderId && r.user.uid === user.uid)) {
-                        // Skip if already reviewed
                         return;
                     }
     
@@ -148,21 +146,30 @@ export default function WriteReviewPage() {
                         rating: reviewData.rating,
                         comment: reviewData.comment,
                         date: new Date().toISOString(),
-                        status: 'pending'
+                        status: 'approved' // Automatically approve reviews
                     };
                     
                     const reviewDocRef = doc(db, `products/${productId}/reviews`, reviewId);
                     transaction.set(reviewDocRef, newReview);
 
-                    // Also add to the reviews array in the product document
                     const updatedReviews = [...existingReviews, newReview];
-                    transaction.update(productDocRef, { reviews: updatedReviews });
+                    
+                    // Recalculate average rating
+                    const approvedReviews = updatedReviews.filter(r => r.status === 'approved');
+                    const newRating = approvedReviews.length > 0
+                        ? approvedReviews.reduce((acc, curr) => acc + curr.rating, 0) / approvedReviews.length
+                        : 0;
+
+                    transaction.update(productDocRef, { 
+                        reviews: updatedReviews,
+                        rating: newRating
+                    });
                 });
             }
     
             toast({
                 title: "Reviews Submitted",
-                description: "Thank you for your feedback! Your reviews are pending approval.",
+                description: "Thank you for your feedback!",
             });
             router.push('/account/reviews');
         } catch (error) {

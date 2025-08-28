@@ -11,7 +11,6 @@ import type { Review } from "@/types";
 import { getFirestore, collectionGroup, query, where, onSnapshot } from "firebase/firestore";
 import app from "@/lib/firebase";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { Badge } from "@/components/ui/badge";
 
 const db = getFirestore(app);
 
@@ -61,9 +60,6 @@ export default function ReviewsPage() {
                                             </div>
                                             <div className="text-right">
                                                  <p className="text-sm text-muted-foreground mb-1">{new Date(review.date).toLocaleDateString()}</p>
-                                                 <Badge variant={review.status === 'approved' ? 'default' : review.status === 'rejected' ? 'destructive' : 'secondary'}>
-                                                    {review.status}
-                                                 </Badge>
                                             </div>
                                         </div>
                                         <p className="text-muted-foreground mt-2">{review.comment}</p>

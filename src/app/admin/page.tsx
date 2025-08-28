@@ -24,12 +24,6 @@ const menuItems = [
         icon: ShoppingCart,
         href: "/admin/orders"
     },
-     {
-        title: "Review Management",
-        description: "Approve and manage user reviews.",
-        icon: Star,
-        href: "/admin/reviews"
-    },
     {
         title: "Verify Payments",
         description: "Verify pending online payments.",
