@@ -39,7 +39,7 @@ const defaultBanner = {
 function HomePageContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
-  const { products: allProducts } = useProducts();
+  const { products: allProducts, getFlashSaleProducts } = useProducts();
   const { activeOffers } = useOffers();
 
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
@@ -65,8 +65,6 @@ function HomePageContent() {
 
   useEffect(() => {
     if (allProducts.length > 0) {
-      const now = new Date();
-      
       // New arrivals: sort by ID descending (assuming higher ID is newer)
       const sortedNew = [...allProducts].sort((a, b) => b.id - a.id);
       setNewArrivals(sortedNew.slice(0, 5));
@@ -75,16 +73,11 @@ function HomePageContent() {
       const sortedRated = [...allProducts].sort((a, b) => b.rating - a.rating);
       setTopRated(sortedRated.slice(0, 5));
 
-      // Flash sale products with mock discount
-      const saleProducts = allProducts
-        .filter(p => p.isFlashSale && p.flashSaleEndDate && new Date(p.flashSaleEndDate) > now)
-        .map(p => ({
-          ...p,
-          originalPrice: p.originalPrice || p.price + (p.price * 0.2), // Mock discount if not present
-      }));
+      // Flash sale products
+      const { products: saleProducts } = getFlashSaleProducts();
       setFlashSaleProducts(saleProducts);
     }
-  }, [allProducts]);
+  }, [allProducts, getFlashSaleProducts]);
   
   const showRecommendations = searchQuery.trim().length > 0;
 
