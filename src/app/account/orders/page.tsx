@@ -3,15 +3,16 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShoppingBag, Package, Truck, PackageCheck, Undo2 } from "lucide-react";
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import type { Order, OrderStatus } from '@/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 const db = getFirestore(app);
 
@@ -53,6 +54,11 @@ export default function OrdersPage() {
     ? orders 
     : orders.filter(order => order.status === status);
     
+  const pageTitle = useMemo(() => {
+    const tab = TABS.find(t => t.value === status);
+    return tab ? tab.label : 'My Orders';
+  }, [status]);
+    
   if (loading) {
       return <LoadingSpinner />;
   }
@@ -60,27 +66,22 @@ export default function OrdersPage() {
   return (
     <div className="bg-purple-50/30 min-h-screen">
         <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">My Orders</h1>
-        <Tabs defaultValue={status} className="w-full">
-            <ScrollArea className="w-full whitespace-nowrap rounded-md">
-                <TabsList className="inline-flex w-max mb-4">
-                    {TABS.map(tab => (
-                        <TabsTrigger key={tab.value} value={tab.value}>
-                            <tab.icon className="w-4 h-4 mr-2" />
-                            {tab.label}
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-                <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            <div className="flex items-center mb-6">
+                <Button asChild variant="ghost" size="icon" className="mr-2">
+                    <Link href="/account">
+                        <ArrowLeft className="h-5 w-5" />
+                    </Link>
+                </Button>
+                <h1 className="text-3xl font-bold">{pageTitle}</h1>
+            </div>
             
-            <TabsContent value={status}>
+            <div>
                 {filteredOrders.length > 0 ? (
                     <div className="space-y-4">
                     {filteredOrders.map(order => (
                         <Card key={order.id}>
                         <CardHeader>
-                            <CardTitle>Order #{order.id}</CardTitle>
+                            <CardTitle>Order #{order.id.slice(0, 8)}...</CardTitle>
                             <CardDescription>Date: {new Date(order.date).toLocaleDateString()}</CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -102,8 +103,7 @@ export default function OrdersPage() {
                         <p className="text-muted-foreground">You have no orders with this status.</p>
                     </div>
                 )}
-                </TabsContent>
-        </Tabs>
+            </div>
         </div>
     </div>
   );
