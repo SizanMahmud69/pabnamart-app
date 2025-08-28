@@ -23,8 +23,10 @@ function AdminHeader() {
                     <span className="text-2xl font-bold text-primary whitespace-nowrap">PabnaMart</span>
                 </Link>
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon">
-                        <Settings className="h-6 w-6" />
+                    <Button asChild variant="ghost" size="icon">
+                        <Link href="/admin/settings">
+                            <Settings className="h-6 w-6" />
+                        </Link>
                     </Button>
                     <Button variant="outline" onClick={handleLogout}>
                         <LogOut className="mr-2 h-4 w-4" />
