@@ -5,7 +5,7 @@ import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import admin from '@/lib/firebase-admin';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
-import type { CartItem, Order, ShippingAddress } from "@/types";
+import type { CartItem, Order, OrderStatus, ShippingAddress } from "@/types";
 import { revalidatePath } from "next/cache";
 
 const db = getFirestore();
@@ -50,6 +50,14 @@ export async function placeOrder(
 
   try {
     const orderRef = db.collection('orders').doc();
+    
+    let status: OrderStatus = 'pending';
+    if (paymentMethod === 'cod') {
+        status = 'shipped';
+    } else if (paymentMethod === 'online') {
+        status = 'processing';
+    }
+
     const orderData: Omit<Order, 'id'> = {
       userId,
       items: cartItems.map(item => ({
@@ -60,7 +68,7 @@ export async function placeOrder(
         image: item.images[0]
       })),
       total: totalAmount,
-      status: 'pending',
+      status: status,
       date: Timestamp.now().toDate().toISOString(),
       shippingAddress,
       paymentMethod,
@@ -68,8 +76,11 @@ export async function placeOrder(
 
     await orderRef.set(orderData);
 
-    const cartRef = db.collection('carts').doc(userId);
-    await cartRef.set({ items: [] });
+    // Only clear cart if order is not in processing state (i.e., COD)
+    if (status !== 'processing') {
+        const cartRef = db.collection('carts').doc(userId);
+        await cartRef.set({ items: [] });
+    }
     
     revalidatePath('/account/orders');
     revalidatePath('/admin/orders');
@@ -80,3 +91,5 @@ export async function placeOrder(
     return { success: false, message: error.message || 'Failed to place order.' };
   }
 }
+
+    

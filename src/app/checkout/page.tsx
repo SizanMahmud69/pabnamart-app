@@ -118,15 +118,28 @@ function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!user) return;
-    setIsPlacingOrder(true);
-    
+
     const selectedAddress = addresses.find(a => a.id === selectedAddressId);
     if (!selectedAddress) {
         toast({ title: "Error", description: "Please select a shipping address.", variant: "destructive"});
-        setIsPlacingOrder(false);
         return;
     }
     
+    setIsPlacingOrder(true);
+    
+    if (selectedPaymentMethod === 'online') {
+        const orderDetails = {
+            cartItems,
+            finalTotal,
+            shippingAddress: selectedAddress,
+            paymentMethod: selectedPaymentMethod,
+            voucher: selectedVoucher
+        };
+        sessionStorage.setItem('orderDetails', JSON.stringify(orderDetails));
+        router.push('/payment');
+        return;
+    }
+
     const { id, default: isDefault, ...shippingAddressData } = selectedAddress;
 
     const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, selectedPaymentMethod);
@@ -137,15 +150,15 @@ function CheckoutPage() {
             description: "Thank you for your purchase.",
         });
         clearCart();
-        router.push('/account/orders');
+        router.push('/account/orders?status=shipped');
     } else {
         toast({
             title: "Order Failed",
             description: result.message,
             variant: "destructive"
         });
-        setIsPlacingOrder(false);
     }
+    setIsPlacingOrder(false);
   }
   
   if (loadingAddresses) {
@@ -330,7 +343,7 @@ function CheckoutPage() {
                         {isPlacingOrder ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Placing Order...
+                                Processing...
                             </>
                         ) : (
                             'Place Order'
@@ -346,3 +359,5 @@ function CheckoutPage() {
 }
 
 export default withAuth(CheckoutPage);
+
+    
