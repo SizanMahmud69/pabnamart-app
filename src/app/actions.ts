@@ -55,7 +55,8 @@ export async function placeOrder(
     if (paymentMethod === 'cod') {
         status = 'shipped';
     } else if (paymentMethod === 'online') {
-        status = 'processing';
+        // For online payments, we set to pending until payment is verified
+        status = 'pending'; 
     }
 
     const orderData: Omit<Order, 'id'> = {
@@ -75,12 +76,10 @@ export async function placeOrder(
     };
 
     await orderRef.set(orderData);
-
-    // Only clear cart if order is not in processing state (i.e., COD)
-    if (status !== 'processing') {
-        const cartRef = db.collection('carts').doc(userId);
-        await cartRef.set({ items: [] });
-    }
+    
+    // Clear cart after order is placed, regardless of payment method
+    const cartRef = db.collection('carts').doc(userId);
+    await cartRef.set({ items: [] });
     
     revalidatePath('/account/orders');
     revalidatePath('/admin/orders');
@@ -91,5 +90,3 @@ export async function placeOrder(
     return { success: false, message: error.message || 'Failed to place order.' };
   }
 }
-
-    

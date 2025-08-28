@@ -62,25 +62,23 @@ function PaymentGatewayPage() {
         }
         setIsProcessing(true);
 
-        const { cartItems, finalTotal, shippingAddress, paymentMethod } = orderDetails;
+        const { cartItems, finalTotal, shippingAddress } = orderDetails;
         const { id, default: isDefault, ...shippingAddressData } = shippingAddress;
 
-        // Simulate payment verification
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'shipped'); // status becomes 'shipped' after payment
+        // Place order with 'pending' status for verification
+        const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'online');
 
         if (result.success) {
             toast({
-                title: "Payment Successful!",
-                description: "Your order has been placed.",
+                title: "Order Placed!",
+                description: "Your payment will be verified within 10 minutes.",
             });
             clearCart();
             sessionStorage.removeItem('orderDetails');
-            router.push('/account/orders?status=shipped');
+            router.push('/account/orders?status=pending');
         } else {
             toast({
-                title: "Payment Failed",
+                title: "Order Failed",
                 description: result.message || "Something went wrong.",
                 variant: "destructive"
             });
@@ -106,7 +104,7 @@ function PaymentGatewayPage() {
                         <CardDescription>
                             Please pay the following amount to complete your purchase.
                         </CardDescription>
-                        <p className="text-3xl font-bold text-primary pt-2">
+                        <p className="text-4xl font-bold text-primary pt-2">
                             ৳{orderDetails.finalTotal.toFixed(2)}
                         </p>
                     </CardHeader>
@@ -151,7 +149,7 @@ function PaymentGatewayPage() {
                                     {isProcessing ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Verifying Payment...
+                                            Processing...
                                         </>
                                     ) : 'Confirm Payment'}
                                 </Button>
