@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ShoppingCart, Undo2, ArrowRight, Tag, Ticket, ShieldCheck, Settings } from "lucide-react";
+import { Package, Users, ShoppingCart, Undo2, ArrowRight, Tag, Ticket, ShieldCheck, Settings, Star } from "lucide-react";
 import Link from "next/link";
 
 const menuItems = [
@@ -23,6 +23,12 @@ const menuItems = [
         description: "Track and process customer orders.",
         icon: ShoppingCart,
         href: "/admin/orders"
+    },
+     {
+        title: "Review Management",
+        description: "Approve and manage user reviews.",
+        icon: Star,
+        href: "/admin/reviews"
     },
     {
         title: "Verify Payments",

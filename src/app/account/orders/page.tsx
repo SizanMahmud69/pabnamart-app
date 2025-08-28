@@ -136,7 +136,7 @@ export default function OrdersPage() {
                                             </Button>
                                         )}
                                         <Button variant="outline" size="sm" asChild className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 border-green-200">
-                                            <Link href="/account/reviews">
+                                            <Link href={`/account/reviews/new/${order.id}`}>
                                                 <Edit className="mr-2 h-4 w-4" />
                                                 Write a Review
                                             </Link>

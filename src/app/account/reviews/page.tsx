@@ -1,25 +1,47 @@
 
+"use client";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/useAuth";
+import type { Review } from "@/types";
+import { getFirestore, collectionGroup, query, where, onSnapshot } from "firebase/firestore";
+import app from "@/lib/firebase";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { Badge } from "@/components/ui/badge";
 
-const reviews = [
-    { 
-        productName: "Classic Leather Watch",
-        rating: 5,
-        comment: "Absolutely love this watch! Great quality and looks amazing.",
-        date: "2023-10-20"
-    },
-    {
-        productName: "Wireless Bluetooth Headphones",
-        rating: 4,
-        comment: "Incredible sound quality and very long battery life. Highly recommended!",
-        date: "2023-10-18"
-    }
-];
+const db = getFirestore(app);
 
 export default function ReviewsPage() {
+    const { user } = useAuth();
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+
+        const reviewsRef = collectionGroup(db, 'reviews');
+        const q = query(reviewsRef, where('user.uid', '==', user.uid));
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const userReviews = snapshot.docs.map(doc => doc.data() as Review);
+            setReviews(userReviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+    
+    if (loading) {
+        return <LoadingSpinner />;
+    }
+
     return (
         <div className="bg-purple-50/30 min-h-screen">
             <div className="container mx-auto px-4 py-8">
@@ -28,8 +50,8 @@ export default function ReviewsPage() {
                     <CardContent className="p-6">
                         {reviews.length > 0 ? (
                             <div className="space-y-6">
-                                {reviews.map((review, index) => (
-                                    <div key={index}>
+                                {reviews.map((review) => (
+                                    <div key={review.id}>
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <h3 className="font-semibold">{review.productName}</h3>
@@ -37,10 +59,15 @@ export default function ReviewsPage() {
                                                     <StarRating rating={review.rating} />
                                                 </div>
                                             </div>
-                                            <p className="text-sm text-muted-foreground">{review.date}</p>
+                                            <div className="text-right">
+                                                 <p className="text-sm text-muted-foreground mb-1">{new Date(review.date).toLocaleDateString()}</p>
+                                                 <Badge variant={review.status === 'approved' ? 'default' : review.status === 'rejected' ? 'destructive' : 'secondary'}>
+                                                    {review.status}
+                                                 </Badge>
+                                            </div>
                                         </div>
                                         <p className="text-muted-foreground mt-2">{review.comment}</p>
-                                        {index < reviews.length - 1 && <Separator className="mt-6" />}
+                                        <Separator className="mt-6" />
                                     </div>
                                 ))}
                             </div>

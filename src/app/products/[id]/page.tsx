@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import type { Product } from '@/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, CheckCircle2, Truck, Package, Badge } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Truck, Package, Badge as BadgeIcon } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -44,6 +44,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   }
   
   const hasDiscount = (product.originalPrice && product.originalPrice > product.price) || product.hasOffer;
+  const approvedReviews = product.reviews?.filter(r => r.status === 'approved') || [];
 
   return (
     <div className="bg-background min-h-screen">
@@ -83,7 +84,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                         <h1 className="text-2xl font-bold">{product.name}</h1>
                         <div className="flex items-center gap-2">
                             <StarRating rating={product.rating} />
-                            <span className="text-muted-foreground text-sm">({product.reviews.length} reviews)</span>
+                            <span className="text-muted-foreground text-sm">({approvedReviews.length} reviews)</span>
                         </div>
                         <p className="text-base text-muted-foreground leading-relaxed">{product.description}</p>
                         
@@ -148,15 +149,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                         <div>
                             <h2 className="text-xl font-bold mb-4">Customer Reviews</h2>
                             <div className="space-y-6">
-                                {product.reviews.length > 0 ? (
-                                    product.reviews.map((review, index) => (
-                                        <div key={index} className="flex items-start gap-4">
+                                {approvedReviews.length > 0 ? (
+                                    approvedReviews.map((review) => (
+                                        <div key={review.id} className="flex items-start gap-4">
                                             <Avatar>
-                                                <AvatarFallback>{review.user.charAt(0)}</AvatarFallback>
+                                                <AvatarFallback>{review.user.displayName.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div className="flex-1">
                                                 <div className="flex justify-between items-center">
-                                                    <p className="font-semibold">{review.user}</p>
+                                                    <p className="font-semibold">{review.user.displayName}</p>
+                                                    <StarRating rating={review.rating} />
                                                 </div>
                                                 <p className="text-muted-foreground mt-1">{review.comment}</p>
                                             </div>

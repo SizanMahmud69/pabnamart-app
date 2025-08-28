@@ -2,8 +2,18 @@
 import type { LucideIcon } from "react";
 
 export interface Review {
-  user: string;
+  id: string;
+  orderId: string;
+  productId: number;
+  productName: string;
+  user: {
+    uid: string;
+    displayName: string;
+  };
+  rating: number;
   comment: string;
+  date: string;
+  status: 'pending' | 'approved' | 'rejected';
 }
 
 export interface Product {
