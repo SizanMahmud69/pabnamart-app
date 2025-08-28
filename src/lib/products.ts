@@ -12,6 +12,7 @@ export const products: Product[] = [
     rating: 4.8,
     category: 'Electronics',
     stock: 0,
+    sold: 150,
     images: [
       'https://picsum.photos/seed/headphones1/600/600',
       'https://picsum.photos/seed/headphones2/600/600',
@@ -33,6 +34,7 @@ export const products: Product[] = [
     rating: 4.9,
     category: 'Groceries',
     stock: 25,
+    sold: 300,
     images: [
         'https://picsum.photos/seed/tea1/600/600',
     ],
@@ -54,6 +56,7 @@ export const products: Product[] = [
     rating: 4.7,
     category: 'Men\'s Fashion',
     stock: 8,
+    sold: 120,
     images: [
       'https://picsum.photos/seed/shoes1/600/600',
       'https://picsum.photos/seed/shoes2/600/600',
@@ -77,6 +80,7 @@ export const products: Product[] = [
     rating: 4.4,
     category: 'Electronics',
     stock: 12,
+    sold: 80,
     images: [
       'https://picsum.photos/seed/hub1/600/600',
     ],
@@ -97,6 +101,7 @@ export const products: Product[] = [
     rating: 4.9,
     category: 'Groceries',
     stock: 0,
+    sold: 500,
     images: [
       'https://picsum.photos/seed/coffee1/600/600',
     ],
@@ -117,6 +122,7 @@ export const products: Product[] = [
     rating: 4.9,
     category: 'Mobile & Computers',
     stock: 10,
+    sold: 25,
     images: [
       'https://picsum.photos/seed/laptop1/600/600',
       'https://picsum.photos/seed/laptop2/600/600',
@@ -139,6 +145,7 @@ export const products: Product[] = [
     rating: 4.8,
     category: 'Cosmetics',
     stock: 15,
+    sold: 90,
     images: [
       'https://picsum.photos/seed/foundation1/600/600',
     ],
@@ -159,6 +166,7 @@ export const products: Product[] = [
     rating: 4.6,
     category: 'Women\'s Fashion',
     stock: 20,
+    sold: 75,
     images: [
       'https://picsum.photos/seed/dress1/600/600',
       'https://picsum.photos/seed/dress2/600/600'

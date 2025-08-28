@@ -10,8 +10,8 @@ import { useOffers } from './useOffers';
 
 interface ProductContextType {
   products: Product[];
-  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews'>) => Promise<void>;
-  updateProduct: (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews'>) => Promise<void>;
+  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => Promise<void>;
+  updateProduct: (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => Promise<void>;
   deleteProduct: (productId: number) => Promise<void>;
   loading: boolean;
 }
@@ -75,13 +75,14 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   }, [baseProducts, activeOffers]);
 
 
-  const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews'>) => {
+  const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
     const newId = new Date().getTime(); // Simple way to generate a unique ID
     const newProduct: Product = { 
       ...productData, 
       id: newId,
       rating: 0,
       reviews: [],
+      sold: 0,
       isFlashSale: productData.isFlashSale || false,
       flashSaleEndDate: productData.flashSaleEndDate || '',
     };
@@ -89,7 +90,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     await setDoc(productDoc, newProduct);
   };
 
-  const updateProduct = async (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews'>) => {
+  const updateProduct = async (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
     const productDoc = doc(db, 'products', productId.toString());
     const existingProduct = baseProducts.find(p => p.id === productId);
     const dataToUpdate = {
@@ -97,6 +98,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         id: productId,
         rating: existingProduct?.rating || 0,
         reviews: existingProduct?.reviews || [],
+        sold: existingProduct?.sold || 0,
         isFlashSale: productData.isFlashSale || false,
         flashSaleEndDate: productData.flashSaleEndDate || '',
     };

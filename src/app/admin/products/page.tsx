@@ -113,6 +113,7 @@ export default function AdminProductManagement() {
                                           <TableHead>Category</TableHead>
                                           <TableHead>Price</TableHead>
                                           <TableHead>Stock</TableHead>
+                                          <TableHead>Sold</TableHead>
                                           <TableHead>Flash Sale</TableHead>
                                           <TableHead>Rating</TableHead>
                                           <TableHead className="text-right">Actions</TableHead>
@@ -132,6 +133,7 @@ export default function AdminProductManagement() {
                                                       {product.stock > 0 ? `${product.stock} in stock` : 'Out of Stock'}
                                                   </Badge>
                                               </TableCell>
+                                              <TableCell>{product.sold || 0}</TableCell>
                                               <TableCell>
                                                   {product.isFlashSale && <Badge variant="secondary">Yes</Badge>}
                                               </TableCell>

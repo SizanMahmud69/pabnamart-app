@@ -17,6 +17,7 @@ export interface Product {
   images: string[];
   reviews: Review[];
   stock: number;
+  sold: number;
   details?: string;
   freeShipping?: boolean;
   shippingTime?: string;

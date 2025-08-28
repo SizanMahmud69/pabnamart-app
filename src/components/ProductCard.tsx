@@ -64,7 +64,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Star className="w-4 h-4 fill-accent text-accent" />
           <span>{product.rating.toFixed(1)}</span>
           <span>|</span>
-          <span>Sold {product.reviews.length > 0 ? product.reviews.length * 15 : 0}</span>
+          <span>Sold {product.sold || 0}</span>
         </div>
         <div className="flex justify-between items-center mt-auto">
           <div>

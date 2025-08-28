@@ -4,7 +4,7 @@
 import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai/flows/product-recommendations";
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import admin from '@/lib/firebase-admin';
-import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp, FieldValue, runTransaction } from 'firebase-admin/firestore';
 import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher } from "@/types";
 import { revalidatePath } from "next/cache";
 
@@ -58,46 +58,68 @@ export async function placeOrder(
   }
 
   try {
-    const orderRef = db.collection('orders').doc();
-    
-    let status: OrderStatus = 'pending';
-    if (paymentMethod === 'cod') {
-        status = 'shipped';
-    } else if (paymentMethod === 'online') {
-        status = 'pending'; 
-    }
+     const orderRef = db.collection('orders').doc();
 
-    const orderData: Omit<Order, 'id'> = {
-      orderNumber: generateOrderNumber(),
-      userId,
-      items: cartItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.images[0]
-      })),
-      total: totalAmount,
-      status: status,
-      date: Timestamp.now().toDate().toISOString(),
-      shippingAddress,
-      paymentMethod,
-      ...(paymentDetails && { paymentDetails }),
-    };
+     await runTransaction(db, async (transaction) => {
+        // 1. Update product stock and sold count
+        for (const item of cartItems) {
+            const productRef = db.collection('products').doc(item.id.toString());
+            const productDoc = await transaction.get(productRef);
 
-    await orderRef.set(orderData);
-    
-    // Clear cart after order is placed
-    const cartRef = db.collection('carts').doc(userId);
-    await cartRef.set({ items: [] });
-    
-    // Remove used voucher if it's a return voucher
-    if (usedVoucher?.isReturnVoucher) {
-        const voucherRef = db.collection('userVouchers').doc(userId);
-        await voucherRef.update({
-            vouchers: FieldValue.arrayRemove(usedVoucher)
-        });
-    }
+            if (!productDoc.exists) {
+                throw new Error(`Product with ID ${item.id} not found.`);
+            }
+
+            const productData = productDoc.data();
+            const newStock = (productData?.stock || 0) - item.quantity;
+            const newSoldCount = (productData?.sold || 0) + item.quantity;
+
+            if (newStock < 0) {
+                throw new Error(`Not enough stock for ${item.name}.`);
+            }
+
+            transaction.update(productRef, { stock: newStock, sold: newSoldCount });
+        }
+
+        // 2. Create the order document
+        let status: OrderStatus = 'pending';
+        if (paymentMethod === 'cod') {
+            status = 'shipped';
+        } else if (paymentMethod === 'online') {
+            status = 'pending'; 
+        }
+
+        const orderData: Omit<Order, 'id'> = {
+          orderNumber: generateOrderNumber(),
+          userId,
+          items: cartItems.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.images[0]
+          })),
+          total: totalAmount,
+          status: status,
+          date: Timestamp.now().toDate().toISOString(),
+          shippingAddress,
+          paymentMethod,
+          ...(paymentDetails && { paymentDetails }),
+        };
+        transaction.set(orderRef, orderData);
+
+        // 3. Clear user's cart
+        const cartRef = db.collection('carts').doc(userId);
+        transaction.set(cartRef, { items: [] });
+        
+        // 4. Remove used voucher if it's a return voucher
+        if (usedVoucher?.isReturnVoucher) {
+            const voucherRef = db.collection('userVouchers').doc(userId);
+            transaction.update(voucherRef, {
+                vouchers: FieldValue.arrayRemove(usedVoucher)
+            });
+        }
+     });
     
     revalidatePath('/account/orders');
     revalidatePath('/admin/orders');
