@@ -9,32 +9,54 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import type { DeliverySettings } from '@/types';
+
+const initialSettings: DeliverySettings = {
+    insidePabna: 60,
+    outsidePabna: 120,
+};
 
 export default function DeliverySettingsPage() {
     const { toast } = useToast();
-    const [deliveryCharge, setDeliveryCharge] = useState('50');
+    const [settings, setSettings] = useState<DeliverySettings>(initialSettings);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
-        const savedCharge = localStorage.getItem('deliveryCharge');
-        if (savedCharge) {
-            setDeliveryCharge(savedCharge);
+        try {
+            const savedSettings = localStorage.getItem('deliverySettings');
+            if (savedSettings) {
+                setSettings(JSON.parse(savedSettings));
+            }
+        } catch (error) {
+            console.error("Could not read delivery settings from localStorage", error);
         }
         setIsLoading(false);
     }, []);
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setSettings(prev => ({ ...prev, [name]: Number(value) }));
+    };
+
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSaving(true);
-        localStorage.setItem('deliveryCharge', deliveryCharge);
-        setTimeout(() => {
+        try {
+            localStorage.setItem('deliverySettings', JSON.stringify(settings));
             toast({
                 title: "Settings Saved",
-                description: "The delivery charge has been updated successfully.",
+                description: "The delivery charges have been updated successfully.",
             });
+        } catch (error) {
+             toast({
+                title: "Error",
+                description: "Failed to save settings.",
+                variant: "destructive"
+            });
+        } finally {
             setIsSaving(false);
-        }, 500);
+        }
     };
 
     if (isLoading) {
@@ -59,20 +81,33 @@ export default function DeliverySettingsPage() {
                             <CardDescription>Manage the delivery charges for your store.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="deliveryCharge">Standard Delivery Charge (৳)</Label>
-                                <Input 
-                                    id="deliveryCharge" 
-                                    name="deliveryCharge"
-                                    type="number"
-                                    value={deliveryCharge}
-                                    onChange={(e) => setDeliveryCharge(e.target.value)}
-                                    placeholder="e.g., 50" 
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    This charge applies to all orders unless a product is marked for free shipping. If any product in the cart has free shipping, the entire order ships for free.
-                                </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="insidePabna">Inside Pabna City (৳)</Label>
+                                    <Input 
+                                        id="insidePabna" 
+                                        name="insidePabna"
+                                        type="number"
+                                        value={settings.insidePabna}
+                                        onChange={handleInputChange}
+                                        placeholder="e.g., 60" 
+                                    />
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="outsidePabna">Outside Pabna City (৳)</Label>
+                                    <Input 
+                                        id="outsidePabna" 
+                                        name="outsidePabna"
+                                        type="number"
+                                        value={settings.outsidePabna}
+                                        onChange={handleInputChange}
+                                        placeholder="e.g., 120" 
+                                    />
+                                </div>
                             </div>
+                            <p className="text-xs text-muted-foreground pt-4">
+                                This charge applies to all orders unless a product is marked for free shipping. If any product in the cart has free shipping, the entire order ships for free. The correct charge will be applied at checkout based on the user's address.
+                            </p>
                         </CardContent>
                         <CardFooter className="flex justify-end">
                             <Button type="submit" disabled={isSaving}>

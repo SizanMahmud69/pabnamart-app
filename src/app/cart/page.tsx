@@ -116,8 +116,11 @@ export default function CartPage() {
                     <span>৳{cartTotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span>৳{shippingFee.toFixed(2)}</span>
+                        <div>
+                           <p>Shipping</p>
+                           <p className="text-xs text-muted-foreground">(Calculated at checkout)</p>
+                        </div>
+                        <span>৳{shippingFee.toFixed(2)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">

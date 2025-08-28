@@ -23,6 +23,7 @@ import { placeOrder } from "@/app/actions";
 import { doc, getFirestore, onSnapshot } from "firebase/firestore";
 import app from "@/lib/firebase";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useDeliveryCharge } from "@/hooks/useDeliveryCharge";
 
 const db = getFirestore(app);
 
@@ -40,9 +41,11 @@ const paymentMethods = [
 ]
 
 function CheckoutPage() {
-  const { cartItems, cartTotal, cartCount, updateQuantity, shippingFee, clearCart } = useCart();
+  const { cartItems, cartTotal, cartCount, updateQuantity, clearCart } = useCart();
   const { user } = useAuth();
   const { collectedVouchers } = useVouchers();
+  const { chargeInsidePabna, chargeOutsidePabna } = useDeliveryCharge();
+
   const [addresses, setAddresses] = useState<ShippingAddressType[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
@@ -94,6 +97,19 @@ function CheckoutPage() {
     setSelectedVoucher(voucher);
   };
 
+  const selectedAddress = useMemo(() => {
+    return addresses.find(a => a.id === selectedAddressId);
+  }, [addresses, selectedAddressId]);
+  
+  const shippingFee = useMemo(() => {
+    if (cartCount === 0) return 0;
+    if (cartItems.some(item => item.freeShipping)) return 0;
+    if (!selectedAddress) return chargeOutsidePabna; // Default fee if no address is selected yet
+
+    return selectedAddress.city.toLowerCase().trim() === 'pabna' ? chargeInsidePabna : chargeOutsidePabna;
+
+  }, [cartItems, cartCount, selectedAddress, chargeInsidePabna, chargeOutsidePabna]);
+
   const { orderDiscount, shippingDiscount } = useMemo(() => {
     if (!selectedVoucher) return { orderDiscount: 0, shippingDiscount: 0 };
     
@@ -105,11 +121,11 @@ function CheckoutPage() {
     }
 
     if (selectedVoucher.discountType === 'shipping') {
-      return { orderDiscount: 0, shippingDiscount: calculatedDiscount };
+      return { orderDiscount: 0, shippingDiscount: Math.min(calculatedDiscount, shippingFee) };
     }
     
     return { orderDiscount: calculatedDiscount, shippingDiscount: 0 };
-  }, [selectedVoucher, cartTotal]);
+  }, [selectedVoucher, cartTotal, shippingFee]);
 
 
   const subtotalWithDiscount = cartTotal - orderDiscount > 0 ? cartTotal - orderDiscount : 0;
@@ -119,7 +135,6 @@ function CheckoutPage() {
   const handlePlaceOrder = async () => {
     if (!user) return;
 
-    const selectedAddress = addresses.find(a => a.id === selectedAddressId);
     if (!selectedAddress) {
         toast({ title: "Error", description: "Please select a shipping address.", variant: "destructive"});
         return;

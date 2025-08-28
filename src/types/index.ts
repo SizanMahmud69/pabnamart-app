@@ -107,3 +107,8 @@ export interface Order {
   paymentMethod: string;
   paymentDetails?: PaymentDetails;
 }
+
+export interface DeliverySettings {
+  insidePabna: number;
+  outsidePabna: number;
+}

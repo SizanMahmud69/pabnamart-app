@@ -28,7 +28,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { deliveryCharge } = useDeliveryCharge();
+  const { chargeOutsidePabna } = useDeliveryCharge();
 
   const updateFirestoreCart = useCallback(async (items: CartItem[]) => {
     if (user) {
@@ -124,8 +124,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return 0;
     }
     
-    return deliveryCharge;
-  }, [cartItems, cartCount, deliveryCharge]);
+    // The final fee is calculated at checkout based on address.
+    // Here, we show a default/placeholder fee.
+    return chargeOutsidePabna;
+  }, [cartItems, cartCount, chargeOutsidePabna]);
 
 
   return (

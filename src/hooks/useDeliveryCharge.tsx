@@ -2,26 +2,31 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import type { DeliverySettings } from '@/types';
 
-const DEFAULT_DELIVERY_CHARGE = 50;
+const defaultSettings: DeliverySettings = {
+  insidePabna: 60,
+  outsidePabna: 120,
+};
 
 export const useDeliveryCharge = () => {
-  const [deliveryCharge, setDeliveryCharge] = useState(DEFAULT_DELIVERY_CHARGE);
+  const [settings, setSettings] = useState<DeliverySettings>(defaultSettings);
 
   useEffect(() => {
     // This hook runs on the client-side, so it's safe to access localStorage.
     try {
-      const savedCharge = localStorage.getItem('deliveryCharge');
-      if (savedCharge) {
-        const charge = parseInt(savedCharge, 10);
-        if (!isNaN(charge)) {
-          setDeliveryCharge(charge);
-        }
+      const savedSettings = localStorage.getItem('deliverySettings');
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings({ ...defaultSettings, ...parsedSettings });
       }
     } catch (error) {
-      console.error("Could not read delivery charge from localStorage", error);
+      console.error("Could not read delivery settings from localStorage", error);
     }
   }, []);
 
-  return { deliveryCharge };
+  return { 
+    chargeInsidePabna: settings.insidePabna, 
+    chargeOutsidePabna: settings.outsidePabna 
+  };
 };
