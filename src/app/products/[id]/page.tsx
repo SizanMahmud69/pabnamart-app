@@ -8,27 +8,44 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import StarRating from '@/components/StarRating';
 import AddToCartButton from './AddToCartButton';
 import { Separator } from '@/components/ui/separator';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
 import type { Product } from '@/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, CheckCircle2, Truck, Package } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 
-export default function ProductDetailPage() {
+function ProductDetailPageContent() {
   const params = useParams();
-  const { products } = useProducts();
+  const searchParams = useSearchParams();
+  const { products, getFlashSalePrice } = useProducts();
   const [product, setProduct] = useState<Product | undefined | null>(null);
+
+  const isFlashSaleContext = searchParams.get('flash') === 'true';
   
   useEffect(() => {
     const productId = params.id as string;
     if (products.length > 0 && productId) {
         const foundProduct = products.find(p => p.id === parseInt(productId));
-        setProduct(foundProduct);
+        if (foundProduct) {
+          if (isFlashSaleContext) {
+            const flashPrice = getFlashSalePrice(foundProduct);
+            // Create a temporary product view with flash sale price
+            setProduct({
+              ...foundProduct,
+              originalPrice: foundProduct.price, // The regular price becomes original
+              price: flashPrice,
+            });
+          } else {
+            setProduct(foundProduct);
+          }
+        } else {
+           setProduct(undefined);
+        }
     }
-  }, [products, params.id]);
+  }, [products, params.id, isFlashSaleContext, getFlashSalePrice]);
 
   if (product === null) {
     return <LoadingSpinner />;
@@ -99,7 +116,7 @@ export default function ProductDetailPage() {
                             )}
                         </div>
                         
-                        <AddToCartButton product={product} />
+                        <AddToCartButton product={product} isFlashSaleContext={isFlashSaleContext} />
 
                         {product.stock > 0 ? (
                              <div className="inline-flex items-center justify-center rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
@@ -183,4 +200,13 @@ export default function ProductDetailPage() {
         </div>
     </div>
   );
+}
+
+
+export default function ProductDetailPage() {
+    return (
+        <Suspense fallback={<LoadingSpinner />}>
+            <ProductDetailPageContent />
+        </Suspense>
+    );
 }

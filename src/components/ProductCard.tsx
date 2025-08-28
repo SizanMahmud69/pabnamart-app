@@ -35,9 +35,11 @@ export default function ProductCard({ product, isFlashSaleContext = false }: Pro
       addToCart(product, isFlashSaleContext);
   }
 
+  const productLink = isFlashSaleContext ? `/products/${product.id}?flash=true` : `/products/${product.id}`;
+
   return (
     <Card className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-shadow duration-300 hover:shadow-lg group">
-       <Link href={`/products/${product.id}`} className="block">
+       <Link href={productLink} className="block">
         <div className="relative aspect-square w-full overflow-hidden">
           <Image
             src={product.images[0]}
@@ -71,7 +73,7 @@ export default function ProductCard({ product, isFlashSaleContext = false }: Pro
       <CardContent className="flex flex-col flex-grow p-3 space-y-2">
         <p className="text-xs text-muted-foreground">{product.category}</p>
         <h3 className="text-sm font-semibold text-gray-800 leading-snug flex-grow">
-            <Link href={`/products/${product.id}`} className="hover:text-primary">
+            <Link href={productLink} className="hover:text-primary">
                 {product.name}
             </Link>
         </h3>
