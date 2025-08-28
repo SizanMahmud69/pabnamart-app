@@ -25,7 +25,7 @@ interface OrderDetails {
 }
 
 const paymentMethods = [
-    { name: 'bKash', logo: 'https://picsum.photos/seed/bkash/100/60', merchantNumber: '01234567890', hint: 'bKash logo' },
+    { name: 'bKash', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/BKash_logo.svg', merchantNumber: '01234567890', hint: 'bKash logo' },
     { name: 'Nagad', logo: 'https://picsum.photos/seed/nagad/100/60', merchantNumber: '01234567891', hint: 'Nagad logo' },
     { name: 'Rocket', logo: 'https://picsum.photos/seed/rocket/100/60', merchantNumber: '01234567892', hint: 'Rocket logo' },
 ];
@@ -126,7 +126,9 @@ function PaymentGatewayPage() {
                                     )}
                                     onClick={() => setSelectedMethod(method.name)}
                                 >
-                                    <Image src={method.logo} alt={method.name} width={60} height={36} data-ai-hint={method.hint} />
+                                    <div className="relative w-[60px] h-[36px]">
+                                        <Image src={method.logo} alt={method.name} fill style={{ objectFit: 'contain' }} data-ai-hint={method.hint} />
+                                    </div>
                                     <p className="text-sm font-semibold mt-2">{method.name}</p>
                                 </div>
                             ))}
