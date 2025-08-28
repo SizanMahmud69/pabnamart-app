@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { ShoppingBag, Star, Undo2, Edit } from "lucide-react";
 import type { Order } from '@/types';
@@ -19,6 +19,7 @@ const db = getFirestore(app);
 
 export default function OrdersPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const status = searchParams.get('status') || 'all';
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -51,6 +52,15 @@ export default function OrdersPage() {
   if (loading) {
       return <LoadingSpinner />;
   }
+  
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, orderId: string) => {
+    // Check if the click target is a button or inside a button
+    if (e.target instanceof HTMLElement && e.target.closest('button, a')) {
+        return;
+    }
+    router.push(`/account/orders/${orderId}`);
+  };
+
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
@@ -68,19 +78,24 @@ export default function OrdersPage() {
                 {filteredOrders.length > 0 ? (
                     <div className="space-y-4">
                     {filteredOrders.map(order => (
-                        <Card key={order.id} className="shadow-sm">
-                            <CardContent className="p-4">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h2 className="text-lg font-bold">Order ID: #{order.orderNumber}</h2>
-                                        <p className="text-sm text-muted-foreground">Placed on: {new Date(order.date).toLocaleDateString()}</p>
-                                    </div>
-                                    <Badge className="capitalize bg-primary hover:bg-primary text-primary-foreground">{order.status.replace('-', ' ')}</Badge>
-                                </div>
-                                <div className="mt-4">
-                                    <p className="font-bold text-lg">Total Amount: ৳{order.total.toFixed(2)}</p>
-                                </div>
-                            </CardContent>
+                        <Card key={order.id} className="shadow-sm transition-shadow hover:shadow-md">
+                            <div 
+                              className="cursor-pointer"
+                              onClick={(e) => handleCardClick(e, order.id)}
+                            >
+                              <CardContent className="p-4">
+                                  <div className="flex justify-between items-start">
+                                      <div>
+                                          <h2 className="text-lg font-bold">Order ID: #{order.orderNumber}</h2>
+                                          <p className="text-sm text-muted-foreground">Placed on: {new Date(order.date).toLocaleDateString()}</p>
+                                      </div>
+                                      <Badge className="capitalize bg-primary hover:bg-primary text-primary-foreground">{order.status.replace('-', ' ')}</Badge>
+                                  </div>
+                                  <div className="mt-4">
+                                      <p className="font-bold text-lg">Total Amount: ৳{order.total.toFixed(2)}</p>
+                                  </div>
+                              </CardContent>
+                            </div>
                             
                              <CardFooter className="bg-muted/30 p-4 flex justify-end gap-2">
                                 {order.status === 'delivered' && (
