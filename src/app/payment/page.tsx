@@ -9,9 +9,6 @@ import { Separator } from "@/components/ui/separator";
 import { CreditCard, Loader2 } from "lucide-react";
 import type { CartItem, ShippingAddress, Voucher } from "@/types";
 import { useAuth, withAuth } from "@/hooks/useAuth";
-import { useCart } from "@/hooks/useCart";
-import { useToast } from "@/hooks/use-toast";
-import { placeOrder } from "../actions";
 
 interface OrderDetails {
     cartItems: CartItem[];
@@ -23,49 +20,23 @@ interface OrderDetails {
 
 function PaymentPage() {
     const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
-    const { user } = useAuth();
-    const { clearCart } = useCart();
-    const { toast } = useToast();
 
     useEffect(() => {
         const storedDetails = sessionStorage.getItem('orderDetails');
         if (storedDetails) {
             setOrderDetails(JSON.parse(storedDetails));
         } else {
-            router.push('/checkout');
+            // If no details, redirect to checkout, but not during loading
+            if(!isLoading) router.push('/checkout');
         }
-    }, [router]);
+    }, [router, isLoading]);
 
-    const handleConfirmPayment = async () => {
-        if (!orderDetails || !user) return;
-        setIsProcessing(true);
-
-        const { cartItems, finalTotal, shippingAddress, paymentMethod } = orderDetails;
-        const { id, default: isDefault, ...shippingAddressData } = shippingAddress;
-
-        // Simulate payment processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, paymentMethod);
-
-        if (result.success) {
-            toast({
-                title: "Payment Successful!",
-                description: "Your order has been placed.",
-            });
-            clearCart();
-            sessionStorage.removeItem('orderDetails');
-            router.push('/account/orders?status=shipped');
-        } else {
-            toast({
-                title: "Payment Failed",
-                description: result.message || "Something went wrong.",
-                variant: "destructive"
-            });
-            setIsProcessing(false);
-        }
+    const handleConfirmPayment = () => {
+        setIsLoading(true);
+        // Instead of processing payment here, we navigate to the gateway page
+        router.push('/payment/gateway');
     };
     
     if (!orderDetails) {
@@ -95,20 +66,20 @@ function PaymentPage() {
                         </div>
                         <Separator />
                         <div className="text-center">
-                            <p className="text-muted-foreground">You will be redirected to a secure payment gateway.</p>
+                            <p className="text-muted-foreground">You will be redirected to the payment gateway.</p>
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button size="lg" className="w-full" onClick={handleConfirmPayment} disabled={isProcessing}>
-                            {isProcessing ? (
+                        <Button size="lg" className="w-full" onClick={handleConfirmPayment} disabled={isLoading}>
+                            {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Processing Payment...
+                                    Redirecting...
                                 </>
                             ) : (
                                 <>
                                     <CreditCard className="mr-2 h-4 w-4" />
-                                    Pay Now
+                                    Proceed to Pay
                                 </>
                             )}
                         </Button>
@@ -121,5 +92,3 @@ function PaymentPage() {
 
 
 export default withAuth(PaymentPage);
-
-    
