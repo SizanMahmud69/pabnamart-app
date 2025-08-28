@@ -7,24 +7,48 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { addDoc, collection, getFirestore } from 'firebase/firestore';
+import app from '@/lib/firebase';
+
+const db = getFirestore(app);
 
 export default function NewOfferPage() {
     const router = useRouter();
     const { toast } = useToast();
+    const [isCreating, setIsCreating] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        toast({
-            title: "Offer Created",
-            description: "The new offer has been successfully created.",
-        });
-        router.push('/admin/offers');
+        setIsCreating(true);
+        const formData = new FormData(e.currentTarget);
+        
+        const offerData = {
+            name: formData.get('name') as string,
+            discount: Number(formData.get('discount')),
+            startDate: formData.get('start-date') as string,
+            endDate: formData.get('end-date') as string,
+        };
+
+        try {
+            await addDoc(collection(db, 'offers'), offerData);
+            toast({
+                title: "Offer Created",
+                description: "The new offer has been successfully created.",
+            });
+            router.push('/admin/offers');
+        } catch (error) {
+            console.error("Error creating offer: ", error);
+            toast({ title: "Error", description: "Failed to create offer.", variant: "destructive" });
+        } finally {
+            setIsCreating(false);
+        }
     };
 
     return (
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto p-4 max-w-lg">
             <header className="py-4">
                 <Button asChild variant="outline" size="sm">
                     <Link href="/admin/offers">
@@ -43,26 +67,29 @@ export default function NewOfferPage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Offer Name</Label>
-                                <Input id="name" placeholder="e.g., Mega Electronics Sale" required />
+                                <Input id="name" name="name" placeholder="e.g., Mega Electronics Sale" required disabled={isCreating}/>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="discount">Discount Percentage</Label>
-                                <Input id="discount" type="number" placeholder="e.g., 40" required />
+                                <Input id="discount" name="discount" type="number" placeholder="e.g., 40" required disabled={isCreating}/>
                             </div>
                              <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="start-date">Start Date</Label>
-                                    <Input id="start-date" type="date" required />
+                                    <Input id="start-date" name="start-date" type="date" required disabled={isCreating}/>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="end-date">End Date</Label>
-                                    <Input id="end-date" type="date" required />
+                                    <Input id="end-date" name="end-date" type="date" required disabled={isCreating}/>
                                 </div>
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-                            <Button type="submit">Create Offer</Button>
+                            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isCreating}>Cancel</Button>
+                            <Button type="submit" disabled={isCreating}>
+                                {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Create Offer
+                            </Button>
                         </CardFooter>
                     </Card>
                 </form>

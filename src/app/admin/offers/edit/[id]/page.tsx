@@ -7,45 +7,82 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
+import { doc, getDoc, getFirestore, updateDoc } from 'firebase/firestore';
+import app from '@/lib/firebase';
+import type { Offer } from '@/types';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
-// Mock data for demonstration
-const mockOffers = [
-  { id: '1', name: 'Mega Electronics Sale', discount: '40', startDate: '2023-10-20', endDate: '2023-10-31' },
-  { id: '2', name: 'Winter Fashion Fest', discount: '25', startDate: '2023-11-01', endDate: '2023-11-15' },
-  { id: '3', name: 'Summer Clearance', discount: '50', startDate: '2023-08-01', endDate: '2023-08-15' },
-];
 
+const db = getFirestore(app);
 
 export default function EditOfferPage() {
     const router = useRouter();
     const params = useParams();
     const offerId = params.id as string;
     const { toast } = useToast();
-    const [offer, setOffer] = useState<{ id: string; name: string; discount: string; startDate: string; endDate: string; } | undefined>(undefined);
+    const [offer, setOffer] = useState<Offer | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
-        const offerToEdit = mockOffers.find(o => o.id === offerId);
-        setOffer(offerToEdit);
-    }, [offerId]);
+        if (!offerId) return;
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        const fetchOffer = async () => {
+            setLoading(true);
+            const offerRef = doc(db, 'offers', offerId);
+            const docSnap = await getDoc(offerRef);
+            if (docSnap.exists()) {
+                setOffer({ id: docSnap.id, ...docSnap.data() } as Offer);
+            } else {
+                toast({ title: "Error", description: "Offer not found.", variant: "destructive" });
+                router.push('/admin/offers');
+            }
+            setLoading(false);
+        };
+        fetchOffer();
+    }, [offerId, router, toast]);
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        toast({
-            title: "Offer Updated",
-            description: "The offer has been successfully updated.",
-        });
-        router.push('/admin/offers');
+        setIsSaving(true);
+        const formData = new FormData(e.currentTarget);
+        
+        const offerData = {
+            name: formData.get('name') as string,
+            discount: Number(formData.get('discount')),
+            startDate: formData.get('start-date') as string,
+            endDate: formData.get('end-date') as string,
+        };
+
+        try {
+            const offerRef = doc(db, 'offers', offerId);
+            await updateDoc(offerRef, offerData);
+            toast({
+                title: "Offer Updated",
+                description: "The offer has been successfully updated.",
+            });
+            router.push('/admin/offers');
+        } catch (error) {
+            console.error("Error updating offer: ", error);
+            toast({ title: "Error", description: "Failed to update offer.", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
     };
     
+    if (loading) {
+        return <LoadingSpinner />
+    }
+    
     if (!offer) {
-        return <div className="container mx-auto p-4">Loading...</div>
+        return null;
     }
 
     return (
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto p-4 max-w-lg">
             <header className="py-4">
                 <Button asChild variant="outline" size="sm">
                     <Link href="/admin/offers">
@@ -64,26 +101,29 @@ export default function EditOfferPage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Offer Name</Label>
-                                <Input id="name" defaultValue={offer.name} required />
+                                <Input id="name" name="name" defaultValue={offer.name} required disabled={isSaving}/>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="discount">Discount Percentage</Label>
-                                <Input id="discount" type="number" defaultValue={offer.discount} required />
+                                <Input id="discount" name="discount" type="number" defaultValue={offer.discount} required disabled={isSaving}/>
                             </div>
                              <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="start-date">Start Date</Label>
-                                    <Input id="start-date" type="date" defaultValue={offer.startDate} required />
+                                    <Input id="start-date" name="start-date" type="date" defaultValue={offer.startDate} required disabled={isSaving}/>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="end-date">End Date</Label>
-                                    <Input id="end-date" type="date" defaultValue={offer.endDate} required />
+                                    <Input id="end-date" name="end-date" type="date" defaultValue={offer.endDate} required disabled={isSaving}/>
                                 </div>
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-                            <Button type="submit">Save Changes</Button>
+                            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving}>Cancel</Button>
+                            <Button type="submit" disabled={isSaving}>
+                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save Changes
+                            </Button>
                         </CardFooter>
                     </Card>
                 </form>

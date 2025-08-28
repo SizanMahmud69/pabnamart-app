@@ -38,6 +38,14 @@ export interface Voucher {
     isReturnVoucher?: boolean;
 }
 
+export interface Offer {
+    id: string;
+    name: string;
+    discount: number;
+    startDate: string;
+    endDate: string;
+}
+
 export interface Notification {
     id: string;
     icon: LucideIcon;
