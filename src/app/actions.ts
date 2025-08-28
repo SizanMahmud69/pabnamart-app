@@ -104,6 +104,7 @@ export async function placeOrder(
           date: Timestamp.now().toDate().toISOString(),
           shippingAddress,
           paymentMethod,
+          isReviewed: false,
           ...(paymentDetails && { paymentDetails }),
         };
         transaction.set(orderRef, orderData);

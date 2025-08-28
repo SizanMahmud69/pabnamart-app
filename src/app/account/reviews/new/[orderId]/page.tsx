@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Star } from 'lucide-react';
 import Link from 'next/link';
-import { getFirestore, doc, getDoc, collection, runTransaction } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, runTransaction, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order, Review, Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -63,6 +63,11 @@ export default function WriteReviewPage() {
                     const orderData = { id: orderDocSnap.id, ...orderDocSnap.data() } as Order;
                     if (orderData.userId !== user.uid) {
                         toast({ title: "Access Denied", variant: "destructive" });
+                        router.push('/account/orders');
+                        return;
+                    }
+                    if (orderData.isReviewed) {
+                        toast({ title: "Already Reviewed", description: "You have already submitted a review for this order.", variant: "destructive" });
                         router.push('/account/orders');
                         return;
                     }
@@ -166,6 +171,10 @@ export default function WriteReviewPage() {
                     });
                 });
             }
+
+            // Mark the order as reviewed
+            const orderDocRef = doc(db, 'orders', orderId);
+            await updateDoc(orderDocRef, { isReviewed: true });
     
             toast({
                 title: "Reviews Submitted",

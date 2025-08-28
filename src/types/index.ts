@@ -118,6 +118,7 @@ export interface Order {
   shippingAddress: Omit<ShippingAddress, 'id' | 'default'>;
   paymentMethod: string;
   paymentDetails?: PaymentDetails;
+  isReviewed?: boolean;
 }
 
 export interface DeliverySettings {

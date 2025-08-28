@@ -135,12 +135,19 @@ export default function OrdersPage() {
                                                 </Link>
                                             </Button>
                                         )}
-                                        <Button variant="outline" size="sm" asChild className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 border-green-200">
-                                            <Link href={`/account/reviews/new/${order.id}`}>
+                                        {order.isReviewed ? (
+                                            <Button variant="outline" size="sm" disabled className="w-full bg-green-100 text-green-800 border-green-200">
                                                 <Edit className="mr-2 h-4 w-4" />
-                                                Write a Review
-                                            </Link>
-                                        </Button>
+                                                Reviewed
+                                            </Button>
+                                        ) : (
+                                            <Button variant="outline" size="sm" asChild className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 border-green-200">
+                                                <Link href={`/account/reviews/new/${order.id}`}>
+                                                    <Edit className="mr-2 h-4 w-4" />
+                                                    Write a Review
+                                                </Link>
+                                            </Button>
+                                        )}
                                     </div>
                                 )}
                             </CardFooter>
