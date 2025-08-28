@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -73,11 +72,11 @@ export default function AddressFormModal({ isOpen, onClose, onSave, address }: A
                     <Label
                       htmlFor="home"
                       className={cn(
-                        "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                        "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground cursor-pointer",
                         "peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                       )}
                     >
-                      <Home className="mb-3 h-6 w-6" />
+                      <Home className="mb-2 h-5 w-5" />
                       Home
                     </Label>
                   </div>
@@ -86,11 +85,11 @@ export default function AddressFormModal({ isOpen, onClose, onSave, address }: A
                     <Label
                       htmlFor="office"
                       className={cn(
-                        "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                        "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground cursor-pointer",
                         "peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                       )}
                     >
-                      <Building className="mb-3 h-6 w-6" />
+                      <Building className="mb-2 h-5 w-5" />
                       Office
                     </Label>
                   </div>
