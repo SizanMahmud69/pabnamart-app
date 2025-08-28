@@ -11,14 +11,17 @@ import { cn } from "@/lib/utils";
 
 const NotificationItem = ({ notification, onClick }: { notification: Notification, onClick: () => void }) => {
     const content = (
-        <div className={cn(
-            "p-4 rounded-lg flex items-start gap-4 transition-colors",
-            !notification.read ? 'bg-primary/10' : 'bg-muted/50',
-            notification.href && 'hover:bg-primary/20'
-        )} onClick={onClick}>
+        <div 
+            className={cn(
+                "p-4 rounded-lg flex items-start gap-4 transition-colors",
+                !notification.read ? 'bg-primary/5' : 'bg-transparent',
+                notification.href && 'hover:bg-primary/10 cursor-pointer'
+            )} 
+            onClick={onClick}
+        >
             <div className={cn(
                 'mt-1 flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center',
-                !notification.read ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
+                !notification.read ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             )}>
                 <notification.icon className="h-5 w-5" />
             </div>
@@ -27,12 +30,16 @@ const NotificationItem = ({ notification, onClick }: { notification: Notificatio
                 <p className="text-sm text-muted-foreground">{notification.description}</p>
                 <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
             </div>
-            {!notification.read && <div className="mt-1 flex-shrink-0 h-3 w-3 rounded-full bg-primary" />}
+            {!notification.read && (
+                <div className="mt-1.5 flex-shrink-0">
+                    <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                </div>
+            )}
         </div>
     );
 
     if (notification.href) {
-        return <Link href={notification.href}>{content}</Link>;
+        return <Link href={notification.href} className="block">{content}</Link>;
     }
 
     return content;
@@ -56,15 +63,23 @@ function NotificationsPage() {
                         You have {unreadCount} unread message{unreadCount !== 1 ? 's' : ''}.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="space-y-2">
-                        {notifications.map((notification) => (
-                            <NotificationItem 
-                                key={notification.id} 
-                                notification={notification} 
-                                onClick={() => markAsRead(notification.id)}
-                            />
-                        ))}
+                <CardContent className="p-0">
+                    <div className="divide-y">
+                        {notifications.length > 0 ? (
+                            notifications.map((notification) => (
+                                <NotificationItem 
+                                    key={notification.id} 
+                                    notification={notification} 
+                                    onClick={() => markAsRead(notification.id)}
+                                />
+                            ))
+                        ) : (
+                            <div className="text-center py-16">
+                                <Bell className="mx-auto h-16 w-16 text-muted-foreground" />
+                                <h2 className="mt-4 text-xl font-semibold">No Notifications</h2>
+                                <p className="text-muted-foreground">You're all caught up!</p>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
