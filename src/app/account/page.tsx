@@ -12,7 +12,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import type { OrderStatus } from "@/types";
+import type { Order, OrderStatus } from "@/types";
+import { useEffect, useState } from "react";
+import { collection, getFirestore, onSnapshot, query, where } from "firebase/firestore";
+import app from "@/lib/firebase";
+
+const db = getFirestore(app);
+
 
 interface OrderStatusProps {
     icon: LucideIcon;
@@ -50,13 +56,38 @@ const ServiceItem = ({ icon: Icon, label, href }: ServiceItemProps) => (
 
 export default function AccountPage() {
     const { voucherCount } = useVouchers();
-    const { user, logout, loading } = useAuth();
+    const { user, logout, loading: authLoading } = useAuth();
     const router = useRouter();
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [ordersLoading, setOrdersLoading] = useState(true);
+
+    useEffect(() => {
+        if (!user) {
+            setOrdersLoading(false);
+            return;
+        }
+
+        const ordersRef = collection(db, 'orders');
+        const q = query(ordersRef, where('userId', '==', user.uid));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const userOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+            setOrders(userOrders);
+            setOrdersLoading(false);
+        }, (error) => {
+            console.error("Error fetching orders: ", error);
+            setOrdersLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
 
     const handleLogout = async () => {
         await logout();
         router.push('/login');
     };
+    
+    const loading = authLoading || ordersLoading;
     
     if (loading) {
         return <LoadingSpinner />
@@ -76,21 +107,19 @@ export default function AccountPage() {
         )
     }
     
-    // Mock order counts for demonstration
-    const orderCounts: Record<OrderStatus, number> = {
-        'pending': 2,
-        'shipped': 1,
-        'in-transit': 1,
-        'delivered': 5,
-        'returned': 0
-    };
+    const orderCounts = orders.reduce((acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+    }, {} as Record<OrderStatus, number>);
+    
+    const getCount = (status: OrderStatus) => orderCounts[status] || 0;
 
     const orderStatuses: OrderStatusProps[] = [
-        { icon: Wallet, label: "To Pay", count: orderCounts.pending, href: "/account/orders?status=pending" },
-        { icon: Box, label: "To Ship", count: orderCounts.shipped, href: "/account/orders?status=shipped" },
-        { icon: Truck, label: "To Receive", count: orderCounts['in-transit'], href: "/account/orders?status=in-transit" },
-        { icon: PackageCheck, label: "Delivered", count: orderCounts.delivered, href: "/account/orders?status=delivered" },
-        { icon: Undo2, label: "My Returns", count: orderCounts.returned, href: "/account/orders?status=returned" },
+        { icon: Wallet, label: "To Pay", count: getCount('pending'), href: "/account/orders?status=pending" },
+        { icon: Box, label: "To Ship", count: getCount('shipped'), href: "/account/orders?status=shipped" },
+        { icon: Truck, label: "To Receive", count: getCount('in-transit'), href: "/account/orders?status=in-transit" },
+        { icon: PackageCheck, label: "Delivered", count: getCount('delivered'), href: "/account/orders?status=delivered" },
+        { icon: Undo2, label: "My Returns", count: getCount('returned'), href: "/account/orders?status=returned" },
     ];
     
     const services: ServiceItemProps[] = [
