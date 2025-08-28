@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { collection, query, where, onSnapshot, getFirestore, doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getFirestore, doc, updateDoc, setDoc, getDoc, arrayUnion } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order, Voucher } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -41,7 +41,7 @@ export default function AdminReturnManagement() {
 
     if (status === 'returned') {
       const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-      // Create a voucher for the user
+      
       const voucherCode = `RET-${order.orderNumber}`;
       const newVoucher: Voucher = {
         code: voucherCode,
@@ -52,18 +52,22 @@ export default function AdminReturnManagement() {
         isReturnVoucher: true,
       };
 
-      const userVouchersRef = doc(db, 'userVouchers', order.userId);
+      const availableVouchersRef = doc(db, 'availableReturnVouchers', order.userId);
        try {
-            const voucherSnap = await getDoc(userVouchersRef);
-            const existingVouchers = voucherSnap.exists() ? voucherSnap.data().vouchers : [];
-            
-            if (!existingVouchers.some((v: Voucher) => v.code === newVoucher.code)) {
-                await setDoc(userVouchersRef, { vouchers: [...existingVouchers, newVoucher] }, { merge: true });
-                toast({
-                    title: "Return Approved",
-                    description: `A voucher for ৳${subtotal} has been issued to the user.`
+            const docSnap = await getDoc(availableVouchersRef);
+            if (docSnap.exists()) {
+                 await updateDoc(availableVouchersRef, {
+                    vouchers: arrayUnion(newVoucher)
                 });
+            } else {
+                await setDoc(availableVouchersRef, { vouchers: [newVoucher] });
             }
+           
+            toast({
+                title: "Return Approved",
+                description: `A voucher for ৳${subtotal} has been made available to the user.`
+            });
+
         } catch (error) {
             console.error("Error creating voucher:", error);
             toast({

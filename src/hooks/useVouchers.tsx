@@ -5,11 +5,12 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Voucher } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
-import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, getDoc, arrayUnion } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 interface VoucherContextType {
   collectedVouchers: Voucher[];
+  availableReturnVouchers: Voucher[];
   collectVoucher: (voucher: Voucher) => void;
   voucherCount: number;
 }
@@ -20,30 +21,40 @@ const db = getFirestore(app);
 
 export const VoucherProvider = ({ children }: { children: ReactNode }) => {
   const [collectedVouchers, setCollectedVouchers] = useState<Voucher[]>([]);
+  const [availableReturnVouchers, setAvailableReturnVouchers] = useState<Voucher[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const updateFirestoreVouchers = useCallback(async (vouchers: Voucher[]) => {
-    if (user) {
-      const voucherRef = doc(db, 'userVouchers', user.uid);
-      await setDoc(voucherRef, { vouchers });
-    }
-  }, [user]);
-
   useEffect(() => {
     if (user) {
-      const voucherRef = doc(db, 'userVouchers', user.uid);
-      const unsubscribe = onSnapshot(voucherRef, (docSnap) => {
+      // Listener for collected vouchers
+      const collectedVoucherRef = doc(db, 'userVouchers', user.uid);
+      const unsubscribeCollected = onSnapshot(collectedVoucherRef, (docSnap) => {
         if (docSnap.exists()) {
           setCollectedVouchers(docSnap.data().vouchers || []);
         } else {
           setCollectedVouchers([]);
         }
       });
-      return () => unsubscribe();
+      
+      // Listener for available return vouchers
+      const availableVoucherRef = doc(db, 'availableReturnVouchers', user.uid);
+      const unsubscribeAvailable = onSnapshot(availableVoucherRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setAvailableReturnVouchers(docSnap.data().vouchers || []);
+        } else {
+          setAvailableReturnVouchers([]);
+        }
+      });
+
+      return () => {
+        unsubscribeCollected();
+        unsubscribeAvailable();
+      };
     } else {
       // Clear vouchers for logged-out users
       setCollectedVouchers([]);
+      setAvailableReturnVouchers([]);
     }
   }, [user]);
 
@@ -57,7 +68,6 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
       
-    // Fetch latest vouchers to prevent race conditions
     const voucherRef = doc(db, 'userVouchers', user.uid);
     const docSnap = await getDoc(voucherRef);
     const currentVouchers = docSnap.exists() ? docSnap.data().vouchers : [];
@@ -72,14 +82,17 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     
-    const newVouchers = [...currentVouchers, voucher];
-    await updateFirestoreVouchers(newVouchers); // This will trigger the onSnapshot listener to update state
+    if (docSnap.exists()) {
+        await setDoc(voucherRef, { vouchers: arrayUnion(voucher) }, { merge: true });
+    } else {
+        await setDoc(voucherRef, { vouchers: [voucher] });
+    }
     
     toast({
       title: "Voucher Collected!",
       description: `Voucher ${voucher.code} has been added to your account.`,
     });
-  }, [toast, user, updateFirestoreVouchers]);
+  }, [toast, user]);
 
   const voucherCount = collectedVouchers.filter(v => !v.isReturnVoucher).length;
 
@@ -87,6 +100,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
     <VoucherContext.Provider
       value={{
         collectedVouchers,
+        availableReturnVouchers,
         collectVoucher,
         voucherCount,
       }}

@@ -3,7 +3,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { ShoppingBag, Star, Undo2, Edit } from "lucide-react";
+import { ShoppingBag, Star, Undo2, Edit, Ticket } from "lucide-react";
 import type { Order } from '@/types';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -69,6 +69,8 @@ export default function OrdersPage() {
       switch(orderStatus) {
           case 'return-rejected':
               return <Badge variant="destructive">Return Rejected</Badge>;
+          case 'returned':
+              return <Badge className="bg-blue-100 text-blue-800 capitalize">Returned</Badge>;
           default:
               return <Badge className="capitalize bg-primary hover:bg-primary text-primary-foreground">{orderStatus.replace('-', ' ')}</Badge>
       }
@@ -111,12 +113,19 @@ export default function OrdersPage() {
                             </div>
                             
                             <CardFooter className="bg-muted/30 p-4">
-                                {(order.status === 'delivered' || order.status === 'return-rejected') && (
+                                {(order.status === 'delivered' || order.status === 'return-rejected' || order.status === 'returned') && (
                                     <div className="grid grid-cols-2 gap-2 w-full">
                                         {order.status === 'return-rejected' ? (
                                             <Button variant="outline" size="sm" disabled className="w-full bg-red-100 text-red-800 border-red-200">
                                                 <Undo2 className="mr-2 h-4 w-4" />
                                                 Return Rejected
+                                            </Button>
+                                        ) : order.status === 'returned' ? (
+                                            <Button variant="outline" size="sm" asChild className="w-full bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900 border-blue-200">
+                                                <Link href="/vouchers">
+                                                    <Ticket className="mr-2 h-4 w-4" />
+                                                    View Voucher
+                                                </Link>
                                             </Button>
                                         ) : (
                                             <Button variant="outline" size="sm" asChild className="bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900 border-red-200">
