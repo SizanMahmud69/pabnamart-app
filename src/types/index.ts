@@ -55,7 +55,7 @@ export interface User {
   shippingAddresses?: ShippingAddress[];
 }
 
-export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned' | 'processing';
+export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned' | 'return-requested' | 'processing';
 
 export interface OrderItem {
   id: number;

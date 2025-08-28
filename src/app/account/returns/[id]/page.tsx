@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Package } from 'lucide-react';
 import Link from 'next/link';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -72,19 +72,25 @@ export default function ReturnRequestPage() {
             return;
         }
         setIsSubmitting(true);
-        // Here you would typically call a server action to create the return request
-        // For now, we'll just simulate it.
-        await new Promise(resolve => setTimeout(resolve, 1500));
         
-        toast({
-            title: "Return Request Submitted",
-            description: "Your return request has been received. We will process it shortly.",
-        });
-        
-        // You might want to update the order status in Firestore to 'return-requested' here
-        
-        router.push('/account/orders?status=returned');
-        setIsSubmitting(false);
+        try {
+            const orderDocRef = doc(db, 'orders', orderId);
+            await updateDoc(orderDocRef, {
+                status: 'return-requested'
+            });
+            
+            toast({
+                title: "Return Request Submitted",
+                description: "Your return request has been received. We will process it shortly.",
+            });
+            
+            router.push('/account/orders?status=return-requested');
+        } catch (error) {
+            console.error("Error submitting return request:", error);
+            toast({ title: "Error", description: "Failed to submit your return request.", variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     if (loading) {

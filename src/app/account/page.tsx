@@ -119,7 +119,7 @@ export default function AccountPage() {
         { icon: Box, label: "To Ship", count: getCount('shipped'), href: "/account/orders?status=shipped" },
         { icon: Truck, label: "To Receive", count: getCount('in-transit'), href: "/account/orders?status=in-transit" },
         { icon: PackageCheck, label: "Delivered", count: getCount('delivered'), href: "/account/orders?status=delivered" },
-        { icon: Undo2, label: "My Returns", count: getCount('returned'), href: "/account/orders?status=returned" },
+        { icon: Undo2, label: "My Returns", count: getCount('return-requested'), href: "/account/orders?status=return-requested" },
     ];
     
     const services: ServiceItemProps[] = [
