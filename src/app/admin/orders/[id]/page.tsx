@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, User as UserIcon, Mail, MapPin, CreditCard, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Mail, MapPin, CreditCard, ShoppingBag, Download } from 'lucide-react';
 import Link from 'next/link';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -61,6 +61,10 @@ export default function OrderDetailsPage() {
         fetchOrderData();
     }, [orderId, toast, router]);
 
+    const handlePrint = () => {
+        window.print();
+    }
+
     if (loading) {
         return <LoadingSpinner />;
     }
@@ -71,12 +75,16 @@ export default function OrderDetailsPage() {
 
     return (
         <div className="container mx-auto p-4">
-            <header className="py-4">
+            <header className="py-4 flex justify-between items-center print:hidden">
                 <Button asChild variant="outline">
                     <Link href="/admin/orders">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Order List
                     </Link>
+                </Button>
+                <Button variant="outline" onClick={handlePrint}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Invoice
                 </Button>
             </header>
             <main className="space-y-6">
