@@ -1,9 +1,11 @@
 
 "use client";
 
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ShoppingCart, Undo2, ArrowRight, Tag, Ticket, ShieldCheck, Settings, Star } from "lucide-react";
-import Link from "next/link";
+import { Package, Users, ShoppingCart, Undo2, ArrowRight, Tag, Ticket, ShieldCheck, Settings, Star, Loader2 } from "lucide-react";
+import { cn } from '@/lib/utils';
 
 const menuItems = [
     {
@@ -57,29 +59,47 @@ const menuItems = [
 ];
 
 const AdminDashboard = () => {
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
+    const [loadingHref, setLoadingHref] = useState<string | null>(null);
+
+    const handleNavigation = (href: string) => {
+        setLoadingHref(href);
+        startTransition(() => {
+            router.push(href);
+        });
+    };
+
     return (
         <div className="container mx-auto max-w-2xl p-4">
             <main className="mt-6">
                 <h2 className="text-3xl font-bold mb-6">Welcome, Admin!</h2>
                 <div className="space-y-4">
-                    {menuItems.map((item, index) => (
-                        <Link href={item.href} key={index} className="block">
-                            <Card className="hover:border-primary hover:shadow-lg transition-all">
-                                <CardContent className="p-4 flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-primary/10 p-3 rounded-lg">
-                                            <item.icon className="h-6 w-6 text-primary" />
+                    {menuItems.map((item, index) => {
+                        const isLoading = isPending && loadingHref === item.href;
+                        return (
+                            <div key={index} onClick={() => !isLoading && handleNavigation(item.href)} className="block">
+                                <Card className={cn("hover:border-primary hover:shadow-lg transition-all", isLoading ? "cursor-wait" : "cursor-pointer")}>
+                                    <CardContent className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-primary/10 p-3 rounded-lg">
+                                                <item.icon className="h-6 w-6 text-primary" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-semibold">{item.title}</h3>
+                                                <p className="text-sm text-muted-foreground">{item.description}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h3 className="text-lg font-semibold">{item.title}</h3>
-                                            <p className="text-sm text-muted-foreground">{item.description}</p>
-                                        </div>
-                                    </div>
-                                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                                </CardContent>
-                            </Card>
-                        </Link>
-                    ))}
+                                        {isLoading ? (
+                                            <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                                        ) : (
+                                            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        )
+                    })}
                 </div>
             </main>
         </div>
