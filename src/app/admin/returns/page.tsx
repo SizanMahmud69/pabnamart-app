@@ -22,7 +22,7 @@ export default function AdminReturnManagement() {
 
   useEffect(() => {
     const ordersRef = collection(db, 'orders');
-    const q = query(ordersRef, where('status', 'in', ['return-requested', 'returned']));
+    const q = query(ordersRef, where('status', 'in', ['return-requested', 'returned', 'return-rejected']));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
@@ -33,7 +33,7 @@ export default function AdminReturnManagement() {
     return () => unsubscribe();
   }, []);
 
-  const handleStatusChange = async (orderId: string, status: 'returned' | 'delivered') => {
+  const handleStatusChange = async (orderId: string, status: 'returned' | 'return-rejected') => {
     const orderDoc = doc(db, 'orders', orderId);
     await updateDoc(orderDoc, { status });
     // In a real app, you would also generate a voucher here if approved.
@@ -79,8 +79,10 @@ export default function AdminReturnManagement() {
                                     <TableCell>
                                         {request.status === 'return-requested' ? (
                                             <Badge variant='secondary'>Pending</Badge>
-                                        ) : (
+                                        ) : request.status === 'returned' ? (
                                             <Badge className="bg-green-100 text-green-800 capitalize">{request.status}</Badge>
+                                        ) : (
+                                            <Badge variant='destructive' className="capitalize">Rejected</Badge>
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -100,7 +102,7 @@ export default function AdminReturnManagement() {
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem 
                                                         className="text-destructive"
-                                                        onSelect={() => handleStatusChange(request.id, 'delivered')}
+                                                        onSelect={() => handleStatusChange(request.id, 'return-rejected')}
                                                     >
                                                         <XCircle className="mr-2 h-4 w-4" />
                                                         <span>Reject</span>

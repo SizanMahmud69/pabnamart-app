@@ -47,6 +47,8 @@ export default function OrdersPage() {
     ? orders 
     : status === 'return-requested'
     ? orders.filter(order => order.status === 'return-requested' || order.status === 'returned')
+    : status === 'delivered'
+    ? orders.filter(order => order.status === 'delivered' || order.status === 'return-rejected')
     : orders.filter(order => order.status === status);
     
   const pageTitle = status === 'all' ? 'My Orders' : `My ${status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')} Orders`;
@@ -62,6 +64,15 @@ export default function OrdersPage() {
     }
     router.push(`/account/orders/${orderId}`);
   };
+
+  const getStatusBadge = (orderStatus: Order['status']) => {
+      switch(orderStatus) {
+          case 'return-rejected':
+              return <Badge variant="destructive">Return Rejected</Badge>;
+          default:
+              return <Badge className="capitalize bg-primary hover:bg-primary text-primary-foreground">{orderStatus.replace('-', ' ')}</Badge>
+      }
+  }
 
 
   return (
@@ -91,7 +102,7 @@ export default function OrdersPage() {
                                           <h2 className="text-lg font-bold">Order ID: #{order.orderNumber}</h2>
                                           <p className="text-sm text-muted-foreground">Placed on: {new Date(order.date).toLocaleDateString()}</p>
                                       </div>
-                                      <Badge className="capitalize bg-primary hover:bg-primary text-primary-foreground">{order.status.replace('-', ' ')}</Badge>
+                                      {getStatusBadge(order.status)}
                                   </div>
                                   <div className="mt-4">
                                       <p className="font-bold text-lg">Total Amount: ৳{order.total.toFixed(2)}</p>
@@ -100,14 +111,21 @@ export default function OrdersPage() {
                             </div>
                             
                             <CardFooter className="bg-muted/30 p-4">
-                                {order.status === 'delivered' && (
+                                {(order.status === 'delivered' || order.status === 'return-rejected') && (
                                     <div className="grid grid-cols-2 gap-2 w-full">
-                                        <Button variant="outline" size="sm" asChild className="bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900 border-red-200">
-                                            <Link href={`/account/returns/${order.id}`}>
+                                        {order.status === 'return-rejected' ? (
+                                            <Button variant="outline" size="sm" disabled className="w-full bg-red-100 text-red-800 border-red-200">
                                                 <Undo2 className="mr-2 h-4 w-4" />
-                                                Return
-                                            </Link>
-                                        </Button>
+                                                Return Rejected
+                                            </Button>
+                                        ) : (
+                                            <Button variant="outline" size="sm" asChild className="bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900 border-red-200">
+                                                <Link href={`/account/returns/${order.id}`}>
+                                                    <Undo2 className="mr-2 h-4 w-4" />
+                                                    Return
+                                                </Link>
+                                            </Button>
+                                        )}
                                         <Button variant="outline" size="sm" asChild className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 border-green-200">
                                             <Link href="/account/reviews">
                                                 <Edit className="mr-2 h-4 w-4" />
