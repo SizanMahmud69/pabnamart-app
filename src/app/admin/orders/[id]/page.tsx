@@ -17,14 +17,14 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
-const db = getFirestore(app);
-
 const Stamp = ({ text, colorClass }: { text: string; colorClass: string }) => (
-    <div className={cn(
-        "absolute top-1/2 right-8 transform -translate-y-1/2 rotate-12 w-28 h-28 rounded-full border-4 flex items-center justify-center opacity-20 pointer-events-none",
-        colorClass
-    )}>
-        <span className="text-3xl font-bold uppercase">{text}</span>
+    <div className="w-28 h-28 flex-shrink-0 hidden md:flex items-center justify-center">
+        <div className={cn(
+            "w-28 h-28 rounded-full border-4 flex items-center justify-center opacity-20 pointer-events-none rotate-12",
+            colorClass
+        )}>
+            <span className="text-3xl font-bold uppercase">{text}</span>
+        </div>
     </div>
 );
 
@@ -171,55 +171,58 @@ export default function OrderDetailsPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><ShoppingBag className="h-5 w-5" /> Order Items ({order.items.length})</CardTitle>
                     </CardHeader>
-                    <CardContent className="relative">
-                        {isPaid ? (
-                            <Stamp text="Paid" colorClass="border-green-500 text-green-500" />
-                        ) : (
-                            <Stamp text="Unpaid" colorClass="border-red-500 text-red-500" />
-                        )}
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Product</TableHead>
-                                    <TableHead>Quantity</TableHead>
-                                    <TableHead>Price</TableHead>
-                                    <TableHead className="text-right">Subtotal</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {order.items.map(item => (
-                                    <TableRow key={item.id}>
-                                        <TableCell className="flex items-center gap-3">
-                                            <div className="relative h-12 w-12 rounded-md overflow-hidden border">
-                                                <Image src={item.image} alt={item.name} fill className="object-cover" sizes="50px" />
-                                            </div>
-                                            <span className="font-medium">{item.name}</span>
-                                        </TableCell>
-                                        <TableCell>x {item.quantity}</TableCell>
-                                        <TableCell>৳{item.price.toFixed(2)}</TableCell>
-                                        <TableCell className="text-right">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                            <TableFooter>
-                                <TableRow>
-                                    <TableCell colSpan={3} className="text-right font-semibold">Subtotal</TableCell>
-                                    <TableCell className="text-right font-semibold">৳{subtotal.toFixed(2)}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell colSpan={3} className="text-right font-semibold">Shipping Fee</TableCell>
-                                    <TableCell className="text-right font-semibold">৳{shippingFee.toFixed(2)}</TableCell>
-                                </TableRow>
-                                <TableRow className="text-lg font-bold">
-                                    <TableCell colSpan={3} className="text-right">Total</TableCell>
-                                    <TableCell className="text-right">৳{order.total.toFixed(2)}</TableCell>
-                                </TableRow>
-                            </TableFooter>
-                        </Table>
+                    <CardContent>
+                        <div className="flex justify-between items-start gap-8">
+                            <div className="flex-grow">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Product</TableHead>
+                                            <TableHead>Quantity</TableHead>
+                                            <TableHead>Price</TableHead>
+                                            <TableHead className="text-right">Subtotal</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {order.items.map(item => (
+                                            <TableRow key={item.id}>
+                                                <TableCell className="flex items-center gap-3">
+                                                    <div className="relative h-12 w-12 rounded-md overflow-hidden border">
+                                                        <Image src={item.image} alt={item.name} fill className="object-cover" sizes="50px" />
+                                                    </div>
+                                                    <span className="font-medium">{item.name}</span>
+                                                </TableCell>
+                                                <TableCell>x {item.quantity}</TableCell>
+                                                <TableCell>৳{item.price.toFixed(2)}</TableCell>
+                                                <TableCell className="text-right">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                    <TableFooter>
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-right font-semibold">Subtotal</TableCell>
+                                            <TableCell className="text-right font-semibold">৳{subtotal.toFixed(2)}</TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-right font-semibold">Shipping Fee</TableCell>
+                                            <TableCell className="text-right font-semibold">৳{shippingFee.toFixed(2)}</TableCell>
+                                        </TableRow>
+                                        <TableRow className="text-lg font-bold">
+                                            <TableCell colSpan={3} className="text-right">Total</TableCell>
+                                            <TableCell className="text-right">৳{order.total.toFixed(2)}</TableCell>
+                                        </TableRow>
+                                    </TableFooter>
+                                </Table>
+                            </div>
+                            {isPaid ? (
+                                <Stamp text="Paid" colorClass="border-green-500 text-green-500" />
+                            ) : (
+                                <Stamp text="Unpaid" colorClass="border-red-500 text-red-500" />
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             </main>
         </div>
     );
 }
-
