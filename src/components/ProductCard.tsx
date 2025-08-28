@@ -7,8 +7,9 @@ import type { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
-import { ShoppingCart, Star, Truck } from 'lucide-react';
+import { ShoppingCart, Star, Truck, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useWishlist } from '@/hooks/useWishlist';
 
 interface ProductCardProps {
   product: Product;
@@ -16,9 +17,15 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
   const hasDiscount = (product.originalPrice && product.originalPrice > product.price) || product.hasOffer;
   const discountAmount = hasDiscount ? (product.originalPrice ?? 0) - product.price : 0;
   const isSoldOut = product.stock === 0;
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addToWishlist(product);
+  };
 
   return (
     <Card className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-shadow duration-300 hover:shadow-lg group">
@@ -30,7 +37,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             fill
             className={cn(
               "object-cover transition-transform duration-300 group-hover:scale-105",
-              isSoldOut && "filter blur-sm"
+              isSoldOut && "filter grayscale"
             )}
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
             data-ai-hint="product lifestyle"
@@ -75,15 +82,27 @@ export default function ProductCard({ product }: ProductCardProps) {
               </p>
             )}
           </div>
-          <Button
-            onClick={() => addToCart(product)}
-            size="icon"
-            className="h-9 w-9"
-            disabled={isSoldOut}
-            aria-label={isSoldOut ? "Sold Out" : "Add to Cart"}
-          >
-            <ShoppingCart className="h-4 w-4" />
-          </Button>
+          {isSoldOut ? (
+             <Button
+                onClick={handleWishlistClick}
+                size="icon"
+                variant="outline"
+                className="h-9 w-9"
+                disabled={isInWishlist(product.id)}
+                aria-label={isInWishlist(product.id) ? "In Wishlist" : "Add to Wishlist"}
+            >
+                <Heart className={cn("h-4 w-4", isInWishlist(product.id) && "fill-destructive text-destructive")} />
+            </Button>
+          ) : (
+            <Button
+                onClick={() => addToCart(product)}
+                size="icon"
+                className="h-9 w-9"
+                aria-label="Add to Cart"
+            >
+                <ShoppingCart className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

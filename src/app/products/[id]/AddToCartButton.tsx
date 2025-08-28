@@ -3,16 +3,33 @@
 import { useCart } from "@/hooks/useCart";
 import type { Product } from "@/types";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, CreditCard } from "lucide-react";
+import { ShoppingCart, CreditCard, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useWishlist } from "@/hooks/useWishlist";
 
 export default function AddToCartButton({ product }: { product: Product }) {
   const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
+  
+  const isSoldOut = product.stock === 0;
 
   const handleBuyNow = () => {
     addToCart(product);
     router.push('/checkout');
+  }
+  
+  const handleAddToWishlist = () => {
+    addToWishlist(product);
+  }
+
+  if (isSoldOut) {
+    return (
+      <Button size="lg" className="w-full" onClick={handleAddToWishlist} disabled={isInWishlist(product.id)}>
+        <Heart className="mr-2 h-5 w-5" />
+        {isInWishlist(product.id) ? "In Wishlist" : "Add to Wishlist"}
+      </Button>
+    )
   }
 
   return (

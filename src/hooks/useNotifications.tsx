@@ -5,7 +5,11 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Notification } from '@/types';
 import { useAuth } from './useAuth';
 import { useVouchers } from './useVouchers';
-import { LogIn, Truck, Gift, Tag } from 'lucide-react';
+import { LogIn, Truck, Gift, Tag, PackageCheck } from 'lucide-react';
+import { getFirestore, doc, onSnapshot, collection, query, where, getDocs, updateDoc, writeBatch } from 'firebase/firestore';
+import app from '@/lib/firebase';
+
+const db = getFirestore(app);
 
 // This is mock data that would typically come from a database.
 const orders = [
@@ -30,8 +34,30 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { collectedVouchers } = useVouchers();
 
+  const fetchAndClearPendingNotifications = useCallback(async (userId: string) => {
+    const notificationsRef = collection(db, `users/${userId}/pendingNotifications`);
+    const q = query(notificationsRef);
+    const querySnapshot = await getDocs(q);
+    
+    const pending: Notification[] = [];
+    const batch = writeBatch(db);
+
+    querySnapshot.forEach(doc => {
+        const data = doc.data() as Omit<Notification, 'id'>;
+        pending.push({ ...data, id: doc.id });
+        batch.delete(doc.ref); // Delete after fetching
+    });
+
+    if (!querySnapshot.empty) {
+        await batch.commit();
+        setNotifications(prev => [...pending.reverse(), ...prev]);
+    }
+  }, []);
+
   useEffect(() => {
     if (user) {
+        fetchAndClearPendingNotifications(user.uid);
+        
         const generatedNotifications: Notification[] = [];
 
         // Welcome notification
@@ -88,7 +114,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     } else {
         setNotifications([]);
     }
-  }, [user, collectedVouchers]);
+  }, [user, collectedVouchers, fetchAndClearPendingNotifications]);
 
 
   const markAsRead = useCallback((id: string) => {

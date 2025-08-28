@@ -14,6 +14,7 @@ import { NotificationProvider } from '@/hooks/useNotifications';
 import { usePathname } from 'next/navigation';
 import { ProductProvider } from '@/hooks/useProducts';
 import { OfferProvider } from '@/hooks/useOffers';
+import { WishlistProvider } from '@/hooks/useWishlist';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -39,16 +40,18 @@ function RootLayoutContent({
         <AuthProvider>
           <VoucherProvider>
             <CartProvider>
-              <NotificationProvider>
-                <OfferProvider>
-                  <ProductProvider>
-                    {!isAdminPage && <Header />}
-                    <main className={isAdminPage ? '' : "pb-16 md:pb-0"}>{children}</main>
-                    <Toaster />
-                    {!isAdminPage && <BottomNav />}
-                  </ProductProvider>
-                </OfferProvider>
-              </NotificationProvider>
+              <OfferProvider>
+                <ProductProvider>
+                  <WishlistProvider>
+                    <NotificationProvider>
+                      {!isAdminPage && <Header />}
+                      <main className={isAdminPage ? '' : "pb-16 md:pb-0"}>{children}</main>
+                      <Toaster />
+                      {!isAdminPage && <BottomNav />}
+                    </NotificationProvider>
+                  </WishlistProvider>
+                </ProductProvider>
+              </OfferProvider>
             </CartProvider>
           </VoucherProvider>
         </AuthProvider>

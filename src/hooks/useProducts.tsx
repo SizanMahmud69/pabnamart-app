@@ -1,12 +1,13 @@
 
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
-import type { Product, Offer } from '@/types';
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
+import type { Product, Offer, Notification } from '@/types';
+import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, writeBatch, getDocs, query, where } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { products as initialProducts } from '@/lib/products';
 import { useOffers } from './useOffers';
+import { PackageCheck } from 'lucide-react';
 
 interface ProductContextType {
   products: Product[];
@@ -70,7 +71,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
           hasOffer: true,
         };
       }
-      return { ...product, originalPrice: product.originalPrice || product.price, hasOffer: false };
+      return { ...product, originalPrice: product.originalPrice || p.price, hasOffer: false };
     });
   }, [baseProducts, activeOffers]);
 
@@ -89,10 +90,40 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     const productDoc = doc(db, 'products', newId.toString());
     await setDoc(productDoc, newProduct);
   };
+  
+  const sendStockNotifications = useCallback(async (product: Product) => {
+      const wishlistsRef = collection(db, 'wishlists');
+      const q = query(wishlistsRef, where('productIds', 'array-contains', product.id));
+      const querySnapshot = await getDocs(q);
+
+      const batch = writeBatch(db);
+
+      querySnapshot.forEach(userDoc => {
+          const userId = userDoc.id;
+          const notification: Omit<Notification, 'id'> = {
+              icon: PackageCheck,
+              title: "Item Back in Stock!",
+              description: `The item you wanted, "${product.name}", is now available.`,
+              time: new Date().toLocaleDateString(),
+              read: false,
+              href: `/products/${product.id}`
+          };
+          const notificationRef = doc(collection(db, `users/${userId}/pendingNotifications`));
+          batch.set(notificationRef, notification);
+      });
+
+      await batch.commit();
+
+  }, []);
 
   const updateProduct = async (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
-    const productDoc = doc(db, 'products', productId.toString());
+    const productDocRef = doc(db, 'products', productId.toString());
     const existingProduct = baseProducts.find(p => p.id === productId);
+
+    if (existingProduct && existingProduct.stock === 0 && productData.stock > 0) {
+        await sendStockNotifications(existingProduct);
+    }
+    
     const dataToUpdate = {
         ...productData,
         id: productId,
@@ -102,7 +133,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         isFlashSale: productData.isFlashSale || false,
         flashSaleEndDate: productData.flashSaleEndDate || '',
     };
-    await updateDoc(productDoc, dataToUpdate);
+    await updateDoc(productDocRef, dataToUpdate);
   };
 
 

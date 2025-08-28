@@ -4,13 +4,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Heart } from "lucide-react";
-import { useProducts } from "@/hooks/useProducts";
+import { Heart, Trash2 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
+import { useWishlist } from "@/hooks/useWishlist";
+import { withAuth } from "@/hooks/useAuth";
 
-export default function WishlistPage() {
-    const { products } = useProducts();
-    const wishlistItems = products.slice(0, 3); // Mock data
+function WishlistPage() {
+    const { wishlistItems, removeFromWishlist } = useWishlist();
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -19,7 +19,17 @@ export default function WishlistPage() {
                 {wishlistItems.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                         {wishlistItems.map(item => (
-                            <ProductCard key={item.id} product={item} />
+                             <div key={item.id} className="relative group">
+                                <ProductCard product={item} />
+                                <Button
+                                    size="icon"
+                                    variant="destructive"
+                                    className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => removeFromWishlist(item.id)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
                         ))}
                     </div>
                 ) : (
@@ -40,3 +50,5 @@ export default function WishlistPage() {
         </div>
     );
 }
+
+export default withAuth(WishlistPage);

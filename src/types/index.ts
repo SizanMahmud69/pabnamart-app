@@ -131,3 +131,8 @@ export interface PaymentSettings {
   nagadMerchantNumber: string;
   rocketMerchantNumber: string;
 }
+
+export interface Wishlist {
+    userId: string;
+    productIds: number[];
+}
