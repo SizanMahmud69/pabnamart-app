@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { ArrowLeft, User as UserIcon, Mail, MapPin, CreditCard, ShoppingBag, Download, CircleDollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
@@ -74,6 +74,8 @@ export default function OrderDetailsPage() {
     }
 
     const isPaid = order.paymentMethod === 'online' && order.status !== 'pending';
+    const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const shippingFee = order.total - subtotal;
 
     return (
         <div className="container mx-auto p-4">
@@ -180,6 +182,20 @@ export default function OrderDetailsPage() {
                                     </TableRow>
                                 ))}
                             </TableBody>
+                            <TableFooter>
+                                <TableRow>
+                                    <TableCell colSpan={3} className="text-right font-semibold">Subtotal</TableCell>
+                                    <TableCell className="text-right font-semibold">৳{subtotal.toFixed(2)}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell colSpan={3} className="text-right font-semibold">Shipping Fee</TableCell>
+                                    <TableCell className="text-right font-semibold">৳{shippingFee.toFixed(2)}</TableCell>
+                                </TableRow>
+                                <TableRow className="text-lg font-bold">
+                                    <TableCell colSpan={3} className="text-right">Total</TableCell>
+                                    <TableCell className="text-right">৳{order.total.toFixed(2)}</TableCell>
+                                </TableRow>
+                            </TableFooter>
                         </Table>
                     </CardContent>
                 </Card>
@@ -187,3 +203,4 @@ export default function OrderDetailsPage() {
         </div>
     );
 }
+
