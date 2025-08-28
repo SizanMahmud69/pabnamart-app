@@ -24,7 +24,7 @@ interface OrderDetails {
     voucher: Voucher | null;
 }
 
-const paymentMethods = [
+const initialPaymentMethods = [
     { name: 'bKash', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/BKash_logo.svg', merchantNumber: '01234567890', hint: 'bKash logo' },
     { name: 'Nagad', logo: 'https://pix1.wapkizfile.info/download/8a051c9b664e1f7de58fec071478a91c/sizan+wapkiz+click/nagad-logo-png-seeklogo-355240-(sizan.wapkiz.click).png', merchantNumber: '01234567891', hint: 'Nagad logo' },
     { name: 'Rocket', logo: 'https://picsum.photos/seed/rocket/100/60', merchantNumber: '01234567892', hint: 'Rocket logo' },
@@ -36,6 +36,7 @@ function PaymentGatewayPage() {
     const [trxId, setTrxId] = useState('');
     const [paymentNumber, setPaymentNumber] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentMethods, setPaymentMethods] = useState(initialPaymentMethods);
     
     const router = useRouter();
     const { user } = useAuth();
@@ -48,6 +49,17 @@ function PaymentGatewayPage() {
             setOrderDetails(JSON.parse(storedDetails));
         } else {
             router.push('/checkout');
+        }
+
+        const savedSettings = localStorage.getItem('siteSettings');
+        if (savedSettings) {
+            const parsedSettings = JSON.parse(savedSettings);
+            setPaymentMethods(prevMethods => prevMethods.map(method => {
+                if (method.name === 'bKash' && parsedSettings.bkashLogo) return { ...method, logo: parsedSettings.bkashLogo };
+                if (method.name === 'Nagad' && parsedSettings.nagadLogo) return { ...method, logo: parsedSettings.nagadLogo };
+                if (method.name === 'Rocket' && parsedSettings.rocketLogo) return { ...method, logo: parsedSettings.rocketLogo };
+                return method;
+            }));
         }
     }, [router]);
 
