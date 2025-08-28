@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { Product } from '@/types';
 import { useProducts } from '@/hooks/useProducts';
@@ -16,39 +16,51 @@ import AiRecommendations from '@/components/AiRecommendations';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import Categories from '@/components/Categories';
+import { useOffers } from '@/hooks/useOffers';
 
-const heroBanners = [
-  {
-    title: "Mega Electronics Sale",
-    description: "Up to 40% off on the latest gadgets and electronics.",
-    image: "https://picsum.photos/seed/electronics/1200/400",
-    link: "/category/Electronics",
-    aiHint: "electronics gadgets"
-  },
-  {
-    title: "Fresh Groceries Daily",
-    description: "Get the best quality groceries delivered to your door.",
-    image: "https://picsum.photos/seed/groceries/1200/400",
-    link: "/category/Groceries",
-    aiHint: "fresh food"
-  },
-  {
-    title: "New Fashion Arrivals",
-    description: "Check out the latest trends in our apparel section.",
-    image: "https://picsum.photos/seed/fashion/1200/400",
-    link: "/category/Women's Fashion",
-    aiHint: "stylish clothes"
-  }
-];
+const categoryImageMap: { [key: string]: { image: string; aiHint: string } } = {
+  "Electronics": { image: "https://picsum.photos/seed/electronics/1200/400", aiHint: "electronics gadgets" },
+  "Groceries": { image: "https://picsum.photos/seed/groceries/1200/400", aiHint: "fresh food" },
+  "Women's Fashion": { image: "https://picsum.photos/seed/fashion/1200/400", aiHint: "stylish clothes" },
+  "Men's Fashion": { image: "https://picsum.photos/seed/menfashion/1200/400", aiHint: "men clothes" },
+  "Cosmetics": { image: "https://picsum.photos/seed/cosmetics/1200/400", aiHint: "makeup beauty" },
+  "Mobile & Computers": { image: "https://picsum.photos/seed/computers/1200/400", aiHint: "laptops mobile" },
+  "default": { image: "https://picsum.photos/seed/sale/1200/400", aiHint: "general sale" }
+};
+
+const defaultBanner = {
+  title: "Welcome to PabnaMart",
+  description: "Your one-stop shop for all your needs. Quality products, great prices.",
+  image: "https://picsum.photos/seed/welcome/1200/400",
+  link: "/products",
+  aiHint: "shopping store"
+};
 
 function HomePageContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
   const { products: allProducts } = useProducts();
+  const { activeOffers } = useOffers();
 
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [topRated, setTopRated] = useState<Product[]>([]);
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
+
+  const heroBanners = useMemo(() => {
+    if (activeOffers.length === 0) {
+      return [defaultBanner];
+    }
+    return activeOffers.map(offer => {
+      const categoryInfo = categoryImageMap[offer.name] || categoryImageMap.default;
+      return {
+        title: `${offer.discount}% Off on ${offer.name}`,
+        description: `Get the best deals on our ${offer.name} collection.`,
+        image: categoryInfo.image,
+        link: `/category/${encodeURIComponent(offer.name)}`,
+        aiHint: categoryInfo.aiHint,
+      };
+    });
+  }, [activeOffers]);
 
 
   useEffect(() => {
