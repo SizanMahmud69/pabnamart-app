@@ -34,6 +34,7 @@ export default function NewProductPage() {
     const [imageUrls, setImageUrls] = useState(['']);
     const [freeShipping, setFreeShipping] = useState(false);
     const [isFlashSale, setIsFlashSale] = useState(false);
+    const [flashSaleEndDate, setFlashSaleEndDate] = useState('');
 
     const handleImageChange = (index: number, value: string) => {
         const newImageUrls = [...imageUrls];
@@ -72,6 +73,7 @@ export default function NewProductPage() {
             details: formData.get('details') as string,
             freeShipping: freeShipping,
             isFlashSale: isFlashSale,
+            flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
             shippingTime: formData.get('shippingTime') as string,
             returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,
         };
@@ -166,14 +168,30 @@ export default function NewProductPage() {
                                         Eligible for free shipping
                                     </label>
                                 </div>
-                                 <div className="flex items-center space-x-2">
-                                    <Checkbox id="flash-sale" checked={isFlashSale} onCheckedChange={(checked) => setIsFlashSale(checked as boolean)} disabled={isLoading} />
-                                    <label
-                                        htmlFor="flash-sale"
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                    >
-                                        Add to Flash Sale
-                                    </label>
+                                 <div className="flex flex-col gap-4">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox id="flash-sale" checked={isFlashSale} onCheckedChange={(checked) => setIsFlashSale(checked as boolean)} disabled={isLoading} />
+                                        <label
+                                            htmlFor="flash-sale"
+                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                        >
+                                            Add to Flash Sale
+                                        </label>
+                                    </div>
+                                    {isFlashSale && (
+                                        <div className="space-y-2 ml-6">
+                                            <Label htmlFor="flash-sale-end-date">Flash Sale End Date</Label>
+                                            <Input 
+                                                id="flash-sale-end-date" 
+                                                name="flashSaleEndDate" 
+                                                type="datetime-local" 
+                                                value={flashSaleEndDate}
+                                                onChange={(e) => setFlashSaleEndDate(e.target.value)}
+                                                required={isFlashSale} 
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">

@@ -83,6 +83,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       rating: 0,
       reviews: [],
       isFlashSale: productData.isFlashSale || false,
+      flashSaleEndDate: productData.flashSaleEndDate || '',
     };
     const productDoc = doc(db, 'products', newId.toString());
     await setDoc(productDoc, newProduct);
@@ -97,6 +98,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         rating: existingProduct?.rating || 0,
         reviews: existingProduct?.reviews || [],
         isFlashSale: productData.isFlashSale || false,
+        flashSaleEndDate: productData.flashSaleEndDate || '',
     };
     await updateDoc(productDoc, dataToUpdate);
   };

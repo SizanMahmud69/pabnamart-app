@@ -65,6 +65,8 @@ function HomePageContent() {
 
   useEffect(() => {
     if (allProducts.length > 0) {
+      const now = new Date();
+      
       // New arrivals: sort by ID descending (assuming higher ID is newer)
       const sortedNew = [...allProducts].sort((a, b) => b.id - a.id);
       setNewArrivals(sortedNew.slice(0, 5));
@@ -74,9 +76,11 @@ function HomePageContent() {
       setTopRated(sortedRated.slice(0, 5));
 
       // Flash sale products with mock discount
-      const saleProducts = allProducts.filter(p => p.isFlashSale).map(p => ({
-        ...p,
-        originalPrice: p.originalPrice || p.price + (p.price * 0.2), // Mock discount if not present
+      const saleProducts = allProducts
+        .filter(p => p.isFlashSale && p.flashSaleEndDate && new Date(p.flashSaleEndDate) > now)
+        .map(p => ({
+          ...p,
+          originalPrice: p.originalPrice || p.price + (p.price * 0.2), // Mock discount if not present
       }));
       setFlashSaleProducts(saleProducts);
     }
