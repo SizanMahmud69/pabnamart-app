@@ -72,10 +72,6 @@ export default function OrderDetailsPage() {
     if (!order) {
         return null;
     }
-
-    const isPaidOnline = order.paymentMethod === 'online' && order.status !== 'pending';
-    const isPaidCOD = order.paymentMethod === 'cod' && order.status === 'delivered';
-    const isPaid = isPaidOnline || isPaidCOD;
     
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const shippingFee = order.total - subtotal;
@@ -132,16 +128,6 @@ export default function OrderDetailsPage() {
                         </CardHeader>
                         <CardContent className="text-sm space-y-2">
                             <p><strong>Method:</strong> <span className="capitalize">{order.paymentMethod}</span></p>
-                            <div className="flex items-center justify-between">
-                                <p><strong>Status:</strong></p>
-                                {isPaid ? (
-                                    <Badge className="bg-green-100 text-green-800">Paid</Badge>
-                                ) : order.paymentMethod === 'online' ? (
-                                    <Badge variant="secondary">Pending Verification</Badge>
-                                ) : (
-                                     <Badge variant="outline">Cash on Delivery</Badge>
-                                )}
-                            </div>
                             <p><strong>Total:</strong> <span className="font-bold text-foreground">৳{order.total.toFixed(2)}</span></p>
                              {order.paymentMethod === 'online' && order.paymentDetails && (
                                 <div className="pt-2 border-t mt-2 space-y-1">
@@ -161,48 +147,46 @@ export default function OrderDetailsPage() {
                         <CardTitle className="flex items-center gap-2"><ShoppingBag className="h-5 w-5" /> Order Items ({order.items.length})</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex justify-between items-start gap-8">
-                            <div className="flex-grow">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Product</TableHead>
-                                            <TableHead>Quantity</TableHead>
-                                            <TableHead>Price</TableHead>
-                                            <TableHead className="text-right">Subtotal</TableHead>
+                        <div className="relative w-full overflow-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Product</TableHead>
+                                        <TableHead>Quantity</TableHead>
+                                        <TableHead>Price</TableHead>
+                                        <TableHead className="text-right">Subtotal</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {order.items.map(item => (
+                                        <TableRow key={item.id}>
+                                            <TableCell className="flex items-center gap-3">
+                                                <div className="relative h-12 w-12 rounded-md overflow-hidden border">
+                                                    <Image src={item.image} alt={item.name} fill className="object-cover" sizes="50px" />
+                                                </div>
+                                                <span className="font-medium">{item.name}</span>
+                                            </TableCell>
+                                            <TableCell>x {item.quantity}</TableCell>
+                                            <TableCell>৳{item.price.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
                                         </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {order.items.map(item => (
-                                            <TableRow key={item.id}>
-                                                <TableCell className="flex items-center gap-3">
-                                                    <div className="relative h-12 w-12 rounded-md overflow-hidden border">
-                                                        <Image src={item.image} alt={item.name} fill className="object-cover" sizes="50px" />
-                                                    </div>
-                                                    <span className="font-medium">{item.name}</span>
-                                                </TableCell>
-                                                <TableCell>x {item.quantity}</TableCell>
-                                                <TableCell>৳{item.price.toFixed(2)}</TableCell>
-                                                <TableCell className="text-right">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                    <TableFooter>
-                                        <TableRow>
-                                            <TableCell colSpan={3} className="text-right font-semibold">Subtotal</TableCell>
-                                            <TableCell className="text-right font-semibold">৳{subtotal.toFixed(2)}</TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell colSpan={3} className="text-right font-semibold">Shipping Fee</TableCell>
-                                            <TableCell className="text-right font-semibold">৳{shippingFee.toFixed(2)}</TableCell>
-                                        </TableRow>
-                                        <TableRow className="text-lg font-bold">
-                                            <TableCell colSpan={3} className="text-right">Total</TableCell>
-                                            <TableCell className="text-right">৳{order.total.toFixed(2)}</TableCell>
-                                        </TableRow>
-                                    </TableFooter>
-                                </Table>
-                            </div>
+                                    ))}
+                                </TableBody>
+                                <TableFooter>
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="text-right font-semibold">Subtotal</TableCell>
+                                        <TableCell className="text-right font-semibold">৳{subtotal.toFixed(2)}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="text-right font-semibold">Shipping Fee</TableCell>
+                                        <TableCell className="text-right font-semibold">৳{shippingFee.toFixed(2)}</TableCell>
+                                    </TableRow>
+                                    <TableRow className="text-lg font-bold">
+                                        <TableCell colSpan={3} className="text-right">Total</TableCell>
+                                        <TableCell className="text-right">৳{order.total.toFixed(2)}</TableCell>
+                                    </TableRow>
+                                </TableFooter>
+                            </Table>
                         </div>
                     </CardContent>
                 </Card>
