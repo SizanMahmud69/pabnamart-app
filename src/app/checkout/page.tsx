@@ -41,11 +41,10 @@ const paymentMethods = [
 ]
 
 function CheckoutPage() {
-  const { selectedCartItems, selectedCartTotal, selectedCartCount, updateQuantity, clearCart } = useCart();
+  const { selectedCartItems, selectedCartTotal, selectedCartCount, updateQuantity, clearCart, shippingFee } = useCart();
   const { user, appUser } = useAuth();
   const { collectedVouchers } = useVouchers();
-  const { chargeInsidePabna, chargeOutsidePabna } = useDeliveryCharge();
-
+  
   const [addresses, setAddresses] = useState<ShippingAddressType[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
@@ -111,17 +110,8 @@ function CheckoutPage() {
     return addresses.find(a => a.id === selectedAddressId);
   }, [addresses, selectedAddressId]);
   
-  const shippingFee = useMemo(() => {
-    if (selectedCartCount === 0) return 0;
-    if (selectedCartItems.some(item => item.freeShipping)) return 0;
-    if (!selectedAddress) return chargeOutsidePabna; // Default fee if no address is selected yet
-
-    return selectedAddress.city.toLowerCase().trim() === 'pabna' ? chargeInsidePabna : chargeOutsidePabna;
-
-  }, [selectedCartItems, selectedCartCount, selectedAddress, chargeInsidePabna, chargeOutsidePabna]);
-
   const { orderDiscount, shippingDiscount } = useMemo(() => {
-    if (!selectedVoucher) return { orderDiscount: 0, shippingDiscount: 0 };
+    if (!selectedVoucher || shippingFee === null) return { orderDiscount: 0, shippingDiscount: 0 };
     
     let calculatedDiscount = 0;
     if (selectedVoucher.type === 'fixed') {
@@ -139,7 +129,7 @@ function CheckoutPage() {
 
 
   const subtotalWithDiscount = selectedCartTotal - orderDiscount > 0 ? selectedCartTotal - orderDiscount : 0;
-  const shippingFeeWithDiscount = shippingFee - shippingDiscount > 0 ? shippingFee - shippingDiscount : 0;
+  const shippingFeeWithDiscount = (shippingFee || 0) - shippingDiscount > 0 ? (shippingFee || 0) - shippingDiscount : 0;
   const finalTotal = subtotalWithDiscount + shippingFeeWithDiscount;
 
   const handlePlaceOrder = async () => {
@@ -353,7 +343,7 @@ function CheckoutPage() {
                     )}
                      <div className="flex justify-between">
                         <span>Shipping</span>
-                        <span>৳{shippingFee.toFixed(2)}</span>
+                        <span>৳{(shippingFee ?? 0).toFixed(2)}</span>
                     </div>
                     {shippingDiscount > 0 && (
                         <div className="flex justify-between text-primary">

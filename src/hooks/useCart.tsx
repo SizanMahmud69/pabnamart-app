@@ -19,7 +19,7 @@ interface CartContextType {
   clearCart: () => void;
   cartCount: number;
   cartTotal: number;
-  shippingFee: number | null;
+  shippingFee: number;
   selectedItemIds: number[];
   toggleSelectItem: (productId: number) => void;
   toggleSelectAll: () => void;
@@ -60,18 +60,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           const itemsFromDb = data.items || [];
           setCartItems(itemsFromDb);
 
+          // On first load, check if there's a saved selection. If not, select all.
           if (isInitialLoad) {
-            // On first load, check if there's a saved selection. If not, select all.
-            if (data.selectedItemIds !== undefined) {
+            if (data.selectedItemIds && Array.isArray(data.selectedItemIds)) {
                 setSelectedItemIds(data.selectedItemIds);
             } else {
                 setSelectedItemIds(itemsFromDb.map((item: CartItem) => item.id));
             }
             setIsInitialLoad(false);
           }
-          // After initial load, Firestore is the source of truth, so we don't need to set selectedItemIds again here.
-          // The local state updates will trigger the other useEffect to save to Firestore.
-          
         } else {
           setCartItems([]);
           setSelectedItemIds([]);
@@ -101,7 +98,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setDefaultAddress(null);
       setIsInitialLoad(true);
     }
-  }, [user]);
+  }, [user, isInitialLoad]);
   
   // Save to Firestore whenever selected items or cart items change
   useEffect(() => {
@@ -261,7 +258,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         clearCart,
         cartCount,
         cartTotal,
-        shippingFee,
+        shippingFee: shippingFee || 0,
         selectedItemIds,
         toggleSelectItem,
         toggleSelectAll,
