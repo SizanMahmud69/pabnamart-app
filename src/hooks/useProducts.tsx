@@ -90,15 +90,9 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
         const baseProduct = baseProducts.find(p => p.id === product.id);
         
-        // Guard against undefined baseProduct to prevent crash
-        if (!baseProduct) {
-            // Fallback to a safe calculation if the base product isn't found for some reason
-            const originalPriceForFlashSale = product.originalPrice ?? product.price;
-            const discountAmount = (originalPriceForFlashSale * product.flashSaleDiscount) / 100;
-            return roundPrice(originalPriceForFlashSale - discountAmount);
-        }
-
-        const { originalPrice: baseOriginalPrice, price: basePrice } = baseProduct;
+        // Alternative fix: Safer destructuring and fallback logic.
+        const baseOriginalPrice = baseProduct?.originalPrice;
+        const basePrice = baseProduct?.price;
 
         const originalPriceForFlashSale = baseOriginalPrice ?? basePrice ?? product.price;
         const discountAmount = (originalPriceForFlashSale * product.flashSaleDiscount) / 100;
@@ -116,7 +110,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       .map(p => {
         const flashPrice = getFlashSalePrice(p);
         const baseProduct = baseProducts.find(bp => bp.id === p.id);
-        // Ensure we have a valid original price to show, even if baseProduct is somehow missing
+        // Ensure we have a valid original price to show
         const originalPrice = baseProduct?.originalPrice || baseProduct?.price || p.originalPrice || p.price;
         return {
           ...p,
