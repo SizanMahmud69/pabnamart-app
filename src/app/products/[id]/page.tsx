@@ -26,6 +26,10 @@ function ProductDetailPageContent() {
   const isFlashSaleContext = searchParams.get('flash') === 'true';
   
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [params.id]);
+
+  useEffect(() => {
     const productId = params.id as string;
     if (products.length > 0 && productId) {
         const foundProduct = products.find(p => p.id === parseInt(productId));
