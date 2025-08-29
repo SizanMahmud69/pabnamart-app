@@ -1,7 +1,7 @@
 
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { CartItem, Product, ShippingAddress } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
@@ -36,7 +36,7 @@ const db = getFirestore(app);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const isInitialLoad = useRef(true);
   const { user } = useAuth();
   const { toast } = useToast();
   const { chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge } = useDeliveryCharge();
@@ -52,27 +52,32 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (user) {
-      setIsInitialLoad(true);
+      isInitialLoad.current = true;
       const cartRef = doc(db, 'carts', user.uid);
       const cartUnsubscribe = onSnapshot(cartRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           const itemsFromDb = data.items || [];
-          setCartItems(itemsFromDb);
-
-          // On first load, check if there's a saved selection. If not, select all.
-          if (isInitialLoad) {
+          
+          setCartItems(currentItems => {
+            if (JSON.stringify(currentItems) !== JSON.stringify(itemsFromDb)) {
+              return itemsFromDb;
+            }
+            return currentItems;
+          });
+          
+          if (isInitialLoad.current) {
             if (data.selectedItemIds && Array.isArray(data.selectedItemIds)) {
                 setSelectedItemIds(data.selectedItemIds);
             } else {
                 setSelectedItemIds(itemsFromDb.map((item: CartItem) => item.id));
             }
-            setIsInitialLoad(false);
+            isInitialLoad.current = false;
           }
         } else {
           setCartItems([]);
           setSelectedItemIds([]);
-          setIsInitialLoad(false);
+          isInitialLoad.current = false;
         }
       });
       
@@ -96,16 +101,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setCartItems([]);
       setSelectedItemIds([]);
       setDefaultAddress(null);
-      setIsInitialLoad(true);
+      isInitialLoad.current = true;
     }
-  }, [user, isInitialLoad]);
+  }, [user]);
   
   // Save to Firestore whenever selected items or cart items change
   useEffect(() => {
-    if (!isInitialLoad && user) {
+    if (!isInitialLoad.current && user) {
       updateFirestoreCart(user.uid, cartItems, selectedItemIds);
     }
-  }, [selectedItemIds, cartItems, user, updateFirestoreCart, isInitialLoad]);
+  }, [selectedItemIds, cartItems, user, updateFirestoreCart]);
 
   const addToCart = useCallback((product: Product, isFlashSaleContext = false) => {
     if (!user) {
@@ -258,7 +263,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         clearCart,
         cartCount,
         cartTotal,
-        shippingFee: shippingFee || 0,
+        shippingFee,
         selectedItemIds,
         toggleSelectItem,
         toggleSelectAll,
