@@ -52,7 +52,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (user) {
-      setIsInitialLoad(true); // Reset initial load flag on user change
+      setIsInitialLoad(true);
       const cartRef = doc(db, 'carts', user.uid);
       const cartUnsubscribe = onSnapshot(cartRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -60,14 +60,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           const itemsFromDb = data.items || [];
           setCartItems(itemsFromDb);
 
-          // On first load for a user session, select all items by default
           if (isInitialLoad) {
-            setSelectedItemIds(itemsFromDb.map((item: CartItem) => item.id));
+            // On first load, check if there's a saved selection. If not, select all.
+            if (data.selectedItemIds !== undefined) {
+                setSelectedItemIds(data.selectedItemIds);
+            } else {
+                setSelectedItemIds(itemsFromDb.map((item: CartItem) => item.id));
+            }
             setIsInitialLoad(false);
-          } else {
-            // After initial load, respect the selection from Firestore
-            setSelectedItemIds(data.selectedItemIds || []);
           }
+          // After initial load, Firestore is the source of truth, so we don't need to set selectedItemIds again here.
+          // The local state updates will trigger the other useEffect to save to Firestore.
+          
         } else {
           setCartItems([]);
           setSelectedItemIds([]);
@@ -99,9 +103,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
   
-  // Save to Firestore whenever selected items change
+  // Save to Firestore whenever selected items or cart items change
   useEffect(() => {
-    // Prevent updating Firestore on the very first render after user logs in
     if (!isInitialLoad && user) {
       updateFirestoreCart(user.uid, cartItems, selectedItemIds);
     }
@@ -121,48 +124,50 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const price = isFlashSaleContext ? getFlashSalePrice(product) : product.price;
     const originalPrice = product.originalPrice;
 
-    const newCartItems = [...cartItems];
-    let newSelectedItemIds = [...selectedItemIds];
-    const existingItem = newCartItems.find(item => item.id === product.id);
+    setCartItems(prevCartItems => {
+        const newCartItems = [...prevCartItems];
+        const existingItem = newCartItems.find(item => item.id === product.id);
 
-    if (existingItem) {
-      existingItem.quantity += 1;
-      if (isFlashSaleContext) {
-          existingItem.price = price;
-          existingItem.originalPrice = originalPrice;
-      }
-    } else {
-      newCartItems.push({ 
-          ...product, 
-          quantity: 1,
-          price,
-          originalPrice,
-      });
-      // Automatically select newly added item
-      if (!newSelectedItemIds.includes(product.id)) {
-          newSelectedItemIds.push(product.id);
-      }
-    }
-    setCartItems(newCartItems);
-    setSelectedItemIds(newSelectedItemIds);
-    // Firestore update is handled by useEffect
+        if (existingItem) {
+          existingItem.quantity += 1;
+          if (isFlashSaleContext) {
+              existingItem.price = price;
+              existingItem.originalPrice = originalPrice;
+          }
+        } else {
+          newCartItems.push({ 
+              ...product, 
+              quantity: 1,
+              price,
+              originalPrice,
+          });
+        }
+        return newCartItems;
+    });
+
+    // Automatically select newly added item
+    setSelectedItemIds(prevSelectedIds => {
+        if (!prevSelectedIds.includes(product.id)) {
+            return [...prevSelectedIds, product.id];
+        }
+        return prevSelectedIds;
+    });
+
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
     });
-  }, [cartItems, selectedItemIds, user, toast, router, getFlashSalePrice]);
+  }, [user, toast, router, getFlashSalePrice]);
 
   const removeFromCart = useCallback((productId: number) => {
     if (!user) return;
-    const newCartItems = cartItems.filter(item => item.id !== productId);
-    const newSelectedItemIds = selectedItemIds.filter(id => id !== productId);
-    setCartItems(newCartItems);
-    setSelectedItemIds(newSelectedItemIds);
+    setCartItems(prev => prev.filter(item => item.id !== productId));
+    setSelectedItemIds(prev => prev.filter(id => id !== productId));
     toast({
       title: "Removed from cart",
       description: `The item has been removed from your cart.`,
     });
-  }, [cartItems, selectedItemIds, user, toast]);
+  }, [user, toast]);
 
   const updateQuantity = useCallback((productId: number, quantity: number) => {
     if (!user) return;
@@ -170,11 +175,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       removeFromCart(productId);
       return;
     }
-    const newCartItems = cartItems.map(item =>
+    setCartItems(prev => prev.map(item =>
         item.id === productId ? { ...item, quantity } : item
-    );
-    setCartItems(newCartItems);
-  }, [cartItems, removeFromCart, user]);
+    ));
+  }, [removeFromCart, user]);
 
   const clearCart = useCallback(async () => {
     if (!user) return;
