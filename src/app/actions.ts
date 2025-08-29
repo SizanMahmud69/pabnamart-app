@@ -128,19 +128,11 @@ export async function placeOrder(
         
         // 4. Handle used voucher
         if (usedVoucher) {
-            if (usedVoucher.isReturnVoucher) {
-                // Remove used return voucher from user's collected vouchers
-                const userVouchersRef = db.collection('userVouchers').doc(userId);
-                transaction.update(userVouchersRef, {
-                    vouchers: FieldValue.arrayRemove(usedVoucher)
-                });
-            } else {
-                // Add regular voucher code to user's used voucher list
-                const userRef = db.collection('users').doc(userId);
-                transaction.update(userRef, {
-                    usedVoucherCodes: FieldValue.arrayUnion(usedVoucher.code)
-                });
-            }
+            // Add voucher code to user's used voucher list for both regular and return vouchers
+            const userRef = db.collection('users').doc(userId);
+            transaction.update(userRef, {
+                usedVoucherCodes: FieldValue.arrayUnion(usedVoucher.code)
+            });
         }
      });
     

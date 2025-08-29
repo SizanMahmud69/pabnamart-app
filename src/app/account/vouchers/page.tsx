@@ -68,7 +68,14 @@ function MyVouchersPage() {
                                                     <p className="text-xs text-muted-foreground">Voucher Code</p>
                                                     <p className="font-mono font-bold">{voucher.code}</p>
                                                 </div>
-                                                <Button variant="outline" disabled>Collected</Button>
+                                                <Button variant="outline" disabled>
+                                                    {isUsed(voucher.code) ? (
+                                                        <>
+                                                          <CheckCircle className="mr-2 h-4 w-4" />
+                                                          Used
+                                                        </>
+                                                    ) : 'Collected'}
+                                                </Button>
                                             </div>
                                         </div>
                                     ))}
