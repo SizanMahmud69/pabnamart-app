@@ -89,13 +89,10 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     
     if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
         const baseProduct = baseProducts.find(p => p.id === product.id);
-        if (!baseProduct) {
-            // Fallback if base product not found (should be rare)
-            const productWithOffer = productsWithOffers.find(p => p.id === product.id);
-            return productWithOffer ? productWithOffer.price : roundPrice(product.price);
-        }
+        
+        const { originalPrice: baseOriginalPrice, price: basePrice } = baseProduct ?? {};
 
-        const originalPriceForFlashSale = baseProduct.originalPrice || baseProduct.price;
+        const originalPriceForFlashSale = baseOriginalPrice ?? basePrice ?? product.price;
         const discountAmount = (originalPriceForFlashSale * product.flashSaleDiscount) / 100;
         return roundPrice(originalPriceForFlashSale - discountAmount);
     }
@@ -111,7 +108,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       .map(p => {
         const flashPrice = getFlashSalePrice(p);
         const baseProduct = baseProducts.find(bp => bp.id === p.id);
-        const originalPrice = baseProduct?.originalPrice || baseProduct?.price;
+        const originalPrice = baseProduct?.originalPrice || baseProduct?.price || p.price;
         return {
           ...p,
           originalPrice: roundPrice(originalPrice),
