@@ -79,6 +79,7 @@ export interface User {
   status: 'active' | 'banned';
   joined: string;
   shippingAddresses?: ShippingAddress[];
+  usedVoucherCodes?: string[];
 }
 
 export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned' | 'return-requested' | 'processing' | 'return-rejected';
@@ -123,6 +124,7 @@ export interface Order {
   paymentMethod: string;
   paymentDetails?: PaymentDetails;
   isReviewed?: boolean;
+  usedVoucherCode?: string;
 }
 
 export interface DeliverySettings {

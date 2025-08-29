@@ -3,17 +3,21 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Ticket, ArrowLeft, Info } from "lucide-react";
+import { Ticket, ArrowLeft, Info, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useVouchers } from "@/hooks/useVouchers";
 import { Card, CardContent } from "@/components/ui/card";
-import { withAuth } from "@/hooks/useAuth";
+import { withAuth, useAuth } from "@/hooks/useAuth";
 
 function MyVouchersPage() {
     const { collectedVouchers } = useVouchers();
+    const { appUser } = useAuth();
+    const usedVoucherCodes = appUser?.usedVoucherCodes || [];
 
     const generalVouchers = collectedVouchers.filter(v => !v.isReturnVoucher);
     const returnVouchers = collectedVouchers.filter(v => v.isReturnVoucher);
+
+    const isUsed = (code: string) => usedVoucherCodes.includes(code);
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -95,7 +99,14 @@ function MyVouchersPage() {
                                                     <p className="text-xs text-muted-foreground">Voucher Code</p>
                                                     <p className="font-mono font-bold">{voucher.code}</p>
                                                 </div>
-                                                <Button variant="outline" disabled>Collected</Button>
+                                                <Button variant="outline" disabled>
+                                                    {isUsed(voucher.code) ? (
+                                                        <>
+                                                          <CheckCircle className="mr-2 h-4 w-4" />
+                                                          Used
+                                                        </>
+                                                    ) : 'Collected'}
+                                                </Button>
                                             </div>
                                         </div>
                                     ))}

@@ -117,6 +117,7 @@ export async function placeOrder(
           shippingAddress,
           paymentMethod,
           isReviewed: false,
+          ...(usedVoucher && { usedVoucherCode: usedVoucher.code }),
           ...(paymentDetails && { paymentDetails }),
         };
         transaction.set(orderRef, orderData);
@@ -125,12 +126,21 @@ export async function placeOrder(
         const cartRef = db.collection('carts').doc(userId);
         transaction.set(cartRef, { items: [] });
         
-        // 4. Remove used voucher if it's a return voucher
-        if (usedVoucher?.isReturnVoucher) {
-            const voucherRef = db.collection('userVouchers').doc(userId);
-            transaction.update(voucherRef, {
-                vouchers: FieldValue.arrayRemove(usedVoucher)
-            });
+        // 4. Handle used voucher
+        if (usedVoucher) {
+            if (usedVoucher.isReturnVoucher) {
+                // Remove used return voucher from user's collected vouchers
+                const userVouchersRef = db.collection('userVouchers').doc(userId);
+                transaction.update(userVouchersRef, {
+                    vouchers: FieldValue.arrayRemove(usedVoucher)
+                });
+            } else {
+                // Add regular voucher code to user's used voucher list
+                const userRef = db.collection('users').doc(userId);
+                transaction.update(userRef, {
+                    usedVoucherCodes: FieldValue.arrayUnion(usedVoucher.code)
+                });
+            }
         }
      });
     

@@ -42,7 +42,7 @@ const paymentMethods = [
 
 function CheckoutPage() {
   const { cartItems, cartTotal, cartCount, updateQuantity, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, appUser } = useAuth();
   const { collectedVouchers } = useVouchers();
   const { chargeInsidePabna, chargeOutsidePabna } = useDeliveryCharge();
 
@@ -72,6 +72,16 @@ function CheckoutPage() {
       });
       return () => unsubscribe();
   }, [user]);
+
+  const availableVouchers = useMemo(() => {
+    const usedCodes = appUser?.usedVoucherCodes || [];
+    return collectedVouchers.filter(v => !v.isReturnVoucher && !usedCodes.includes(v.code));
+  }, [collectedVouchers, appUser]);
+
+  const returnVouchers = useMemo(() => {
+      return collectedVouchers.filter(v => v.isReturnVoucher);
+  }, [collectedVouchers]);
+
 
   const handleApplyVoucher = (code: string) => {
     if (!code || code === "none") {
@@ -303,7 +313,7 @@ function CheckoutPage() {
                  </div>
                  <Separator className="my-4" />
 
-                 {collectedVouchers.length > 0 && (
+                 {(availableVouchers.length > 0 || returnVouchers.length > 0) && (
                     <div className="space-y-2">
                         <Label htmlFor="voucher">Apply Voucher</Label>
                         <Select onValueChange={handleApplyVoucher} defaultValue="none">
@@ -312,7 +322,10 @@ function CheckoutPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="none">No Voucher</SelectItem>
-                                {collectedVouchers.map(v => (
+                                {returnVouchers.map(v => (
+                                    <SelectItem key={v.code} value={v.code}>{v.code} - {v.description}</SelectItem>
+                                ))}
+                                {availableVouchers.map(v => (
                                     <SelectItem key={v.code} value={v.code}>{v.code} - {v.description}</SelectItem>
                                 ))}
                             </SelectContent>

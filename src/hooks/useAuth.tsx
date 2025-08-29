@@ -16,7 +16,7 @@ import {
 import app from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import type { User as AppUser } from '@/types';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -27,6 +27,7 @@ const storage = getStorage(app);
 
 interface AuthContextType {
   user: FirebaseUser | null;
+  appUser: AppUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<any>;
   signup: (email: string, password: string, displayName: string) => Promise<any>;
@@ -41,12 +42,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      setLoading(false);
+      if (user) {
+          const userDocRef = doc(db, 'users', user.uid);
+          const unsub = onSnapshot(userDocRef, (docSnap) => {
+              if (docSnap.exists()) {
+                  setAppUser({ ...docSnap.data(), uid: docSnap.id } as AppUser);
+              }
+              setLoading(false);
+          });
+          return () => unsub();
+      } else {
+          setAppUser(null);
+          setLoading(false);
+      }
     });
 
     return () => unsubscribe();
@@ -82,15 +96,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     // Create user document in Firestore
     const userDocRef = doc(db, 'users', firebaseUser.uid);
-    await setDoc(userDocRef, {
-        uid: firebaseUser.uid,
+    const newAppUser: Omit<AppUser, 'uid'> = {
         email: firebaseUser.email,
         displayName: displayName,
         photoURL: null,
         status: 'active',
         joined: new Date().toISOString(),
         shippingAddresses: [],
-    });
+        usedVoucherCodes: [],
+    };
+
+    await setDoc(userDocRef, newAppUser);
 
     const authInstance = getAuth(app);
     if (authInstance.currentUser) {
@@ -160,6 +176,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     user,
+    appUser,
     loading,
     login,
     signup,
