@@ -8,16 +8,24 @@ import Link from "next/link";
 import { useVouchers } from "@/hooks/useVouchers";
 import { Card, CardContent } from "@/components/ui/card";
 import { withAuth, useAuth } from "@/hooks/useAuth";
+import { useMemo } from "react";
+import { cn } from "@/lib/utils";
 
 function MyVouchersPage() {
     const { collectedVouchers } = useVouchers();
     const { appUser } = useAuth();
     const usedVoucherCodes = appUser?.usedVoucherCodes || [];
 
-    const generalVouchers = collectedVouchers.filter(v => !v.isReturnVoucher);
-    const returnVouchers = collectedVouchers.filter(v => v.isReturnVoucher);
-
     const isUsed = (code: string) => usedVoucherCodes.includes(code);
+
+    const sortedVouchers = useMemo(() => {
+        return [...collectedVouchers].sort((a, b) => {
+            const aIsUsed = isUsed(a.code);
+            const bIsUsed = isUsed(b.code);
+            if (aIsUsed === bIsUsed) return 0; // Keep original order if status is the same
+            return aIsUsed ? 1 : -1; // Unused vouchers first
+        });
+    }, [collectedVouchers, usedVoucherCodes]);
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -34,7 +42,7 @@ function MyVouchersPage() {
                     </div>
                 </div>
 
-                {collectedVouchers.length === 0 ? (
+                {sortedVouchers.length === 0 ? (
                      <Card>
                         <CardContent className="text-center py-16">
                             <Ticket className="mx-auto h-16 w-16 text-muted-foreground" />
@@ -47,79 +55,53 @@ function MyVouchersPage() {
                     </Card>
                 ) : (
                     <>
-                        {returnVouchers.length > 0 && (
-                            <div>
-                                <h2 className="text-xl font-bold mb-4">Return Vouchers</h2>
-                                <div className="space-y-4">
-                                    {returnVouchers.map((voucher) => (
-                                        <div key={voucher.code} className="rounded-lg bg-gradient-to-r from-green-100 to-blue-100 shadow-sm overflow-hidden border-0">
-                                            <div className="p-4">
-                                                <div className="flex items-center gap-4">
-                                                    <Ticket className="h-10 w-10 text-green-600" />
-                                                    <div>
-                                                        <h3 className="text-xl font-bold text-green-700">৳{voucher.discount} Off</h3>
-                                                        <p className="text-sm text-gray-600">{voucher.description}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <Separator />
-                                            <div className="p-4 bg-white/50 flex justify-between items-center">
+                        <div className="space-y-4">
+                            {sortedVouchers.map((voucher) => {
+                                const used = isUsed(voucher.code);
+                                return (
+                                    <div key={voucher.code} className={cn(
+                                        "rounded-lg shadow-sm overflow-hidden border-0 transition-opacity",
+                                        voucher.isReturnVoucher 
+                                            ? "bg-gradient-to-r from-green-100 to-blue-100" 
+                                            : "bg-gradient-to-r from-purple-100 to-pink-100",
+                                        used && "opacity-60"
+                                    )}>
+                                        <div className="p-4">
+                                            <div className="flex items-center gap-4">
+                                                <Ticket className={cn(
+                                                    "h-10 w-10",
+                                                    voucher.isReturnVoucher ? "text-green-600" : "text-primary"
+                                                )} />
                                                 <div>
-                                                    <p className="text-xs text-muted-foreground">Voucher Code</p>
-                                                    <p className="font-mono font-bold">{voucher.code}</p>
+                                                    <h3 className={cn(
+                                                        "text-xl font-bold",
+                                                        voucher.isReturnVoucher ? "text-green-700" : "text-primary"
+                                                    )}>
+                                                        {voucher.discountType === 'shipping' ? 'Free Shipping' : (voucher.type === 'fixed' ? `৳${voucher.discount} Off` : `${voucher.discount}% Off`)}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-600">{voucher.description}</p>
                                                 </div>
-                                                <Button variant="outline" disabled>
-                                                    {isUsed(voucher.code) ? (
-                                                        <>
-                                                          <CheckCircle className="mr-2 h-4 w-4" />
-                                                          Used
-                                                        </>
-                                                    ) : 'Collected'}
-                                                </Button>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        
-                        {generalVouchers.length > 0 && (
-                            <div>
-                                <h2 className="text-xl font-bold mb-4 mt-6">General Vouchers</h2>
-                                <div className="space-y-4">
-                                    {generalVouchers.map((voucher) => (
-                                         <div key={voucher.code} className="rounded-lg bg-gradient-to-r from-purple-100 to-pink-100 shadow-sm overflow-hidden border-0">
-                                            <div className="p-4">
-                                                <div className="flex items-center gap-4">
-                                                    <Ticket className="h-10 w-10 text-primary" />
-                                                    <div>
-                                                        <h3 className="text-xl font-bold text-primary">
-                                                            {voucher.discountType === 'shipping' ? 'Free Shipping' : (voucher.type === 'fixed' ? `৳${voucher.discount} Off` : `${voucher.discount}% Off`)}
-                                                        </h3>
-                                                        <p className="text-sm text-gray-600">{voucher.description}</p>
-                                                    </div>
-                                                </div>
+                                        <Separator />
+                                        <div className="p-4 bg-white/50 flex justify-between items-center">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Voucher Code</p>
+                                                <p className="font-mono font-bold">{voucher.code}</p>
                                             </div>
-                                            <Separator />
-                                            <div className="p-4 bg-white/50 flex justify-between items-center">
-                                                <div>
-                                                    <p className="text-xs text-muted-foreground">Voucher Code</p>
-                                                    <p className="font-mono font-bold">{voucher.code}</p>
-                                                </div>
-                                                <Button variant="outline" disabled>
-                                                    {isUsed(voucher.code) ? (
-                                                        <>
-                                                          <CheckCircle className="mr-2 h-4 w-4" />
-                                                          Used
-                                                        </>
-                                                    ) : 'Collected'}
-                                                </Button>
-                                            </div>
+                                            <Button variant="outline" disabled>
+                                                {used ? (
+                                                    <>
+                                                      <CheckCircle className="mr-2 h-4 w-4" />
+                                                      Used
+                                                    </>
+                                                ) : 'Collected'}
+                                            </Button>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                                    </div>
+                                )}
+                            )}
+                        </div>
 
                         <div className="text-center pt-4">
                             <Button asChild>
