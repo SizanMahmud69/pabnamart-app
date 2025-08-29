@@ -72,21 +72,25 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
           hasOffer: true,
         };
       }
-      return { ...product, originalPrice: product.originalPrice };
+      return { ...product };
     });
   }, [baseProducts, activeOffers]);
 
   const getFlashSalePrice = useCallback((product: Product): number => {
     const now = new Date();
-    const productWithOffer = productsWithOffers.find(p => p.id === product.id) || product;
-
+    
     if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
-        const basePrice = productWithOffer.originalPrice || productWithOffer.price;
+        // Use the original price from the base product, before category offers were applied.
+        const baseProduct = baseProducts.find(p => p.id === product.id);
+        const basePrice = baseProduct?.originalPrice || baseProduct?.price || product.price;
         const discountAmount = (basePrice * product.flashSaleDiscount) / 100;
         return basePrice - discountAmount;
     }
-    return productWithOffer.price;
-  }, [productsWithOffers]);
+    
+    // If not in flash sale, return the price which might already have a category offer.
+    const productWithCategoryOffer = productsWithOffers.find(p => p.id === product.id);
+    return productWithCategoryOffer ? productWithCategoryOffer.price : product.price;
+  }, [baseProducts, productsWithOffers]);
 
   const getFlashSaleProducts = useCallback(() => {
     const now = new Date();
@@ -94,9 +98,11 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       .filter(p => p.isFlashSale && p.flashSaleEndDate && new Date(p.flashSaleEndDate) > now)
       .map(p => {
         const flashPrice = getFlashSalePrice(p);
+        const baseProduct = baseProducts.find(bp => bp.id === p.id);
+        const originalPrice = baseProduct?.originalPrice || baseProduct?.price;
         return {
           ...p,
-          originalPrice: p.price,
+          originalPrice: originalPrice,
           price: flashPrice,
         };
       });
@@ -111,7 +117,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return { products: saleProducts, closestExpiry };
-  }, [productsWithOffers, getFlashSalePrice]);
+  }, [productsWithOffers, getFlashSalePrice, baseProducts]);
 
 
   const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
