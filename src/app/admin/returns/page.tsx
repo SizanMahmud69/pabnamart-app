@@ -25,7 +25,7 @@ async function createReturnNotification(userId: string, orderNumber: string, sta
         description: `Your return request for order #${orderNumber} has been ${status}.`,
         time: new Date().toISOString(),
         read: false,
-        href: status === 'approved' ? '/vouchers' : `/account/orders?status=return-rejected`
+        href: status === 'approved' ? '/account/vouchers' : `/account/orders?status=return-rejected`
     };
     await addDoc(collection(db, `users/${userId}/pendingNotifications`), notification);
 }

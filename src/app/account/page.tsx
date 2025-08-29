@@ -168,7 +168,7 @@ export default function AccountPage() {
                                 <Link href="/account/wishlist" className="flex items-center gap-1 hover:text-primary">
                                     <Heart className="h-4 w-4" /> {wishlistItems.length} Wishlist
                                 </Link>
-                                <Link href="/vouchers" className="flex items-center gap-1 hover:text-primary">
+                                <Link href="/account/vouchers" className="flex items-center gap-1 hover:text-primary">
                                     <Ticket className="h-4 w-4" /> {voucherCount} Vouchers
                                 </Link>
                             </div>

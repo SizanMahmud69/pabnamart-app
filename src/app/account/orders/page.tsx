@@ -136,7 +136,7 @@ export default function OrdersPage() {
                                             </Button>
                                         ) : order.status === 'returned' ? (
                                             <Button variant="outline" size="sm" asChild className="w-full bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900 border-blue-200">
-                                                <Link href="/vouchers">
+                                                <Link href="/account/vouchers">
                                                     <Ticket className="mr-2 h-4 w-4" />
                                                     View Voucher
                                                 </Link>
