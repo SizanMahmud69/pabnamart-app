@@ -56,11 +56,11 @@ function HomePageContent() {
     if (allProducts.length > 0) {
       // New arrivals: sort by ID descending (assuming higher ID is newer)
       const sortedNew = [...allProducts].sort((a, b) => b.id - a.id);
-      setNewArrivals(sortedNew.slice(0, 5));
+      setNewArrivals(sortedNew.slice(0, 3));
 
       // Top rated: sort by rating descending
       const sortedRated = [...allProducts].sort((a, b) => b.rating - a.rating);
-      setTopRated(sortedRated.slice(0, 5));
+      setTopRated(sortedRated.slice(0, 3));
 
       // Flash sale products
       const { products: saleProducts } = getFlashSaleProducts();
@@ -196,7 +196,7 @@ function HomePageContent() {
                 See More
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
               {newArrivals.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -211,7 +211,7 @@ function HomePageContent() {
                 See More
             </Link>
           </div>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
               {topRated.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
