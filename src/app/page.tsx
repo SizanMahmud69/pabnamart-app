@@ -217,6 +217,22 @@ function HomePageContent() {
               ))}
             </div>
         </div>
+
+        {/* All Products Section */}
+        <div>
+           <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2"><ShoppingBag className="text-primary"/>All Products</h2>
+             <Link href="/products" className="text-primary font-semibold hover:underline">
+                See All
+            </Link>
+          </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {allProducts.slice(0, 6).map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+        </div>
+
       </div>
     </div>
   );
