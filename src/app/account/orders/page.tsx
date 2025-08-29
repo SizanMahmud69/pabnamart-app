@@ -4,8 +4,8 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { ShoppingBag, Star, Undo2, Edit, Ticket } from "lucide-react";
-import type { Order } from '@/types';
-import { useEffect, useState } from 'react';
+import type { Order, OrderItem } from '@/types';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -14,8 +14,91 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const db = getFirestore(app);
+
+const OrderReturnButton = ({ order }: { order: Order }) => {
+    const isReturnable = useMemo(() => {
+        if (order.status !== 'delivered' || !order.deliveryDate) {
+            return { canReturn: false, reason: "Order not delivered yet." };
+        }
+    
+        const hasReturnableItem = order.items.some(item => typeof item.returnPolicy === 'number');
+        if (!hasReturnableItem) {
+            return { canReturn: false, reason: "No items in this order are returnable." };
+        }
+    
+        const maxReturnDays = Math.max(...order.items.map(item => item.returnPolicy || 0));
+        
+        if (maxReturnDays === 0) {
+            return { canReturn: false, reason: "Items in this order are not returnable." };
+        }
+
+        const deliveryDate = new Date(order.deliveryDate);
+        const returnDeadline = new Date(deliveryDate);
+        returnDeadline.setDate(deliveryDate.getDate() + maxReturnDays);
+    
+        const now = new Date();
+    
+        if (now > returnDeadline) {
+            return { canReturn: false, reason: `Return period of ${maxReturnDays} days has expired.` };
+        }
+    
+        return { canReturn: true, reason: "" };
+
+    }, [order]);
+
+
+    if (order.status === 'return-rejected') {
+        return (
+            <Button variant="outline" size="sm" disabled className="w-full bg-red-100 text-red-800 border-red-200">
+                <Undo2 className="mr-2 h-4 w-4" />
+                Return Rejected
+            </Button>
+        );
+    }
+    
+    if (order.status === 'returned') {
+        return (
+            <Button variant="outline" size="sm" asChild className="w-full bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900 border-blue-200">
+                <Link href="/account/vouchers">
+                    <Ticket className="mr-2 h-4 w-4" />
+                    View Voucher
+                </Link>
+            </Button>
+        );
+    }
+    
+    if (!isReturnable.canReturn) {
+        return (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <span className="w-full">
+                            <Button variant="outline" size="sm" disabled className="w-full">
+                                <Undo2 className="mr-2 h-4 w-4" />
+                                Return
+                            </Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{isReturnable.reason}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        );
+    }
+
+    return (
+        <Button variant="outline" size="sm" asChild className="bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900 border-red-200">
+            <Link href={`/account/returns/${order.id}`}>
+                <Undo2 className="mr-2 h-4 w-4" />
+                Return
+            </Link>
+        </Button>
+    )
+}
 
 export default function OrdersPage() {
   const searchParams = useSearchParams();
@@ -129,26 +212,7 @@ export default function OrdersPage() {
                             <CardFooter className="bg-muted/30 p-4">
                                 {(order.status === 'delivered' || order.status === 'return-rejected' || order.status === 'returned') && (
                                     <div className="grid grid-cols-2 gap-2 w-full">
-                                        {order.status === 'return-rejected' ? (
-                                            <Button variant="outline" size="sm" disabled className="w-full bg-red-100 text-red-800 border-red-200">
-                                                <Undo2 className="mr-2 h-4 w-4" />
-                                                Return Rejected
-                                            </Button>
-                                        ) : order.status === 'returned' ? (
-                                            <Button variant="outline" size="sm" asChild className="w-full bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900 border-blue-200">
-                                                <Link href="/account/vouchers">
-                                                    <Ticket className="mr-2 h-4 w-4" />
-                                                    View Voucher
-                                                </Link>
-                                            </Button>
-                                        ) : (
-                                            <Button variant="outline" size="sm" asChild className="bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900 border-red-200">
-                                                <Link href={`/account/returns/${order.id}`}>
-                                                    <Undo2 className="mr-2 h-4 w-4" />
-                                                    Return
-                                                </Link>
-                                            </Button>
-                                        )}
+                                        <OrderReturnButton order={order} />
                                         {order.isReviewed ? (
                                             <Button variant="outline" size="sm" disabled className="w-full bg-green-100 text-green-800 border-green-200">
                                                 <Edit className="mr-2 h-4 w-4" />

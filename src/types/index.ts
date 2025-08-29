@@ -89,6 +89,7 @@ export interface OrderItem {
   price: number;
   quantity: number;
   image: string;
+  returnPolicy?: number;
 }
 
 export interface ShippingAddress {
@@ -117,6 +118,7 @@ export interface Order {
   total: number;
   status: OrderStatus;
   date: string;
+  deliveryDate?: string;
   shippingAddress: Omit<ShippingAddress, 'id' | 'default'>;
   paymentMethod: string;
   paymentDetails?: PaymentDetails;

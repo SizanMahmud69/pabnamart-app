@@ -5,7 +5,7 @@ import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import admin from '@/lib/firebase-admin';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
-import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher } from "@/types";
+import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product } from "@/types";
 import { revalidatePath } from "next/cache";
 
 const db = getFirestore();
@@ -59,20 +59,28 @@ export async function placeOrder(
 
   try {
      const orderRef = db.collection('orders').doc();
+     const productRefs = cartItems.map(item => db.collection('products').doc(item.id.toString()));
 
      await db.runTransaction(async (transaction) => {
+        const productDocs = await transaction.getAll(...productRefs);
+        const productsData: { [id: number]: Product } = {};
+        productDocs.forEach(doc => {
+            if (doc.exists) {
+                productsData[Number(doc.id)] = doc.data() as Product;
+            }
+        });
+
         // 1. Update product stock and sold count
         for (const item of cartItems) {
             const productRef = db.collection('products').doc(item.id.toString());
-            const productDoc = await transaction.get(productRef);
+            const productData = productsData[item.id];
 
-            if (!productDoc.exists) {
+            if (!productData) {
                 throw new Error(`Product with ID ${item.id} not found.`);
             }
 
-            const productData = productDoc.data();
-            const newStock = (productData?.stock || 0) - item.quantity;
-            const newSoldCount = (productData?.sold || 0) + item.quantity;
+            const newStock = (productData.stock || 0) - item.quantity;
+            const newSoldCount = (productData.sold || 0) + item.quantity;
 
             if (newStock < 0) {
                 throw new Error(`Not enough stock for ${item.name}.`);
@@ -92,13 +100,17 @@ export async function placeOrder(
         const orderData: Omit<Order, 'id'> = {
           orderNumber: generateOrderNumber(),
           userId,
-          items: cartItems.map(item => ({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.images[0]
-          })),
+          items: cartItems.map(item => {
+            const productData = productsData[item.id];
+            return {
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              image: item.images[0],
+              returnPolicy: productData?.returnPolicy, // Add return policy
+            }
+          }),
           total: totalAmount,
           status: status,
           date: Timestamp.now().toDate().toISOString(),

@@ -71,7 +71,13 @@ export default function AdminOrderManagement() {
 
     const handleStatusChange = async (order: Order, newStatus: OrderStatus) => {
         const orderDocRef = doc(db, 'orders', order.id);
-        await updateDoc(orderDocRef, { status: newStatus });
+        const updateData: { status: OrderStatus; deliveryDate?: string } = { status: newStatus };
+        
+        if (newStatus === 'delivered') {
+            updateData.deliveryDate = new Date().toISOString();
+        }
+
+        await updateDoc(orderDocRef, updateData);
         await createNotification(order.userId, order.orderNumber, newStatus);
     };
     
