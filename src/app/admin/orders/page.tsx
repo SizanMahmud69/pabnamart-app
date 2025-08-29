@@ -10,12 +10,25 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Eye, Truck, PackageCheck, MoreHorizontal, CircleDollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { Order, OrderStatus, User as AppUser } from '@/types';
-import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, orderBy } from 'firebase/firestore';
+import type { Order, OrderStatus, User as AppUser, Notification } from '@/types';
+import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, orderBy, addDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const db = getFirestore(app);
+
+async function createNotification(userId: string, orderNumber: string, status: OrderStatus) {
+    if (!userId) return;
+    const notification: Omit<Notification, 'id'> = {
+        icon: 'Truck',
+        title: `Order #${orderNumber} is now ${status.replace('-', ' ')}`,
+        description: `Your order has been updated. You can track its progress in your account.`,
+        time: new Date().toISOString(),
+        read: false,
+        href: `/account/orders?status=${status}`
+    };
+    await addDoc(collection(db, `users/${userId}/pendingNotifications`), notification);
+}
 
 export default function AdminOrderManagement() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -56,9 +69,10 @@ export default function AdminOrderManagement() {
         return () => unsubscribe();
     }, [users]);
 
-    const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
-        const orderDocRef = doc(db, 'orders', orderId);
+    const handleStatusChange = async (order: Order, newStatus: OrderStatus) => {
+        const orderDocRef = doc(db, 'orders', order.id);
         await updateDoc(orderDocRef, { status: newStatus });
+        await createNotification(order.userId, order.orderNumber, newStatus);
     };
     
     const getStatusBadgeVariant = (status: OrderStatus) => {
@@ -137,19 +151,19 @@ export default function AdminOrderManagement() {
                                                         View Details
                                                     </DropdownMenuItem>
                                                     {order.status === 'pending' && (
-                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order.id, 'shipped')}>
+                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order, 'shipped')}>
                                                             <Truck className="mr-2 h-4 w-4" />
                                                             Mark as Shipped
                                                         </DropdownMenuItem>
                                                     )}
                                                      {order.status === 'shipped' && (
-                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order.id, 'in-transit')}>
+                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order, 'in-transit')}>
                                                             <Truck className="mr-2 h-4 w-4" />
                                                             Mark as In-Transit
                                                         </DropdownMenuItem>
                                                     )}
                                                      {order.status === 'in-transit' && (
-                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order.id, 'delivered')}>
+                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order, 'delivered')}>
                                                             <PackageCheck className="mr-2 h-4 w-4" />
                                                             Mark as Delivered
                                                         </DropdownMenuItem>

@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, MoreHorizontal, Eye } from 'lucide-react';
 import Link from 'next/link';
-import type { Order, User as AppUser } from '@/types';
-import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where } from 'firebase/firestore';
+import type { Order, User as AppUser, Notification } from '@/types';
+import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where, addDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useRouter } from 'next/navigation';
 
 const db = getFirestore(app);
+
+async function createPaymentVerifiedNotification(userId: string, orderNumber: string) {
+    if (!userId) return;
+    const notification: Omit<Notification, 'id'> = {
+        icon: 'Truck',
+        title: `Payment Verified for #${orderNumber}`,
+        description: `Your payment has been verified and your order is now being processed for shipping.`,
+        time: new Date().toISOString(),
+        read: false,
+        href: `/account/orders?status=shipped`
+    };
+    await addDoc(collection(db, `users/${userId}/pendingNotifications`), notification);
+}
 
 export default function VerifyPaymentPage() {
     const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
@@ -63,10 +76,11 @@ export default function VerifyPaymentPage() {
         return [...pendingOrders].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [pendingOrders]);
 
-    const handleVerifyPayment = async (orderId: string) => {
+    const handleVerifyPayment = async (order: Order) => {
         try {
-            const orderDocRef = doc(db, 'orders', orderId);
+            const orderDocRef = doc(db, 'orders', order.id);
             await updateDoc(orderDocRef, { status: 'shipped' });
+            await createPaymentVerifiedNotification(order.userId, order.orderNumber);
             toast({
                 title: "Payment Verified",
                 description: "The order has been moved to 'To Ship'.",
@@ -138,7 +152,7 @@ export default function VerifyPaymentPage() {
                                                             <Eye className="mr-2 h-4 w-4" />
                                                             View Details
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem onSelect={() => handleVerifyPayment(order.id)}>
+                                                        <DropdownMenuItem onSelect={() => handleVerifyPayment(order)}>
                                                             <CheckCircle className="mr-2 h-4 w-4" />
                                                             Verify Payment
                                                         </DropdownMenuItem>

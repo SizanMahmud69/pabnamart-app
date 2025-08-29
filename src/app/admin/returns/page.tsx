@@ -9,13 +9,26 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { collection, query, where, onSnapshot, getFirestore, doc, updateDoc, setDoc, getDoc, arrayUnion } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getFirestore, doc, updateDoc, setDoc, getDoc, arrayUnion, addDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Order, Voucher } from '@/types';
+import type { Order, Voucher, Notification } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 
 const db = getFirestore(app);
+
+async function createReturnNotification(userId: string, orderNumber: string, status: 'approved' | 'rejected') {
+    if (!userId) return;
+    const notification: Omit<Notification, 'id'> = {
+        icon: status === 'approved' ? 'CheckCircle' : 'XCircle',
+        title: `Return Request ${status === 'approved' ? 'Approved' : 'Rejected'}`,
+        description: `Your return request for order #${orderNumber} has been ${status}.`,
+        time: new Date().toISOString(),
+        read: false,
+        href: status === 'approved' ? '/vouchers' : `/account/orders?status=return-rejected`
+    };
+    await addDoc(collection(db, `users/${userId}/pendingNotifications`), notification);
+}
 
 export default function AdminReturnManagement() {
   const [returnRequests, setReturnRequests] = useState<Order[]>([]);
@@ -63,6 +76,7 @@ export default function AdminReturnManagement() {
                 await setDoc(availableVouchersRef, { vouchers: [newVoucher] });
             }
            
+            await createReturnNotification(order.userId, order.orderNumber, 'approved');
             toast({
                 title: "Return Approved",
                 description: `A voucher for ৳${subtotal} has been made available to the user.`
@@ -77,6 +91,7 @@ export default function AdminReturnManagement() {
             });
         }
     } else {
+        await createReturnNotification(order.userId, order.orderNumber, 'rejected');
         toast({
             title: "Return Rejected",
             description: `The return request for order #${order.orderNumber} has been rejected.`
