@@ -74,7 +74,8 @@ export default function OrderDetailsPage() {
     }
     
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const shippingFee = order.total - subtotal;
+    const shippingFee = order.total + (order.voucherDiscount || 0) - subtotal;
+
 
     return (
         <div className="container mx-auto p-4">
@@ -179,8 +180,16 @@ export default function OrderDetailsPage() {
                                     </TableRow>
                                     <TableRow>
                                         <TableCell colSpan={3} className="text-right font-semibold">Shipping Fee</TableCell>
-                                        <TableCell className="text-right font-semibold">৳{shippingFee.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right font-semibold">৳{shippingFee > 0 ? shippingFee.toFixed(2) : 'Free'}</TableCell>
                                     </TableRow>
+                                    {order.usedVoucherCode && order.voucherDiscount && (
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-right font-semibold text-primary">
+                                                Voucher ({order.usedVoucherCode})
+                                            </TableCell>
+                                            <TableCell className="text-right font-semibold text-primary">- ৳{order.voucherDiscount.toFixed(2)}</TableCell>
+                                        </TableRow>
+                                    )}
                                     <TableRow className="text-lg font-bold">
                                         <TableCell colSpan={3} className="text-right">Total</TableCell>
                                         <TableCell className="text-right">৳{order.total.toFixed(2)}</TableCell>

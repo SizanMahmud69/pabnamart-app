@@ -126,6 +126,7 @@ export interface Order {
   paymentDetails?: PaymentDetails;
   isReviewed?: boolean;
   usedVoucherCode?: string;
+  voucherDiscount?: number;
 }
 
 export interface DeliverySettings {

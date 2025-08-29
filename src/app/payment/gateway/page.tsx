@@ -22,6 +22,7 @@ interface OrderDetails {
     shippingAddress: ShippingAddress;
     paymentMethod: string;
     voucher: Voucher | null;
+    voucherDiscount: number;
 }
 
 const initialPaymentMethods = [
@@ -86,7 +87,7 @@ function PaymentGatewayPage() {
         }
         setIsProcessing(true);
 
-        const { cartItems, finalTotal, shippingAddress, voucher } = orderDetails;
+        const { cartItems, finalTotal, shippingAddress, voucher, voucherDiscount } = orderDetails;
         const { id, default: isDefault, ...shippingAddressData } = shippingAddress;
         
         const paymentDetails: PaymentDetails = {
@@ -97,7 +98,7 @@ function PaymentGatewayPage() {
         };
 
         try {
-            const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'online', paymentDetails, voucher);
+            const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'online', paymentDetails, voucher, voucherDiscount);
 
             if (result.success) {
                 toast({

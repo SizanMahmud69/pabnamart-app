@@ -111,8 +111,8 @@ function CheckoutPage() {
     return addresses.find(a => a.id === selectedAddressId);
   }, [addresses, selectedAddressId]);
   
-  const { orderDiscount, shippingDiscount } = useMemo(() => {
-    if (!selectedVoucher || shippingFee === null) return { orderDiscount: 0, shippingDiscount: 0 };
+  const { orderDiscount, shippingDiscount, totalDiscount } = useMemo(() => {
+    if (!selectedVoucher || shippingFee === null) return { orderDiscount: 0, shippingDiscount: 0, totalDiscount: 0 };
     
     let calculatedDiscount = 0;
     if (selectedVoucher.type === 'fixed') {
@@ -122,10 +122,11 @@ function CheckoutPage() {
     }
 
     if (selectedVoucher.discountType === 'shipping') {
-      return { orderDiscount: 0, shippingDiscount: Math.min(calculatedDiscount, shippingFee) };
+      const discount = Math.min(calculatedDiscount, shippingFee);
+      return { orderDiscount: 0, shippingDiscount: discount, totalDiscount: discount };
     }
     
-    return { orderDiscount: calculatedDiscount, shippingDiscount: 0 };
+    return { orderDiscount: calculatedDiscount, shippingDiscount: 0, totalDiscount: calculatedDiscount };
   }, [selectedVoucher, selectedCartTotal, shippingFee]);
 
 
@@ -149,7 +150,8 @@ function CheckoutPage() {
             finalTotal,
             shippingAddress: selectedAddress,
             paymentMethod: selectedPaymentMethod,
-            voucher: selectedVoucher
+            voucher: selectedVoucher,
+            voucherDiscount: totalDiscount
         };
         sessionStorage.setItem('orderDetails', JSON.stringify(orderDetails));
         router.push('/payment');
@@ -159,7 +161,7 @@ function CheckoutPage() {
     const { id, default: isDefault, ...shippingAddressData } = selectedAddress;
 
     try {
-        const result = await placeOrder(user.uid, selectedCartItems, finalTotal, shippingAddressData, selectedPaymentMethod, undefined, selectedVoucher);
+        const result = await placeOrder(user.uid, selectedCartItems, finalTotal, shippingAddressData, selectedPaymentMethod, undefined, selectedVoucher, totalDiscount);
 
         if (result.success) {
             toast({

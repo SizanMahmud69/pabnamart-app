@@ -52,6 +52,7 @@ export async function placeOrder(
   paymentMethod: string,
   paymentDetails?: PaymentDetails,
   usedVoucher?: Voucher | null,
+  voucherDiscount?: number | null,
 ) {
   if (!userId || !cartItems || cartItems.length === 0) {
     return { success: false, message: 'Invalid order data.' };
@@ -118,6 +119,7 @@ export async function placeOrder(
           paymentMethod,
           isReviewed: false,
           ...(usedVoucher && { usedVoucherCode: usedVoucher.code }),
+          ...(voucherDiscount && { voucherDiscount: voucherDiscount }),
           ...(paymentDetails && { paymentDetails }),
         };
         transaction.set(orderRef, orderData);
