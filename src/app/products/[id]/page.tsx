@@ -20,7 +20,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 function ProductDetailPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const { products, getFlashSalePrice } from useProducts();
+  const { products, getFlashSalePrice } = useProducts();
   const [product, setProduct] = useState<Product | undefined | null>(null);
 
   const isFlashSaleContext = searchParams.get('flash') === 'true';

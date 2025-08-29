@@ -86,20 +86,17 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   
   const getFlashSalePrice = useCallback((product: Product): number => {
     const now = new Date();
+    const baseProduct = baseProducts.find(p => p.id === product.id);
 
-    if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
-        const baseProduct = baseProducts.find(p => p.id === product.id);
-        
-        // Robust check to prevent crashes
-        if (!baseProduct) {
-             // Fallback if base product not found (should be rare)
-            const fallbackOriginalPrice = product.originalPrice ?? product.price;
-            const discountAmount = (fallbackOriginalPrice * product.flashSaleDiscount) / 100;
-            return roundPrice(fallbackOriginalPrice - discountAmount);
-        }
-
+    if (
+        baseProduct &&
+        baseProduct.isFlashSale && 
+        baseProduct.flashSaleEndDate && 
+        new Date(baseProduct.flashSaleEndDate) > now && 
+        baseProduct.flashSaleDiscount
+    ) {
         const originalPriceForFlashSale = baseProduct.originalPrice ?? baseProduct.price;
-        const discountAmount = (originalPriceForFlashSale * product.flashSaleDiscount) / 100;
+        const discountAmount = (originalPriceForFlashSale * baseProduct.flashSaleDiscount) / 100;
         return roundPrice(originalPriceForFlashSale - discountAmount);
     }
     
@@ -116,7 +113,6 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         const flashPrice = getFlashSalePrice(p);
         const baseProduct = baseProducts.find(bp => bp.id === p.id);
         
-        // Robust check for original price
         const originalPrice = baseProduct ? (baseProduct.originalPrice || baseProduct.price) : (p.originalPrice || p.price);
         
         return {
@@ -129,7 +125,6 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     let closestExpiry = null;
     if (saleProducts.length > 0) {
       closestExpiry = saleProducts.reduce((closest, current) => {
-        // Ensure flashSaleEndDate is not null before creating Date object
         if (!closest.flashSaleEndDate || !current.flashSaleEndDate) return closest;
         const closestTime = new Date(closest.flashSaleEndDate).getTime();
         const currentTime = new Date(current.flashSaleEndDate).getTime();
