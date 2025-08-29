@@ -27,6 +27,7 @@ interface CartContextType {
   selectedCartItems: CartItem[];
   selectedCartCount: number;
   selectedCartTotal: number;
+  selectedShippingAddress: ShippingAddress | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -41,7 +42,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const { chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge } = useDeliveryCharge();
   const { getFlashSalePrice } = useProducts();
-  const [defaultAddress, setDefaultAddress] = useState<ShippingAddress | null>(null);
+  const [selectedShippingAddress, setSelectedShippingAddress] = useState<ShippingAddress | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -88,9 +89,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           const userData = docSnap.data();
           const addresses = userData.shippingAddresses || [];
           const defaultAddr = addresses.find((a: ShippingAddress) => a.default) || addresses[0] || null;
-          setDefaultAddress(defaultAddr);
+          setSelectedShippingAddress(defaultAddr);
         } else {
-            setDefaultAddress(null);
+            setSelectedShippingAddress(null);
         }
       });
 
@@ -101,7 +102,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setCartItems([]);
       setSelectedItemIds([]);
-      setDefaultAddress(null);
+      setSelectedShippingAddress(null);
       isInitialLoad.current = true;
     }
   }, [user]);
@@ -238,7 +239,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const itemCount = selectedCartItems.reduce((total, item) => total + item.quantity, 0);
-    const isInsidePabna = defaultAddress?.city.toLowerCase().trim() === 'pabna';
+    const isInsidePabna = selectedShippingAddress?.city.toLowerCase().trim() === 'pabna';
 
     if (isInsidePabna) {
         return itemCount >= 1 && itemCount <= 5 ? chargeInsidePabnaSmall : chargeInsidePabnaLarge;
@@ -246,7 +247,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return itemCount >= 1 && itemCount <= 5 ? chargeOutsidePabnaSmall : chargeOutsidePabnaLarge;
     }
 
-  }, [selectedCartItems, selectedCartCount, defaultAddress, chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge]);
+  }, [selectedCartItems, selectedCartCount, selectedShippingAddress, chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge]);
 
   // When navigating to checkout, save selected items to session storage
   useEffect(() => {
@@ -273,6 +274,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         selectedCartItems,
         selectedCartCount,
         selectedCartTotal,
+        selectedShippingAddress
       }}
     >
       {children}

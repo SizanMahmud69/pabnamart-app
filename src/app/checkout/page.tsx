@@ -42,36 +42,24 @@ const paymentMethods = [
 ]
 
 function CheckoutPage() {
-  const { selectedCartItems, selectedCartTotal, selectedCartCount, updateQuantity, clearCart, shippingFee } = useCart();
+  const { selectedCartItems, selectedCartTotal, selectedCartCount, updateQuantity, clearCart, shippingFee, selectedShippingAddress } = useCart();
   const { user, appUser } = useAuth();
   const { collectedVouchers } = useVouchers();
   
-  const [addresses, setAddresses] = useState<ShippingAddressType[]>([]);
-  const [loadingAddresses, setLoadingAddresses] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | undefined>(undefined);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-      if (!user) return;
-      setLoadingAddresses(true);
-      const userDocRef = doc(db, 'users', user.uid);
-      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-          if (docSnap.exists()) {
-              const userData = docSnap.data();
-              const userAddresses = userData.shippingAddresses || [];
-              setAddresses(userAddresses);
-              const defaultAddress = userAddresses.find((a: ShippingAddressType) => a.default);
-              setSelectedAddressId(defaultAddress?.id || (userAddresses[0] ? userAddresses[0].id : undefined));
-          }
-          setLoadingAddresses(false);
-      });
-      return () => unsubscribe();
+    if (user !== undefined) {
+      setLoading(false);
+    }
   }, [user]);
+
 
   const availableVouchers = useMemo(() => {
     const usedCodes = appUser?.usedVoucherCodes || [];
@@ -106,10 +94,6 @@ function CheckoutPage() {
     setError(null);
     setSelectedVoucher(voucher);
   };
-
-  const selectedAddress = useMemo(() => {
-    return addresses.find(a => a.id === selectedAddressId);
-  }, [addresses, selectedAddressId]);
   
   const { orderDiscount, shippingDiscount, totalDiscount } = useMemo(() => {
     if (!selectedVoucher || shippingFee === null) return { orderDiscount: 0, shippingDiscount: 0, totalDiscount: 0 };
@@ -137,7 +121,7 @@ function CheckoutPage() {
   const handlePlaceOrder = async () => {
     if (!user) return;
 
-    if (!selectedAddress) {
+    if (!selectedShippingAddress) {
         toast({ title: "Error", description: "Please select a shipping address.", variant: "destructive"});
         return;
     }
@@ -148,7 +132,7 @@ function CheckoutPage() {
         const orderDetails = {
             cartItems: selectedCartItems,
             finalTotal,
-            shippingAddress: selectedAddress,
+            shippingAddress: selectedShippingAddress,
             paymentMethod: selectedPaymentMethod,
             voucher: selectedVoucher,
             voucherDiscount: totalDiscount
@@ -158,7 +142,7 @@ function CheckoutPage() {
         return;
     }
 
-    const { id, default: isDefault, ...shippingAddressData } = selectedAddress;
+    const { id, default: isDefault, ...shippingAddressData } = selectedShippingAddress;
 
     try {
         const result = await placeOrder(user.uid, selectedCartItems, finalTotal, shippingAddressData, selectedPaymentMethod, undefined, selectedVoucher, totalDiscount);
@@ -188,7 +172,7 @@ function CheckoutPage() {
     }
   }
   
-  if (loadingAddresses) {
+  if (loading) {
       return <LoadingSpinner />;
   }
 
@@ -223,34 +207,28 @@ function CheckoutPage() {
                     </div>
                     <div>
                         <div className="flex justify-between items-center mb-2">
-                           <Label>Select Address</Label>
+                           <Label>Shipping Address</Label>
                             <Button asChild variant="link" className="p-0 h-auto">
                                 <Link href="/account/settings/addresses">Manage Addresses</Link>
                             </Button>
                         </div>
-                        {addresses.length > 0 ? (
-                             <RadioGroup value={selectedAddressId} onValueChange={setSelectedAddressId} className="mt-2 space-y-3">
-                                {addresses.map((address) => (
-                                    <Label key={address.id} htmlFor={address.id} className={cn(
-                                        "flex flex-col p-4 rounded-lg border cursor-pointer transition-colors",
-                                        selectedAddressId === address.id ? "border-primary ring-2 ring-primary" : "border-border"
-                                    )}>
-                                        <div className="flex items-center gap-4">
-                                            <RadioGroupItem value={address.id} id={address.id} />
-                                            {address.type === 'Home' ? <Home className="h-5 w-5 text-muted-foreground" /> : <Building className="h-5 w-5 text-muted-foreground" />}
-                                            <div className="flex-grow">
-                                                <p className="font-semibold">{address.type} {address.default && '(Default)'}</p>
-                                                <p className="text-xs text-muted-foreground">{address.fullName}, {address.address}, {address.area}, {address.city}</p>
-                                            </div>
+                        {selectedShippingAddress ? (
+                             <div className="mt-2 space-y-3">
+                                <div className="p-4 rounded-lg border border-primary ring-2 ring-primary">
+                                    <div className="flex items-center gap-4">
+                                        {selectedShippingAddress.type === 'Home' ? <Home className="h-5 w-5 text-muted-foreground" /> : <Building className="h-5 w-5 text-muted-foreground" />}
+                                        <div className="flex-grow">
+                                            <p className="font-semibold">{selectedShippingAddress.type} (Default)</p>
+                                            <p className="text-xs text-muted-foreground">{selectedShippingAddress.fullName}, {selectedShippingAddress.address}, {selectedShippingAddress.area}, {selectedShippingAddress.city}</p>
                                         </div>
-                                    </Label>
-                                ))}
-                            </RadioGroup>
+                                    </div>
+                                </div>
+                            </div>
                         ) : (
                              <div className="text-center py-6 border-2 border-dashed rounded-lg">
-                                <p className="text-muted-foreground">No shipping address found.</p>
+                                <p className="text-muted-foreground">No default shipping address found.</p>
                                 <Button asChild variant="link">
-                                    <Link href="/account/settings/addresses">Add an Address</Link>
+                                    <Link href="/account/settings/addresses">Add and set a default address</Link>
                                 </Button>
                             </div>
                         )}
@@ -373,7 +351,7 @@ function CheckoutPage() {
                         <p className="text-sm text-muted-foreground">Total to Pay</p>
                         ৳{finalTotal.toFixed(2)}
                     </div>
-                    <Button size="lg" className="w-1/2" onClick={handlePlaceOrder} disabled={isPlacingOrder || !selectedAddressId}>
+                    <Button size="lg" className="w-1/2" onClick={handlePlaceOrder} disabled={isPlacingOrder || !selectedShippingAddress}>
                         {isPlacingOrder ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
