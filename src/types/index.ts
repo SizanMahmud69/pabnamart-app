@@ -51,6 +51,7 @@ export interface Voucher {
     minSpend?: number;
     discountType?: 'order' | 'shipping';
     isReturnVoucher?: boolean;
+    collectedDate?: string;
 }
 
 export interface Offer {

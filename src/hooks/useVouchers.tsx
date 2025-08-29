@@ -82,10 +82,15 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     
+    const voucherToCollect = {
+        ...voucher,
+        collectedDate: new Date().toISOString()
+    };
+    
     if (docSnap.exists()) {
-        await setDoc(voucherRef, { vouchers: arrayUnion(voucher) }, { merge: true });
+        await setDoc(voucherRef, { vouchers: arrayUnion(voucherToCollect) }, { merge: true });
     } else {
-        await setDoc(voucherRef, { vouchers: [voucher] });
+        await setDoc(voucherRef, { vouchers: [voucherToCollect] });
     }
     
     toast({

@@ -22,8 +22,26 @@ function MyVouchersPage() {
         return [...collectedVouchers].sort((a, b) => {
             const aIsUsed = isUsed(a.code);
             const bIsUsed = isUsed(b.code);
-            if (aIsUsed === bIsUsed) return 0; // Keep original order if status is the same
-            return aIsUsed ? 1 : -1; // Unused vouchers first
+
+            if (aIsUsed && !bIsUsed) {
+                return 1; // a (used) comes after b (unused)
+            }
+            if (!aIsUsed && bIsUsed) {
+                return -1; // a (unused) comes before b (used)
+            }
+
+            // If both are unused, sort by collection date descending (newest first)
+            if (!aIsUsed && !bIsUsed) {
+                const dateA = a.collectedDate ? new Date(a.collectedDate).getTime() : 0;
+                const dateB = b.collectedDate ? new Date(b.collectedDate).getTime() : 0;
+                return dateB - dateA;
+            }
+
+            // If both are used, you might want to sort them by date as well, or keep original order
+            // For now, let's keep their relative order (or sort by date descending too)
+            const dateA = a.collectedDate ? new Date(a.collectedDate).getTime() : 0;
+            const dateB = b.collectedDate ? new Date(b.collectedDate).getTime() : 0;
+            return dateB - dateA;
         });
     }, [collectedVouchers, usedVoucherCodes]);
 
