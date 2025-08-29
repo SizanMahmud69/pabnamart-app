@@ -197,7 +197,7 @@ export default function OrdersPage() {
                               className="cursor-pointer"
                               onClick={(e) => handleCardClick(e, order.id)}
                             >
-                              <CardContent className="p-4 space-y-4">
+                              <CardContent className="p-4 space-y-3">
                                   <div className="flex justify-between items-start">
                                       <div>
                                           <h2 className="text-lg font-bold">Order ID: #{order.orderNumber}</h2>
@@ -206,30 +206,29 @@ export default function OrdersPage() {
                                       {getStatusBadge(order.status)}
                                   </div>
                                   
-                                  <div className="flex -space-x-4">
-                                    {order.items.slice(0, 4).map((item, index) => (
-                                        <div key={item.id + '-' + index} className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-white">
-                                            <Image src={item.image} alt={item.name} fill sizes="48px" className="object-cover" />
-                                        </div>
-                                    ))}
-                                    {order.items.length > 4 && (
-                                        <div className="relative h-12 w-12 rounded-full bg-muted flex items-center justify-center text-sm font-semibold border-2 border-white">
-                                            +{order.items.length - 4}
-                                        </div>
-                                    )}
-                                  </div>
-
-                                  <Separator />
-                                  
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-muted-foreground">Items: {order.items.length}</span>
-                                    <p className="font-bold text-lg">Total Amount: ৳{order.total.toFixed(2)}</p>
+                                  <div className="flex items-center gap-4">
+                                      <div className="flex -space-x-4">
+                                        {order.items.slice(0, 4).map((item, index) => (
+                                            <div key={item.id + '-' + index} className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-white">
+                                                <Image src={item.image} alt={item.name} fill sizes="48px" className="object-cover" />
+                                            </div>
+                                        ))}
+                                        {order.items.length > 4 && (
+                                            <div className="relative h-12 w-12 rounded-full bg-muted flex items-center justify-center text-sm font-semibold border-2 border-white">
+                                                +{order.items.length - 4}
+                                            </div>
+                                        )}
+                                      </div>
+                                      <div className="text-right flex-grow">
+                                        <span className="text-sm text-muted-foreground">Total Amount</span>
+                                        <p className="font-bold text-lg">৳{order.total.toFixed(2)}</p>
+                                      </div>
                                   </div>
                               </CardContent>
                             </div>
                             
-                            <CardFooter className="bg-muted/30 p-4">
-                                {(order.status === 'delivered' || order.status === 'return-rejected' || order.status === 'returned') && (
+                            {(order.status === 'delivered' || order.status === 'return-rejected' || order.status === 'returned') && (
+                              <CardFooter className="bg-muted/30 p-2">
                                     <div className="grid grid-cols-2 gap-2 w-full">
                                         <OrderReturnButton order={order} />
                                         {order.isReviewed ? (
@@ -246,8 +245,8 @@ export default function OrdersPage() {
                                             </Button>
                                         )}
                                     </div>
-                                )}
-                            </CardFooter>
+                              </CardFooter>
+                            )}
                         </Card>
                     ))}
                     </div>
