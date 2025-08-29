@@ -99,7 +99,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [toast, user]);
 
-  const voucherCount = collectedVouchers.filter(v => !v.isReturnVoucher).length;
+  const voucherCount = collectedVouchers.length;
 
   return (
     <VoucherContext.Provider

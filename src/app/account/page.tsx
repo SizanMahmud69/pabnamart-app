@@ -56,7 +56,7 @@ const ServiceItem = ({ icon: Icon, label, href }: ServiceItemProps) => (
 )
 
 export default function AccountPage() {
-    const { voucherCount } = useVouchers();
+    const { collectedVouchers } = useVouchers();
     const { user, logout, loading: authLoading } = useAuth();
     const { wishlistItems } = useWishlist();
     const router = useRouter();
@@ -169,7 +169,7 @@ export default function AccountPage() {
                                     <Heart className="h-4 w-4" /> {wishlistItems.length} Wishlist
                                 </Link>
                                 <Link href="/account/vouchers" className="flex items-center gap-1 hover:text-primary">
-                                    <Ticket className="h-4 w-4" /> {voucherCount} Vouchers
+                                    <Ticket className="h-4 w-4" /> {collectedVouchers.length} Vouchers
                                 </Link>
                             </div>
                         </div>
