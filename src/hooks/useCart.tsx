@@ -36,6 +36,7 @@ const db = getFirestore(app);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
   const { chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge } = useDeliveryCharge();
@@ -51,20 +52,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (user) {
+      setIsInitialLoad(true); // Reset initial load flag on user change
       const cartRef = doc(db, 'carts', user.uid);
       const cartUnsubscribe = onSnapshot(cartRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setCartItems(data.items || []);
-          // On first load, select all items by default
-          if (data.items && data.items.length > 0 && selectedItemIds.length === 0) {
-              setSelectedItemIds(data.items.map((item: CartItem) => item.id));
+          const itemsFromDb = data.items || [];
+          setCartItems(itemsFromDb);
+
+          // On first load for a user session, select all items by default
+          if (isInitialLoad) {
+            setSelectedItemIds(itemsFromDb.map((item: CartItem) => item.id));
+            setIsInitialLoad(false);
           } else {
-              setSelectedItemIds(data.selectedItemIds || []);
+            // After initial load, respect the selection from Firestore
+            setSelectedItemIds(data.selectedItemIds || []);
           }
         } else {
           setCartItems([]);
           setSelectedItemIds([]);
+          setIsInitialLoad(false);
         }
       });
       
@@ -88,15 +95,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setCartItems([]);
       setSelectedItemIds([]);
       setDefaultAddress(null);
+      setIsInitialLoad(true);
     }
   }, [user]);
   
   // Save to Firestore whenever selected items change
   useEffect(() => {
-    if (user) {
+    // Prevent updating Firestore on the very first render after user logs in
+    if (!isInitialLoad && user) {
       updateFirestoreCart(user.uid, cartItems, selectedItemIds);
     }
-  }, [selectedItemIds, cartItems, user, updateFirestoreCart]);
+  }, [selectedItemIds, cartItems, user, updateFirestoreCart, isInitialLoad]);
 
   const addToCart = useCallback((product: Product, isFlashSaleContext = false) => {
     if (!user) {
@@ -220,7 +229,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return 0;
     }
 
-    const itemCount = selectedCartItems.length;
+    const itemCount = selectedCartItems.reduce((total, item) => total + item.quantity, 0);
     const isInsidePabna = defaultAddress?.city.toLowerCase().trim() === 'pabna';
 
     if (isInsidePabna) {
