@@ -19,6 +19,7 @@ import Categories from '@/components/Categories';
 import { useOffers } from '@/hooks/useOffers';
 
 const categoryImageMap: { [key: string]: { image: string; aiHint: string } } = {
+  "Flash Sale": { image: "https://picsum.photos/seed/flashsale/1200/400", aiHint: "flash sale" },
   "Electronics": { image: "https://picsum.photos/seed/electronics/1200/400", aiHint: "electronics gadgets" },
   "Groceries": { image: "https://picsum.photos/seed/groceries/1200/400", aiHint: "fresh food" },
   "Women's Fashion": { image: "https://picsum.photos/seed/fashion/1200/400", aiHint: "stylish clothes" },
@@ -46,23 +47,6 @@ function HomePageContent() {
   const [topRated, setTopRated] = useState<Product[]>([]);
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
 
-  const heroBanners = useMemo(() => {
-    if (activeOffers.length === 0) {
-      return [defaultBanner];
-    }
-    return activeOffers.map(offer => {
-      const categoryInfo = categoryImageMap[offer.name] || categoryImageMap.default;
-      return {
-        title: `${offer.discount}% Off on ${offer.name}`,
-        description: `Get the best deals on our ${offer.name} collection.`,
-        image: categoryInfo.image,
-        link: `/category/${encodeURIComponent(offer.name)}`,
-        aiHint: categoryInfo.aiHint,
-      };
-    });
-  }, [activeOffers]);
-
-
   useEffect(() => {
     if (allProducts.length > 0) {
       // New arrivals: sort by ID descending (assuming higher ID is newer)
@@ -78,6 +62,36 @@ function HomePageContent() {
       setFlashSaleProducts(saleProducts);
     }
   }, [allProducts, getFlashSaleProducts]);
+
+  const heroBanners = useMemo(() => {
+    const banners = activeOffers.map(offer => {
+      const categoryInfo = categoryImageMap[offer.name] || categoryImageMap.default;
+      return {
+        title: `${offer.discount}% Off on ${offer.name}`,
+        description: `Get the best deals on our ${offer.name} collection.`,
+        image: categoryInfo.image,
+        link: `/category/${encodeURIComponent(offer.name)}`,
+        aiHint: categoryInfo.aiHint,
+      };
+    });
+
+    if (flashSaleProducts.length > 0) {
+      const flashSaleBanner = {
+        title: "⚡ Flash Sale Live Now! ⚡",
+        description: "Limited time offers. Grab them before they're gone!",
+        image: categoryImageMap["Flash Sale"].image,
+        link: "/flash-sale",
+        aiHint: categoryImageMap["Flash Sale"].aiHint,
+      };
+      banners.unshift(flashSaleBanner);
+    }
+
+    if (banners.length === 0) {
+      return [defaultBanner];
+    }
+
+    return banners;
+  }, [activeOffers, flashSaleProducts]);
   
   const showRecommendations = searchQuery.trim().length > 0;
 
