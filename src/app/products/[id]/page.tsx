@@ -20,7 +20,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 function ProductDetailPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const { products, getFlashSalePrice } = useProducts();
+  const { products, getFlashSalePrice } from useProducts();
   const [product, setProduct] = useState<Product | undefined | null>(null);
 
   const isFlashSaleContext = searchParams.get('flash') === 'true';
@@ -35,7 +35,7 @@ function ProductDetailPageContent() {
             // Create a temporary product view with flash sale price
             setProduct({
               ...foundProduct,
-              originalPrice: foundProduct.price, // The regular price becomes original
+              originalPrice: foundProduct.originalPrice || foundProduct.price, // Use the real original price or the current price
               price: flashPrice,
             });
           } else {
