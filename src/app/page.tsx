@@ -9,7 +9,7 @@ import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
@@ -17,6 +17,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 import Categories from '@/components/Categories';
 import { useOffers } from '@/hooks/useOffers';
+import { cn } from '@/lib/utils';
 
 const categoryImageMap: { [key: string]: { image: string; aiHint: string } } = {
   "Flash Sale": { image: "https://picsum.photos/seed/flashsale/1200/400", aiHint: "flash sale" },
@@ -34,8 +35,12 @@ const defaultBanner = {
   description: "Your one-stop shop for all your needs. Quality products, great prices.",
   image: "https://picsum.photos/seed/welcome/1200/400",
   link: "/products",
-  aiHint: "shopping store"
+  aiHint: "shopping store",
+  Icon: ShoppingBag,
+  alignment: 'center'
 };
+
+const bannerLayouts = ['left', 'right', 'center'];
 
 function HomePageContent() {
   const searchParams = useSearchParams();
@@ -64,6 +69,13 @@ function HomePageContent() {
   }, [allProducts, getFlashSaleProducts]);
 
   const heroBanners = useMemo(() => {
+    let layoutIndex = 0;
+    const getNextLayout = () => {
+        const layout = bannerLayouts[layoutIndex % bannerLayouts.length];
+        layoutIndex++;
+        return layout;
+    };
+    
     const banners = activeOffers.map(offer => {
       const categoryInfo = categoryImageMap[offer.name] || categoryImageMap.default;
       return {
@@ -72,16 +84,20 @@ function HomePageContent() {
         image: categoryInfo.image,
         link: `/category/${encodeURIComponent(offer.name)}`,
         aiHint: categoryInfo.aiHint,
+        Icon: Percent,
+        alignment: getNextLayout(),
       };
     });
 
     if (flashSaleProducts.length > 0) {
       const flashSaleBanner = {
-        title: "⚡ Flash Sale Live Now! ⚡",
+        title: "Flash Sale Live Now!",
         description: "Limited time offers. Grab them before they're gone!",
         image: categoryImageMap["Flash Sale"].image,
         link: "/flash-sale",
         aiHint: categoryImageMap["Flash Sale"].aiHint,
+        Icon: Zap,
+        alignment: getNextLayout(),
       };
       banners.unshift(flashSaleBanner);
     }
@@ -110,30 +126,41 @@ function HomePageContent() {
           className="w-full"
         >
           <CarouselContent>
-            {heroBanners.map((banner, index) => (
-              <CarouselItem key={index}>
-                 <div className="relative text-white rounded-lg overflow-hidden">
-                    <Image
-                      src={banner.image}
-                      alt={banner.title}
-                      width={1200}
-                      height={400}
-                      className="object-cover w-full h-48 md:h-64"
-                      data-ai-hint={banner.aiHint}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6">
-                      <h1 className="text-3xl md:text-4xl font-bold mb-2">{banner.title}</h1>
-                      <p className="text-lg md:text-xl mb-4">{banner.description}</p>
-                      <Button asChild className="w-fit bg-primary hover:bg-primary/90">
-                        <Link href={banner.link}>
-                          <ShoppingBag className="mr-2 h-5 w-5" />
-                          Shop Now
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-              </CarouselItem>
-            ))}
+            {heroBanners.map((banner, index) => {
+                const Icon = banner.Icon;
+                const alignmentClasses = {
+                    left: 'items-start text-left',
+                    right: 'items-end text-right',
+                    center: 'items-center text-center'
+                };
+                return (
+                  <CarouselItem key={index}>
+                     <div className="relative text-white rounded-lg overflow-hidden">
+                        <Image
+                          src={banner.image}
+                          alt={banner.title}
+                          width={1200}
+                          height={400}
+                          className="object-cover w-full h-48 md:h-64"
+                          data-ai-hint={banner.aiHint}
+                        />
+                        <div className={cn(
+                            "absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6",
+                            alignmentClasses[banner.alignment as keyof typeof alignmentClasses]
+                        )}>
+                          <h1 className="text-3xl md:text-4xl font-bold mb-2">{banner.title}</h1>
+                          <p className="text-lg md:text-xl mb-4 max-w-lg">{banner.description}</p>
+                          <Button asChild className="w-fit bg-primary hover:bg-primary/90">
+                            <Link href={banner.link}>
+                              <Icon className="mr-2 h-5 w-5" />
+                              Shop Now
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                  </CarouselItem>
+                )
+            })}
           </CarouselContent>
           <CarouselPrevious className="left-2" />
           <CarouselNext className="right-2" />
