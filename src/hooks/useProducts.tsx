@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import type { Product, Offer, Notification } from '@/types';
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, writeBatch, getDocs, query, where } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, writeBatch, getDocs, query, where, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { products as initialProducts } from '@/lib/products';
 import { useOffers } from './useOffers';
@@ -22,7 +22,6 @@ interface ProductContextType {
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 const db = getFirestore(app);
-const productsCollectionRef = collection(db, 'products');
 
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [baseProducts, setBaseProducts] = useState<Product[]>([]);
@@ -30,7 +29,10 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const { activeOffers } = useOffers();
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(productsCollectionRef, (snapshot) => {
+    const productsCollectionRef = collection(db, 'products');
+    const q = query(productsCollectionRef, orderBy('id', 'desc'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       if (snapshot.empty) {
         // If the collection is empty, populate it with initial products
         const batch = Promise.all(
@@ -40,7 +42,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
           })
         );
         batch.then(() => {
-          setBaseProducts(initialProducts);
+          setBaseProducts(initialProducts.sort((a, b) => b.id - a.id));
           setLoading(false);
         });
       } else {
@@ -50,7 +52,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       }
     }, (error) => {
       console.error("Error fetching products:", error);
-      setBaseProducts(initialProducts); // Fallback to initial products on error
+      setBaseProducts(initialProducts.sort((a, b) => b.id - a.id)); // Fallback to initial products on error
       setLoading(false);
     });
 
