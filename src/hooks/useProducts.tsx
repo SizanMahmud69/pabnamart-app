@@ -63,25 +63,29 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     return baseProducts.map(product => {
       const applicableOffer = activeOffers.find(offer => offer.name === product.category);
       if (applicableOffer) {
-        const discountAmount = (product.price * applicableOffer.discount) / 100;
+        const basePriceForOffer = product.originalPrice || product.price;
+        const discountAmount = (basePriceForOffer * applicableOffer.discount) / 100;
         return {
           ...product,
-          originalPrice: product.price,
-          price: product.price - discountAmount,
+          originalPrice: basePriceForOffer,
+          price: basePriceForOffer - discountAmount,
+          hasOffer: true,
         };
       }
-      return { ...product, originalPrice: product.originalPrice || product.price };
+      return { ...product, originalPrice: product.originalPrice };
     });
   }, [baseProducts, activeOffers]);
 
   const getFlashSalePrice = useCallback((product: Product): number => {
     const now = new Date();
+    const productWithOffer = productsWithOffers.find(p => p.id === product.id) || product;
+
     if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
-        const regularPrice = productsWithOffers.find(p => p.id === product.id)?.price || product.price;
-        const discountAmount = (regularPrice * product.flashSaleDiscount) / 100;
-        return regularPrice - discountAmount;
+        const basePrice = productWithOffer.originalPrice || productWithOffer.price;
+        const discountAmount = (basePrice * product.flashSaleDiscount) / 100;
+        return basePrice - discountAmount;
     }
-    return productsWithOffers.find(p => p.id === product.id)?.price || product.price;
+    return productWithOffer.price;
   }, [productsWithOffers]);
 
   const getFlashSaleProducts = useCallback(() => {
