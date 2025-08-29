@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useCart } from "@/hooks/useCart";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,9 +12,22 @@ import { Trash2, ShoppingBag, Minus, Plus, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, cartTotal, cartCount, shippingFee } = useCart();
+  const { 
+    cartItems, 
+    removeFromCart, 
+    updateQuantity, 
+    selectedCartTotal, 
+    selectedCartCount, 
+    shippingFee,
+    selectedItemIds,
+    toggleSelectItem,
+    toggleSelectAll,
+    isAllSelected,
+    selectedCartItems
+  } = useCart();
   const { user } = useAuth();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -25,16 +38,18 @@ export default function CartPage() {
   }, []);
 
   const handleCheckout = () => {
+    if (selectedCartCount === 0) {
+        return;
+    }
     setIsCheckingOut(true);
     if (user) {
       router.push('/checkout');
     } else {
       router.push('/login');
     }
-    // No need to set isCheckingOut to false as we are navigating away
   };
 
-  const finalTotal = cartTotal + (shippingFee || 0);
+  const finalTotal = selectedCartTotal + (shippingFee || 0);
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
@@ -44,13 +59,26 @@ export default function CartPage() {
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Cart Items ({cartCount})</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Cart Items ({cartItems.length})</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <Checkbox 
+                                id="select-all" 
+                                checked={isAllSelected}
+                                onCheckedChange={toggleSelectAll}
+                            />
+                            <label htmlFor="select-all" className="text-sm font-medium">Select All</label>
+                        </div>
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="divide-y">
                         {cartItems.map((item) => (
                             <div key={item.id} className="flex items-start gap-4 p-4">
+                                <Checkbox 
+                                    className="mt-8 flex-shrink-0"
+                                    checked={selectedItemIds.includes(item.id)}
+                                    onCheckedChange={() => toggleSelectItem(item.id)}
+                                />
                                 <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border">
                                     <Image
                                     src={item.images[0]}
@@ -117,8 +145,8 @@ export default function CartPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex justify-between">
-                    <span>Subtotal ({cartCount} items)</span>
-                    <span>৳{cartTotal.toFixed(2)}</span>
+                    <span>Subtotal ({selectedCartCount} items)</span>
+                    <span>৳{selectedCartTotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                         <div>
@@ -134,7 +162,7 @@ export default function CartPage() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button size="lg" className="w-full" onClick={handleCheckout} disabled={isCheckingOut}>
+                    <Button size="lg" className="w-full" onClick={handleCheckout} disabled={isCheckingOut || selectedCartCount === 0}>
                         {isCheckingOut ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

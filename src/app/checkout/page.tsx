@@ -41,7 +41,7 @@ const paymentMethods = [
 ]
 
 function CheckoutPage() {
-  const { cartItems, cartTotal, cartCount, updateQuantity, clearCart } = useCart();
+  const { selectedCartItems, selectedCartTotal, selectedCartCount, updateQuantity, clearCart } = useCart();
   const { user, appUser } = useAuth();
   const { collectedVouchers } = useVouchers();
   const { chargeInsidePabna, chargeOutsidePabna } = useDeliveryCharge();
@@ -97,7 +97,7 @@ function CheckoutPage() {
       return;
     }
 
-    if (voucher.minSpend && cartTotal < voucher.minSpend) {
+    if (voucher.minSpend && selectedCartTotal < voucher.minSpend) {
         setError(`You need to spend at least ৳${voucher.minSpend} to use this voucher.`);
         setSelectedVoucher(null);
         return;
@@ -112,13 +112,13 @@ function CheckoutPage() {
   }, [addresses, selectedAddressId]);
   
   const shippingFee = useMemo(() => {
-    if (cartCount === 0) return 0;
-    if (cartItems.some(item => item.freeShipping)) return 0;
+    if (selectedCartCount === 0) return 0;
+    if (selectedCartItems.some(item => item.freeShipping)) return 0;
     if (!selectedAddress) return chargeOutsidePabna; // Default fee if no address is selected yet
 
     return selectedAddress.city.toLowerCase().trim() === 'pabna' ? chargeInsidePabna : chargeOutsidePabna;
 
-  }, [cartItems, cartCount, selectedAddress, chargeInsidePabna, chargeOutsidePabna]);
+  }, [selectedCartItems, selectedCartCount, selectedAddress, chargeInsidePabna, chargeOutsidePabna]);
 
   const { orderDiscount, shippingDiscount } = useMemo(() => {
     if (!selectedVoucher) return { orderDiscount: 0, shippingDiscount: 0 };
@@ -127,7 +127,7 @@ function CheckoutPage() {
     if (selectedVoucher.type === 'fixed') {
       calculatedDiscount = selectedVoucher.discount;
     } else { // percentage
-      calculatedDiscount = (cartTotal * selectedVoucher.discount) / 100;
+      calculatedDiscount = (selectedCartTotal * selectedVoucher.discount) / 100;
     }
 
     if (selectedVoucher.discountType === 'shipping') {
@@ -135,10 +135,10 @@ function CheckoutPage() {
     }
     
     return { orderDiscount: calculatedDiscount, shippingDiscount: 0 };
-  }, [selectedVoucher, cartTotal, shippingFee]);
+  }, [selectedVoucher, selectedCartTotal, shippingFee]);
 
 
-  const subtotalWithDiscount = cartTotal - orderDiscount > 0 ? cartTotal - orderDiscount : 0;
+  const subtotalWithDiscount = selectedCartTotal - orderDiscount > 0 ? selectedCartTotal - orderDiscount : 0;
   const shippingFeeWithDiscount = shippingFee - shippingDiscount > 0 ? shippingFee - shippingDiscount : 0;
   const finalTotal = subtotalWithDiscount + shippingFeeWithDiscount;
 
@@ -154,7 +154,7 @@ function CheckoutPage() {
     
     if (selectedPaymentMethod === 'online') {
         const orderDetails = {
-            cartItems,
+            cartItems: selectedCartItems,
             finalTotal,
             shippingAddress: selectedAddress,
             paymentMethod: selectedPaymentMethod,
@@ -168,7 +168,7 @@ function CheckoutPage() {
     const { id, default: isDefault, ...shippingAddressData } = selectedAddress;
 
     try {
-        const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, selectedPaymentMethod, undefined, selectedVoucher);
+        const result = await placeOrder(user.uid, selectedCartItems, finalTotal, shippingAddressData, selectedPaymentMethod, undefined, selectedVoucher);
 
         if (result.success) {
             toast({
@@ -199,7 +199,7 @@ function CheckoutPage() {
       return <LoadingSpinner />;
   }
 
-  if (cartCount === 0) {
+  if (selectedCartCount === 0) {
     return (
         <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
             <div className="text-center">
@@ -292,7 +292,7 @@ function CheckoutPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                  <div className="space-y-4">
-                    {cartItems.map(item => (
+                    {selectedCartItems.map(item => (
                         <div key={item.id} className="flex justify-between items-center text-sm">
                             <div className="flex items-center gap-3">
                                 <div className="relative h-16 w-16 rounded-md overflow-hidden border">
@@ -343,7 +343,7 @@ function CheckoutPage() {
                  <div className="space-y-2">
                     <div className="flex justify-between">
                         <span>Subtotal</span>
-                        <span>৳{cartTotal.toFixed(2)}</span>
+                        <span>৳{selectedCartTotal.toFixed(2)}</span>
                     </div>
                     {orderDiscount > 0 && (
                         <div className="flex justify-between text-primary">
@@ -396,5 +396,3 @@ function CheckoutPage() {
 }
 
 export default withAuth(CheckoutPage);
-
-    
