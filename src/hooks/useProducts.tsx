@@ -86,19 +86,24 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   
   const getFlashSalePrice = useCallback((product: Product): number => {
     const now = new Date();
-    
+
     if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
         const baseProduct = baseProducts.find(p => p.id === product.id);
         
-        // Alternative fix: Safer destructuring and fallback logic.
-        const baseOriginalPrice = baseProduct?.originalPrice;
-        const basePrice = baseProduct?.price;
+        // Robust check to prevent crashes
+        if (!baseProduct) {
+             // Fallback if base product not found (should be rare)
+            const fallbackOriginalPrice = product.originalPrice ?? product.price;
+            const discountAmount = (fallbackOriginalPrice * product.flashSaleDiscount) / 100;
+            return roundPrice(fallbackOriginalPrice - discountAmount);
+        }
 
-        const originalPriceForFlashSale = baseOriginalPrice ?? basePrice ?? product.price;
+        const originalPriceForFlashSale = baseProduct.originalPrice ?? baseProduct.price;
         const discountAmount = (originalPriceForFlashSale * product.flashSaleDiscount) / 100;
         return roundPrice(originalPriceForFlashSale - discountAmount);
     }
     
+    // If not a flash sale, return the price with category offer or the regular price
     const productWithCategoryOffer = productsWithOffers.find(p => p.id === product.id);
     return productWithCategoryOffer ? productWithCategoryOffer.price : roundPrice(product.price);
   }, [baseProducts, productsWithOffers]);
@@ -110,8 +115,10 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       .map(p => {
         const flashPrice = getFlashSalePrice(p);
         const baseProduct = baseProducts.find(bp => bp.id === p.id);
-        // Ensure we have a valid original price to show
-        const originalPrice = baseProduct?.originalPrice || baseProduct?.price || p.originalPrice || p.price;
+        
+        // Robust check for original price
+        const originalPrice = baseProduct ? (baseProduct.originalPrice || baseProduct.price) : (p.originalPrice || p.price);
+        
         return {
           ...p,
           originalPrice: roundPrice(originalPrice),
@@ -122,8 +129,10 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     let closestExpiry = null;
     if (saleProducts.length > 0) {
       closestExpiry = saleProducts.reduce((closest, current) => {
-        const closestTime = new Date(closest.flashSaleEndDate!).getTime();
-        const currentTime = new Date(current.flashSaleEndDate!).getTime();
+        // Ensure flashSaleEndDate is not null before creating Date object
+        if (!closest.flashSaleEndDate || !current.flashSaleEndDate) return closest;
+        const closestTime = new Date(closest.flashSaleEndDate).getTime();
+        const currentTime = new Date(current.flashSaleEndDate).getTime();
         return currentTime < closestTime ? current : closest;
       }).flashSaleEndDate || null;
     }
