@@ -15,21 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 const db = getFirestore(app);
-
-const Stamp = ({ text, colorClass }: { text: string; colorClass: string }) => (
-    <div className="w-28 h-28 flex-shrink-0 hidden md:flex items-center justify-center">
-        <div className={cn(
-            "w-28 h-28 rounded-full border-4 flex items-center justify-center opacity-20 pointer-events-none rotate-12",
-            colorClass
-        )}>
-            <span className="text-3xl font-bold uppercase">{text}</span>
-        </div>
-    </div>
-);
-
 
 export default function OrderDetailsPage() {
     const [order, setOrder] = useState<Order | null>(null);
@@ -96,13 +83,13 @@ export default function OrderDetailsPage() {
     return (
         <div className="container mx-auto p-4">
             <header className="py-4 flex justify-between items-center print:hidden">
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" size="sm">
                     <Link href="/admin/orders">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Order List
                     </Link>
                 </Button>
-                <Button variant="outline" onClick={handlePrint}>
+                <Button variant="outline" size="sm" onClick={handlePrint}>
                     <Download className="mr-2 h-4 w-4" />
                     Download Invoice
                 </Button>
@@ -216,11 +203,6 @@ export default function OrderDetailsPage() {
                                     </TableFooter>
                                 </Table>
                             </div>
-                            {isPaid ? (
-                                <Stamp text="Paid" colorClass="border-green-500 text-green-500" />
-                            ) : (
-                                <Stamp text="Unpaid" colorClass="border-red-500 text-red-500" />
-                            )}
                         </div>
                     </CardContent>
                 </Card>
