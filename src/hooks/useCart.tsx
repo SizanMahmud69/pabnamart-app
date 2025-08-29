@@ -60,6 +60,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           const itemsFromDb = data.items || [];
           
           setCartItems(currentItems => {
+            // Only update if the data from Firestore is different from the current state
             if (JSON.stringify(currentItems) !== JSON.stringify(itemsFromDb)) {
               return itemsFromDb;
             }
@@ -230,8 +231,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const shippingFee = useMemo(() => {
     if (selectedCartCount === 0) return 0;
     
-    const hasFreeShippingItem = selectedCartItems.some(item => item.freeShipping);
-    if (hasFreeShippingItem) {
+    // Free shipping is applied only if *every* selected item is eligible for it.
+    const allItemsHaveFreeShipping = selectedCartItems.every(item => item.freeShipping);
+    if (allItemsHaveFreeShipping) {
       return 0;
     }
 
