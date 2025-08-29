@@ -63,7 +63,7 @@ export interface Offer {
 
 export interface Notification {
     id: string;
-    icon: LucideIcon;
+    icon: string; // Changed from LucideIcon to string
     title: string;
     description: string;
     time: string;

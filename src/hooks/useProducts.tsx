@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
@@ -133,7 +134,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       querySnapshot.forEach(userDoc => {
           const userId = userDoc.id;
           const notification: Omit<Notification, 'id'> = {
-              icon: PackageCheck,
+              icon: 'PackageCheck',
               title: "Item Back in Stock!",
               description: `The item you wanted, "${product.name}", is now available.`,
               time: new Date().toLocaleDateString(),

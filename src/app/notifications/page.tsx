@@ -4,12 +4,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell } from 'lucide-react';
 import { withAuth } from "@/hooks/useAuth";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotifications, iconMap } from "@/hooks/useNotifications";
 import type { Notification } from "@/types";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const NotificationItem = ({ notification, onClick }: { notification: Notification, onClick: () => void }) => {
+    const Icon = iconMap[notification.icon] || Bell;
+
     const content = (
         <div 
             className={cn(
@@ -23,7 +25,7 @@ const NotificationItem = ({ notification, onClick }: { notification: Notificatio
                 'mt-1 flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center',
                 !notification.read ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             )}>
-                <notification.icon className="h-5 w-5" />
+                <Icon className="h-5 w-5" />
             </div>
             <div className="flex-grow">
                 <p className="font-semibold">{notification.title}</p>

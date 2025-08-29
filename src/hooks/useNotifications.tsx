@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Notification } from '@/types';
 import { useAuth } from './useAuth';
 import { useVouchers } from './useVouchers';
-import { LogIn, Truck, Gift, Tag, PackageCheck } from 'lucide-react';
+import { LogIn, Truck, Gift, Tag, PackageCheck, type LucideIcon } from 'lucide-react';
 import { getFirestore, doc, onSnapshot, collection, query, where, getDocs, updateDoc, writeBatch } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
@@ -20,6 +20,15 @@ const orders = [
 const availableVouchers = [
     { code: "NEW100", description: "For your first purchase." },
 ];
+
+export const iconMap: { [key: string]: LucideIcon } = {
+    LogIn,
+    Truck,
+    Gift,
+    Tag,
+    PackageCheck,
+};
+
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -63,7 +72,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         // Welcome notification
         generatedNotifications.push({
           id: 'welcome',
-          icon: LogIn,
+          icon: 'LogIn',
           title: "Welcome to PabnaMart!",
           description: `Hello ${user?.displayName || 'there'}, welcome to your account.`,
           time: "Just now",
@@ -76,7 +85,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
             if (order.status === 'shipped') {
                 generatedNotifications.push({
                     id: `order-${order.id}`,
-                    icon: Truck,
+                    icon: 'Truck',
                     title: "Order Shipped",
                     description: `Your order #${order.id} has been shipped.`,
                     time: "1d ago",
@@ -90,7 +99,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         if (availableVouchers.length > collectedVouchers.length) {
             generatedNotifications.push({
                 id: 'new-vouchers',
-                icon: Gift,
+                icon: 'Gift',
                 title: "New Vouchers Available",
                 description: "Exclusive vouchers just for you! Collect them now for extra savings.",
                 time: "2d ago",
@@ -102,7 +111,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         // Flash sale notification
         generatedNotifications.push({
             id: 'flash-sale',
-            icon: Tag,
+            icon: 'Tag',
             title: "Flash Sale Alert!",
             description: "Don't miss out! Our biggest flash sale is ending soon.",
             time: "1h ago",
