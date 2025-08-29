@@ -23,6 +23,8 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 const db = getFirestore(app);
 
+const roundPrice = (price: number) => Math.round(price);
+
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [baseProducts, setBaseProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,12 +69,12 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         const discountAmount = (basePriceForOffer * applicableOffer.discount) / 100;
         return {
           ...product,
-          originalPrice: basePriceForOffer,
-          price: basePriceForOffer - discountAmount,
+          originalPrice: roundPrice(basePriceForOffer),
+          price: roundPrice(basePriceForOffer - discountAmount),
           hasOffer: true,
         };
       }
-      return { ...product };
+      return { ...product, price: roundPrice(product.price), originalPrice: product.originalPrice ? roundPrice(product.originalPrice) : undefined };
     });
   }, [baseProducts, activeOffers]);
 
@@ -80,16 +82,16 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     const now = new Date();
     
     if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
-        // Use the original price from the base product, before category offers were applied.
         const baseProduct = baseProducts.find(p => p.id === product.id);
-        const basePrice = baseProduct?.originalPrice || baseProduct?.price || product.price;
-        const discountAmount = (basePrice * product.flashSaleDiscount) / 100;
-        return basePrice - discountAmount;
+        const originalPriceForFlashSale = baseProduct?.originalPrice || baseProduct?.price;
+        if (originalPriceForFlashSale) {
+            const discountAmount = (originalPriceForFlashSale * product.flashSaleDiscount) / 100;
+            return roundPrice(originalPriceForFlashSale - discountAmount);
+        }
     }
     
-    // If not in flash sale, return the price which might already have a category offer.
     const productWithCategoryOffer = productsWithOffers.find(p => p.id === product.id);
-    return productWithCategoryOffer ? productWithCategoryOffer.price : product.price;
+    return productWithCategoryOffer ? productWithCategoryOffer.price : roundPrice(product.price);
   }, [baseProducts, productsWithOffers]);
 
   const getFlashSaleProducts = useCallback(() => {
@@ -102,7 +104,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         const originalPrice = baseProduct?.originalPrice || baseProduct?.price;
         return {
           ...p,
-          originalPrice: originalPrice,
+          originalPrice: roundPrice(originalPrice),
           price: flashPrice,
         };
       });

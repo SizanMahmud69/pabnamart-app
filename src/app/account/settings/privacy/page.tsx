@@ -36,6 +36,14 @@ export default function PrivacyPolicyPage() {
 
                         <h2>5. How Do We Keep Your Information Safe?</h2>
                         <p>We aim to protect your personal information through a system of organizational and technical security measures.</p>
+
+                        <h2>6. Pricing and Rounding Policy</h2>
+                        <p>To ensure clarity and simplicity in our pricing, all final product prices are rounded to the nearest whole number. If a price calculation (e.g., after a discount) results in a decimal value, the following rounding rule is applied:</p>
+                        <ul>
+                            <li>If the decimal part is between .01 and .50, the price will be rounded down to the nearest whole number (e.g., ৳100.50 becomes ৳100).</li>
+                            <li>If the decimal part is between .51 and .99, the price will be rounded up to the nearest whole number (e.g., ৳100.51 becomes ৳101).</li>
+                        </ul>
+                        <p>This policy ensures that all prices displayed at checkout are clear, simple, and free of confusing decimal points.</p>
                     </CardContent>
                 </Card>
             </div>
