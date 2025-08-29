@@ -64,6 +64,12 @@ export default function AccountPage() {
     const [ordersLoading, setOrdersLoading] = useState(true);
     const [viewedDeliveredOrders, setViewedDeliveredOrders] = useState<string[]>([]);
 
+    const unusedVoucherCount = useMemo(() => {
+        if (!appUser) return 0;
+        const usedCodes = appUser.usedVoucherCodes || [];
+        return collectedVouchers.filter(v => !usedCodes.includes(v.code)).length;
+    }, [collectedVouchers, appUser]);
+
     useEffect(() => {
         if (!user) {
             setOrdersLoading(false);
@@ -128,11 +134,6 @@ export default function AccountPage() {
         order => order.status === 'delivered' && !viewedDeliveredOrders.includes(order.id)
     ).length;
     
-    const unusedVoucherCount = useMemo(() => {
-        const usedCodes = appUser?.usedVoucherCodes || [];
-        return collectedVouchers.filter(v => !usedCodes.includes(v.code)).length;
-    }, [collectedVouchers, appUser]);
-
     const orderStatuses: OrderStatusProps[] = [
         { icon: Wallet, label: "To Pay", count: getCount('pending'), href: "/account/orders?status=pending" },
         { icon: Box, label: "To Ship", count: getCount('shipped'), href: "/account/orders?status=shipped" },
