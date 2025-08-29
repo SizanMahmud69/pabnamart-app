@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import type { Order, OrderStatus } from "@/types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { collection, getFirestore, onSnapshot, query, where } from "firebase/firestore";
 import app from "@/lib/firebase";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -57,7 +57,7 @@ const ServiceItem = ({ icon: Icon, label, href }: ServiceItemProps) => (
 
 export default function AccountPage() {
     const { collectedVouchers } = useVouchers();
-    const { user, logout, loading: authLoading } = useAuth();
+    const { user, logout, loading: authLoading, appUser } = useAuth();
     const { wishlistItems } = useWishlist();
     const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
@@ -127,6 +127,11 @@ export default function AccountPage() {
     const newDeliveredCount = orders.filter(
         order => order.status === 'delivered' && !viewedDeliveredOrders.includes(order.id)
     ).length;
+    
+    const unusedVoucherCount = useMemo(() => {
+        const usedCodes = appUser?.usedVoucherCodes || [];
+        return collectedVouchers.filter(v => !usedCodes.includes(v.code)).length;
+    }, [collectedVouchers, appUser]);
 
     const orderStatuses: OrderStatusProps[] = [
         { icon: Wallet, label: "To Pay", count: getCount('pending'), href: "/account/orders?status=pending" },
@@ -169,7 +174,7 @@ export default function AccountPage() {
                                     <Heart className="h-4 w-4" /> {wishlistItems.length} Wishlist
                                 </Link>
                                 <Link href="/account/vouchers" className="flex items-center gap-1 hover:text-primary">
-                                    <Ticket className="h-4 w-4" /> {collectedVouchers.length} Vouchers
+                                    <Ticket className="h-4 w-4" /> {unusedVoucherCount} Vouchers
                                 </Link>
                             </div>
                         </div>
