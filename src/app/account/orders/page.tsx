@@ -15,6 +15,8 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import Image from 'next/image';
+import { Separator } from '@/components/ui/separator';
 
 const db = getFirestore(app);
 
@@ -195,7 +197,7 @@ export default function OrdersPage() {
                               className="cursor-pointer"
                               onClick={(e) => handleCardClick(e, order.id)}
                             >
-                              <CardContent className="p-4">
+                              <CardContent className="p-4 space-y-4">
                                   <div className="flex justify-between items-start">
                                       <div>
                                           <h2 className="text-lg font-bold">Order ID: #{order.orderNumber}</h2>
@@ -203,8 +205,25 @@ export default function OrdersPage() {
                                       </div>
                                       {getStatusBadge(order.status)}
                                   </div>
-                                  <div className="mt-4">
-                                      <p className="font-bold text-lg">Total Amount: ৳{order.total.toFixed(2)}</p>
+                                  
+                                  <div className="flex -space-x-4">
+                                    {order.items.slice(0, 4).map((item, index) => (
+                                        <div key={item.id + '-' + index} className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-white">
+                                            <Image src={item.image} alt={item.name} fill sizes="48px" className="object-cover" />
+                                        </div>
+                                    ))}
+                                    {order.items.length > 4 && (
+                                        <div className="relative h-12 w-12 rounded-full bg-muted flex items-center justify-center text-sm font-semibold border-2 border-white">
+                                            +{order.items.length - 4}
+                                        </div>
+                                    )}
+                                  </div>
+
+                                  <Separator />
+                                  
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-muted-foreground">Items: {order.items.length}</span>
+                                    <p className="font-bold text-lg">Total Amount: ৳{order.total.toFixed(2)}</p>
                                   </div>
                               </CardContent>
                             </div>
