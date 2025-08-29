@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 
 export default function CartPage() {
   const { 
@@ -153,7 +154,15 @@ export default function CartPage() {
                            <p>Shipping</p>
                            <p className="text-xs text-muted-foreground">(Based on default address)</p>
                         </div>
-                        <span>{isClient ? `৳${(shippingFee || 0).toFixed(2)}` : '...'}</span>
+                        {isClient ? (
+                            shippingFee === 0 && selectedCartCount > 0 ? (
+                                <Badge className="bg-green-100 text-green-800">Free Delivery</Badge>
+                            ) : (
+                                <span>৳{(shippingFee || 0).toFixed(2)}</span>
+                            )
+                        ) : (
+                            <span>...</span>
+                        )}
                     </div>
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">

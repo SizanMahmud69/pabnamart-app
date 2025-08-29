@@ -24,6 +24,7 @@ import { doc, getFirestore, onSnapshot } from "firebase/firestore";
 import app from "@/lib/firebase";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useDeliveryCharge } from "@/hooks/useDeliveryCharge";
+import { Badge } from "@/components/ui/badge";
 
 const db = getFirestore(app);
 
@@ -341,9 +342,13 @@ function CheckoutPage() {
                             <span>- ৳{orderDiscount.toFixed(2)}</span>
                         </div>
                     )}
-                     <div className="flex justify-between">
+                     <div className="flex justify-between items-center">
                         <span>Shipping</span>
-                        <span>৳{(shippingFee ?? 0).toFixed(2)}</span>
+                        {shippingFee === 0 && selectedCartCount > 0 ? (
+                            <Badge className="bg-green-100 text-green-800">Free Delivery</Badge>
+                        ) : (
+                            <span>৳{(shippingFee ?? 0).toFixed(2)}</span>
+                        )}
                     </div>
                     {shippingDiscount > 0 && (
                         <div className="flex justify-between text-primary">
