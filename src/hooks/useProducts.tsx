@@ -23,7 +23,14 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 const db = getFirestore(app);
 
-const roundPrice = (price: number) => Math.round(price);
+const roundPrice = (price: number) => {
+    const decimalPart = price - Math.floor(price);
+    if (decimalPart > 0 && decimalPart <= 0.50) {
+        return Math.floor(price);
+    }
+    return Math.round(price);
+};
+
 
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [baseProducts, setBaseProducts] = useState<Product[]>([]);
@@ -66,28 +73,31 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       const applicableOffer = activeOffers.find(offer => offer.name === product.category);
       if (applicableOffer) {
         const basePriceForOffer = product.originalPrice || product.price;
-        const discountAmount = (basePriceForOffer * applicableOffer.discount) / 100;
         return {
           ...product,
           originalPrice: roundPrice(basePriceForOffer),
-          price: roundPrice(basePriceForOffer - discountAmount),
+          price: roundPrice(basePriceForOffer - (basePriceForOffer * applicableOffer.discount) / 100),
           hasOffer: true,
         };
       }
       return { ...product, price: roundPrice(product.price), originalPrice: product.originalPrice ? roundPrice(product.originalPrice) : undefined };
     });
   }, [baseProducts, activeOffers]);
-
+  
   const getFlashSalePrice = useCallback((product: Product): number => {
     const now = new Date();
     
     if (product.isFlashSale && product.flashSaleEndDate && new Date(product.flashSaleEndDate) > now && product.flashSaleDiscount) {
         const baseProduct = baseProducts.find(p => p.id === product.id);
-        const originalPriceForFlashSale = baseProduct?.originalPrice || baseProduct?.price;
-        if (originalPriceForFlashSale) {
-            const discountAmount = (originalPriceForFlashSale * product.flashSaleDiscount) / 100;
-            return roundPrice(originalPriceForFlashSale - discountAmount);
+        if (!baseProduct) {
+            // Fallback if base product not found (should be rare)
+            const productWithOffer = productsWithOffers.find(p => p.id === product.id);
+            return productWithOffer ? productWithOffer.price : roundPrice(product.price);
         }
+
+        const originalPriceForFlashSale = baseProduct.originalPrice || baseProduct.price;
+        const discountAmount = (originalPriceForFlashSale * product.flashSaleDiscount) / 100;
+        return roundPrice(originalPriceForFlashSale - discountAmount);
     }
     
     const productWithCategoryOffer = productsWithOffers.find(p => p.id === product.id);
