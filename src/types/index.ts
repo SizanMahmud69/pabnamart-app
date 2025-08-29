@@ -129,8 +129,10 @@ export interface Order {
 }
 
 export interface DeliverySettings {
-  insidePabna: number;
-  outsidePabna: number;
+  insidePabnaSmall: number;
+  insidePabnaLarge: number;
+  outsidePabnaSmall: number;
+  outsidePabnaLarge: number;
 }
 
 export interface PaymentSettings {

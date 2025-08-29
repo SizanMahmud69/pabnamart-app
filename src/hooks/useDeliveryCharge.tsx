@@ -5,8 +5,10 @@ import { useState, useEffect } from 'react';
 import type { DeliverySettings } from '@/types';
 
 const defaultSettings: DeliverySettings = {
-  insidePabna: 60,
-  outsidePabna: 120,
+  insidePabnaSmall: 60,
+  insidePabnaLarge: 80,
+  outsidePabnaSmall: 120,
+  outsidePabnaLarge: 150,
 };
 
 export const useDeliveryCharge = () => {
@@ -26,7 +28,9 @@ export const useDeliveryCharge = () => {
   }, []);
 
   return { 
-    chargeInsidePabna: settings.insidePabna, 
-    chargeOutsidePabna: settings.outsidePabna 
+    chargeInsidePabnaSmall: settings.insidePabnaSmall, 
+    chargeInsidePabnaLarge: settings.insidePabnaLarge,
+    chargeOutsidePabnaSmall: settings.outsidePabnaSmall,
+    chargeOutsidePabnaLarge: settings.outsidePabnaLarge,
   };
 };

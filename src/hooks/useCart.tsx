@@ -38,7 +38,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { chargeInsidePabna, chargeOutsidePabna } = useDeliveryCharge();
+  const { chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge } = useDeliveryCharge();
   const { getFlashSalePrice } = useProducts();
   const [defaultAddress, setDefaultAddress] = useState<ShippingAddress | null>(null);
   const router = useRouter();
@@ -219,14 +219,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     if (hasFreeShippingItem) {
       return 0;
     }
-    
-    if (!defaultAddress) {
-      return chargeOutsidePabna;
+
+    const itemCount = selectedCartItems.length;
+    const isInsidePabna = defaultAddress?.city.toLowerCase().trim() === 'pabna';
+
+    if (isInsidePabna) {
+        return itemCount >= 1 && itemCount <= 5 ? chargeInsidePabnaSmall : chargeInsidePabnaLarge;
+    } else {
+        return itemCount >= 1 && itemCount <= 5 ? chargeOutsidePabnaSmall : chargeOutsidePabnaLarge;
     }
 
-    return defaultAddress.city.toLowerCase().trim() === 'pabna' ? chargeInsidePabna : chargeOutsidePabna;
-
-  }, [selectedCartItems, selectedCartCount, defaultAddress, chargeInsidePabna, chargeOutsidePabna]);
+  }, [selectedCartItems, selectedCartCount, defaultAddress, chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge]);
 
   // When navigating to checkout, save selected items to session storage
   useEffect(() => {
