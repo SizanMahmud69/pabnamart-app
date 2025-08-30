@@ -9,7 +9,7 @@ import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent } from 'lucide-react';
+import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
@@ -51,6 +51,7 @@ function HomePageContent() {
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [topRated, setTopRated] = useState<Product[]>([]);
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
+  const [visibleProductsCount, setVisibleProductsCount] = useState(9);
 
   useEffect(() => {
     if (allProducts.length > 0) {
@@ -110,6 +111,10 @@ function HomePageContent() {
   }, [activeOffers, flashSaleProducts]);
   
   const showRecommendations = searchQuery.trim().length > 0;
+  
+  const handleSeeMore = () => {
+    setVisibleProductsCount(prevCount => prevCount + 9);
+  };
 
   if (searchQuery) {
     return <Suspense fallback={<div>Loading...</div>}><SearchPageContent searchQuery={searchQuery} /></Suspense>;
@@ -227,10 +232,17 @@ function HomePageContent() {
             </Link>
           </div>
             <div className="grid grid-cols-3 gap-2 md:gap-4">
-              {allProducts.slice(0, 9).map(product => (
+              {allProducts.slice(0, visibleProductsCount).map(product => (
                 <ProductCard key={product.id} product={product} size="small" />
               ))}
             </div>
+            {visibleProductsCount < allProducts.length && (
+              <div className="mt-6 text-center">
+                <Button onClick={handleSeeMore} variant="outline">
+                  See More
+                </Button>
+              </div>
+            )}
         </div>
 
       </div>
