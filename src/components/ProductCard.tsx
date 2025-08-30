@@ -140,12 +140,25 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                 <span className="truncate-2-lines">{product.name}</span>
             </Link>
         </h3>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground" style={dropShadowStyle}>
-          <Star className="w-4 h-4 fill-accent text-accent" />
-          <span style={textShadowStyle}>{product.rating.toFixed(1)}</span>
-          <span style={textShadowStyle}>|</span>
-          <span style={textShadowStyle}>Sold {product.sold || 0}</span>
-        </div>
+        {isSmall ? (
+             <div className="flex items-center justify-around text-xs text-muted-foreground" style={dropShadowStyle}>
+                <div className="text-center">
+                    <Star className="w-4 h-4 mx-auto fill-accent text-accent" />
+                    <span style={textShadowStyle}>{product.rating.toFixed(1)}</span>
+                </div>
+                <div className="text-center">
+                    <span className="font-semibold" style={textShadowStyle}>Sold</span>
+                    <p style={textShadowStyle}>{product.sold || 0}</p>
+                </div>
+            </div>
+        ) : (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground" style={dropShadowStyle}>
+                <Star className="w-4 h-4 fill-accent text-accent" />
+                <span style={textShadowStyle}>{product.rating.toFixed(1)}</span>
+                <span style={textShadowStyle}>|</span>
+                <span style={textShadowStyle}>Sold {product.sold || 0}</span>
+            </div>
+        )}
         <div className="flex justify-between items-center mt-auto">
           <div>
             <p className={cn("font-bold text-primary", isSmall ? "text-base" : "text-lg")} style={dropShadowStyle}>৳{price}</p>
