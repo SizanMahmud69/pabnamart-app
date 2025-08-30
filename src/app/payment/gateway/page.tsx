@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -52,24 +51,13 @@ function PaymentGatewayPage() {
             router.push('/checkout');
         }
 
-        const savedSiteSettings = localStorage.getItem('siteSettings');
-        if (savedSiteSettings) {
-            const parsedSettings = JSON.parse(savedSiteSettings);
-            setPaymentMethods(prevMethods => prevMethods.map(method => {
-                if (method.name === 'bKash' && parsedSettings.bkashLogo) return { ...method, logo: parsedSettings.bkashLogo };
-                if (method.name === 'Nagad' && parsedSettings.nagadLogo) return { ...method, logo: parsedSettings.nagadLogo };
-                if (method.name === 'Rocket' && parsedSettings.rocketLogo) return { ...method, logo: parsedSettings.rocketLogo };
-                return method;
-            }));
-        }
-
         const savedPaymentSettings = localStorage.getItem('paymentSettings');
         if (savedPaymentSettings) {
             const parsedSettings = JSON.parse(savedPaymentSettings);
             setPaymentMethods(prevMethods => prevMethods.map(method => {
-                if (method.name === 'bKash') return { ...method, merchantNumber: parsedSettings.bkashMerchantNumber };
-                if (method.name === 'Nagad') return { ...method, merchantNumber: parsedSettings.nagadMerchantNumber };
-                if (method.name === 'Rocket') return { ...method, merchantNumber: parsedSettings.rocketMerchantNumber };
+                if (method.name === 'bKash') return { ...method, logo: parsedSettings.bkashLogo || method.logo, merchantNumber: parsedSettings.bkashMerchantNumber };
+                if (method.name === 'Nagad') return { ...method, logo: parsedSettings.nagadLogo || method.logo, merchantNumber: parsedSettings.nagadMerchantNumber };
+                if (method.name === 'Rocket') return { ...method, logo: parsedSettings.rocketLogo || method.logo, merchantNumber: parsedSettings.rocketMerchantNumber };
                 return method;
             }));
         }

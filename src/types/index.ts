@@ -1,4 +1,3 @@
-
 import type { LucideIcon } from "react";
 
 export interface Review {
@@ -140,6 +139,9 @@ export interface PaymentSettings {
   bkashMerchantNumber: string;
   nagadMerchantNumber: string;
   rocketMerchantNumber: string;
+  bkashLogo: string;
+  nagadLogo: string;
+  rocketLogo: string;
 }
 
 export interface Wishlist {

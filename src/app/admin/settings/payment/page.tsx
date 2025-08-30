@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -10,17 +9,16 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
-
-interface PaymentSettings {
-  bkashMerchantNumber: string;
-  nagadMerchantNumber: string;
-  rocketMerchantNumber: string;
-}
+import type { PaymentSettings } from '@/types';
+import { Separator } from '@/components/ui/separator';
 
 const initialSettings: PaymentSettings = {
     bkashMerchantNumber: '01234567890',
     nagadMerchantNumber: '01234567891',
     rocketMerchantNumber: '01234567892',
+    bkashLogo: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/BKash_logo.svg',
+    nagadLogo: 'https://pix1.wapkizfile.info/download/8a051c9b664e1f7de58fec071478a91c/sizan+wapkiz+click/nagad-logo-png-seeklogo-355240-(sizan.wapkiz.click).png',
+    rocketLogo: 'https://picsum.photos/seed/rocket/100/60',
 };
 
 export default function PaymentSettingsPage() {
@@ -33,7 +31,7 @@ export default function PaymentSettingsPage() {
         try {
             const savedSettings = localStorage.getItem('paymentSettings');
             if (savedSettings) {
-                setSettings(JSON.parse(savedSettings));
+                setSettings(prev => ({...prev, ...JSON.parse(savedSettings)}));
             }
         } catch (error) {
             console.error("Could not read payment settings from localStorage", error);
@@ -62,7 +60,6 @@ export default function PaymentSettingsPage() {
                 variant: "destructive"
             });
         } finally {
-            // Simulate a delay for better UX
             setTimeout(() => setIsSaving(false), 500);
         }
     };
@@ -85,10 +82,14 @@ export default function PaymentSettingsPage() {
                 <form onSubmit={handleSubmit}>
                     <Card>
                         <CardHeader>
-                            <CardTitle>Payment Settings</CardTitle>
-                            <CardDescription>Manage the merchant numbers for online payment gateways.</CardDescription>
+                            <CardTitle>Payment & Site Settings</CardTitle>
+                            <CardDescription>Manage payment gateways and site logos.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
+                             <div>
+                                <h3 className="text-lg font-medium mb-2">Payment Merchant Numbers</h3>
+                                <Separator />
+                            </div>
                             <div className="space-y-2">
                                 <Label htmlFor="bkashMerchantNumber">bKash Merchant Number</Label>
                                 <Input 
@@ -117,6 +118,44 @@ export default function PaymentSettingsPage() {
                                     value={settings.rocketMerchantNumber}
                                     onChange={handleInputChange}
                                     placeholder="e.g., 01xxxxxxxxx" 
+                                />
+                            </div>
+
+                             <div className="pt-4">
+                                <h3 className="text-lg font-medium mb-2">Payment Gateway Logos</h3>
+                                <Separator />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="bkashLogo">bKash Logo URL</Label>
+                                <Input 
+                                    id="bkashLogo" 
+                                    name="bkashLogo"
+                                    value={settings.bkashLogo}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter image URL" 
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="nagadLogo">Nagad Logo URL</Label>
+                                <Input 
+                                    id="nagadLogo" 
+                                    name="nagadLogo"
+                                    value={settings.nagadLogo}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter image URL" 
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="rocketLogo">Rocket Logo URL</Label>
+                                <Input 
+                                    id="rocketLogo" 
+                                    name="rocketLogo"
+                                    value={settings.rocketLogo}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter image URL" 
                                 />
                             </div>
                         </CardContent>

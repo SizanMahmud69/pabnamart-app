@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useTransition } from 'react';
@@ -11,20 +10,14 @@ import { cn } from '@/lib/utils';
 
 const settingsItems = [
     {
-        title: "Site Settings",
-        description: "Manage your website's logos and branding.",
-        icon: ImageIcon,
-        href: "/admin/settings/site"
-    },
-    {
         title: "Delivery Settings",
         description: "Set the standard delivery charge for orders.",
         icon: Truck,
         href: "/admin/settings/delivery"
     },
     {
-        title: "Payment Settings",
-        description: "Manage payment gateway merchant numbers.",
+        title: "Payment & Site Settings",
+        description: "Manage payment gateways and logos.",
         icon: CreditCard,
         href: "/admin/settings/payment"
     },
