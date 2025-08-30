@@ -52,7 +52,7 @@ const menuItems = [
     },
     {
         title: "Settings",
-        description: "Manage site and delivery settings.",
+        description: "Manage site, delivery and category.",
         icon: Settings,
         href: "/admin/settings"
     }

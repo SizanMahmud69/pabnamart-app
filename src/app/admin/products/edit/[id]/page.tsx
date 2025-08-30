@@ -12,19 +12,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, PlusCircle, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
-import type { Product } from '@/types';
+import type { Product, Category } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { collection, getFirestore, onSnapshot } from 'firebase/firestore';
+import app from '@/lib/firebase';
 
-const categories = [
-  "Men's Fashion",
-  "Women's Fashion",
-  "Cosmetics",
-  "Groceries",
-  "Mobile & Computers",
-  "Electronics",
-];
+const db = getFirestore(app);
 
 export default function EditProductPage() {
     const router = useRouter();
@@ -40,7 +35,16 @@ export default function EditProductPage() {
     const [isFlashSale, setIsFlashSale] = useState(false);
     const [flashSaleEndDate, setFlashSaleEndDate] = useState('');
     const [flashSaleDiscount, setFlashSaleDiscount] = useState<number | undefined>(undefined);
+    const [categories, setCategories] = useState<Category[]>([]);
 
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, 'categories'), (snapshot) => {
+            const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+            setCategories(cats);
+        });
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         const productToEdit = products.find(p => p.id === productId);
@@ -173,8 +177,8 @@ export default function EditProductPage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categories.map(cat => (
-                                            <SelectItem key={cat} value={cat}>
-                                                {cat}
+                                            <SelectItem key={cat.id} value={cat.name}>
+                                                {cat.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

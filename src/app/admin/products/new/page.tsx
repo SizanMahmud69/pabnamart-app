@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,18 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, PlusCircle, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
-import type { Product } from '@/types';
+import type { Product, Category } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { collection, getFirestore, onSnapshot } from 'firebase/firestore';
+import app from '@/lib/firebase';
 
-const categories = [
-  "Men's Fashion",
-  "Women's Fashion",
-  "Cosmetics",
-  "Groceries",
-  "Mobile & Computers",
-  "Electronics",
-];
+const db = getFirestore(app);
 
 export default function NewProductPage() {
     const router = useRouter();
@@ -36,6 +31,15 @@ export default function NewProductPage() {
     const [isFlashSale, setIsFlashSale] = useState(false);
     const [flashSaleEndDate, setFlashSaleEndDate] = useState('');
     const [flashSaleDiscount, setFlashSaleDiscount] = useState<number | undefined>(undefined);
+    const [categories, setCategories] = useState<Category[]>([]);
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, 'categories'), (snapshot) => {
+            const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+            setCategories(cats);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleImageChange = (index: number, value: string) => {
         const newImageUrls = [...imageUrls];
@@ -151,8 +155,8 @@ export default function NewProductPage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categories.map(cat => (
-                                            <SelectItem key={cat} value={cat}>
-                                                {cat}
+                                            <SelectItem key={cat.id} value={cat.name}>
+                                                {cat.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

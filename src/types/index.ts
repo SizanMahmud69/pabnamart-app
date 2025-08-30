@@ -146,3 +146,10 @@ export interface Wishlist {
     userId: string;
     productIds: number[];
 }
+
+export interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}
