@@ -84,7 +84,7 @@ export default function OrderDetailsPage() {
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const shippingFee = order.total + (order.voucherDiscount || 0) - subtotal;
     
-    const isPaid = order.paymentMethod === 'online';
+    const isPaid = order.paymentMethod === 'online' || (order.paymentMethod === 'cod' && order.status === 'delivered');
 
     return (
         <div className="container mx-auto p-4">
@@ -117,7 +117,7 @@ export default function OrderDetailsPage() {
                     </CardHeader>
                 </Card>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-6">
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-lg"><UserIcon className="h-5 w-5" /> Customer Details</CardTitle>
