@@ -10,6 +10,11 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { DeliverySettings } from '@/types';
+import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import app from '@/lib/firebase';
+import LoadingSpinner from '@/components/LoadingSpinner';
+
+const db = getFirestore(app);
 
 const initialSettings: DeliverySettings = {
     insidePabnaSmall: 0,
@@ -25,15 +30,15 @@ export default function DeliverySettingsPage() {
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
-        try {
-            const savedSettings = localStorage.getItem('deliverySettings');
-            if (savedSettings) {
-                setSettings(JSON.parse(savedSettings));
+        const settingsDocRef = doc(db, 'settings', 'delivery');
+        const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setSettings(docSnap.data() as DeliverySettings);
             }
-        } catch (error) {
-            console.error("Could not read delivery settings from localStorage", error);
-        }
-        setIsLoading(false);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
     }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,11 +46,12 @@ export default function DeliverySettingsPage() {
         setSettings(prev => ({ ...prev, [name]: Number(value) }));
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSaving(true);
         try {
-            localStorage.setItem('deliverySettings', JSON.stringify(settings));
+            const settingsDocRef = doc(db, 'settings', 'delivery');
+            await setDoc(settingsDocRef, settings);
             toast({
                 title: "Settings Saved",
                 description: "The delivery charges have been updated successfully.",
@@ -57,13 +63,12 @@ export default function DeliverySettingsPage() {
                 variant: "destructive"
             });
         } finally {
-            // Simulate a delay for better UX
-            setTimeout(() => setIsSaving(false), 500);
+            setIsSaving(false);
         }
     };
 
     if (isLoading) {
-        return <div className="container mx-auto p-4">Loading settings...</div>;
+        return <LoadingSpinner />;
     }
 
     return (

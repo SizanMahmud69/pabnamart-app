@@ -12,6 +12,10 @@ import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import type { PaymentSettings } from '@/types';
 import { Separator } from '@/components/ui/separator';
+import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import app from '@/lib/firebase';
+
+const db = getFirestore(app);
 
 const initialSettings: PaymentSettings = {
     bkashMerchantNumber: '',
@@ -29,15 +33,15 @@ export default function PaymentSettingsPage() {
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
-        try {
-            const savedSettings = localStorage.getItem('paymentSettings');
-            if (savedSettings) {
-                setSettings(prev => ({...prev, ...JSON.parse(savedSettings)}));
+        const settingsDocRef = doc(db, 'settings', 'payment');
+        const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setSettings(prev => ({...prev, ...docSnap.data()}));
             }
-        } catch (error) {
-            console.error("Could not read payment settings from localStorage", error);
-        }
-        setIsLoading(false);
+            setIsLoading(false);
+        });
+        
+        return () => unsubscribe();
     }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,11 +49,12 @@ export default function PaymentSettingsPage() {
         setSettings(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSaving(true);
         try {
-            localStorage.setItem('paymentSettings', JSON.stringify(settings));
+            const settingsDocRef = doc(db, 'settings', 'payment');
+            await setDoc(settingsDocRef, settings, { merge: true });
             toast({
                 title: "Settings Saved",
                 description: "The payment settings have been updated successfully.",
@@ -61,7 +66,7 @@ export default function PaymentSettingsPage() {
                 variant: "destructive"
             });
         } finally {
-            setTimeout(() => setIsSaving(false), 500);
+            setIsSaving(false);
         }
     };
 

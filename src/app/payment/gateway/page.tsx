@@ -9,12 +9,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Copy } from "lucide-react";
-import type { CartItem, ShippingAddress, Voucher, PaymentDetails } from "@/types";
+import type { CartItem, ShippingAddress, Voucher, PaymentDetails, PaymentSettings } from "@/types";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
 import { placeOrder } from "@/app/actions";
 import { cn } from "@/lib/utils";
+import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
+import app from '@/lib/firebase';
+
+const db = getFirestore(app);
 
 interface OrderDetails {
     cartItems: CartItem[];
@@ -52,17 +56,20 @@ function PaymentGatewayPage() {
             router.push('/checkout');
         }
 
-        const savedPaymentSettings = localStorage.getItem('paymentSettings');
-        if (savedPaymentSettings) {
-            const parsedSettings = JSON.parse(savedPaymentSettings);
-            setPaymentMethods(prevMethods => prevMethods.map(method => {
-                if (method.name === 'bKash') return { ...method, logo: parsedSettings.bkashLogo || method.logo, merchantNumber: parsedSettings.bkashMerchantNumber };
-                if (method.name === 'Nagad') return { ...method, logo: parsedSettings.nagadLogo || method.logo, merchantNumber: parsedSettings.nagadMerchantNumber };
-                if (method.name === 'Rocket') return { ...method, logo: parsedSettings.rocketLogo || method.logo, merchantNumber: parsedSettings.rocketMerchantNumber };
-                return method;
-            }));
-        }
+        const settingsDocRef = doc(db, 'settings', 'payment');
+        const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const parsedSettings = docSnap.data() as PaymentSettings;
+                 setPaymentMethods(prevMethods => prevMethods.map(method => {
+                    if (method.name === 'bKash') return { ...method, logo: parsedSettings.bkashLogo || method.logo, merchantNumber: parsedSettings.bkashMerchantNumber };
+                    if (method.name === 'Nagad') return { ...method, logo: parsedSettings.nagadLogo || method.logo, merchantNumber: parsedSettings.nagadMerchantNumber };
+                    if (method.name === 'Rocket') return { ...method, logo: parsedSettings.rocketLogo || method.logo, merchantNumber: parsedSettings.rocketMerchantNumber };
+                    return method;
+                }));
+            }
+        });
 
+        return () => unsubscribe();
     }, [router]);
 
     const handleConfirmPayment = async () => {

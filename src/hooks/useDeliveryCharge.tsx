@@ -3,6 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import type { DeliverySettings } from '@/types';
+import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
+import app from '@/lib/firebase';
+
+const db = getFirestore(app);
 
 const defaultSettings: DeliverySettings = {
   insidePabnaSmall: 60,
@@ -15,16 +19,20 @@ export const useDeliveryCharge = () => {
   const [settings, setSettings] = useState<DeliverySettings>(defaultSettings);
 
   useEffect(() => {
-    // This hook runs on the client-side, so it's safe to access localStorage.
-    try {
-      const savedSettings = localStorage.getItem('deliverySettings');
-      if (savedSettings) {
-        const parsedSettings = JSON.parse(savedSettings);
-        setSettings({ ...defaultSettings, ...parsedSettings });
-      }
-    } catch (error) {
-      console.error("Could not read delivery settings from localStorage", error);
-    }
+    const settingsDocRef = doc(db, 'settings', 'delivery');
+    const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            setSettings({ ...defaultSettings, ...data });
+        } else {
+            setSettings(defaultSettings);
+        }
+    }, (error) => {
+        console.error("Could not read delivery settings from Firestore", error);
+        setSettings(defaultSettings);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return { 
