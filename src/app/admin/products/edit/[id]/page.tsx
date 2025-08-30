@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,15 @@ export default function EditProductPage() {
         return () => unsubscribe();
     }, []);
 
+    const uniqueCategories = useMemo(() => {
+        const seen = new Set();
+        return categories.filter(cat => {
+            const duplicate = seen.has(cat.name);
+            seen.add(cat.name);
+            return !duplicate;
+        });
+    }, [categories]);
+
     useEffect(() => {
         const productToEdit = products.find(p => p.id === productId);
         if (productToEdit) {
@@ -85,7 +94,7 @@ export default function EditProductPage() {
             finalImageUrls.push('https://picsum.photos/600/600');
         }
 
-        const updatedProductData: Omit<Product, 'id' | 'rating' | 'reviews'> = {
+        const updatedProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             price: parseFloat(formData.get('price') as string),
@@ -96,7 +105,7 @@ export default function EditProductPage() {
             details: formData.get('details') as string,
             freeShipping: freeShipping,
             isFlashSale: isFlashSale,
-            flashSaleEndDate: isFlashSale ? flashSaleEndDate : undefined,
+            flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
             flashSaleDiscount: isFlashSale ? flashSaleDiscount : undefined,
             shippingTime: formData.get('shippingTime') as string,
             returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,
@@ -176,7 +185,7 @@ export default function EditProductPage() {
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {categories.map(cat => (
+                                        {uniqueCategories.map(cat => (
                                             <SelectItem key={cat.id} value={cat.name}>
                                                 {cat.name}
                                             </SelectItem>

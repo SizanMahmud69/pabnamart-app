@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,15 @@ export default function NewProductPage() {
         return () => unsubscribe();
     }, []);
 
+    const uniqueCategories = useMemo(() => {
+        const seen = new Set();
+        return categories.filter(cat => {
+            const duplicate = seen.has(cat.name);
+            seen.add(cat.name);
+            return !duplicate;
+        });
+    }, [categories]);
+
     const handleImageChange = (index: number, value: string) => {
         const newImageUrls = [...imageUrls];
         newImageUrls[index] = value;
@@ -67,7 +76,7 @@ export default function NewProductPage() {
             finalImageUrls.push('https://picsum.photos/600/600');
         }
 
-        const newProductData: Omit<Product, 'id' | 'rating' | 'reviews'> = {
+        const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             price: parseFloat(formData.get('price') as string),
@@ -78,7 +87,7 @@ export default function NewProductPage() {
             details: formData.get('details') as string,
             freeShipping: freeShipping,
             isFlashSale: isFlashSale,
-            flashSaleEndDate: isFlashSale ? flashSaleEndDate : undefined,
+            flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
             flashSaleDiscount: isFlashSale ? flashSaleDiscount : undefined,
             shippingTime: formData.get('shippingTime') as string,
             returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,
@@ -154,7 +163,7 @@ export default function NewProductPage() {
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {categories.map(cat => (
+                                        {uniqueCategories.map(cat => (
                                             <SelectItem key={cat.id} value={cat.name}>
                                                 {cat.name}
                                             </SelectItem>
