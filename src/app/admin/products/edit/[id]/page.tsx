@@ -92,7 +92,7 @@ export default function EditProductPage() {
             details: formData.get('details') as string,
             freeShipping: freeShipping,
             isFlashSale: isFlashSale,
-            flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
+            flashSaleEndDate: isFlashSale ? flashSaleEndDate : undefined,
             flashSaleDiscount: isFlashSale ? flashSaleDiscount : undefined,
             shippingTime: formData.get('shippingTime') as string,
             returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,

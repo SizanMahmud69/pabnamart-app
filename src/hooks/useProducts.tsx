@@ -148,6 +148,14 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       flashSaleEndDate: productData.flashSaleEndDate || '',
       flashSaleDiscount: productData.flashSaleDiscount,
     };
+     // Ensure optional fields are not undefined
+    if (newProduct.flashSaleDiscount === undefined) {
+      delete newProduct.flashSaleDiscount;
+    }
+    if (!newProduct.flashSaleEndDate) {
+        delete newProduct.flashSaleEndDate;
+    }
+
     const productDoc = doc(db, 'products', newId.toString());
     await setDoc(productDoc, newProduct);
   };
@@ -185,16 +193,28 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         await sendStockNotifications(existingProduct);
     }
     
-    const dataToUpdate = {
+    const dataToUpdate: Partial<Product> = {
         ...productData,
         id: productId,
         rating: existingProduct?.rating || 0,
         reviews: existingProduct?.reviews || [],
         sold: existingProduct?.sold || 0,
         isFlashSale: productData.isFlashSale || false,
-        flashSaleEndDate: productData.flashSaleEndDate || '',
-        flashSaleDiscount: productData.flashSaleDiscount,
     };
+
+    // Ensure optional fields are not undefined
+    if (productData.flashSaleDiscount !== undefined) {
+      dataToUpdate.flashSaleDiscount = productData.flashSaleDiscount;
+    } else {
+      delete dataToUpdate.flashSaleDiscount;
+    }
+    
+    if (productData.flashSaleEndDate) {
+      dataToUpdate.flashSaleEndDate = productData.flashSaleEndDate;
+    } else {
+      delete dataToUpdate.flashSaleEndDate;
+    }
+
     await updateDoc(productDocRef, dataToUpdate);
   };
 
