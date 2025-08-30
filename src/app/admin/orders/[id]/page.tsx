@@ -65,8 +65,12 @@ export default function OrderDetailsPage() {
         if (!order) return;
         const originalTitle = document.title;
         document.title = `Order-#${order.orderNumber}`;
-        window.print();
-        document.title = originalTitle;
+        
+        // Use a timeout to ensure the title has been updated in the browser
+        setTimeout(() => {
+            window.print();
+            document.title = originalTitle;
+        }, 100);
     }
 
     if (loading) {
@@ -210,6 +214,4 @@ export default function OrderDetailsPage() {
             </main>
         </div>
     );
-
-    
-
+}
