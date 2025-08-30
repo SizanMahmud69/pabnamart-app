@@ -9,35 +9,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Category } from '@/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import Image from 'next/image';
 
 const db = getFirestore(app);
-
-const iconOptions = ["Shirt", "Heart", "ShoppingBasket", "Smartphone", "Tv2", "Laptop"];
-const colorOptions = [
-    { name: "Blue", value: "bg-blue-100 text-blue-600" },
-    { name: "Purple", value: "bg-purple-100 text-purple-600" },
-    { name: "Pink", value: "bg-pink-100 text-pink-600" },
-    { name: "Green", value: "bg-green-100 text-green-600" },
-    { name: "Cyan", value: "bg-cyan-100 text-cyan-600" },
-    { name: "Indigo", value: "bg-indigo-100 text-indigo-600" }
-];
-
 
 export default function CategorySettingsPage() {
     const { toast } = useToast();
     const [categories, setCategories] = useState<Category[]>([]);
     const [newCategoryName, setNewCategoryName] = useState('');
+    const [newCategoryImage, setNewCategoryImage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
     useEffect(() => {
         setIsLoading(true);
-        const unsubscribe = onSnapshot(collection(db, 'categories'), (snapshot) => {
+        const categoriesRef = collection(db, 'categories');
+        const q = query(categoriesRef, orderBy('createdAt', 'asc'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
             setCategories(cats);
             setIsLoading(false);
@@ -47,19 +41,20 @@ export default function CategorySettingsPage() {
 
     const handleAddCategory = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newCategoryName.trim()) {
-            toast({ title: "Error", description: "Category name cannot be empty.", variant: "destructive" });
+        if (!newCategoryName.trim() || !newCategoryImage.trim()) {
+            toast({ title: "Error", description: "Category name and image URL cannot be empty.", variant: "destructive" });
             return;
         }
         setIsSubmitting(true);
         try {
             await addDoc(collection(db, 'categories'), {
                 name: newCategoryName,
-                icon: iconOptions[Math.floor(Math.random() * iconOptions.length)],
-                color: colorOptions[Math.floor(Math.random() * colorOptions.length)].value,
+                image: newCategoryImage,
+                createdAt: new Date().toISOString(),
             });
             toast({ title: "Success", description: "New category added." });
             setNewCategoryName('');
+            setNewCategoryImage('');
         } catch (error) {
             console.error(error);
             toast({ title: "Error", description: "Failed to add category.", variant: "destructive" });
@@ -101,7 +96,7 @@ export default function CategorySettingsPage() {
                         <CardDescription>Create a new category for your products.</CardDescription>
                     </CardHeader>
                     <form onSubmit={handleAddCategory}>
-                        <CardContent>
+                        <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="category-name">Category Name</Label>
                                 <Input
@@ -109,6 +104,16 @@ export default function CategorySettingsPage() {
                                     value={newCategoryName}
                                     onChange={(e) => setNewCategoryName(e.target.value)}
                                     placeholder="e.g., Home Appliances"
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="category-image">Category Image URL</Label>
+                                <Input
+                                    id="category-image"
+                                    value={newCategoryImage}
+                                    onChange={(e) => setNewCategoryImage(e.target.value)}
+                                    placeholder="https://example.com/image.png"
                                     disabled={isSubmitting}
                                 />
                             </div>
@@ -134,10 +139,15 @@ export default function CategorySettingsPage() {
                             <ul className="space-y-2">
                                 {categories.map(cat => (
                                     <li key={cat.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                                        <span className="font-medium">{cat.name}</span>
+                                        <div className="flex items-center gap-4">
+                                            {cat.image && (
+                                                <Image src={cat.image} alt={cat.name} width={40} height={40} className="rounded-md object-cover" />
+                                            )}
+                                            <span className="font-medium">{cat.name}</span>
+                                        </div>
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setCategoryToDelete(cat)}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </AlertDialogTrigger>
@@ -149,7 +159,7 @@ export default function CategorySettingsPage() {
                                                     </AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogCancel onClick={() => setCategoryToDelete(null)}>Cancel</AlertDialogCancel>
                                                     <AlertDialogAction onClick={() => handleDeleteCategory()}>Delete</AlertDialogAction>
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>

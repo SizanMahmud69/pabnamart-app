@@ -2,34 +2,24 @@
 "use client";
 
 import Link from 'next/link';
-import { Shirt, Heart, ShoppingBasket, Smartphone, Tv2, Laptop } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
-import { getFirestore, collection, onSnapshot } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Category } from '@/types';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import Image from 'next/image';
 
 const db = getFirestore(app);
-
-const iconMap: { [key: string]: LucideIcon } = {
-  Shirt,
-  Heart,
-  ShoppingBasket,
-  Smartphone,
-  Tv2,
-  Laptop,
-  "default": ShoppingBasket,
-};
-
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'categories'), (snapshot) => {
+    const categoriesRef = collection(db, 'categories');
+    const q = query(categoriesRef, orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
         const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
         setCategories(cats);
         setLoading(false);
@@ -51,17 +41,24 @@ export default function Categories() {
                             </div>
                         ))
                     ) : (
-                        categories.map((category) => {
-                            const Icon = iconMap[category.icon] || iconMap.default;
-                            return (
-                                <Link href={`/category/${encodeURIComponent(category.name)}`} key={category.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-purple-100/50 transition-colors w-24 text-center">
-                                    <div className={`w-16 h-16 rounded-full flex items-center justify-center ${category.color}`}>
-                                        <Icon className="w-8 h-8" />
-                                    </div>
-                                    <span className="text-sm font-medium whitespace-normal break-words">{category.name}</span>
-                                </Link>
-                            )
-                        })
+                        categories.map((category) => (
+                            <Link href={`/category/${encodeURIComponent(category.name)}`} key={category.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-purple-100/50 transition-colors w-24 text-center">
+                                <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden relative border">
+                                    {category.image ? (
+                                        <Image
+                                            src={category.image}
+                                            alt={category.name}
+                                            fill
+                                            className="object-cover"
+                                            sizes="64px"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-muted" />
+                                    )}
+                                </div>
+                                <span className="text-sm font-medium whitespace-normal break-words">{category.name}</span>
+                            </Link>
+                        ))
                     )}
                 </div>
                 <ScrollBar orientation="horizontal" />

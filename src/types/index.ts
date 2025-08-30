@@ -150,6 +150,6 @@ export interface Wishlist {
 export interface Category {
   id: string;
   name: string;
-  icon: string;
-  color: string;
+  image: string;
+  createdAt: string;
 }
