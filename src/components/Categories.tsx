@@ -18,7 +18,7 @@ export default function Categories() {
 
   useEffect(() => {
     const categoriesRef = collection(db, 'categories');
-    const q = query(categoriesRef, orderBy('createdAt', 'desc'));
+    const q = query(categoriesRef, orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
         setCategories(cats);
