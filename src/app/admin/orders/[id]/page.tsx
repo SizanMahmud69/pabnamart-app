@@ -83,7 +83,8 @@ export default function OrderDetailsPage() {
     
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const shippingFee = order.total + (order.voucherDiscount || 0) - subtotal;
-
+    
+    const isPaid = order.paymentMethod === 'online';
 
     return (
         <div className="container mx-auto p-4">
@@ -159,7 +160,7 @@ export default function OrderDetailsPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><ShoppingBag className="h-5 w-5" /> Order Items ({order.items.length})</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="relative">
                         <div className="relative w-full overflow-auto">
                             <Table>
                                 <TableHeader>
@@ -209,9 +210,21 @@ export default function OrderDetailsPage() {
                                 </TableFooter>
                             </Table>
                         </div>
+                        <div className="absolute bottom-16 right-8 hidden print:block">
+                            {isPaid ? (
+                                <div className="flex items-center justify-center w-32 h-32 border-4 border-green-500 rounded-full">
+                                    <span className="text-3xl font-bold text-green-500 transform -rotate-12">Paid</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center w-32 h-32 border-4 border-red-500 rounded-full">
+                                    <span className="text-3xl font-bold text-red-500 transform -rotate-12">Unpaid</span>
+                                </div>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             </main>
         </div>
     );
 }
+
