@@ -82,7 +82,7 @@ export default function PaymentSettingsPage() {
                 <form onSubmit={handleSubmit}>
                     <Card>
                         <CardHeader>
-                            <CardTitle>Payment & Site Settings</CardTitle>
+                            <CardTitle>Payment Settings</CardTitle>
                             <CardDescription>Manage payment gateways and site logos.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">

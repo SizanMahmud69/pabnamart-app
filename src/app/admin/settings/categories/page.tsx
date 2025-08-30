@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -22,7 +21,7 @@ export default function CategorySettingsPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newCategoryImage, setNewCategoryImage] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -130,7 +129,7 @@ export default function CategorySettingsPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Manage Categories</CardTitle>
+                        <CardTitle>Category Settings</CardTitle>
                         <CardDescription>View and delete existing categories.</CardDescription>
                     </CardHeader>
                     <CardContent>

@@ -16,13 +16,13 @@ const settingsItems = [
         href: "/admin/settings/delivery"
     },
     {
-        title: "Payment & Site Settings",
+        title: "Payment Settings",
         description: "Manage payment gateways and logos.",
         icon: CreditCard,
         href: "/admin/settings/payment"
     },
     {
-        title: "Category Management",
+        title: "Category Settings",
         description: "Add, edit and delete product categories.",
         icon: LayoutGrid,
         href: "/admin/settings/categories"
