@@ -29,6 +29,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
+
 interface AuthContextType {
   user: FirebaseUser | null;
   appUser: AppUser | null;
@@ -97,14 +99,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const firebaseUser = userCredential.user;
     
-    await updateProfile(firebaseUser, { displayName });
+    await updateProfile(firebaseUser, { displayName, photoURL: DEFAULT_AVATAR_URL });
     
     // Create user document in Firestore
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     const newAppUser: Omit<AppUser, 'uid'> = {
         email: firebaseUser.email,
         displayName: displayName,
-        photoURL: null,
+        photoURL: DEFAULT_AVATAR_URL,
         status: 'active',
         joined: new Date().toISOString(),
         shippingAddresses: [],
@@ -115,7 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const authInstance = getAuth(app);
     if (authInstance.currentUser) {
-        await updateProfile(authInstance.currentUser, { displayName });
+        await updateProfile(authInstance.currentUser, { displayName, photoURL: DEFAULT_AVATAR_URL });
         setUser({ ...authInstance.currentUser });
     }
     return userCredential;
@@ -135,7 +137,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const newAppUser: Omit<AppUser, 'uid'> = {
         email: firebaseUser.email,
         displayName: firebaseUser.displayName,
-        photoURL: firebaseUser.photoURL,
+        photoURL: firebaseUser.photoURL || DEFAULT_AVATAR_URL,
         status: 'active',
         joined: new Date().toISOString(),
         shippingAddresses: [],

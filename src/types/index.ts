@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from "react";
 
 export interface Review {
@@ -75,7 +76,7 @@ export interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
-  photoURL?: string | null;
+  photoURL: string | null;
   status: 'active' | 'banned';
   joined: string;
   shippingAddresses?: ShippingAddress[];

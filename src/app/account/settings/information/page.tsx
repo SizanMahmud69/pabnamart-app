@@ -12,6 +12,9 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
+
+
 function AccountInformationPage() {
     const { user, updateUserDisplayName, updateUserProfilePicture } = useAuth();
     const [displayName, setDisplayName] = useState('');
@@ -86,7 +89,7 @@ function AccountInformationPage() {
                     <CardContent className="space-y-8">
                         <div className="flex justify-center">
                             <Avatar className="h-24 w-24">
-                                <AvatarImage src={user?.photoURL || ''} alt="User Avatar" />
+                                <AvatarImage src={user?.photoURL || DEFAULT_AVATAR_URL} alt="User Avatar" />
                                 <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
                             </Avatar>
                         </div>
