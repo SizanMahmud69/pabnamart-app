@@ -8,7 +8,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import StarRating from '@/components/StarRating';
 import AddToCartButton from './AddToCartButton';
 import { Separator } from '@/components/ui/separator';
-import { useEffect, useState, useMemo, Suspense } from 'react';
+import { useEffect, useState, useMemo, Suspense, use } from 'react';
 import type { Product } from '@/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,8 @@ import { useParams, useSearchParams } from 'next/navigation';
 
 function ProductDetailPageContent() {
   const params = useParams();
+  // Using React.use() to unwrap params as per Next.js recommendation
+  const unwrappedParams = use(params);
   const searchParams = useSearchParams();
   const { products, getFlashSalePrice } = useProducts();
   const [product, setProduct] = useState<Product | undefined | null>(null);
@@ -27,10 +29,10 @@ function ProductDetailPageContent() {
   
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [params.id]);
+  }, [unwrappedParams.id]);
 
   useEffect(() => {
-    const productId = params.id as string;
+    const productId = unwrappedParams.id as string;
     if (products.length > 0 && productId) {
         const foundProduct = products.find(p => p.id === parseInt(productId));
         if (foundProduct) {
@@ -49,7 +51,7 @@ function ProductDetailPageContent() {
            setProduct(undefined);
         }
     }
-  }, [products, params.id, isFlashSaleContext, getFlashSalePrice]);
+  }, [products, unwrappedParams.id, isFlashSaleContext, getFlashSalePrice]);
 
   if (product === null) {
     return <LoadingSpinner />;

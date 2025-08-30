@@ -6,25 +6,27 @@ import ProductCard from '@/components/ProductCard';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import type { Product } from '@/types';
 import { useParams } from 'next/navigation';
 
 export default function CategoryPage() {
     const params = useParams();
+    // Using React.use() to unwrap params as per Next.js recommendation
+    const unwrappedParams = use(params);
     const { products: allProducts } = useProducts();
     const [products, setProducts] = useState<Product[]>([]);
     const [categoryName, setCategoryName] = useState('');
 
     useEffect(() => {
-        const name = params.name as string;
+        const name = unwrappedParams.name as string;
         if (name) {
             const decodedName = decodeURIComponent(name);
             setCategoryName(decodedName);
             const filteredProducts = allProducts.filter(p => p.category.toLowerCase() === decodedName.toLowerCase());
             setProducts(filteredProducts);
         }
-    }, [params.name, allProducts]);
+    }, [unwrappedParams.name, allProducts]);
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
