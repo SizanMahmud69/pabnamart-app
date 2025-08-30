@@ -66,7 +66,6 @@ export default function OrderDetailsPage() {
         const originalTitle = document.title;
         document.title = `Order-#${order.orderNumber}`;
         
-        // Use a timeout to ensure the title has been updated in the browser
         setTimeout(() => {
             window.print();
             document.title = originalTitle;
@@ -84,7 +83,10 @@ export default function OrderDetailsPage() {
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const shippingFee = order.total + (order.voucherDiscount || 0) - subtotal;
     
-    const isPaid = order.paymentMethod === 'online' || (order.paymentMethod === 'cod' && order.status === 'delivered');
+    const isPaidOnline = order.paymentMethod === 'online' && order.status !== 'pending';
+    const isPaidCOD = order.paymentMethod === 'cod' && order.status === 'delivered';
+    const isPaid = isPaidOnline || isPaidCOD;
+
 
     return (
         <div className="container mx-auto p-4">
@@ -109,7 +111,7 @@ export default function OrderDetailsPage() {
                     <CardHeader>
                         <CardTitle className="flex justify-between items-center">
                             <span>Order #{order.orderNumber}</span>
-                             <Badge variant="secondary" className="capitalize text-base">{order.status}</Badge>
+                             <Badge variant="secondary" className="capitalize text-base">{order.status.replace('-', ' ')}</Badge>
                         </CardTitle>
                         <CardDescription>
                             Date: {new Date(order.date).toLocaleString()}
@@ -210,7 +212,7 @@ export default function OrderDetailsPage() {
                                 </TableFooter>
                             </Table>
                         </div>
-                        <div className="absolute bottom-16 right-8 hidden print:block">
+                        <div className="absolute bottom-4 right-4 print:bottom-16 print:right-8">
                             {isPaid ? (
                                 <div className="flex items-center justify-center w-32 h-32 border-4 border-green-500 rounded-full">
                                     <span className="text-3xl font-bold text-green-500 transform -rotate-12">Paid</span>

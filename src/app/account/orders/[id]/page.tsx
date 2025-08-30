@@ -40,7 +40,6 @@ export default function UserOrderDetailsPage() {
                 if (orderDocSnap.exists()) {
                     const orderData = { id: orderDocSnap.id, ...orderDocSnap.data() } as Order;
                     
-                    // Security check: ensure the user owns this order
                     if (orderData.userId !== user.uid) {
                          toast({ title: "Access Denied", description: "You are not authorized to view this order.", variant: "destructive" });
                          router.push('/account/orders');
@@ -95,7 +94,7 @@ export default function UserOrderDetailsPage() {
                         <CardHeader>
                             <CardTitle className="flex justify-between items-center">
                                 <span>Order #{order.orderNumber}</span>
-                                <Badge variant="secondary" className="capitalize text-base">{order.status}</Badge>
+                                <Badge variant="secondary" className="capitalize text-base">{order.status.replace('-', ' ')}</Badge>
                             </CardTitle>
                             <CardDescription>
                                 Date: {new Date(order.date).toLocaleString()}
@@ -133,7 +132,7 @@ export default function UserOrderDetailsPage() {
                                     ) : order.paymentMethod === 'online' ? (
                                         <Badge variant="secondary">Pending Verification</Badge>
                                     ) : (
-                                        <Badge variant="outline">Cash on Delivery</Badge>
+                                        <Badge variant="outline">Unpaid</Badge>
                                     )}
                                 </div>
                                 <p><strong>Total:</strong> <span className="font-bold text-foreground">৳{order.total}</span></p>
@@ -145,54 +144,67 @@ export default function UserOrderDetailsPage() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><ShoppingBag className="h-5 w-5" /> Order Items ({order.items.length})</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Product</TableHead>
-                                        <TableHead>Quantity</TableHead>
-                                        <TableHead>Price</TableHead>
-                                        <TableHead className="text-right">Subtotal</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {order.items.map(item => (
-                                        <TableRow key={item.id}>
-                                            <TableCell className="flex items-center gap-3">
-                                                <div className="relative h-12 w-12 rounded-md overflow-hidden border">
-                                                    <Image src={item.image} alt={item.name} fill className="object-cover" sizes="50px" />
-                                                </div>
-                                                <span className="font-medium">{item.name}</span>
-                                            </TableCell>
-                                            <TableCell>x {item.quantity}</TableCell>
-                                            <TableCell>৳{item.price}</TableCell>
-                                            <TableCell className="text-right">৳{item.price * item.quantity}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                                <TableFooter>
-                                    <TableRow>
-                                        <TableCell colSpan={3} className="text-right font-semibold">Subtotal</TableCell>
-                                        <TableCell className="text-right font-semibold">৳{subtotal}</TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell colSpan={3} className="text-right font-semibold">Shipping Fee</TableCell>
-                                        <TableCell className="text-right font-semibold">৳{shippingFee > 0 ? shippingFee : 'Free'}</TableCell>
-                                    </TableRow>
-                                    {order.usedVoucherCode && order.voucherDiscount && (
+                        <CardContent className="relative">
+                           <div className="relative w-full overflow-auto">
+                                <Table>
+                                    <TableHeader>
                                         <TableRow>
-                                            <TableCell colSpan={3} className="text-right font-semibold text-primary">
-                                                Voucher ({order.usedVoucherCode})
-                                            </TableCell>
-                                            <TableCell className="text-right font-semibold text-primary">- ৳{order.voucherDiscount}</TableCell>
+                                            <TableHead>Product</TableHead>
+                                            <TableHead>Quantity</TableHead>
+                                            <TableHead>Price</TableHead>
+                                            <TableHead className="text-right">Subtotal</TableHead>
                                         </TableRow>
-                                    )}
-                                    <TableRow className="text-lg font-bold">
-                                        <TableCell colSpan={3} className="text-right">Total</TableCell>
-                                        <TableCell className="text-right">৳{order.total}</TableCell>
-                                    </TableRow>
-                                </TableFooter>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {order.items.map(item => (
+                                            <TableRow key={item.id}>
+                                                <TableCell className="flex items-center gap-3">
+                                                    <div className="relative h-12 w-12 rounded-md overflow-hidden border">
+                                                        <Image src={item.image} alt={item.name} fill className="object-cover" sizes="50px" />
+                                                    </div>
+                                                    <span className="font-medium">{item.name}</span>
+                                                </TableCell>
+                                                <TableCell>x {item.quantity}</TableCell>
+                                                <TableCell>৳{item.price}</TableCell>
+                                                <TableCell className="text-right">৳{item.price * item.quantity}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                    <TableFooter>
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-right font-semibold">Subtotal</TableCell>
+                                            <TableCell className="text-right font-semibold">৳{subtotal}</TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-right font-semibold">Shipping Fee</TableCell>
+                                            <TableCell className="text-right font-semibold">৳{shippingFee > 0 ? shippingFee : 'Free'}</TableCell>
+                                        </TableRow>
+                                        {order.usedVoucherCode && order.voucherDiscount && (
+                                            <TableRow>
+                                                <TableCell colSpan={3} className="text-right font-semibold text-primary">
+                                                    Voucher ({order.usedVoucherCode})
+                                                </TableCell>
+                                                <TableCell className="text-right font-semibold text-primary">- ৳{order.voucherDiscount}</TableCell>
+                                            </TableRow>
+                                        )}
+                                        <TableRow className="text-lg font-bold">
+                                            <TableCell colSpan={3} className="text-right">Total</TableCell>
+                                            <TableCell className="text-right">৳{order.total}</TableCell>
+                                        </TableRow>
+                                    </TableFooter>
+                                </Table>
+                           </div>
+                            <div className="absolute bottom-4 right-4">
+                                {isPaid ? (
+                                    <div className="flex items-center justify-center w-32 h-32 border-4 border-green-500 rounded-full">
+                                        <span className="text-3xl font-bold text-green-500 transform -rotate-12">Paid</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center w-32 h-32 border-4 border-red-500 rounded-full">
+                                        <span className="text-3xl font-bold text-red-500 transform -rotate-12">Unpaid</span>
+                                    </div>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                 </main>
