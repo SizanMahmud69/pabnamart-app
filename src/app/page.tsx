@@ -18,6 +18,7 @@ import Autoplay from "embla-carousel-autoplay";
 import Categories from '@/components/Categories';
 import { useOffers } from '@/hooks/useOffers';
 import { cn } from '@/lib/utils';
+import ProductCardSkeleton from '@/components/ProductCardSkeleton';
 
 const categoryImageMap: { [key: string]: { image: string; aiHint: string } } = {
   "Flash Sale": { image: "https://picsum.photos/seed/flashsale/1200/400", aiHint: "flash sale" },
@@ -45,7 +46,7 @@ const bannerLayouts = ['left', 'right', 'center'];
 function HomePageContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
-  const { products: allProducts, getFlashSaleProducts } = useProducts();
+  const { products: allProducts, getFlashSaleProducts, loading: productsLoading } = useProducts();
   const { activeOffers } = useOffers();
 
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
@@ -200,23 +201,35 @@ function HomePageContent() {
           </div>
           <Carousel opts={{ align: "start", loop: false }} className="w-full">
             <CarouselContent className="-ml-2 md:-ml-4">
-                {newArrivals.map(product => (
-                    <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                {productsLoading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <CarouselItem key={i} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                         <div className="p-1">
-                            <ProductCard product={product} />
+                           <ProductCardSkeleton />
                         </div>
                     </CarouselItem>
-                ))}
-                 <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                    <div className="p-1 flex h-full items-center justify-center">
-                        <Button asChild variant="outline" className="h-full w-full">
-                            <Link href="/new-arrivals" className="flex-col h-full">
-                                <span>See More</span>
-                                <ArrowRight className="mt-2 h-6 w-6" />
-                            </Link>
-                        </Button>
-                    </div>
-                </CarouselItem>
+                  ))
+                ) : (
+                  <>
+                    {newArrivals.map(product => (
+                        <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                            <div className="p-1">
+                                <ProductCard product={product} />
+                            </div>
+                        </CarouselItem>
+                    ))}
+                    <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                        <div className="p-1 flex h-full items-center justify-center">
+                            <Button asChild variant="outline" className="h-full w-full">
+                                <Link href="/new-arrivals" className="flex-col h-full">
+                                    <span>See More</span>
+                                    <ArrowRight className="mt-2 h-6 w-6" />
+                                </Link>
+                            </Button>
+                        </div>
+                    </CarouselItem>
+                  </>
+                )}
             </CarouselContent>
             <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
             <CarouselNext className="right-[-10px] sm:right-[-16px]" />
@@ -230,23 +243,35 @@ function HomePageContent() {
           </div>
             <Carousel opts={{ align: "start", loop: false }} className="w-full">
                 <CarouselContent className="-ml-2 md:-ml-4">
-                    {topRated.map(product => (
-                        <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                   {productsLoading ? (
+                      Array.from({ length: 6 }).map((_, i) => (
+                        <CarouselItem key={i} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                             <div className="p-1">
-                                <ProductCard product={product} />
+                               <ProductCardSkeleton />
                             </div>
                         </CarouselItem>
-                    ))}
-                    <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                        <div className="p-1 flex h-full items-center justify-center">
-                             <Button asChild variant="outline" className="h-full w-full">
-                                <Link href="/top-rated" className="flex-col h-full">
-                                    <span>See More</span>
-                                    <ArrowRight className="mt-2 h-6 w-6" />
-                                </Link>
-                            </Button>
-                        </div>
-                    </CarouselItem>
+                      ))
+                    ) : (
+                      <>
+                        {topRated.map(product => (
+                            <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                                <div className="p-1">
+                                    <ProductCard product={product} />
+                                </div>
+                            </CarouselItem>
+                        ))}
+                        <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                            <div className="p-1 flex h-full items-center justify-center">
+                                <Button asChild variant="outline" className="h-full w-full">
+                                    <Link href="/top-rated" className="flex-col h-full">
+                                        <span>See More</span>
+                                        <ArrowRight className="mt-2 h-6 w-6" />
+                                    </Link>
+                                </Button>
+                            </div>
+                        </CarouselItem>
+                      </>
+                    )}
                 </CarouselContent>
                 <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
                 <CarouselNext className="right-[-10px] sm:right-[-16px]" />
@@ -262,11 +287,17 @@ function HomePageContent() {
             </Link>
           </div>
             <div className="grid grid-cols-3 gap-2 md:gap-4">
-              {allProducts.slice(0, visibleProductsCount).map(product => (
-                <ProductCard key={product.id} product={product} size="small" />
-              ))}
+              {productsLoading ? (
+                Array.from({ length: 9 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} size="small" />
+                ))
+              ) : (
+                allProducts.slice(0, visibleProductsCount).map(product => (
+                  <ProductCard key={product.id} product={product} size="small" />
+                ))
+              )}
             </div>
-            {visibleProductsCount < allProducts.length && (
+            {!productsLoading && visibleProductsCount < allProducts.length && (
               <div className="mt-6 text-center">
                 <Button onClick={handleSeeMore} variant="outline">
                   See More
