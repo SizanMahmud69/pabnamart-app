@@ -12,10 +12,10 @@ import { useToast } from '@/hooks/use-toast';
 import type { DeliverySettings } from '@/types';
 
 const initialSettings: DeliverySettings = {
-    insidePabnaSmall: 60,
-    insidePabnaLarge: 80,
-    outsidePabnaSmall: 120,
-    outsidePabnaLarge: 150,
+    insidePabnaSmall: 0,
+    insidePabnaLarge: 0,
+    outsidePabnaSmall: 0,
+    outsidePabnaLarge: 0,
 };
 
 export default function DeliverySettingsPage() {

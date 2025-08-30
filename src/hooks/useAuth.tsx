@@ -97,16 +97,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const firebaseUser = userCredential.user;
     
-    const defaultPhotoURL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
-    
-    await updateProfile(firebaseUser, { displayName, photoURL: defaultPhotoURL });
+    await updateProfile(firebaseUser, { displayName });
     
     // Create user document in Firestore
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     const newAppUser: Omit<AppUser, 'uid'> = {
         email: firebaseUser.email,
         displayName: displayName,
-        photoURL: defaultPhotoURL,
+        photoURL: null,
         status: 'active',
         joined: new Date().toISOString(),
         shippingAddresses: [],
@@ -117,7 +115,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const authInstance = getAuth(app);
     if (authInstance.currentUser) {
-        await updateProfile(authInstance.currentUser, { displayName, photoURL: defaultPhotoURL });
+        await updateProfile(authInstance.currentUser, { displayName });
         setUser({ ...authInstance.currentUser });
     }
     return userCredential;
@@ -134,11 +132,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (!userDocSnap.exists()) {
       // New user, create a document in Firestore
-      const defaultPhotoURL = firebaseUser.photoURL || "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
       const newAppUser: Omit<AppUser, 'uid'> = {
         email: firebaseUser.email,
         displayName: firebaseUser.displayName,
-        photoURL: defaultPhotoURL,
+        photoURL: firebaseUser.photoURL,
         status: 'active',
         joined: new Date().toISOString(),
         shippingAddresses: [],

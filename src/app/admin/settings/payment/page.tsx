@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -13,12 +14,12 @@ import type { PaymentSettings } from '@/types';
 import { Separator } from '@/components/ui/separator';
 
 const initialSettings: PaymentSettings = {
-    bkashMerchantNumber: '01234567890',
-    nagadMerchantNumber: '01234567891',
-    rocketMerchantNumber: '01234567892',
-    bkashLogo: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/BKash_logo.svg',
-    nagadLogo: 'https://pix1.wapkizfile.info/download/8a051c9b664e1f7de58fec071478a91c/sizan+wapkiz+click/nagad-logo-png-seeklogo-355240-(sizan.wapkiz.click).png',
-    rocketLogo: 'https://picsum.photos/seed/rocket/100/60',
+    bkashMerchantNumber: '',
+    nagadMerchantNumber: '',
+    rocketMerchantNumber: '',
+    bkashLogo: '',
+    nagadLogo: '',
+    rocketLogo: '',
 };
 
 export default function PaymentSettingsPage() {

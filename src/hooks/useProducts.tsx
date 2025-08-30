@@ -5,7 +5,6 @@ import { createContext, useContext, useState, ReactNode, useEffect, useMemo, use
 import type { Product, Offer, Notification } from '@/types';
 import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, writeBatch, getDocs, query, where, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import { products as initialProducts } from '@/lib/products';
 import { useOffers } from './useOffers';
 import { PackageCheck } from 'lucide-react';
 
@@ -42,26 +41,12 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     const q = query(productsCollectionRef, orderBy('id', 'desc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
-        // If the collection is empty, populate it with initial products
-        const batch = Promise.all(
-          initialProducts.map(product => {
-            const productDoc = doc(db, 'products', product.id.toString());
-            return setDoc(productDoc, product);
-          })
-        );
-        batch.then(() => {
-          setBaseProducts(initialProducts.sort((a, b) => b.id - a.id));
-          setLoading(false);
-        });
-      } else {
-        const productsData = snapshot.docs.map(doc => doc.data() as Product);
-        setBaseProducts(productsData);
-        setLoading(false);
-      }
+      const productsData = snapshot.docs.map(doc => doc.data() as Product);
+      setBaseProducts(productsData);
+      setLoading(false);
     }, (error) => {
       console.error("Error fetching products:", error);
-      setBaseProducts(initialProducts.sort((a, b) => b.id - a.id)); // Fallback to initial products on error
+      setBaseProducts([]); // Fallback to empty array on error
       setLoading(false);
     });
 

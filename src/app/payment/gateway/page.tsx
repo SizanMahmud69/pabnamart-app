@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -25,9 +26,9 @@ interface OrderDetails {
 }
 
 const initialPaymentMethods = [
-    { name: 'bKash', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/BKash_logo.svg', merchantNumber: '01234567890', hint: 'bKash logo' },
-    { name: 'Nagad', logo: 'https://pix1.wapkizfile.info/download/8a051c9b664e1f7de58fec071478a91c/sizan+wapkiz+click/nagad-logo-png-seeklogo-355240-(sizan.wapkiz.click).png', merchantNumber: '01234567891', hint: 'Nagad logo' },
-    { name: 'Rocket', logo: 'https://picsum.photos/seed/rocket/100/60', merchantNumber: '01234567892', hint: 'Rocket logo' },
+    { name: 'bKash', logo: '', merchantNumber: '', hint: 'bKash logo' },
+    { name: 'Nagad', logo: '', merchantNumber: '', hint: 'Nagad logo' },
+    { name: 'Rocket', logo: '', merchantNumber: '', hint: 'Rocket logo' },
 ];
 
 function PaymentGatewayPage() {
@@ -115,6 +116,7 @@ function PaymentGatewayPage() {
     };
 
     const handleCopyToClipboard = (text: string) => {
+        if (!text) return;
         navigator.clipboard.writeText(text);
         toast({ title: "Copied!", description: "Merchant number copied to clipboard." });
     }
@@ -138,7 +140,7 @@ function PaymentGatewayPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-3 gap-4">
-                            {paymentMethods.map(method => (
+                            {paymentMethods.filter(m => m.logo && m.merchantNumber).map(method => (
                                 <div
                                     key={method.name}
                                     className={cn(
