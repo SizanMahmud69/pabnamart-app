@@ -38,7 +38,8 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const { signup, signInWithGoogle } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -63,6 +64,24 @@ export default function SignUpPage() {
       setIsLoading(false);
     }
   };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+      toast({
+        title: "Account Created",
+        description: "Welcome!",
+      });
+      router.push("/");
+    } catch (error: any) {
+      setError(error.message || "Failed to sign up with Google.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
 
   return (
     <div className="bg-purple-50/30 min-h-screen flex items-center justify-center p-4">
@@ -90,7 +109,7 @@ export default function SignUpPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || isGoogleLoading}
               />
             </div>
             <div className="grid gap-2">
@@ -102,7 +121,7 @@ export default function SignUpPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || isGoogleLoading}
               />
             </div>
             <div className="grid gap-2 relative">
@@ -113,7 +132,7 @@ export default function SignUpPage() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || isGoogleLoading}
                 placeholder="••••••••"
               />
                <Button
@@ -134,7 +153,7 @@ export default function SignUpPage() {
                 required 
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || isGoogleLoading}
                 placeholder="••••••••"
               />
                <Button
@@ -147,7 +166,7 @@ export default function SignUpPage() {
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -168,8 +187,13 @@ export default function SignUpPage() {
                 </div>
             </div>
 
-            <Button variant="outline" className="w-full" disabled={isLoading}>
-                <GoogleIcon /> Sign up with Google
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading || isGoogleLoading}>
+                {isGoogleLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <GoogleIcon />
+                )}
+                Sign up with Google
             </Button>
 
           <div className="mt-4 text-center text-sm">

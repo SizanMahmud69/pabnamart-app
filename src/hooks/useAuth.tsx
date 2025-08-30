@@ -12,6 +12,8 @@ import {
   updateProfile,
   updatePassword,
   User as FirebaseUser,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import app from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -36,6 +38,7 @@ interface AuthContextType {
   updateUserDisplayName: (displayName: string) => Promise<void>;
   updateUserPassword: (newPassword: string) => Promise<void>;
   updateUserProfilePicture: (photoURL: string) => Promise<void>;
+  signInWithGoogle: () => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -118,6 +121,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return userCredential;
   };
 
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const firebaseUser = result.user;
+
+    // Check if user exists in Firestore
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (!userDocSnap.exists()) {
+      // New user, create a document in Firestore
+      const defaultPhotoURL = firebaseUser.photoURL || "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
+      const newAppUser: Omit<AppUser, 'uid'> = {
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        photoURL: defaultPhotoURL,
+        status: 'active',
+        joined: new Date().toISOString(),
+        shippingAddresses: [],
+        usedVoucherCodes: [],
+      };
+      await setDoc(userDocRef, newAppUser);
+    } else {
+        const userData = userDocSnap.data() as AppUser;
+        if (userData.status === 'banned') {
+            await signOut(auth);
+            throw new Error('Your account has been banned. Please contact support.');
+        }
+    }
+    return result;
+  };
+
+
   const logout = () => {
     return signOut(auth);
   };
@@ -183,6 +219,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateUserDisplayName,
     updateUserPassword,
     updateUserProfilePicture,
+    signInWithGoogle,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

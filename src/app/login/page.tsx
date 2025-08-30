@@ -30,7 +30,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const { login, signInWithGoogle } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -67,6 +68,24 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+      toast({
+        title: "Login Successful",
+        description: "Welcome!",
+      });
+      router.push("/");
+    } catch (error: any) {
+      setError(error.message || "Failed to sign in with Google.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+
   return (
     <div className="bg-purple-50/30 min-h-screen flex items-center justify-center p-4">
       <Card className="mx-auto max-w-sm w-full shadow-lg">
@@ -93,7 +112,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || isGoogleLoading}
               />
             </div>
             <div className="grid gap-2 relative">
@@ -104,7 +123,7 @@ export default function LoginPage() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || isGoogleLoading}
                 placeholder="••••••••"
               />
               <Button
@@ -117,7 +136,7 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -138,8 +157,13 @@ export default function LoginPage() {
                 </div>
             </div>
 
-            <Button variant="outline" className="w-full" disabled={isLoading}>
-                <GoogleIcon /> Sign in with Google
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading || isGoogleLoading}>
+                {isGoogleLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <GoogleIcon />
+                )}
+                Sign in with Google
             </Button>
           
             <div className="mt-4 text-center text-sm">
