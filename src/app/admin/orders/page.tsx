@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,6 +14,7 @@ import type { Order, OrderStatus, User as AppUser, Notification } from '@/types'
 import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, orderBy, addDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const db = getFirestore(app);
 
@@ -30,10 +31,19 @@ async function createNotification(userId: string, orderNumber: string, status: O
     await addDoc(collection(db, `users/${userId}/pendingNotifications`), notification);
 }
 
+const TABS = [
+    { value: 'all', label: 'All' },
+    { value: 'shipped', label: 'Shipped' },
+    { value: 'in-transit', label: 'In-Transit' },
+    { value: 'delivered', label: 'Delivered' },
+    { value: 'returned', label: 'Returned' },
+];
+
 export default function AdminOrderManagement() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [users, setUsers] = useState<Map<string, AppUser>>(new Map());
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('all');
     const router = useRouter();
 
     useEffect(() => {
@@ -45,7 +55,6 @@ export default function AdminOrderManagement() {
                 .map(doc => ({ id: doc.id, ...doc.data() } as Order))
                 .filter(order => !(order.paymentMethod === 'online' && order.status === 'pending')); // Filter out pending online orders
             
-            // Fetch user data for each order
             const userIds = new Set(ordersData.map(order => order.userId));
             const usersMap = new Map<string, AppUser>();
             
@@ -92,6 +101,17 @@ export default function AdminOrderManagement() {
         }
     }
 
+    const filteredOrders = useMemo(() => {
+        if (activeTab === 'all') {
+            return orders;
+        }
+        if (activeTab === 'returned') {
+            return orders.filter(order => order.status === 'returned' || order.status === 'return-requested' || order.status === 'return-rejected');
+        }
+        return orders.filter(order => order.status === activeTab);
+    }, [orders, activeTab]);
+
+
     if (loading) {
         return <LoadingSpinner />;
     }
@@ -113,74 +133,88 @@ export default function AdminOrderManagement() {
                         <CardDescription>Track and process customer orders.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Order ID</TableHead>
-                                    <TableHead>Customer</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Total</TableHead>
-                                    <TableHead>Payment</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {orders.map(order => (
-                                    <TableRow key={order.id}>
-                                        <TableCell className="font-medium">#{order.orderNumber}</TableCell>
-                                        <TableCell>{users.get(order.userId)?.displayName || 'Unknown User'}</TableCell>
-                                        <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                                        <TableCell>৳{order.total}</TableCell>
-                                        <TableCell>
-                                            {order.paymentMethod === 'online' ? (
-                                                <Badge className="bg-green-100 text-green-800">Paid</Badge>
-                                            ) : (
-                                                <Badge variant="outline">COD</Badge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={getStatusBadgeVariant(order.status)} className="capitalize">{order.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
-                                                        <Eye className="mr-2 h-4 w-4" />
-                                                        View Details
-                                                    </DropdownMenuItem>
-                                                    {order.status === 'pending' && (
-                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order, 'shipped')}>
-                                                            <Truck className="mr-2 h-4 w-4" />
-                                                            Mark as Shipped
-                                                        </DropdownMenuItem>
-                                                    )}
-                                                     {order.status === 'shipped' && (
-                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order, 'in-transit')}>
-                                                            <Truck className="mr-2 h-4 w-4" />
-                                                            Mark as In-Transit
-                                                        </DropdownMenuItem>
-                                                    )}
-                                                     {order.status === 'in-transit' && (
-                                                        <DropdownMenuItem onSelect={() => handleStatusChange(order, 'delivered')}>
-                                                            <PackageCheck className="mr-2 h-4 w-4" />
-                                                            Mark as Delivered
-                                                        </DropdownMenuItem>
-                                                    )}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
+                        <Tabs value={activeTab} onValueChange={setActiveTab}>
+                            <TabsList>
+                                {TABS.map(tab => (
+                                    <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
                                 ))}
-                            </TableBody>
-                        </Table>
+                            </TabsList>
+                            <TabsContent value={activeTab} className="mt-4">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Order ID</TableHead>
+                                            <TableHead>Customer</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Total</TableHead>
+                                            <TableHead>Payment</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredOrders.map(order => (
+                                            <TableRow key={order.id}>
+                                                <TableCell className="font-medium">#{order.orderNumber}</TableCell>
+                                                <TableCell>{users.get(order.userId)?.displayName || 'Unknown User'}</TableCell>
+                                                <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                                                <TableCell>৳{order.total}</TableCell>
+                                                <TableCell>
+                                                    {order.paymentMethod === 'online' ? (
+                                                        <Badge className="bg-green-100 text-green-800">Paid</Badge>
+                                                    ) : (
+                                                        <Badge variant="outline">COD</Badge>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant={getStatusBadgeVariant(order.status)} className="capitalize">{order.status}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                            <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
+                                                                <Eye className="mr-2 h-4 w-4" />
+                                                                View Details
+                                                            </DropdownMenuItem>
+                                                            {order.status === 'pending' && (
+                                                                <DropdownMenuItem onSelect={() => handleStatusChange(order, 'shipped')}>
+                                                                    <Truck className="mr-2 h-4 w-4" />
+                                                                    Mark as Shipped
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {order.status === 'shipped' && (
+                                                                <DropdownMenuItem onSelect={() => handleStatusChange(order, 'in-transit')}>
+                                                                    <Truck className="mr-2 h-4 w-4" />
+                                                                    Mark as In-Transit
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {order.status === 'in-transit' && (
+                                                                <DropdownMenuItem onSelect={() => handleStatusChange(order, 'delivered')}>
+                                                                    <PackageCheck className="mr-2 h-4 w-4" />
+                                                                    Mark as Delivered
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                                {filteredOrders.length === 0 && (
+                                    <div className="text-center py-10">
+                                        <p>No orders found for this status.</p>
+                                    </div>
+                                )}
+                            </TabsContent>
+                        </Tabs>
                     </CardContent>
                 </Card>
             </main>
