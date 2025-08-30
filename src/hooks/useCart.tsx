@@ -131,19 +131,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCartItems(prevCartItems => {
         const newCartItems = [...prevCartItems];
         const existingItem = newCartItems.find(item => item.id === product.id);
+        
+        // Create a Firestore-compatible product object
+        const productForCart: Product = { ...product };
+        for (const key in productForCart) {
+            if ((productForCart as any)[key] === undefined) {
+                (productForCart as any)[key] = null;
+            }
+        }
 
         if (existingItem) {
           existingItem.quantity += 1;
           if (isFlashSaleContext) {
               existingItem.price = price;
-              existingItem.originalPrice = originalPrice;
+              existingItem.originalPrice = originalPrice ?? null;
           }
         } else {
           newCartItems.push({ 
-              ...product, 
+              ...productForCart, 
               quantity: 1,
               price,
-              originalPrice,
+              originalPrice: originalPrice ?? null,
           });
         }
         return newCartItems;
