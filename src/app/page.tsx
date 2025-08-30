@@ -226,8 +226,8 @@ function HomePageContent() {
                 See All
             </Link>
           </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {allProducts.slice(0, 6).map(product => (
+            <div className="grid grid-cols-3 gap-2 md:gap-4">
+              {allProducts.slice(0, 9).map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
