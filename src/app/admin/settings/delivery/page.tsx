@@ -57,7 +57,8 @@ export default function DeliverySettingsPage() {
                 variant: "destructive"
             });
         } finally {
-            setIsSaving(false);
+            // Simulate a delay for better UX
+            setTimeout(() => setIsSaving(false), 500);
         }
     };
 
@@ -146,7 +147,7 @@ export default function DeliverySettingsPage() {
                         <CardFooter className="flex justify-end">
                             <Button type="submit" disabled={isSaving}>
                                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Save Changes
+                                {isSaving ? "Saving..." : "Save Changes"}
                             </Button>
                         </CardFooter>
                     </Card>

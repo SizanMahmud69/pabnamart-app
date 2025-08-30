@@ -25,6 +25,7 @@ export default function CategorySettingsPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         setIsLoading(true);
@@ -65,7 +66,7 @@ export default function CategorySettingsPage() {
 
     const handleDeleteCategory = async () => {
         if (!categoryToDelete) return;
-        setIsSubmitting(true);
+        setIsDeleting(true);
         try {
             await deleteDoc(doc(db, 'categories', categoryToDelete.id));
             toast({ title: "Success", description: "Category deleted." });
@@ -73,7 +74,7 @@ export default function CategorySettingsPage() {
             console.error(error);
             toast({ title: "Error", description: "Failed to delete category.", variant: "destructive" });
         } finally {
-            setIsSubmitting(false);
+            setIsDeleting(false);
             setCategoryToDelete(null);
         }
     };
@@ -145,7 +146,7 @@ export default function CategorySettingsPage() {
                                             )}
                                             <span className="font-medium">{cat.name}</span>
                                         </div>
-                                        <AlertDialog>
+                                        <AlertDialog onOpenChange={(open) => !open && setCategoryToDelete(null)}>
                                             <AlertDialogTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setCategoryToDelete(cat)}>
                                                     <Trash2 className="h-4 w-4" />
@@ -155,16 +156,18 @@ export default function CategorySettingsPage() {
                                                 <AlertDialogHeader>
                                                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                                     <AlertDialogDescription>
-                                                        This will permanently delete the "{cat.name}" category. This action cannot be undone.
+                                                        This will permanently delete the "{categoryToDelete?.name}" category. This action cannot be undone.
                                                     </AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
-                                                    <AlertDialogCancel onClick={() => setCategoryToDelete(null)}>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDeleteCategory()}>Delete</AlertDialogAction>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={handleDeleteCategory} disabled={isDeleting}>
+                                                        {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                        {isDeleting ? "Deleting..." : "Delete"}
+                                                    </AlertDialogAction>
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>
                                         </AlertDialog>
-
                                     </li>
                                 ))}
                             </ul>

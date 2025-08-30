@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 
@@ -22,6 +22,7 @@ export default function SiteSettingsPage() {
     const { toast } = useToast();
     const [settings, setSettings] = useState(initialSettings);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         const savedSettings = localStorage.getItem('siteSettings');
@@ -38,11 +39,23 @@ export default function SiteSettingsPage() {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        localStorage.setItem('siteSettings', JSON.stringify(settings));
-        toast({
-            title: "Settings Saved",
-            description: "Your site settings have been updated successfully.",
-        });
+        setIsSaving(true);
+        try {
+            localStorage.setItem('siteSettings', JSON.stringify(settings));
+            toast({
+                title: "Settings Saved",
+                description: "Your site settings have been updated successfully.",
+            });
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to save settings.",
+                variant: "destructive"
+            });
+        } finally {
+            // Simulate a delay for better UX
+            setTimeout(() => setIsSaving(false), 500);
+        }
     };
 
     if (isLoading) {
@@ -110,7 +123,10 @@ export default function SiteSettingsPage() {
                             </p>
                         </CardContent>
                         <CardFooter className="flex justify-end">
-                            <Button type="submit">Save Changes</Button>
+                            <Button type="submit" disabled={isSaving}>
+                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isSaving ? "Saving..." : "Save Changes"}
+                            </Button>
                         </CardFooter>
                     </Card>
                 </form>
