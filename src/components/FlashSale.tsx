@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Product } from '@/types';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +8,9 @@ import { Button } from './ui/button';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from './ProductCard';
 import { useProducts } from '@/hooks/useProducts';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import Autoplay from "embla-carousel-autoplay";
+
 
 interface FlashSaleProps {
   products: Product[];
@@ -71,6 +74,7 @@ const CountdownTimer = ({ expiryDate }: { expiryDate: string | null }) => {
 export default function FlashSale({ products: flashSaleProducts }: FlashSaleProps) {
     const { getFlashSaleProducts } = useProducts();
     const [closestExpiry, setClosestExpiry] = useState<string | null>(null);
+    const autoplayPlugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }));
 
     useEffect(() => {
         const { closestExpiry } = getFlashSaleProducts();
@@ -81,6 +85,8 @@ export default function FlashSale({ products: flashSaleProducts }: FlashSaleProp
     if (!flashSaleProducts || flashSaleProducts.length === 0) {
         return null;
     }
+    
+    const useCarousel = flashSaleProducts.length > 2;
 
     return (
         <Card className="bg-purple-50/50">
@@ -92,11 +98,33 @@ export default function FlashSale({ products: flashSaleProducts }: FlashSaleProp
                     </div>
                     <CountdownTimer expiryDate={closestExpiry} />
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4">
-                    {flashSaleProducts.slice(0, 2).map(product => (
-                        <ProductCard key={product.id} product={product} isFlashSaleContext={true} />
-                    ))}
-                </div>
+                {useCarousel ? (
+                     <Carousel
+                        opts={{ align: "start", loop: true }}
+                        plugins={[autoplayPlugin.current]}
+                        onMouseEnter={autoplayPlugin.current.stop}
+                        onMouseLeave={autoplayPlugin.current.reset}
+                        className="w-full"
+                    >
+                        <CarouselContent className="-ml-2">
+                            {flashSaleProducts.map(product => (
+                                <CarouselItem key={product.id} className="pl-2 basis-1/2">
+                                     <div className="p-1">
+                                        <ProductCard product={product} isFlashSaleContext={true} />
+                                    </div>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
+                        <CarouselNext className="right-[-10px] sm:right-[-16px]" />
+                    </Carousel>
+                ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                        {flashSaleProducts.slice(0, 2).map(product => (
+                            <ProductCard key={product.id} product={product} isFlashSaleContext={true} />
+                        ))}
+                    </div>
+                )}
                  <div className="mt-6 text-center">
                     <Button asChild variant="outline">
                         <Link href="/flash-sale">
