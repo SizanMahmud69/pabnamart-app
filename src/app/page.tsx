@@ -57,11 +57,11 @@ function HomePageContent() {
     if (allProducts.length > 0) {
       // New arrivals: sort by ID descending (assuming higher ID is newer)
       const sortedNew = [...allProducts].sort((a, b) => b.id - a.id);
-      setNewArrivals(sortedNew.slice(0, 4));
+      setNewArrivals(sortedNew.slice(0, 6));
 
       // Top rated: sort by rating descending
       const sortedRated = [...allProducts].sort((a, b) => b.rating - a.rating);
-      setTopRated(sortedRated.slice(0, 4));
+      setTopRated(sortedRated.slice(0, 6));
 
       // Flash sale products
       const { products: saleProducts } = getFlashSaleProducts();
@@ -197,30 +197,60 @@ function HomePageContent() {
         <div>
            <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold flex items-center gap-2"><Sparkles className="text-primary"/>New Arrivals</h2>
-            <Link href="/new-arrivals" className="text-primary font-semibold hover:underline">
-                See More
-            </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              {newArrivals.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+          <Carousel opts={{ align: "start", loop: false }} className="w-full">
+            <CarouselContent className="-ml-2">
+                {newArrivals.map(product => (
+                    <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
+                        <div className="p-1">
+                            <ProductCard product={product} />
+                        </div>
+                    </CarouselItem>
+                ))}
+                 <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
+                    <div className="p-1 flex h-full items-center justify-center">
+                        <Button asChild variant="outline" className="h-full w-full">
+                            <Link href="/new-arrivals" className="flex-col h-full">
+                                <span>See More</span>
+                                <ArrowRight className="mt-2 h-6 w-6" />
+                            </Link>
+                        </Button>
+                    </div>
+                </CarouselItem>
+            </CarouselContent>
+            <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
+            <CarouselNext className="right-[-10px] sm:right-[-16px]" />
+          </Carousel>
         </div>
 
          {/* Top Rated Products Section */}
         <div>
            <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold flex items-center gap-2"><Star className="text-accent fill-accent" />Top Rated</h2>
-             <Link href="/top-rated" className="text-primary font-semibold hover:underline">
-                See More
-            </Link>
           </div>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              {topRated.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <Carousel opts={{ align: "start", loop: false }} className="w-full">
+                <CarouselContent className="-ml-2">
+                    {topRated.map(product => (
+                        <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
+                            <div className="p-1">
+                                <ProductCard product={product} />
+                            </div>
+                        </CarouselItem>
+                    ))}
+                    <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
+                        <div className="p-1 flex h-full items-center justify-center">
+                             <Button asChild variant="outline" className="h-full w-full">
+                                <Link href="/top-rated" className="flex-col h-full">
+                                    <span>See More</span>
+                                    <ArrowRight className="mt-2 h-6 w-6" />
+                                </Link>
+                            </Button>
+                        </div>
+                    </CarouselItem>
+                </CarouselContent>
+                <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
+                <CarouselNext className="right-[-10px] sm:right-[-16px]" />
+            </Carousel>
         </div>
 
         {/* All Products Section */}
