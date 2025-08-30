@@ -228,7 +228,7 @@ function HomePageContent() {
           </div>
             <div className="grid grid-cols-3 gap-2 md:gap-4">
               {allProducts.slice(0, 9).map(product => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} size="small" />
               ))}
             </div>
         </div>

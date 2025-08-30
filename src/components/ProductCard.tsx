@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -13,9 +14,10 @@ import { useWishlist } from '@/hooks/useWishlist';
 interface ProductCardProps {
   product: Product;
   isFlashSaleContext?: boolean;
+  size?: 'default' | 'small';
 }
 
-export default function ProductCard({ product, isFlashSaleContext = false }: ProductCardProps) {
+export default function ProductCard({ product, isFlashSaleContext = false, size = 'default' }: ProductCardProps) {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
 
@@ -36,6 +38,8 @@ export default function ProductCard({ product, isFlashSaleContext = false }: Pro
   }
 
   const productLink = isFlashSaleContext ? `/products/${product.id}?flash=true` : `/products/${product.id}`;
+  
+  const isSmall = size === 'small';
 
   return (
     <Card className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-shadow duration-300 hover:shadow-lg group">
@@ -62,7 +66,7 @@ export default function ProductCard({ product, isFlashSaleContext = false }: Pro
               <span className="text-white text-lg font-bold">Sold Out</span>
             </div>
           )}
-           {product.freeShipping && !isSoldOut && (
+           {product.freeShipping && !isSoldOut && !isSmall && (
             <div className="absolute bottom-2 left-2 bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 w-fit">
                 <Truck className="h-3 w-3" />
                 <span>Free Delivery</span>
@@ -70,24 +74,26 @@ export default function ProductCard({ product, isFlashSaleContext = false }: Pro
         )}
         </div>
       </Link>
-      <CardContent className="flex flex-col flex-grow p-3 space-y-2">
-        <p className="text-xs text-muted-foreground">{product.category}</p>
-        <h3 className="text-sm font-semibold text-gray-800 leading-snug flex-grow">
+      <CardContent className={cn("flex flex-col flex-grow space-y-2", isSmall ? "p-2" : "p-3")}>
+        {!isSmall && <p className="text-xs text-muted-foreground">{product.category}</p>}
+        <h3 className={cn("font-semibold text-gray-800 leading-snug flex-grow", isSmall ? "text-xs h-8" : "text-sm")}>
             <Link href={productLink} className="hover:text-primary">
-                {product.name}
+                <span className={cn(isSmall && "truncate-2-lines")}>{product.name}</span>
             </Link>
         </h3>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Star className="w-4 h-4 fill-accent text-accent" />
-          <span>{product.rating.toFixed(1)}</span>
-          <span>|</span>
-          <span>Sold {product.sold || 0}</span>
-        </div>
+        {!isSmall && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Star className="w-4 h-4 fill-accent text-accent" />
+              <span>{product.rating.toFixed(1)}</span>
+              <span>|</span>
+              <span>Sold {product.sold || 0}</span>
+            </div>
+        )}
         <div className="flex justify-between items-center mt-auto">
           <div>
-            <p className="text-lg font-bold text-primary">৳{price.toFixed(2)}</p>
+            <p className={cn("font-bold text-primary", isSmall ? "text-base" : "text-lg")}>৳{price.toFixed(2)}</p>
             {hasDiscount && (
-              <p className="text-xs text-muted-foreground line-through">
+              <p className={cn("text-muted-foreground line-through", isSmall ? "text-[10px]" : "text-xs")}>
                 ৳{originalPrice.toFixed(2)}
               </p>
             )}
@@ -97,7 +103,7 @@ export default function ProductCard({ product, isFlashSaleContext = false }: Pro
                 onClick={handleWishlistClick}
                 size="icon"
                 variant="outline"
-                className="h-9 w-9"
+                className={cn(isSmall ? "h-7 w-7" : "h-9 w-9")}
                 disabled={isInWishlist(product.id)}
                 aria-label={isInWishlist(product.id) ? "In Wishlist" : "Add to Wishlist"}
             >
@@ -107,14 +113,31 @@ export default function ProductCard({ product, isFlashSaleContext = false }: Pro
             <Button
                 onClick={handleAddToCart}
                 size="icon"
-                className="h-9 w-9"
+                className={cn(isSmall ? "h-7 w-7" : "h-9 w-9")}
                 aria-label="Add to Cart"
             >
-                <ShoppingCart className="h-4 w-4" />
+                <ShoppingCart className={cn(isSmall ? "h-3 w-3" : "h-4 w-4")} />
             </Button>
           )}
         </div>
       </CardContent>
     </Card>
   );
+}
+
+// Add this to your globals.css or a style tag if it's not there
+const style = `
+.truncate-2-lines {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+`;
+// A bit of a hack to inject CSS, but it's the only way without a globals.css change.
+if (typeof window !== 'undefined') {
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = style;
+    document.head.appendChild(styleEl);
 }
