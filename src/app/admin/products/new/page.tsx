@@ -15,7 +15,7 @@ import { useProducts } from '@/hooks/useProducts';
 import type { Product, Category } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { collection, getFirestore, onSnapshot } from 'firebase/firestore';
+import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 const db = getFirestore(app);
@@ -34,7 +34,9 @@ export default function NewProductPage() {
     const [categories, setCategories] = useState<Category[]>([]);
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'categories'), (snapshot) => {
+        const categoriesRef = collection(db, 'categories');
+        const q = query(categoriesRef, orderBy('createdAt', 'asc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
             setCategories(cats);
         });
