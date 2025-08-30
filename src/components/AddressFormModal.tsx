@@ -48,14 +48,14 @@ export default function AddressFormModal({ isOpen, onClose, onSave, address }: A
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-4">
           <DialogTitle>{address ? 'Edit Address' : 'Add New Address'}</DialogTitle>
           <DialogDescription>
             Enter your shipping details below.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-grow overflow-y-auto pr-6 -mr-6">
+        <div className="flex-grow overflow-y-auto px-6">
           <form onSubmit={handleSubmit(onSubmit)} id="address-form" className="space-y-4">
             <div className="space-y-2">
               <Label>Address Type</Label>
@@ -126,12 +126,12 @@ export default function AddressFormModal({ isOpen, onClose, onSave, address }: A
                 {errors.city && <p className="text-red-500 text-xs">{errors.city.message}</p>}
               </div>
             </div>
+            <DialogFooter className="pt-4 pb-6 flex-shrink-0">
+              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+              <Button type="submit" form="address-form">Save Address</Button>
+            </DialogFooter>
           </form>
         </div>
-        <DialogFooter className="pt-4 flex-shrink-0">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit" form="address-form">Save Address</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
