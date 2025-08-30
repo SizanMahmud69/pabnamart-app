@@ -165,7 +165,7 @@ export default function AccountPage() {
                 <Card className="shadow-sm">
                     <CardContent className="p-4 flex items-center gap-4">
                         <Avatar className="h-16 w-16 flex-shrink-0">
-                            <AvatarImage src={user.photoURL || "https://picsum.photos/seed/avatar/200"} alt="User Avatar" data-ai-hint="user avatar" />
+                            <AvatarImage src={user.photoURL || "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif"} alt="User Avatar" data-ai-hint="user avatar" />
                             <AvatarFallback>{user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">

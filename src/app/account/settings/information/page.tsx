@@ -15,21 +15,22 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 function AccountInformationPage() {
     const { user, updateUserDisplayName, updateUserProfilePicture } = useAuth();
     const [displayName, setDisplayName] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
+    const [photoURL, setPhotoURL] = useState('');
+    const [isNameLoading, setIsNameLoading] = useState(false);
+    const [isPhotoLoading, setIsPhotoLoading] = useState(false);
     const { toast } = useToast();
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (user?.displayName) {
-            setDisplayName(user.displayName);
+        if (user) {
+            setDisplayName(user.displayName || '');
+            setPhotoURL(user.photoURL || '');
         }
     }, [user]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleNameSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (displayName === user?.displayName) return;
-        setIsLoading(true);
+        setIsNameLoading(true);
         try {
             await updateUserDisplayName(displayName);
             toast({
@@ -43,29 +44,28 @@ function AccountInformationPage() {
                 variant: "destructive",
             });
         } finally {
-            setIsLoading(false);
+            setIsNameLoading(false);
         }
     };
     
-    const handlePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setIsUploading(true);
+    const handlePhotoSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (photoURL === user?.photoURL) return;
+        setIsPhotoLoading(true);
         try {
-            await updateUserProfilePicture(file);
+            await updateUserProfilePicture(photoURL);
             toast({
                 title: "Success",
                 description: "Profile picture updated successfully."
             });
         } catch (error: any) {
             toast({
-                title: "Upload Failed",
-                description: error.message || "Failed to upload new profile picture.",
+                title: "Update Failed",
+                description: error.message || "Failed to update profile picture.",
                 variant: "destructive"
             });
         } finally {
-            setIsUploading(false);
+            setIsPhotoLoading(false);
         }
     };
 
@@ -83,41 +83,39 @@ function AccountInformationPage() {
                         <CardTitle>Account Information</CardTitle>
                         <CardDescription>View and edit your personal details.</CardDescription>
                     </CardHeader>
-                    <form onSubmit={handleSubmit}>
-                        <CardContent className="space-y-6">
-                            <div className="flex flex-col items-center space-y-4">
-                                <div className="relative">
-                                    <Avatar className="h-24 w-24">
-                                        <AvatarImage src={user?.photoURL || ''} alt="User Avatar" />
-                                        <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
-                                    </Avatar>
-                                    <Button
-                                        type="button"
-                                        size="icon"
-                                        className="absolute bottom-0 right-0 rounded-full h-8 w-8"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        disabled={isUploading}
-                                    >
-                                        {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                                    </Button>
-                                    <Input 
-                                        type="file" 
-                                        ref={fileInputRef} 
-                                        className="hidden" 
-                                        accept="image/*"
-                                        onChange={handlePictureChange}
-                                        disabled={isUploading}
-                                    />
-                                </div>
-                                <p className="text-sm text-muted-foreground">Click the camera to change your picture.</p>
+                    <CardContent className="space-y-8">
+                        <div className="flex justify-center">
+                            <Avatar className="h-24 w-24">
+                                <AvatarImage src={user?.photoURL || ''} alt="User Avatar" />
+                                <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                        </div>
+                        
+                        <form onSubmit={handlePhotoSubmit} className="space-y-4">
+                             <div className="space-y-2">
+                                <Label htmlFor="photoURL">Profile Picture URL</Label>
+                                <Input 
+                                    id="photoURL" 
+                                    value={photoURL} 
+                                    onChange={(e) => setPhotoURL(e.target.value)} 
+                                    disabled={isPhotoLoading}
+                                    placeholder="https://example.com/image.png"
+                                />
                             </div>
+                            <Button type="submit" disabled={isPhotoLoading || photoURL === user?.photoURL} className="w-full">
+                                {isPhotoLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Update Picture
+                            </Button>
+                        </form>
+
+                        <form onSubmit={handleNameSubmit} className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="displayName">Display Name</Label>
                                 <Input 
                                     id="displayName" 
                                     value={displayName} 
                                     onChange={(e) => setDisplayName(e.target.value)} 
-                                    disabled={isLoading}
+                                    disabled={isNameLoading}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -125,14 +123,12 @@ function AccountInformationPage() {
                                 <Input id="email" value={user?.email || ''} disabled />
                                 <p className="text-xs text-muted-foreground">Email address cannot be changed.</p>
                             </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button type="submit" disabled={isLoading || displayName === user?.displayName}>
-                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Save Changes
+                            <Button type="submit" disabled={isNameLoading || displayName === user?.displayName} className="w-full">
+                                {isNameLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save Name Changes
                             </Button>
-                        </CardFooter>
-                    </form>
+                        </form>
+                    </CardContent>
                 </Card>
             </div>
         </div>
