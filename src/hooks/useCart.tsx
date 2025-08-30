@@ -129,9 +129,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const originalPrice = product.originalPrice;
 
     setCartItems(prevCartItems => {
-        const newCartItems = [...prevCartItems];
-        const existingItem = newCartItems.find(item => item.id === product.id);
+        const existingItem = prevCartItems.find(item => item.id === product.id);
         
+        if (existingItem) {
+          return prevCartItems.map(item => 
+            item.id === product.id 
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          );
+        }
+
         // Create a Firestore-compatible product object
         const productForCart: Product = { ...product };
         for (const key in productForCart) {
@@ -140,21 +147,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             }
         }
 
-        if (existingItem) {
-          existingItem.quantity += 1;
-          if (isFlashSaleContext) {
-              existingItem.price = price;
-              existingItem.originalPrice = originalPrice ?? null;
-          }
-        } else {
-          newCartItems.push({ 
+        return [
+            ...prevCartItems,
+            { 
               ...productForCart, 
               quantity: 1,
               price,
               originalPrice: originalPrice ?? null,
-          });
-        }
-        return newCartItems;
+            }
+        ];
     });
 
     // Automatically select newly added item
