@@ -93,7 +93,7 @@ export default function CartPage() {
                                 <div className="flex-grow min-w-0">
                                     <h3 className="font-semibold truncate">{item.name}</h3>
                                     <p className="text-sm text-muted-foreground">
-                                    Price: ৳{item.price.toFixed(2)}
+                                    Price: ৳{item.price}
                                     </p>
                                     <div className="mt-2 flex items-center gap-2">
                                         <Button 
@@ -120,7 +120,7 @@ export default function CartPage() {
                                 </div>
                                 <div className="text-right flex flex-col items-end">
                                     <p className="font-semibold text-lg whitespace-nowrap">
-                                        ৳{(item.price * item.quantity).toFixed(2)}
+                                        ৳{item.price * item.quantity}
                                     </p>
                                     <Button
                                         variant="ghost"
@@ -147,7 +147,7 @@ export default function CartPage() {
                 <CardContent className="space-y-4">
                     <div className="flex justify-between">
                     <span>Subtotal ({selectedCartCount} items)</span>
-                    <span>৳{selectedCartTotal.toFixed(2)}</span>
+                    <span>৳{selectedCartTotal}</span>
                     </div>
                     <div className="flex justify-between">
                         <div>
@@ -158,7 +158,7 @@ export default function CartPage() {
                             shippingFee === 0 && selectedCartCount > 0 ? (
                                 <Badge className="bg-green-100 text-green-800">Free Delivery</Badge>
                             ) : (
-                                <span>৳{(shippingFee || 0).toFixed(2)}</span>
+                                <span>৳{shippingFee || 0}</span>
                             )
                         ) : (
                             <span>...</span>
@@ -167,7 +167,7 @@ export default function CartPage() {
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                     <span>Total Amount</span>
-                    <span>{isClient ? `৳${finalTotal.toFixed(2)}` : '...'}</span>
+                    <span>{isClient ? `৳${finalTotal}` : '...'}</span>
                     </div>
                 </CardContent>
                 <CardFooter>

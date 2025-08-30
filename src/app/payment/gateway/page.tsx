@@ -145,7 +145,7 @@ function PaymentGatewayPage() {
                             Please pay the following amount to complete your purchase.
                         </CardDescription>
                         <p className="text-4xl font-bold text-primary pt-2">
-                            ৳{orderDetails.finalTotal.toFixed(2)}
+                            ৳{orderDetails.finalTotal}
                         </p>
                     </CardHeader>
                     <CardContent className="space-y-4">

@@ -131,7 +131,7 @@ export default function AdminOrderManagement() {
                                         <TableCell className="font-medium">#{order.orderNumber}</TableCell>
                                         <TableCell>{users.get(order.userId)?.displayName || 'Unknown User'}</TableCell>
                                         <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                                        <TableCell>৳{order.total.toFixed(2)}</TableCell>
+                                        <TableCell>৳{order.total}</TableCell>
                                         <TableCell>
                                             {order.paymentMethod === 'online' ? (
                                                 <Badge className="bg-green-100 text-green-800">Paid</Badge>

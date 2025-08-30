@@ -112,10 +112,10 @@ function ProductDetailPageContent() {
                         <p className="text-base text-muted-foreground leading-relaxed">{product.description}</p>
                         
                         <div className="flex items-baseline gap-2 pt-2">
-                            <span className="text-4xl font-bold text-primary">৳{product.price.toFixed(2)}</span>
+                            <span className="text-4xl font-bold text-primary">৳{product.price}</span>
                             {hasDiscount && (
                             <span className="text-2xl text-muted-foreground line-through">
-                                ৳{product.originalPrice!.toFixed(2)}
+                                ৳{product.originalPrice!}
                             </span>
                             )}
                         </div>

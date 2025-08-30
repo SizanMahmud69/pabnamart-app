@@ -129,7 +129,7 @@ export default function OrderDetailsPage() {
                         </CardHeader>
                         <CardContent className="text-sm space-y-2">
                             <p><strong>Method:</strong> <span className="capitalize">{order.paymentMethod}</span></p>
-                            <p><strong>Total:</strong> <span className="font-bold text-foreground">৳{order.total.toFixed(2)}</span></p>
+                            <p><strong>Total:</strong> <span className="font-bold text-foreground">৳{order.total}</span></p>
                              {order.paymentMethod === 'online' && order.paymentDetails && (
                                 <div className="pt-2 border-t mt-2 space-y-1">
                                     <h4 className="font-semibold text-foreground">Payment Info</h4>
@@ -168,31 +168,31 @@ export default function OrderDetailsPage() {
                                                 <span className="font-medium">{item.name}</span>
                                             </TableCell>
                                             <TableCell>x {item.quantity}</TableCell>
-                                            <TableCell>৳{item.price.toFixed(2)}</TableCell>
-                                            <TableCell className="text-right">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
+                                            <TableCell>৳{item.price}</TableCell>
+                                            <TableCell className="text-right">৳{item.price * item.quantity}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
                                 <TableFooter>
                                     <TableRow>
                                         <TableCell colSpan={3} className="text-right font-semibold">Subtotal</TableCell>
-                                        <TableCell className="text-right font-semibold">৳{subtotal.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right font-semibold">৳{subtotal}</TableCell>
                                     </TableRow>
                                     <TableRow>
                                         <TableCell colSpan={3} className="text-right font-semibold">Shipping Fee</TableCell>
-                                        <TableCell className="text-right font-semibold">৳{shippingFee > 0 ? shippingFee.toFixed(2) : 'Free'}</TableCell>
+                                        <TableCell className="text-right font-semibold">৳{shippingFee > 0 ? shippingFee : 'Free'}</TableCell>
                                     </TableRow>
                                     {order.usedVoucherCode && order.voucherDiscount && (
                                         <TableRow>
                                             <TableCell colSpan={3} className="text-right font-semibold text-primary">
                                                 Voucher ({order.usedVoucherCode})
                                             </TableCell>
-                                            <TableCell className="text-right font-semibold text-primary">- ৳{order.voucherDiscount.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right font-semibold text-primary">- ৳{order.voucherDiscount}</TableCell>
                                         </TableRow>
                                     )}
                                     <TableRow className="text-lg font-bold">
                                         <TableCell colSpan={3} className="text-right">Total</TableCell>
-                                        <TableCell className="text-right">৳{order.total.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">৳{order.total}</TableCell>
                                     </TableRow>
                                 </TableFooter>
                             </Table>

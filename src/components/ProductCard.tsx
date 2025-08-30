@@ -91,10 +91,10 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
         )}
         <div className="flex justify-between items-center mt-auto">
           <div>
-            <p className={cn("font-bold text-primary", isSmall ? "text-base" : "text-lg")}>৳{price.toFixed(2)}</p>
+            <p className={cn("font-bold text-primary", isSmall ? "text-base" : "text-lg")}>৳{price}</p>
             {hasDiscount && (
               <p className={cn("text-muted-foreground line-through", isSmall ? "text-[10px]" : "text-xs")}>
-                ৳{originalPrice.toFixed(2)}
+                ৳{originalPrice}
               </p>
             )}
           </div>
@@ -123,21 +123,4 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
       </CardContent>
     </Card>
   );
-}
-
-// Add this to your globals.css or a style tag if it's not there
-const style = `
-.truncate-2-lines {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;  
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-`;
-// A bit of a hack to inject CSS, but it's the only way without a globals.css change.
-if (typeof window !== 'undefined') {
-    const styleEl = document.createElement('style');
-    styleEl.innerHTML = style;
-    document.head.appendChild(styleEl);
 }

@@ -127,7 +127,7 @@ export default function AdminProductManagement() {
                                               </TableCell>
                                               <TableCell className="font-medium">{product.name}</TableCell>
                                               <TableCell>{product.category}</TableCell>
-                                              <TableCell>৳{product.price.toFixed(2)}</TableCell>
+                                              <TableCell>৳{product.price}</TableCell>
                                               <TableCell>
                                                   <Badge variant={product.stock > 10 ? 'default' : product.stock > 0 ? 'secondary' : 'destructive'}>
                                                       {product.stock > 0 ? `${product.stock} in stock` : 'Out of Stock'}
@@ -209,4 +209,3 @@ export default function AdminProductManagement() {
     </>
   );
 }
-

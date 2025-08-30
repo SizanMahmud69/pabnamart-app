@@ -116,7 +116,7 @@ function CheckoutPage() {
 
   const subtotalWithDiscount = selectedCartTotal - orderDiscount > 0 ? selectedCartTotal - orderDiscount : 0;
   const shippingFeeWithDiscount = (shippingFee || 0) - shippingDiscount > 0 ? (shippingFee || 0) - shippingDiscount : 0;
-  const finalTotal = subtotalWithDiscount + shippingFeeWithDiscount;
+  const finalTotal = Math.round(subtotalWithDiscount + shippingFeeWithDiscount);
 
   const handlePlaceOrder = async () => {
     if (!user) return;
@@ -278,7 +278,7 @@ function CheckoutPage() {
                                     </div>
                                 </div>
                             </div>
-                            <span className="font-semibold">৳{(item.price * item.quantity).toFixed(2)}</span>
+                            <span className="font-semibold">৳{item.price * item.quantity}</span>
                         </div>
                     ))}
                  </div>
@@ -314,12 +314,12 @@ function CheckoutPage() {
                  <div className="space-y-2">
                     <div className="flex justify-between">
                         <span>Subtotal</span>
-                        <span>৳{selectedCartTotal.toFixed(2)}</span>
+                        <span>৳{selectedCartTotal}</span>
                     </div>
                     {orderDiscount > 0 && (
                         <div className="flex justify-between text-primary">
                             <span>Discount ({selectedVoucher?.code})</span>
-                            <span>- ৳{orderDiscount.toFixed(2)}</span>
+                            <span>- ৳{Math.round(orderDiscount)}</span>
                         </div>
                     )}
                      <div className="flex justify-between items-center">
@@ -327,19 +327,19 @@ function CheckoutPage() {
                         {shippingFee === 0 && selectedCartCount > 0 ? (
                             <Badge className="bg-green-100 text-green-800">Free Delivery</Badge>
                         ) : (
-                            <span>৳{(shippingFee ?? 0).toFixed(2)}</span>
+                            <span>৳{shippingFee ?? 0}</span>
                         )}
                     </div>
                     {shippingDiscount > 0 && (
                         <div className="flex justify-between text-primary">
                             <span>Shipping Discount ({selectedVoucher?.code})</span>
-                            <span>- ৳{shippingDiscount.toFixed(2)}</span>
+                            <span>- ৳{Math.round(shippingDiscount)}</span>
                         </div>
                     )}
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                         <span>Total</span>
-                        <span>৳{finalTotal.toFixed(2)}</span>
+                        <span>৳{finalTotal}</span>
                     </div>
                  </div>
               </CardContent>
@@ -349,7 +349,7 @@ function CheckoutPage() {
                 <div className="container mx-auto max-w-3xl flex items-center justify-between">
                     <div className="text-lg font-bold">
                         <p className="text-sm text-muted-foreground">Total to Pay</p>
-                        ৳{finalTotal.toFixed(2)}
+                        ৳{finalTotal}
                     </div>
                     <Button size="lg" className="w-1/2" onClick={handlePlaceOrder} disabled={isPlacingOrder || !selectedShippingAddress}>
                         {isPlacingOrder ? (

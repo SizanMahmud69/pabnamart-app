@@ -221,7 +221,7 @@ export default function OrdersPage() {
                                       </div>
                                       <div className="text-right flex-grow">
                                         <span className="text-sm text-muted-foreground">Total Amount</span>
-                                        <p className="font-bold text-lg">৳{order.total.toFixed(2)}</p>
+                                        <p className="font-bold text-lg">৳{order.total}</p>
                                       </div>
                                   </div>
                               </CardContent>

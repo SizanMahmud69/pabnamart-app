@@ -53,7 +53,7 @@ function PaymentPage() {
                     <CardContent className="space-y-4">
                         <div className="flex justify-between font-bold text-lg">
                             <span>Total Amount</span>
-                            <span>৳{orderDetails.finalTotal.toFixed(2)}</span>
+                            <span>৳{orderDetails.finalTotal}</span>
                         </div>
                         <Separator />
                         <div>

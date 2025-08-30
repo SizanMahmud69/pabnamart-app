@@ -23,7 +23,7 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 const db = getFirestore(app);
 
-const roundPrice = (price: number) => {
+const roundPrice = (price: number): number => {
     const decimalPart = price - Math.floor(price);
     if (decimalPart > 0 && decimalPart <= 0.50) {
         return Math.floor(price);

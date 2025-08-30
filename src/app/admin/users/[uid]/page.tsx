@@ -162,7 +162,7 @@ export default function UserDetailsPage() {
                                         <TableRow key={order.id}>
                                             <TableCell className="font-medium">#{order.orderNumber}</TableCell>
                                             <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                                            <TableCell>৳{order.total.toFixed(2)}</TableCell>
+                                            <TableCell>৳{order.total}</TableCell>
                                             <TableCell>
                                                 <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>{order.status}</Badge>
                                             </TableCell>
