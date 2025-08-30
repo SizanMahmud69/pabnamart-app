@@ -13,8 +13,10 @@ import { useToast } from '@/hooks/use-toast';
 
 function AccountSecurityPage() {
     const { updateUserPassword } = useAuth();
+    const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +27,7 @@ function AccountSecurityPage() {
         if (newPassword !== confirmPassword) {
             toast({
                 title: "Error",
-                description: "Passwords do not match.",
+                description: "New passwords do not match.",
                 variant: "destructive",
             });
             return;
@@ -33,7 +35,7 @@ function AccountSecurityPage() {
         if (newPassword.length < 6) {
              toast({
                 title: "Error",
-                description: "Password must be at least 6 characters long.",
+                description: "New password must be at least 6 characters long.",
                 variant: "destructive",
             });
             return;
@@ -41,17 +43,18 @@ function AccountSecurityPage() {
 
         setIsLoading(true);
         try {
-            await updateUserPassword(newPassword);
+            await updateUserPassword(currentPassword, newPassword);
             toast({
                 title: "Success",
                 description: "Your password has been updated successfully.",
             });
+            setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
         } catch (error: any) {
             toast({
                 title: "Error",
-                description: error.message || "Failed to update password. You may need to log in again.",
+                description: error.message || "Failed to update password.",
                 variant: "destructive",
             });
         } finally {
@@ -77,6 +80,25 @@ function AccountSecurityPage() {
                         <CardContent className="space-y-4">
                             <h3 className="font-semibold">Change Password</h3>
                             <div className="space-y-2 relative">
+                                <Label htmlFor="currentPassword">Current Password</Label>
+                                <Input 
+                                    id="currentPassword" 
+                                    type={showCurrentPassword ? 'text' : 'password'}
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    disabled={isLoading}
+                                    required
+                                />
+                                <Button
+                                    type="button" variant="ghost" size="icon"
+                                    className="absolute right-1 top-7 h-7 w-7 text-muted-foreground"
+                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                >
+                                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </Button>
+                            </div>
+                            <div className="space-y-2 relative">
                                 <Label htmlFor="newPassword">New Password</Label>
                                 <Input 
                                     id="newPassword" 
@@ -85,6 +107,7 @@ function AccountSecurityPage() {
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     placeholder="••••••••"
                                     disabled={isLoading}
+                                    required
                                 />
                                 <Button
                                     type="button" variant="ghost" size="icon"
@@ -103,6 +126,7 @@ function AccountSecurityPage() {
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     placeholder="••••••••"
                                     disabled={isLoading}
+                                    required
                                 />
                                 <Button
                                     type="button" variant="ghost" size="icon"
@@ -114,7 +138,7 @@ function AccountSecurityPage() {
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button type="submit" disabled={isLoading || !newPassword || !confirmPassword}>
+                            <Button type="submit" disabled={isLoading || !currentPassword || !newPassword || !confirmPassword}>
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Update Password
                             </Button>

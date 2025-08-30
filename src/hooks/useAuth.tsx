@@ -14,6 +14,8 @@ import {
   User as FirebaseUser,
   GoogleAuthProvider,
   signInWithPopup,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
 } from 'firebase/auth';
 import app from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -36,7 +38,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   updateUserDisplayName: (displayName: string) => Promise<void>;
-  updateUserPassword: (newPassword: string) => Promise<void>;
+  updateUserPassword: (currentPassword: string, newPassword: string) => Promise<void>;
   updateUserProfilePicture: (photoURL: string) => Promise<void>;
   signInWithGoogle: () => Promise<any>;
 }
@@ -173,11 +175,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateUserPassword = async (newPassword: string) => {
-    if (auth.currentUser) {
-        await updatePassword(auth.currentUser, newPassword);
+  const updateUserPassword = async (currentPassword: string, newPassword: string) => {
+    const user = auth.currentUser;
+    if (user && user.email) {
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        try {
+            await reauthenticateWithCredential(user, credential);
+            await updatePassword(user, newPassword);
+        } catch (error: any) {
+            if (error.code === 'auth/wrong-password') {
+                throw new Error("Incorrect current password.");
+            }
+            if (error.code === 'auth/too-many-requests') {
+                 throw new Error("Too many attempts. Please try again later.");
+            }
+            throw new Error("Failed to re-authenticate. You may need to log out and log in again.");
+        }
     } else {
-        throw new Error("No user is signed in.");
+        throw new Error("No user is signed in or user has no email.");
     }
   };
 
