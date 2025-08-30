@@ -62,7 +62,11 @@ export default function OrderDetailsPage() {
     }, [orderId, toast, router]);
 
     const handlePrint = () => {
+        if (!order) return;
+        const originalTitle = document.title;
+        document.title = `Order-#${order.orderNumber}`;
         window.print();
+        document.title = originalTitle;
     }
 
     if (loading) {
@@ -208,3 +212,4 @@ export default function OrderDetailsPage() {
     );
 
     
+
