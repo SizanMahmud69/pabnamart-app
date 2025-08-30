@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Ticket, Settings, Wallet, Box, Truck, PackageCheck, Undo2, HelpCircle, Headphones, Star, Users, LogOut } from "lucide-react";
+import { Heart, Ticket, Settings, Wallet, Box, Truck, PackageCheck, Undo2, HelpCircle, Headphones, Star, Users } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from 'lucide-react';
 import { useVouchers } from "@/hooks/useVouchers";
@@ -17,7 +17,6 @@ import { useEffect, useState, useMemo } from "react";
 import { collection, getFirestore, onSnapshot, query, where } from "firebase/firestore";
 import app from "@/lib/firebase";
 import { useWishlist } from "@/hooks/useWishlist";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 
 const db = getFirestore(app);
@@ -59,9 +58,8 @@ const ServiceItem = ({ icon: Icon, label, href }: ServiceItemProps) => (
 
 export default function AccountPage() {
     const { collectedVouchers } = useVouchers();
-    const { user, logout, loading: authLoading, appUser } = useAuth();
+    const { user, loading: authLoading, appUser } = useAuth();
     const { wishlistItems } = useWishlist();
-    const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [ordersLoading, setOrdersLoading] = useState(true);
     const [viewedDeliveredOrders, setViewedDeliveredOrders] = useState<string[]>([]);
@@ -99,11 +97,6 @@ export default function AccountPage() {
             setViewedDeliveredOrders(JSON.parse(stored));
         }
     }, []);
-
-    const handleLogout = async () => {
-        await logout();
-        router.push('/login');
-    };
     
     const loading = authLoading || ordersLoading;
     
@@ -206,29 +199,6 @@ export default function AccountPage() {
                        {services.map(service => <ServiceItem key={service.label} {...service} />)}
                     </CardContent>
                 </Card>
-
-                <div className="text-center pt-4">
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="outline">
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Logout
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure you want to log out?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    You will need to log in again to access your account.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleLogout}>Continue</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
 
             </div>
         </div>
