@@ -79,6 +79,10 @@ export default function OrderDetailsPage() {
 
     return (
         <div className="container mx-auto p-4">
+             <div className="hidden print:block text-center mb-6">
+                <h1 className="text-3xl font-bold text-primary">PabnaMart</h1>
+                <p>Order Invoice</p>
+            </div>
             <header className="py-4 flex justify-between items-center print:hidden">
                 <Button asChild variant="outline" size="sm">
                     <Link href="/admin/orders">
