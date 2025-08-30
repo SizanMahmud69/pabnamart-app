@@ -199,15 +199,15 @@ function HomePageContent() {
             <h2 className="text-2xl font-bold flex items-center gap-2"><Sparkles className="text-primary"/>New Arrivals</h2>
           </div>
           <Carousel opts={{ align: "start", loop: false }} className="w-full">
-            <CarouselContent className="-ml-2">
+            <CarouselContent className="-ml-2 md:-ml-4">
                 {newArrivals.map(product => (
-                    <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
+                    <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                         <div className="p-1">
                             <ProductCard product={product} />
                         </div>
                     </CarouselItem>
                 ))}
-                 <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
+                 <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                     <div className="p-1 flex h-full items-center justify-center">
                         <Button asChild variant="outline" className="h-full w-full">
                             <Link href="/new-arrivals" className="flex-col h-full">
@@ -229,15 +229,15 @@ function HomePageContent() {
             <h2 className="text-2xl font-bold flex items-center gap-2"><Star className="text-accent fill-accent" />Top Rated</h2>
           </div>
             <Carousel opts={{ align: "start", loop: false }} className="w-full">
-                <CarouselContent className="-ml-2">
+                <CarouselContent className="-ml-2 md:-ml-4">
                     {topRated.map(product => (
-                        <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
+                        <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                             <div className="p-1">
                                 <ProductCard product={product} />
                             </div>
                         </CarouselItem>
                     ))}
-                    <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
+                    <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                         <div className="p-1 flex h-full items-center justify-center">
                              <Button asChild variant="outline" className="h-full w-full">
                                 <Link href="/top-rated" className="flex-col h-full">

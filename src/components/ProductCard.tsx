@@ -74,21 +74,19 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
         )}
         </div>
       </Link>
-      <CardContent className={cn("flex flex-col flex-grow space-y-2", isSmall ? "p-2" : "p-3")}>
-        {!isSmall && <p className="text-xs text-muted-foreground">{product.category}</p>}
-        <h3 className={cn("font-semibold text-gray-800 leading-snug flex-grow", isSmall ? "text-xs h-8" : "text-sm")}>
+      <CardContent className={cn("flex flex-col flex-grow space-y-2 p-2", isSmall ? "p-2" : "p-3")}>
+        <p className="text-xs text-muted-foreground truncate">{product.category}</p>
+        <h3 className={cn("font-semibold text-gray-800 leading-snug flex-grow h-10", isSmall ? "text-xs h-8" : "text-sm h-10")}>
             <Link href={productLink} className="hover:text-primary">
-                <span className={cn(isSmall && "truncate-2-lines")}>{product.name}</span>
+                <span className="truncate-2-lines">{product.name}</span>
             </Link>
         </h3>
-        {!isSmall && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Star className="w-4 h-4 fill-accent text-accent" />
-              <span>{product.rating.toFixed(1)}</span>
-              <span>|</span>
-              <span>Sold {product.sold || 0}</span>
-            </div>
-        )}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Star className="w-4 h-4 fill-accent text-accent" />
+          <span>{product.rating.toFixed(1)}</span>
+          <span>|</span>
+          <span>Sold {product.sold || 0}</span>
+        </div>
         <div className="flex justify-between items-center mt-auto">
           <div>
             <p className={cn("font-bold text-primary", isSmall ? "text-base" : "text-lg")}>৳{price}</p>
