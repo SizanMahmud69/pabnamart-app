@@ -49,12 +49,6 @@ const menuItems = [
         description: "Create and distribute vouchers.",
         icon: Ticket,
         href: "/admin/vouchers"
-    },
-    {
-        title: "Settings",
-        description: "Manage site, delivery and category.",
-        icon: Settings,
-        href: "/admin/settings"
     }
 ];
 
