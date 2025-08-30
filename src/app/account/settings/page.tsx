@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const settingsItems = [
     { label: "Account Information", href: "/account/settings/information" },
@@ -55,13 +56,28 @@ export default function AccountSettingsPage() {
                             ))}
                         </div>
                         <Separator className="my-4" />
-                        <Button
-                            variant="ghost"
-                            className="w-full justify-start text-destructive hover:text-destructive text-lg p-2 font-medium"
-                            onClick={handleLogout}
-                        >
-                            Log Out
-                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-start text-destructive hover:text-destructive text-lg p-2 font-medium"
+                                >
+                                    Log Out
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure you want to log out?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        You will need to log in again to access your account.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleLogout}>Continue</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </CardContent>
                 </Card>
             </div>

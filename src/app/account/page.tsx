@@ -17,6 +17,8 @@ import { useEffect, useState, useMemo } from "react";
 import { collection, getFirestore, onSnapshot, query, where } from "firebase/firestore";
 import app from "@/lib/firebase";
 import { useWishlist } from "@/hooks/useWishlist";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
 
 const db = getFirestore(app);
 
@@ -206,10 +208,26 @@ export default function AccountPage() {
                 </Card>
 
                 <div className="text-center pt-4">
-                    <Button variant="outline" onClick={handleLogout}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="outline">
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Logout
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure you want to log out?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    You will need to log in again to access your account.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleLogout}>Continue</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
 
             </div>
