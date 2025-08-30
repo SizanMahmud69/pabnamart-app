@@ -122,15 +122,22 @@ function ProductDetailPageContent() {
                         
                         <AddToCartButton product={product} isFlashSaleContext={isFlashSaleContext} />
 
-                        {product.stock > 0 ? (
-                             <div className="inline-flex items-center justify-center rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
-                                In Stock ({product.stock} left)
-                            </div>
-                        ) : (
-                             <div className="inline-flex items-center justify-center rounded-full bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive">
-                                Out of Stock
-                            </div>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {product.stock > 0 ? (
+                                <div className="inline-flex items-center justify-center rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+                                    In Stock ({product.stock} left)
+                                </div>
+                            ) : (
+                                <div className="inline-flex items-center justify-center rounded-full bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive">
+                                    Out of Stock
+                                </div>
+                            )}
+                             {product.sold > 0 && (
+                                <div className="inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800">
+                                    {product.sold} Sold
+                                </div>
+                            )}
+                        </div>
 
                         <Separator className="my-4"/>
 
