@@ -5,8 +5,9 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Notification } from '@/types';
 import { useAuth } from './useAuth';
 import { LogIn, Truck, Gift, Tag, PackageCheck, CheckCircle, XCircle, type LucideIcon } from 'lucide-react';
-import { getFirestore, onSnapshot, collection, query, writeBatch, getDocs, updateDoc, doc, orderBy, deleteDoc } from 'firebase/firestore';
-import app from '@/lib/firebase';
+import { getFirestore, onSnapshot, collection, query, writeBatch, getDocs, updateDoc, doc, orderBy, deleteDoc, arrayUnion } from 'firebase/firestore';
+import app, { messaging } from '@/lib/firebase';
+import { getToken, onMessage } from 'firebase/messaging';
 
 const db = getFirestore(app);
 
@@ -31,7 +32,49 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const { user } = useAuth();
+  const { user, appUser } = useAuth();
+
+  const requestNotificationPermission = useCallback(async () => {
+    if (!messaging || !user || !appUser) return;
+    
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const currentToken = await getToken(messaging, { vapidKey: 'YOUR_VAPID_KEY' }); // You need to generate this in Firebase console
+            if (currentToken) {
+                const userDocRef = doc(db, 'users', user.uid);
+                if (!appUser.fcmTokens?.includes(currentToken)) {
+                     await updateDoc(userDocRef, {
+                        fcmTokens: arrayUnion(currentToken)
+                    });
+                }
+            } else {
+                console.log('No registration token available. Request permission to generate one.');
+            }
+        } else {
+            console.log('Unable to get permission to notify.');
+        }
+    } catch (err) {
+        console.error('An error occurred while retrieving token. ', err);
+    }
+  }, [user, appUser]);
+
+  useEffect(() => {
+    if (user && appUser) {
+        requestNotificationPermission();
+    }
+  }, [user, appUser, requestNotificationPermission]);
+
+  // Listener for foreground messages
+  useEffect(() => {
+    if (messaging) {
+        const unsubscribe = onMessage(messaging, (payload) => {
+            console.log('Foreground message received.', payload);
+            // You can show an in-app notification here
+        });
+        return () => unsubscribe();
+    }
+  }, []);
 
   // Listener for main notifications collection
   useEffect(() => {
@@ -42,7 +85,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const userNotifications = snapshot.docs.map(doc => {
                 const data = doc.data();
-                // Format time for display, but keep original for sorting
                 const displayTime = new Date(data.time).toLocaleString();
                 return { ...data, id: doc.id, time: displayTime } as Notification
             });

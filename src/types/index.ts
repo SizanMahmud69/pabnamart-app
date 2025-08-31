@@ -80,6 +80,7 @@ export interface User {
   joined: string;
   shippingAddresses?: ShippingAddress[];
   usedVoucherCodes?: string[];
+  fcmTokens?: string[];
 }
 
 export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned' | 'return-requested' | 'processing' | 'return-rejected' | 'return-processing';
