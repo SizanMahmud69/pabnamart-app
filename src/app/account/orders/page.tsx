@@ -279,31 +279,32 @@ export default function OrdersPage() {
                             
                             {(order.status === 'delivered' || ['return-requested', 'return-processing', 'returned', 'return-rejected'].includes(order.status)) && (
                               <CardFooter className="bg-muted/30 p-2">
-                                    <div className="grid grid-cols-2 gap-2 w-full">
-                                        {order.status === 'return-processing' ? (
-                                            <>
-                                                <div /> 
-                                                <ReturnInstructions />
-                                            </>
-                                        ) : order.status === 'delivered' || order.status === 'return-rejected' || order.status === 'returned' ? (
-                                             <>
-                                                <OrderReturnButton order={order} />
-                                                {order.isReviewed ? (
-                                                    <Button variant="outline" size="sm" disabled className="w-full bg-green-100 text-green-800 border-green-200">
-                                                        <Edit className="mr-2 h-4 w-4" />
-                                                        Reviewed
-                                                    </Button>
-                                                ) : (
-                                                    <Button variant="outline" size="sm" asChild className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 border-green-200">
-                                                        <Link href={`/account/reviews/new/${order.id}`}>
+                                    {order.status === 'return-processing' ? (
+                                        <div className="w-full">
+                                            <ReturnInstructions />
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 gap-2 w-full">
+                                            {order.status === 'delivered' || order.status === 'return-rejected' || order.status === 'returned' ? (
+                                                <>
+                                                    <OrderReturnButton order={order} />
+                                                    {order.isReviewed ? (
+                                                        <Button variant="outline" size="sm" disabled className="w-full bg-green-100 text-green-800 border-green-200">
                                                             <Edit className="mr-2 h-4 w-4" />
-                                                            Write a Review
-                                                        </Link>
-                                                    </Button>
-                                                )}
-                                             </>
-                                        ) : null}
-                                    </div>
+                                                            Reviewed
+                                                        </Button>
+                                                    ) : (
+                                                        <Button variant="outline" size="sm" asChild className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 border-green-200">
+                                                            <Link href={`/account/reviews/new/${order.id}`}>
+                                                                <Edit className="mr-2 h-4 w-4" />
+                                                                Write a Review
+                                                            </Link>
+                                                        </Button>
+                                                    )}
+                                                </>
+                                            ) : null}
+                                        </div>
+                                    )}
                               </CardFooter>
                             )}
                         </Card>
@@ -320,4 +321,5 @@ export default function OrdersPage() {
         </div>
     </div>
   );
-}
+
+    
