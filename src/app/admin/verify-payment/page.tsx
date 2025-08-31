@@ -26,7 +26,7 @@ async function createPaymentVerifiedNotification(userId: string, orderNumber: st
         description: `Your payment has been verified and your order is now being processed for shipping.`,
         time: new Date().toISOString(),
         read: false,
-        href: `/account/orders?status=shipped`
+        href: `/account/orders?status=processing`
     };
     await addDoc(collection(db, `users/${userId}/pendingNotifications`), notification);
 }
@@ -79,11 +79,11 @@ export default function VerifyPaymentPage() {
     const handleVerifyPayment = async (order: Order) => {
         try {
             const orderDocRef = doc(db, 'orders', order.id);
-            await updateDoc(orderDocRef, { status: 'shipped' });
+            await updateDoc(orderDocRef, { status: 'processing' });
             await createPaymentVerifiedNotification(order.userId, order.orderNumber);
             toast({
                 title: "Payment Verified",
-                description: "The order has been moved to 'To Ship'.",
+                description: "The order has been moved to 'Processing'.",
             });
         } catch (error) {
              toast({

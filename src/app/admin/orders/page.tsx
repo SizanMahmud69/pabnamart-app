@@ -35,6 +35,7 @@ async function createNotification(userId: string, orderNumber: string, status: O
 
 const TABS = [
     { value: 'all', label: 'All' },
+    { value: 'processing', label: 'Processing' },
     { value: 'shipped', label: 'Shipped' },
     { value: 'in-transit', label: 'In-Transit' },
     { value: 'delivered', label: 'Delivered' },
@@ -120,6 +121,7 @@ export default function AdminOrderManagement() {
     const getStatusBadgeVariant = (status: OrderStatus) => {
         switch(status) {
             case 'pending': return 'secondary';
+            case 'processing': return 'secondary';
             case 'shipped': return 'default';
             case 'in-transit': return 'default';
             case 'delivered': return 'default';
@@ -211,7 +213,7 @@ export default function AdminOrderManagement() {
                                                                     <Eye className="mr-2 h-4 w-4" />
                                                                     View Details
                                                                 </DropdownMenuItem>
-                                                                {order.status === 'pending' && (
+                                                                {order.status === 'processing' && (
                                                                     <DropdownMenuItem onSelect={() => handleStatusChange(order, 'shipped')}>
                                                                         <Truck className="mr-2 h-4 w-4" />
                                                                         Mark as Shipped

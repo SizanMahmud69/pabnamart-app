@@ -93,7 +93,7 @@ export async function placeOrder(
         // 2. Create the order document
         let status: OrderStatus = 'pending';
         if (paymentMethod === 'cod') {
-            status = 'shipped';
+            status = 'processing';
         } else if (paymentMethod === 'online') {
             status = 'pending'; 
         }
