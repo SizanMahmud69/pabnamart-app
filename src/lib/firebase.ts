@@ -1,7 +1,7 @@
-import { initializeApp, getApp, getApps } from 'firebase/app';
+import { initializeApp, getApp, getApps, type FirebaseOptions } from 'firebase/app';
 import { getMessaging } from 'firebase/messaging';
 
-const firebaseConfig = {
+export const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk",
   authDomain: "pabnamart.firebaseapp.com",
   projectId: "pabnamart",

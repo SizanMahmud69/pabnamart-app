@@ -1,34 +1,34 @@
-// This file should be in the public folder
+// This file must be in the public folder.
 
-importScripts("https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js");
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
 
-// Initialize the Firebase app in the service worker by passing in the messagingSenderId.
+// Your web app's Firebase configuration
+// It's safe to expose this, as security is handled by Firebase rules
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY", // Replace with your config
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "600614180848", // This is important
-    appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk",
+  authDomain: "pabnamart.firebaseapp.com",
+  projectId: "pabnamart",
+  storageBucket: "pabnamart.appspot.com",
+  messagingSenderId: "600614180848",
+  appId: "1:600614180848:web:6f4e21fb4f5b6cd42a6f35",
 };
 
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
 
-// Retrieve an instance of Firebase Messaging so that it can handle background messages.
-const messaging = firebase.messaging();
+onBackgroundMessage(messaging, (payload) => {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
 
-messaging.onBackgroundMessage((payload) => {
-  console.log(
-    "[firebase-messaging-sw.js] Received background message ",
-    payload
-  );
-  // Customize notification here
-  const notificationTitle = payload.notification.title;
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: "/icon-192x192.png", // Add an icon for your notifications
-  };
-
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  if (payload.notification) {
+    const notificationTitle = payload.notification.title || 'New Notification';
+    const notificationOptions = {
+      body: payload.notification.body || 'You have a new message.',
+      icon: payload.notification.icon || '/favicon.ico'
+    };
+  
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  }
 });
