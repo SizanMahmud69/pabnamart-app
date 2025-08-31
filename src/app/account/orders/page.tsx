@@ -303,7 +303,7 @@ export default function OrdersPage() {
                                                     )}
                                                 </>
                                             )}
-                                            {(order.status === 'return-requested' || order.status === 'return-processing' || order.status === 'returned' || order.status === 'return-rejected') && (
+                                            {(order.status === 'return-requested' || order.status === 'returned' || order.status === 'return-rejected') && (
                                                 <OrderReturnButton order={order} />
                                             )}
                                         </div>
@@ -326,3 +326,4 @@ export default function OrdersPage() {
   );
 
     
+
