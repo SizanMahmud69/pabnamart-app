@@ -113,7 +113,6 @@ export async function placeOrder(
               quantity: item.quantity,
               image: item.images[0],
               returnPolicy: productData?.returnPolicy ?? 0,
-              shippingTime: productData?.shippingTime,
             }
           }),
           total: totalAmount,

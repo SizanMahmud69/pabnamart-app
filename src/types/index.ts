@@ -30,7 +30,6 @@ export interface Product {
   sold: number;
   details?: string;
   freeShipping?: boolean;
-  shippingTime?: string;
   returnPolicy?: number;
   isFlashSale?: boolean;
   flashSaleEndDate?: string;
@@ -92,7 +91,6 @@ export interface OrderItem {
   quantity: number;
   image: string;
   returnPolicy?: number;
-  shippingTime?: string;
 }
 
 export interface ShippingAddress {
@@ -141,6 +139,8 @@ export interface DeliverySettings {
   insidePabnaLarge: number;
   outsidePabnaSmall: number;
   outsidePabnaLarge: number;
+  deliveryTimeInside: number;
+  deliveryTimeOutside: number;
 }
 
 export interface PaymentSettings {

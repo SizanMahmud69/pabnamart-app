@@ -91,7 +91,6 @@ export default function NewProductPage() {
             isFlashSale: isFlashSale,
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
             flashSaleDiscount: isFlashSale ? flashSaleDiscount : undefined,
-            shippingTime: formData.get('shippingTime') as string,
             returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,
         };
 
@@ -225,15 +224,9 @@ export default function NewProductPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="shipping-time">Shipping Time (e.g., 2-3)</Label>
-                                        <Input id="shipping-time" name="shippingTime" placeholder="e.g., 2-3" disabled={isLoading} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="return-policy">Return Policy (in days)</Label>
-                                        <Input id="return-policy" name="returnPolicy" type="number" placeholder="e.g., 30" disabled={isLoading} />
-                                    </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="return-policy">Return Policy (in days)</Label>
+                                    <Input id="return-policy" name="returnPolicy" type="number" placeholder="e.g., 30" disabled={isLoading} />
                                 </div>
                             </div>
 

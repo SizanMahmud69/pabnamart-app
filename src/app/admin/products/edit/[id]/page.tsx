@@ -109,7 +109,6 @@ export default function EditProductPage() {
             isFlashSale: isFlashSale,
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
             flashSaleDiscount: isFlashSale ? flashSaleDiscount : undefined,
-            shippingTime: formData.get('shippingTime') as string,
             returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,
         };
 
@@ -247,15 +246,9 @@ export default function EditProductPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="shipping-time">Shipping Time (e.g., 2-3)</Label>
-                                        <Input id="shipping-time" name="shippingTime" defaultValue={product.shippingTime} disabled={isLoading} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="return-policy">Return Policy (in days)</Label>
-                                        <Input id="return-policy" name="returnPolicy" type="number" defaultValue={product.returnPolicy} disabled={isLoading} />
-                                    </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="return-policy">Return Policy (in days)</Label>
+                                    <Input id="return-policy" name="returnPolicy" type="number" defaultValue={product.returnPolicy} disabled={isLoading} />
                                 </div>
                             </div>
 

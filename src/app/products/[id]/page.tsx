@@ -9,21 +9,36 @@ import StarRating from '@/components/StarRating';
 import AddToCartButton from './AddToCartButton';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState, useMemo, Suspense } from 'react';
-import type { Product } from '@/types';
+import type { Product, ShippingAddress } from '@/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, CheckCircle2, Truck, Package } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useParams, useSearchParams } from 'next/navigation';
+import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
+import { useAuth } from '@/hooks/useAuth';
 
 function ProductDetailPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { products, getFlashSalePrice } = useProducts();
   const [product, setProduct] = useState<Product | undefined | null>(null);
+  const { appUser } = useAuth();
+  const { deliveryTimeInside, deliveryTimeOutside } = useDeliveryCharge();
 
   const isFlashSaleContext = searchParams.get('flash') === 'true';
+
+  const defaultAddress = useMemo(() => {
+    if (!appUser?.shippingAddresses) return null;
+    return appUser.shippingAddresses.find(addr => addr.default) || appUser.shippingAddresses[0] || null;
+  }, [appUser]);
+
+  const deliveryTime = useMemo(() => {
+    if (!defaultAddress) return deliveryTimeOutside; // Default to outside if no address
+    const isInsidePabna = defaultAddress.city.toLowerCase().trim() === 'pabna';
+    return isInsidePabna ? deliveryTimeInside : deliveryTimeOutside;
+  }, [defaultAddress, deliveryTimeInside, deliveryTimeOutside]);
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -148,10 +163,10 @@ function ProductDetailPageContent() {
                                     <span>Eligible for free shipping</span>
                                 </div>
                             )}
-                            {product.shippingTime && (
+                            {deliveryTime > 0 && (
                                 <div className="flex items-center gap-3">
                                     <Truck className="h-5 w-5 text-blue-500" />
-                                    <span>Ships in {product.shippingTime} business days</span>
+                                    <span>Ships in {deliveryTime} business days (to your default address)</span>
                                 </div>
                             )}
                             {product.returnPolicy && (

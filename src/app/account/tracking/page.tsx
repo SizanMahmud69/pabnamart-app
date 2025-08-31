@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import app from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
 
 const db = getFirestore(app);
 
@@ -44,6 +45,12 @@ export default function OrderTrackingPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [searched, setSearched] = useState(false);
     const { toast } = useToast();
+    const { deliveryTimeInside, deliveryTimeOutside } = useDeliveryCharge();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const handleSearch = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -73,18 +80,15 @@ export default function OrderTrackingPage() {
     };
 
     const getEstimatedDeliveryDate = () => {
-        if (!order) return null;
+        if (!order || !isClient) return null;
+        
+        const isInsidePabna = order.shippingAddress.city.toLowerCase().trim() === 'pabna';
+        const deliveryTime = isInsidePabna ? deliveryTimeInside : deliveryTimeOutside;
 
-        const maxShippingDays = order.items.reduce((max, item) => {
-            if (!item.shippingTime) return max;
-            const days = parseInt(item.shippingTime.split('-').pop() || '0', 10);
-            return days > max ? days : max;
-        }, 0);
-
-        if (maxShippingDays === 0) return null; // No estimate if no shipping times
+        if (deliveryTime === 0) return null; 
 
         const orderDate = new Date(order.date);
-        return addDays(orderDate, maxShippingDays);
+        return addDays(orderDate, deliveryTime);
     };
 
     const estimatedDate = getEstimatedDeliveryDate();

@@ -13,6 +13,8 @@ const defaultSettings: DeliverySettings = {
   insidePabnaLarge: 80,
   outsidePabnaSmall: 120,
   outsidePabnaLarge: 150,
+  deliveryTimeInside: 2,
+  deliveryTimeOutside: 4,
 };
 
 export const useDeliveryCharge = () => {
@@ -40,5 +42,7 @@ export const useDeliveryCharge = () => {
     chargeInsidePabnaLarge: settings.insidePabnaLarge,
     chargeOutsidePabnaSmall: settings.outsidePabnaSmall,
     chargeOutsidePabnaLarge: settings.outsidePabnaLarge,
+    deliveryTimeInside: settings.deliveryTimeInside,
+    deliveryTimeOutside: settings.deliveryTimeOutside,
   };
 };

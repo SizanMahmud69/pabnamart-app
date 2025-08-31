@@ -13,6 +13,7 @@ import type { DeliverySettings } from '@/types';
 import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Separator } from '@/components/ui/separator';
 
 const db = getFirestore(app);
 
@@ -21,6 +22,8 @@ const initialSettings: DeliverySettings = {
     insidePabnaLarge: 0,
     outsidePabnaSmall: 0,
     outsidePabnaLarge: 0,
+    deliveryTimeInside: 0,
+    deliveryTimeOutside: 0,
 };
 
 export default function DeliverySettingsPage() {
@@ -54,7 +57,7 @@ export default function DeliverySettingsPage() {
             await setDoc(settingsDocRef, settings);
             toast({
                 title: "Settings Saved",
-                description: "The delivery charges have been updated successfully.",
+                description: "The delivery settings have been updated successfully.",
             });
         } catch (error) {
              toast({
@@ -86,11 +89,16 @@ export default function DeliverySettingsPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Delivery Settings</CardTitle>
-                            <CardDescription>Manage the delivery charges for your store based on quantity.</CardDescription>
+                            <CardDescription>Manage the delivery charges and times for your store.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div>
-                                <h3 className="font-semibold text-lg mb-2">Inside Pabna City</h3>
+                                <h3 className="font-semibold text-lg mb-2">Delivery Charges</h3>
+                                <p className="text-xs text-muted-foreground mb-4">
+                                This charge applies to all orders unless a product is marked for free shipping. If any product in the cart has free shipping, the entire order ships for free. The correct charge will be applied at checkout based on the user's address and item count.
+                                </p>
+                                <Separator className="mb-4" />
+                                <h4 className="font-medium text-md mb-2">Inside Pabna City</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="insidePabnaSmall">1-5 Items (৳)</Label>
@@ -115,10 +123,7 @@ export default function DeliverySettingsPage() {
                                         />
                                     </div>
                                 </div>
-                            </div>
-
-                            <div>
-                                <h3 className="font-semibold text-lg mb-2">Outside Pabna City</h3>
+                                <h4 className="font-medium text-md mb-2 mt-4">Outside Pabna City</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="outsidePabnaSmall">1-5 Items (৳)</Label>
@@ -144,10 +149,35 @@ export default function DeliverySettingsPage() {
                                     </div>
                                 </div>
                             </div>
-                            
-                            <p className="text-xs text-muted-foreground pt-4">
-                                This charge applies to all orders unless a product is marked for free shipping. If any product in the cart has free shipping, the entire order ships for free. The correct charge will be applied at checkout based on the user's address and item count.
-                            </p>
+
+                            <div className="pt-4">
+                                <h3 className="font-semibold text-lg mb-2">Estimated Delivery Time</h3>
+                                <Separator className="mb-4" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="deliveryTimeInside">Inside Pabna (in days)</Label>
+                                        <Input 
+                                            id="deliveryTimeInside" 
+                                            name="deliveryTimeInside"
+                                            type="number"
+                                            value={settings.deliveryTimeInside}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g., 2" 
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="deliveryTimeOutside">Outside Pabna (in days)</Label>
+                                        <Input 
+                                            id="deliveryTimeOutside" 
+                                            name="deliveryTimeOutside"
+                                            type="number"
+                                            value={settings.deliveryTimeOutside}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g., 4" 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </CardContent>
                         <CardFooter className="flex justify-end">
                             <Button type="submit" disabled={isSaving}>
