@@ -40,7 +40,12 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-            const currentToken = await getToken(messaging, { vapidKey: 'YOUR_VAPID_KEY' }); // You need to generate this in Firebase console
+            const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+            if (!vapidKey) {
+                console.error("VAPID key is not configured in environment variables.");
+                return;
+            }
+            const currentToken = await getToken(messaging, { vapidKey });
             if (currentToken) {
                 const userDocRef = doc(db, 'users', user.uid);
                 if (!appUser.fcmTokens?.includes(currentToken)) {
