@@ -1,9 +1,11 @@
+
 "use client";
 
+import { useState } from "react";
 import { useCart } from "@/hooks/useCart";
 import type { Product } from "@/types";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, CreditCard, Heart } from "lucide-react";
+import { ShoppingCart, CreditCard, Heart, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWishlist } from "@/hooks/useWishlist";
 
@@ -11,10 +13,12 @@ export default function AddToCartButton({ product, isFlashSaleContext = false }:
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
   
   const isSoldOut = product.stock === 0;
 
   const handleBuyNow = () => {
+    setIsLoading(true);
     addToCart(product, isFlashSaleContext);
     router.push('/checkout');
   }
@@ -34,11 +38,16 @@ export default function AddToCartButton({ product, isFlashSaleContext = false }:
 
   return (
     <div className="flex gap-4">
-      <Button size="lg" className="w-full" onClick={() => addToCart(product, isFlashSaleContext)}>
+      <Button size="lg" className="w-full" onClick={() => addToCart(product, isFlashSaleContext)} disabled={isLoading}>
         <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
       </Button>
-      <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow}>
-        <CreditCard className="mr-2 h-5 w-5" /> Buy Now
+      <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isLoading}>
+        {isLoading ? (
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        ) : (
+          <CreditCard className="mr-2 h-5 w-5" />
+        )}
+        {isLoading ? "Processing..." : "Buy Now"}
       </Button>
     </div>
   );
