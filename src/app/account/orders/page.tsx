@@ -285,7 +285,7 @@ export default function OrdersPage() {
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-2 gap-2 w-full">
-                                            {order.status === 'delivered' || order.status === 'return-rejected' || order.status === 'returned' ? (
+                                            {order.status === 'delivered' && (
                                                 <>
                                                     <OrderReturnButton order={order} />
                                                     {order.isReviewed ? (
@@ -302,7 +302,10 @@ export default function OrdersPage() {
                                                         </Button>
                                                     )}
                                                 </>
-                                            ) : null}
+                                            )}
+                                            {(order.status === 'return-requested' || order.status === 'return-processing' || order.status === 'returned' || order.status === 'return-rejected') && (
+                                                <OrderReturnButton order={order} />
+                                            )}
                                         </div>
                                     )}
                               </CardFooter>
