@@ -17,4 +17,22 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 // Initialize Firebase Cloud Messaging and get a reference to the service
 export const messaging = (typeof window !== 'undefined') ? getMessaging(app) : null;
 
+// Function to register the service worker
+export const registerServiceWorker = () => {
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    const firebaseConfigParams = new URLSearchParams(firebaseConfig as Record<string, string>).toString();
+    navigator.serviceWorker.register(`/firebase-messaging-sw.js?${firebaseConfigParams}`)
+      .then(registration => {
+        console.log('Service Worker registered with scope:', registration.scope);
+      }).catch(error => {
+        console.error('Service Worker registration failed:', error);
+      });
+  }
+};
+
+if (typeof window !== 'undefined') {
+  registerServiceWorker();
+}
+
+
 export default app;

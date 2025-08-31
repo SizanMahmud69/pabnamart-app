@@ -1,34 +1,27 @@
-// This file must be in the public folder.
+// Scripts for firebase and firebase messaging
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
+// Initialize the Firebase app in the service worker with the Firebase config passed in the URL
+const params = new URL(location).searchParams;
+const firebaseConfig = Object.fromEntries(params.entries());
 
-// Your web app's Firebase configuration
-// It's safe to expose this, as security is handled by Firebase rules
-const firebaseConfig = {
-  apiKey: "AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk",
-  authDomain: "pabnamart.firebaseapp.com",
-  projectId: "pabnamart",
-  storageBucket: "pabnamart.appspot.com",
-  messagingSenderId: "600614180848",
-  appId: "1:600614180848:web:6f4e21fb4f5b6cd42a6f35",
-};
+firebase.initializeApp(firebaseConfig);
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+// Retrieve an instance of Firebase Messaging so that it can handle background messages.
+const messaging = firebase.messaging();
 
-onBackgroundMessage(messaging, (payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+messaging.onBackgroundMessage((payload) => {
+  console.log(
+    '[firebase-messaging-sw.js] Received background message ',
+    payload,
+  );
+  // Customize notification here
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: '/pabnamart-logo.png', // You can customize this
+  };
 
-  if (payload.notification) {
-    const notificationTitle = payload.notification.title || 'New Notification';
-    const notificationOptions = {
-      body: payload.notification.body || 'You have a new message.',
-      icon: payload.notification.icon || '/favicon.ico'
-    };
-  
-    self.registration.showNotification(notificationTitle, notificationOptions);
-  }
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
