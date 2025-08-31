@@ -76,7 +76,9 @@ export default function ReturnRequestPage() {
         try {
             const orderDocRef = doc(db, 'orders', orderId);
             await updateDoc(orderDocRef, {
-                status: 'return-requested'
+                status: 'return-requested',
+                returnReason: reason,
+                returnComments: comments
             });
             
             toast({

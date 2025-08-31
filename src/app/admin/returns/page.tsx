@@ -6,14 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, MoreHorizontal, FileText } from 'lucide-react';
 import Link from 'next/link';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { collection, query, where, onSnapshot, getFirestore, doc, updateDoc, setDoc, getDoc, arrayUnion, addDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order, Voucher, Notification } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const db = getFirestore(app);
 
@@ -34,6 +35,7 @@ export default function AdminReturnManagement() {
   const [returnRequests, setReturnRequests] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     const ordersRef = collection(db, 'orders');
@@ -146,30 +148,37 @@ export default function AdminReturnManagement() {
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {request.status === 'return-requested' && (
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onSelect={() => handleStatusChange(request, 'returned')}>
-                                                        <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-                                                        <span>Approve</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem 
-                                                        className="text-destructive"
-                                                        onSelect={() => handleStatusChange(request, 'return-rejected')}
-                                                    >
-                                                        <XCircle className="mr-2 h-4 w-4" />
-                                                        <span>Reject</span>
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        )}
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem onSelect={() => router.push(`/admin/returns/${request.id}`)}>
+                                                    <FileText className="mr-2 h-4 w-4" />
+                                                    <span>Return Details</span>
+                                                </DropdownMenuItem>
+                                                {request.status === 'return-requested' && (
+                                                    <>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onSelect={() => handleStatusChange(request, 'returned')}>
+                                                            <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                                                            <span>Approve</span>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem 
+                                                            className="text-destructive"
+                                                            onSelect={() => handleStatusChange(request, 'return-rejected')}
+                                                        >
+                                                            <XCircle className="mr-2 h-4 w-4" />
+                                                            <span>Reject</span>
+                                                        </DropdownMenuItem>
+                                                    </>
+                                                )}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             )) : (

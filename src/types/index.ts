@@ -132,6 +132,8 @@ export interface Order {
   usedVoucherCode?: string;
   voucherDiscount?: number;
   statusHistory?: StatusHistory[];
+  returnReason?: string;
+  returnComments?: string;
 }
 
 export interface DeliverySettings {
