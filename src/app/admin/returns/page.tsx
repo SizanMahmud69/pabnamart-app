@@ -6,28 +6,52 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle, XCircle, MoreHorizontal, FileText } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, MoreHorizontal, FileText, Check } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { collection, query, where, onSnapshot, getFirestore, doc, updateDoc, setDoc, getDoc, arrayUnion, addDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Order, Voucher, Notification } from '@/types';
+import type { Order, Voucher, Notification, DeliverySettings } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
 const db = getFirestore(app);
 
-async function createReturnNotification(userId: string, orderNumber: string, status: 'approved' | 'rejected') {
+async function createReturnNotification(userId: string, orderNumber: string, status: 'approved' | 'rejected' | 'processing', returnAddress?: string) {
     if (!userId) return;
-    const notification: Omit<Notification, 'id'> = {
-        icon: status === 'approved' ? 'CheckCircle' : 'XCircle',
-        title: `Return Request ${status === 'approved' ? 'Approved' : 'Rejected'}`,
-        description: `Your return request for order #${orderNumber} has been ${status}.`,
-        time: new Date().toISOString(),
-        read: false,
-        href: status === 'approved' ? '/vouchers' : `/account/orders?status=return-rejected`
-    };
+
+    let notification: Omit<Notification, 'id'>;
+
+    if (status === 'processing') {
+        notification = {
+            icon: 'Truck',
+            title: `Return Request Accepted`,
+            description: `Your return request for order #${orderNumber} has been accepted. Please send the items back to us.`,
+            time: new Date().toISOString(),
+            read: false,
+            href: `/account/orders/${orderNumber}` // Should be order ID, will fix later if buggy
+        };
+    } else {
+        notification = {
+            icon: status === 'approved' ? 'CheckCircle' : 'XCircle',
+            title: `Return Request ${status === 'approved' ? 'Approved' : 'Rejected'}`,
+            description: `Your return request for order #${orderNumber} has been ${status}.`,
+            time: new Date().toISOString(),
+            read: false,
+            href: status === 'approved' ? '/vouchers' : `/account/orders?status=return-rejected`
+        };
+    }
+    
+    // Find the order document by order number to link to it.
+     const ordersRef = collection(db, 'orders');
+     const q = query(ordersRef, where('orderNumber', '==', orderNumber));
+     const orderSnapshot = await getDocs(q);
+     if (!orderSnapshot.empty) {
+        notification.href = `/account/orders/${orderSnapshot.docs[0].id}`;
+     }
+
+
     await addDoc(collection(db, `users/${userId}/pendingNotifications`), notification);
 }
 
@@ -36,22 +60,53 @@ export default function AdminReturnManagement() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
+  const [deliverySettings, setDeliverySettings] = useState<DeliverySettings | null>(null);
 
   useEffect(() => {
     const ordersRef = collection(db, 'orders');
-    const q = query(ordersRef, where('status', 'in', ['return-requested', 'returned', 'return-rejected']));
+    const q = query(ordersRef, where('status', 'in', ['return-requested', 'return-processing', 'returned', 'return-rejected']));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
-        setReturnRequests(requests);
+        setReturnRequests(requests.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
         setLoading(false);
     });
 
-    return () => unsubscribe();
+    const settingsDocRef = doc(db, 'settings', 'delivery');
+    const unsubscribeSettings = onSnapshot(settingsDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+            setDeliverySettings(docSnap.data() as DeliverySettings);
+        }
+    });
+
+    return () => {
+        unsubscribe();
+        unsubscribeSettings();
+    };
   }, []);
 
-  const handleStatusChange = async (order: Order, status: 'returned' | 'return-rejected') => {
+  const handleStatusChange = async (order: Order, status: 'returned' | 'return-rejected' | 'return-processing') => {
     const orderDoc = doc(db, 'orders', order.id);
+
+    if (status === 'return-processing') {
+         if (!deliverySettings?.returnAddress) {
+            toast({
+                title: "Return Address Missing",
+                description: "Please set a return address in the delivery settings before accepting requests.",
+                variant: "destructive"
+            });
+            return;
+        }
+        await updateDoc(orderDoc, { status });
+        await createReturnNotification(order.userId, order.orderNumber, 'processing', deliverySettings.returnAddress);
+        toast({
+            title: "Return Request Received",
+            description: "The user has been notified to send the product back."
+        });
+        return;
+    }
+
+
     await updateDoc(orderDoc, { status });
 
     if (status === 'returned') {
@@ -92,7 +147,7 @@ export default function AdminReturnManagement() {
                 variant: "destructive"
             });
         }
-    } else {
+    } else if (status === 'return-rejected') {
         await createReturnNotification(order.userId, order.orderNumber, 'rejected');
         toast({
             title: "Return Rejected",
@@ -103,6 +158,21 @@ export default function AdminReturnManagement() {
 
   if (loading) {
       return <LoadingSpinner />
+  }
+  
+  const getStatusBadge = (status: Order['status']) => {
+      switch (status) {
+          case 'return-requested':
+              return <Badge variant='secondary'>Pending</Badge>;
+          case 'return-processing':
+              return <Badge className="bg-yellow-100 text-yellow-800 capitalize">Processing</Badge>;
+          case 'returned':
+              return <Badge className="bg-green-100 text-green-800 capitalize">{status}</Badge>;
+          case 'return-rejected':
+              return <Badge variant='destructive' className="capitalize">Rejected</Badge>;
+          default:
+              return <Badge variant="outline">Unknown</Badge>
+      }
   }
 
   return (
@@ -139,13 +209,7 @@ export default function AdminReturnManagement() {
                                     <TableCell>{request.shippingAddress.fullName}</TableCell>
                                     <TableCell>{new Date(request.date).toLocaleDateString()}</TableCell>
                                     <TableCell>
-                                        {request.status === 'return-requested' ? (
-                                            <Badge variant='secondary'>Pending</Badge>
-                                        ) : request.status === 'returned' ? (
-                                            <Badge className="bg-green-100 text-green-800 capitalize">{request.status}</Badge>
-                                        ) : (
-                                            <Badge variant='destructive' className="capitalize">Rejected</Badge>
-                                        )}
+                                        {getStatusBadge(request.status)}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
@@ -163,6 +227,15 @@ export default function AdminReturnManagement() {
                                                 </DropdownMenuItem>
                                                 {request.status === 'return-requested' && (
                                                     <>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onSelect={() => handleStatusChange(request, 'return-processing')}>
+                                                            <Check className="mr-2 h-4 w-4 text-yellow-600" />
+                                                            <span>Receive Request</span>
+                                                        </DropdownMenuItem>
+                                                    </>
+                                                )}
+                                                {request.status === 'return-processing' && (
+                                                     <>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem onSelect={() => handleStatusChange(request, 'returned')}>
                                                             <CheckCircle className="mr-2 h-4 w-4 text-green-600" />

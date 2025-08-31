@@ -14,6 +14,7 @@ import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 
 const db = getFirestore(app);
 
@@ -24,6 +25,7 @@ const initialSettings: DeliverySettings = {
     outsidePabnaLarge: 0,
     deliveryTimeInside: 0,
     deliveryTimeOutside: 0,
+    returnAddress: '',
 };
 
 export default function DeliverySettingsPage() {
@@ -47,10 +49,11 @@ export default function DeliverySettingsPage() {
         return () => unsubscribe();
     }, []);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setSettings(prev => ({ ...prev, [name]: Number(value) }));
+        setSettings(prev => ({ ...prev, [name]: name.startsWith('deliveryTime') || name.endsWith('Charge') ? Number(value) : value }));
     };
+
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -181,6 +184,22 @@ export default function DeliverySettingsPage() {
                                     </div>
                                 </div>
                             </div>
+                            
+                             <div className="pt-4">
+                                <h3 className="font-semibold text-lg mb-2">Return Address</h3>
+                                <Separator className="mb-4" />
+                                <div className="space-y-2">
+                                    <Label htmlFor="returnAddress">Address for returned products</Label>
+                                    <Textarea 
+                                        id="returnAddress" 
+                                        name="returnAddress"
+                                        value={settings.returnAddress}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter the full address where customers should send returned items." 
+                                    />
+                                </div>
+                            </div>
+
                         </CardContent>
                         <CardFooter className="flex justify-end">
                             <Button type="submit" disabled={isSaving}>

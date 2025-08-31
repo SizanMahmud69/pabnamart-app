@@ -6,22 +6,24 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
-import { ArrowLeft, User as UserIcon, CreditCard, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, CreditCard, ShoppingBag, Info } from 'lucide-react';
 import Link from 'next/link';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Order } from '@/types';
+import type { Order, DeliverySettings } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const db = getFirestore(app);
 
 export default function UserOrderDetailsPage() {
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
+    const [returnAddress, setReturnAddress] = useState<string | null>(null);
     const { toast } = useToast();
     const params = useParams();
     const orderId = params.id as string;
@@ -47,6 +49,16 @@ export default function UserOrderDetailsPage() {
                     }
 
                     setOrder(orderData);
+
+                    if (orderData.status === 'return-processing') {
+                         const settingsDocRef = doc(db, 'settings', 'delivery');
+                         const settingsDocSnap = await getDoc(settingsDocRef);
+                         if (settingsDocSnap.exists()) {
+                             const settings = settingsDocSnap.data() as DeliverySettings;
+                             setReturnAddress(settings.returnAddress || null);
+                         }
+                    }
+
                 } else {
                     toast({ title: "Error", description: "Order not found.", variant: "destructive" });
                     router.push('/account/orders');
@@ -101,6 +113,19 @@ export default function UserOrderDetailsPage() {
                             </CardDescription>
                         </CardHeader>
                     </Card>
+                    
+                     {order.status === 'return-processing' && returnAddress && (
+                        <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertDescription className="space-y-2">
+                                <h3 className="font-bold">Return Instructions</h3>
+                                <p>Please send the product(s) to the following address. Once we receive and verify the items, we will issue a voucher for the item's subtotal amount.</p>
+                                <address className="not-italic p-2 bg-muted rounded-md text-foreground font-semibold">
+                                    {returnAddress}
+                                </address>
+                            </AlertDescription>
+                        </Alert>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Card>

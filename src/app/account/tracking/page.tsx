@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, PackageSearch, Loader2, CheckCircle, Package, Undo2 } from "lucide-react";
+import { ArrowLeft, Search, PackageSearch, Loader2, CheckCircle, Package, Undo2, Truck, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import type { Order, OrderStatus } from '@/types';
 import { getFirestore, collection, query, where, getDocs, limit } from 'firebase/firestore';
@@ -18,7 +18,7 @@ import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
 const db = getFirestore(app);
 
 const baseStatusSteps: OrderStatus[] = ['processing', 'shipped', 'in-transit', 'delivered'];
-const returnStatusSteps: OrderStatus[] = ['return-requested', 'returned'];
+const returnStatusSteps: OrderStatus[] = ['return-requested', 'return-processing', 'returned'];
 
 
 const TrackingStep = ({ icon: Icon, label, isCompleted, isCurrent, date }: { icon: LucideIcon, label: string, isCompleted: boolean, isCurrent: boolean, date?: string }) => (
@@ -88,6 +88,7 @@ export default function OrderTrackingPage() {
             'in-transit': Truck,
             'delivered': CheckCircle,
             'return-requested': Undo2,
+            'return-processing': RefreshCw,
             'returned': Package
         };
         const labels: { [key in OrderStatus]?: string } = {
@@ -96,12 +97,13 @@ export default function OrderTrackingPage() {
             'in-transit': 'In-Transit',
             'delivered': 'Delivered',
             'return-requested': 'Return Request',
+            'return-processing': 'Return Processing',
             'returned': 'Returned',
         };
 
-        if (order && (order.status === 'return-requested' || order.status === 'returned' || order.status === 'return-rejected')) {
+        if (order && ['return-requested', 'return-processing', 'returned', 'return-rejected'].includes(order.status)) {
              const allSteps = [...baseStatusSteps, ...returnStatusSteps];
-             const currentIndex = order.status === 'returned' ? allSteps.indexOf('returned') : allSteps.indexOf('return-requested');
+             const currentIndex = allSteps.indexOf(order.status);
              return { statusSteps: allSteps, currentStatusIndex: currentIndex, statusIcons: icons, statusLabels: labels };
         }
         
@@ -173,13 +175,15 @@ export default function OrderTrackingPage() {
                         </div>
                     ) : order ? (
                         <div className="space-y-6">
-                             {order.status === 'delivered' || order.status === 'return-requested' || order.status === 'returned' || order.status === 'return-rejected' ? (
-                                <div className="bg-green-100/60 rounded-lg p-6 text-center">
-                                    <p className="text-sm text-green-700">Delivered On</p>
-                                    <p className="text-3xl font-bold text-green-800">{format(new Date(order.deliveryDate!), 'eeee')}</p>
-                                    <p className="text-5xl font-bold text-green-600">{format(new Date(order.deliveryDate!), 'd')}</p>
-                                    <p className="text-xl text-green-700">{format(new Date(order.deliveryDate!), 'MMMM yyyy')}</p>
-                                </div>
+                             {order.status === 'delivered' || ['return-requested', 'return-processing', 'returned', 'return-rejected'].includes(order.status) ? (
+                                order.deliveryDate ? (
+                                    <div className="bg-green-100/60 rounded-lg p-6 text-center">
+                                        <p className="text-sm text-green-700">Delivered On</p>
+                                        <p className="text-3xl font-bold text-green-800">{format(new Date(order.deliveryDate), 'eeee')}</p>
+                                        <p className="text-5xl font-bold text-green-600">{format(new Date(order.deliveryDate), 'd')}</p>
+                                        <p className="text-xl text-green-700">{format(new Date(order.deliveryDate), 'MMMM yyyy')}</p>
+                                    </div>
+                                ) : null
                             ) : estimatedDate && (
                                 <div className="bg-muted/50 rounded-lg p-6 text-center">
                                     <p className="text-sm text-muted-foreground">Estimated Delivery</p>
@@ -207,10 +211,13 @@ export default function OrderTrackingPage() {
                                             const label = statusLabels[status] || status;
                                             
                                             let isCompleted = currentStatusIndex >= index;
-                                            // Handle special case for 'returned' where 'return-requested' is also completed.
-                                            if (order.status === 'returned' && status === 'return-requested') {
+                                            // Handle special case for 'returned' where previous return steps are also completed.
+                                            if (order.status === 'returned' && ['return-requested', 'return-processing'].includes(status)) {
+                                                isCompleted = true;
+                                            } else if (order.status === 'return-processing' && status === 'return-requested') {
                                                 isCompleted = true;
                                             }
+
 
                                             return (
                                                 <TrackingStep 

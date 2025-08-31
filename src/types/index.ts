@@ -82,7 +82,7 @@ export interface User {
   usedVoucherCodes?: string[];
 }
 
-export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned' | 'return-requested' | 'processing' | 'return-rejected';
+export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned' | 'return-requested' | 'processing' | 'return-rejected' | 'return-processing';
 
 export interface OrderItem {
   id: number;
@@ -143,6 +143,7 @@ export interface DeliverySettings {
   outsidePabnaLarge: number;
   deliveryTimeInside: number;
   deliveryTimeOutside: number;
+  returnAddress: string;
 }
 
 export interface PaymentSettings {
