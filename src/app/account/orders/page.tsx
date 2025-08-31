@@ -3,7 +3,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { ShoppingBag, Star, Undo2, Edit, Ticket } from "lucide-react";
+import { ShoppingBag, Star, Undo2, Edit, Ticket, Info } from "lucide-react";
 import type { Order, OrderItem } from '@/types';
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,8 +17,42 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
+import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const db = getFirestore(app);
+
+const ReturnInstructions = () => {
+    const { returnAddress } = useDeliveryCharge();
+    const [isOpen, setIsOpen] = useState(false);
+
+    if (!returnAddress) {
+        return null;
+    }
+
+    return (
+        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+            <CollapsibleTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full">
+                    <Info className="mr-2 h-4 w-4" />
+                    Return Instructions
+                </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+                 <Alert className="mt-2">
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="space-y-2">
+                        <p>Please send the product(s) to the following address. Once we receive and verify the items, we will issue a voucher for the item's subtotal amount.</p>
+                        <address className="not-italic p-2 bg-muted rounded-md text-foreground font-semibold">
+                            {returnAddress}
+                        </address>
+                    </AlertDescription>
+                </Alert>
+            </CollapsibleContent>
+        </Collapsible>
+    )
+}
 
 const OrderReturnButton = ({ order }: { order: Order }) => {
     const isReturnable = useMemo(() => {
@@ -243,23 +277,32 @@ export default function OrdersPage() {
                               </CardContent>
                             </div>
                             
-                            {(order.status === 'delivered' || order.status === 'return-rejected' || order.status === 'returned') && (
+                            {(order.status === 'delivered' || ['return-requested', 'return-processing', 'returned', 'return-rejected'].includes(order.status)) && (
                               <CardFooter className="bg-muted/30 p-2">
                                     <div className="grid grid-cols-2 gap-2 w-full">
-                                        <OrderReturnButton order={order} />
-                                        {order.isReviewed ? (
-                                            <Button variant="outline" size="sm" disabled className="w-full bg-green-100 text-green-800 border-green-200">
-                                                <Edit className="mr-2 h-4 w-4" />
-                                                Reviewed
-                                            </Button>
-                                        ) : (
-                                            <Button variant="outline" size="sm" asChild className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 border-green-200">
-                                                <Link href={`/account/reviews/new/${order.id}`}>
-                                                    <Edit className="mr-2 h-4 w-4" />
-                                                    Write a Review
-                                                </Link>
-                                            </Button>
-                                        )}
+                                        {order.status === 'return-processing' ? (
+                                            <>
+                                                <div /> 
+                                                <ReturnInstructions />
+                                            </>
+                                        ) : order.status === 'delivered' || order.status === 'return-rejected' || order.status === 'returned' ? (
+                                             <>
+                                                <OrderReturnButton order={order} />
+                                                {order.isReviewed ? (
+                                                    <Button variant="outline" size="sm" disabled className="w-full bg-green-100 text-green-800 border-green-200">
+                                                        <Edit className="mr-2 h-4 w-4" />
+                                                        Reviewed
+                                                    </Button>
+                                                ) : (
+                                                    <Button variant="outline" size="sm" asChild className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 border-green-200">
+                                                        <Link href={`/account/reviews/new/${order.id}`}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            Write a Review
+                                                        </Link>
+                                                    </Button>
+                                                )}
+                                             </>
+                                        ) : null}
                                     </div>
                               </CardFooter>
                             )}

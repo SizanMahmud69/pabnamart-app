@@ -19,7 +19,7 @@ const defaultSettings: DeliverySettings = {
 };
 
 export const useDeliveryCharge = () => {
-  const [settings, setSettings] = useState<DeliverySettings>(defaultSettings);
+  const [settings, setSettings] = useState<DeliverySettings | null>(null);
 
   useEffect(() => {
     const settingsDocRef = doc(db, 'settings', 'delivery');
@@ -39,12 +39,12 @@ export const useDeliveryCharge = () => {
   }, []);
 
   return { 
-    chargeInsidePabnaSmall: settings.insidePabnaSmall, 
-    chargeInsidePabnaLarge: settings.insidePabnaLarge,
-    chargeOutsidePabnaSmall: settings.outsidePabnaSmall,
-    chargeOutsidePabnaLarge: settings.outsidePabnaLarge,
-    deliveryTimeInside: settings.deliveryTimeInside,
-    deliveryTimeOutside: settings.deliveryTimeOutside,
-    returnAddress: settings.returnAddress,
+    chargeInsidePabnaSmall: settings?.insidePabnaSmall ?? defaultSettings.insidePabnaSmall, 
+    chargeInsidePabnaLarge: settings?.insidePabnaLarge ?? defaultSettings.insidePabnaLarge,
+    chargeOutsidePabnaSmall: settings?.outsidePabnaSmall ?? defaultSettings.outsidePabnaSmall,
+    chargeOutsidePabnaLarge: settings?.outsidePabnaLarge ?? defaultSettings.outsidePabnaLarge,
+    deliveryTimeInside: settings?.deliveryTimeInside ?? defaultSettings.deliveryTimeInside,
+    deliveryTimeOutside: settings?.deliveryTimeOutside ?? defaultSettings.deliveryTimeOutside,
+    returnAddress: settings?.returnAddress ?? '',
   };
 };
