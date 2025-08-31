@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -230,6 +231,13 @@ export default function AdminReturnManagement() {
                                                         <DropdownMenuItem onSelect={() => handleStatusChange(request, 'return-processing')}>
                                                             <Check className="mr-2 h-4 w-4 text-yellow-600" />
                                                             <span>Receive Request</span>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem 
+                                                            className="text-destructive"
+                                                            onSelect={() => handleStatusChange(request, 'return-rejected')}
+                                                        >
+                                                            <XCircle className="mr-2 h-4 w-4" />
+                                                            <span>Reject Request</span>
                                                         </DropdownMenuItem>
                                                     </>
                                                 )}
