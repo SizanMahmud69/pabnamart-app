@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Ticket, Settings, Wallet, Box, Truck, PackageCheck, Undo2, HelpCircle, Headphones, Star, Users, Package as PackageIcon } from "lucide-react";
+import { Heart, Ticket, Settings, Wallet, Box, Truck, PackageCheck, Undo2, HelpCircle, Headphones, Star, Users, Package as PackageIcon, PackageSearch } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from 'lucide-react';
 import { useVouchers } from "@/hooks/useVouchers";
@@ -142,6 +142,7 @@ export default function AccountPage() {
     const services: ServiceItemProps[] = [
         { icon: HelpCircle, label: "Help Center", href: "/account/help" },
         { icon: Headphones, label: "Contact Customer", href: "/contact" },
+        { icon: PackageSearch, label: "Order Tracking", href: "/account/tracking" },
         { icon: Star, label: "My Reviews", href: "/account/reviews" },
         { icon: Users, label: "My Affiliate", href: "/affiliate" },
     ];
@@ -197,7 +198,7 @@ export default function AccountPage() {
                      <CardHeader>
                         <CardTitle className="text-lg">More Services</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 grid grid-cols-4 gap-4">
+                    <CardContent className="p-4 grid grid-cols-5 gap-4">
                        {services.map(service => <ServiceItem key={service.label} {...service} />)}
                     </CardContent>
                 </Card>
