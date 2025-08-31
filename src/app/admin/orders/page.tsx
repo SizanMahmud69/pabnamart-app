@@ -17,6 +17,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const db = getFirestore(app);
 
@@ -172,11 +173,14 @@ export default function AdminOrderManagement() {
                         </CardHeader>
                         <CardContent>
                             <Tabs value={activeTab} onValueChange={setActiveTab}>
-                                <TabsList>
-                                    {TABS.map(tab => (
-                                        <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
-                                    ))}
-                                </TabsList>
+                                <ScrollArea className="w-full whitespace-nowrap rounded-md">
+                                    <TabsList className="inline-flex w-max mb-4">
+                                        {TABS.map(tab => (
+                                            <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
+                                        ))}
+                                    </TabsList>
+                                    <ScrollBar orientation="horizontal" />
+                                </ScrollArea>
                                 <TabsContent value={activeTab} className="mt-4">
                                     <Table>
                                         <TableHeader>
