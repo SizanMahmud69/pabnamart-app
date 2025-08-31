@@ -31,14 +31,14 @@ interface OrderStatusProps {
 }
 
 const OrderStatusItem = ({ icon: Icon, label, count, href }: OrderStatusProps) => (
-    <Link href={href} className="flex flex-col items-center gap-2 text-center text-xs font-medium">
+    <Link href={href} className="flex flex-col items-center gap-1.5 text-center text-[10px] font-medium">
         <div className="relative">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-                <Icon className="h-6 w-6" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                <Icon className="h-5 w-5" />
             </div>
-            {count > 0 && <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0">{count}</Badge>}
+            {count > 0 && <Badge className="absolute -right-1 -top-1 h-4 w-4 justify-center rounded-full p-0 text-[10px]">{count}</Badge>}
         </div>
-        <span>{label}</span>
+        <span className="leading-tight">{label}</span>
     </Link>
 );
 
@@ -136,7 +136,7 @@ export default function AccountPage() {
     ).length;
     
     const newReturnCount = orders.filter(
-        order => (order.status === 'return-requested' || order.status === 'return-processing' || order.status === 'returned' || order.status === 'return-rejected') && !viewedReturnOrders.includes(order.id)
+        order => ['return-requested', 'return-processing', 'returned', 'return-rejected'].includes(order.status) && !viewedReturnOrders.includes(order.id)
     ).length;
 
     const orderStatuses: OrderStatusProps[] = [
