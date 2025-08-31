@@ -8,7 +8,6 @@ export const firebaseConfig: FirebaseOptions = {
   storageBucket: "pabnamart.appspot.com",
   messagingSenderId: "600614180848",
   appId: "1:600614180848:web:6f4e21fb4f5b6cd42a6f35",
-  measurementId: "YOUR_MEASUREMENT_ID" // Optional: Add your measurement ID
 };
 
 // Initialize Firebase
