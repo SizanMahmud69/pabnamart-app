@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Notification } from '@/types';
 import { useAuth } from './useAuth';
 import { LogIn, Truck, Gift, Tag, PackageCheck, CheckCircle, XCircle, type LucideIcon } from 'lucide-react';
-import { getFirestore, onSnapshot, collection, query, writeBatch, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { getFirestore, onSnapshot, collection, query, writeBatch, getDocs, updateDoc, doc, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 const db = getFirestore(app);
@@ -58,11 +58,14 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (user) {
         const userNotificationsRef = collection(db, `users/${user.uid}/notifications`);
-        const unsubscribe = onSnapshot(userNotificationsRef, (snapshot) => {
+        const q = query(userNotificationsRef, orderBy('time', 'desc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const userNotifications = snapshot.docs.map(doc => {
                 const data = doc.data();
-                return { ...data, id: doc.id, time: new Date(data.time).toLocaleDateString() } as Notification
-            }).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+                // Format time for display, but keep original for sorting
+                const displayTime = new Date(data.time).toLocaleString();
+                return { ...data, id: doc.id, time: displayTime } as Notification
+            });
             
             setNotifications(userNotifications);
         });
