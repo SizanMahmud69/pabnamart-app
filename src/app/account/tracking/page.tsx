@@ -106,7 +106,7 @@ export default function OrderTrackingPage() {
                         <form onSubmit={handleSearch} className="flex items-center gap-2">
                             <Input
                                 type="text"
-                                placeholder="Enter Order Number"
+                                placeholder="Enter Your Order (without #)"
                                 value={orderNumber}
                                 onChange={(e) => setOrderNumber(e.target.value)}
                                 disabled={isLoading}
