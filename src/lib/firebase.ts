@@ -1,3 +1,4 @@
+
 import { initializeApp, getApp, getApps, type FirebaseOptions } from 'firebase/app';
 import { getMessaging } from 'firebase/messaging';
 
@@ -20,7 +21,7 @@ export const messaging = (typeof window !== 'undefined') ? getMessaging(app) : n
 export const registerServiceWorker = () => {
   if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
     const firebaseConfigParams = new URLSearchParams(firebaseConfig as Record<string, string>).toString();
-    navigator.serviceWorker.register(`/firebase-messaging-sw.js?${firebaseConfigParams}`)
+    navigator.serviceWorker.register(`/firebase-messaging-sw.js?${firebaseConfigParams}`, { scope: '/' })
       .then(registration => {
         console.log('Service Worker registered with scope:', registration.scope);
       }).catch(error => {
