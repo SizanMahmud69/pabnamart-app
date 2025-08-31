@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, PackageSearch, Loader2, CheckCircle, Package, Undo2, Truck, RefreshCw } from "lucide-react";
+import { ArrowLeft, Search, PackageSearch, Loader2, CheckCircle, Package, Undo2, Truck, RefreshCw, XCircle } from "lucide-react";
 import Link from "next/link";
 import type { Order, OrderStatus } from '@/types';
 import { getFirestore, collection, query, where, getDocs, limit } from 'firebase/firestore';
@@ -20,6 +20,7 @@ const db = getFirestore(app);
 
 const baseStatusSteps: OrderStatus[] = ['processing', 'shipped', 'in-transit', 'delivered'];
 const returnStatusSteps: OrderStatus[] = ['return-requested', 'return-processing', 'returned'];
+const returnRejectedStatusSteps: OrderStatus[] = ['return-requested', 'return-rejected'];
 
 
 const TrackingStep = ({ icon: Icon, label, isCompleted, isCurrent, date }: { icon: any, label: string, isCompleted: boolean, isCurrent: boolean, date?: string }) => (
@@ -90,7 +91,8 @@ export default function OrderTrackingPage() {
             'delivered': CheckCircle,
             'return-requested': Undo2,
             'return-processing': RefreshCw,
-            'returned': Package
+            'returned': Package,
+            'return-rejected': XCircle
         };
         const labels: { [key in OrderStatus]?: string } = {
             'processing': 'Processing',
@@ -100,12 +102,19 @@ export default function OrderTrackingPage() {
             'return-requested': 'Return Request',
             'return-processing': 'Return Processing',
             'returned': 'Returned',
+            'return-rejected': 'Return Rejected'
         };
 
-        if (order && ['return-requested', 'return-processing', 'returned', 'return-rejected'].includes(order.status)) {
+        if (order && ['return-requested', 'return-processing', 'returned'].includes(order.status)) {
              const allSteps = [...baseStatusSteps, ...returnStatusSteps];
              const currentIndex = allSteps.indexOf(order.status);
              return { statusSteps: allSteps, currentStatusIndex: currentIndex, statusIcons: icons, statusLabels: labels };
+        }
+
+        if (order && order.status === 'return-rejected') {
+            const allSteps = [...baseStatusSteps, ...returnRejectedStatusSteps];
+            const currentIndex = allSteps.indexOf(order.status);
+            return { statusSteps: allSteps, currentStatusIndex: currentIndex, statusIcons: icons, statusLabels: labels };
         }
         
         const currentIndex = order ? baseStatusSteps.indexOf(order.status) : -1;
@@ -217,6 +226,8 @@ export default function OrderTrackingPage() {
                                                 if (order.status === 'returned' && ['return-requested', 'return-processing'].includes(status)) {
                                                     isCompleted = true;
                                                 } else if (order.status === 'return-processing' && status === 'return-requested') {
+                                                    isCompleted = true;
+                                                } else if (order.status === 'return-rejected' && status === 'return-requested') {
                                                     isCompleted = true;
                                                 }
 
