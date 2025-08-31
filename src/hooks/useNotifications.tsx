@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Notification } from '@/types';
 import { useAuth } from './useAuth';
 import { LogIn, Truck, Gift, Tag, PackageCheck, CheckCircle, XCircle, type LucideIcon } from 'lucide-react';
-import { getFirestore, onSnapshot, collection, query, writeBatch, getDocs, updateDoc, doc, orderBy } from 'firebase/firestore';
+import { getFirestore, onSnapshot, collection, query, writeBatch, getDocs, updateDoc, doc, orderBy, deleteDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 const db = getFirestore(app);
@@ -33,32 +33,12 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { user } = useAuth();
 
-  const fetchAndClearPendingNotifications = useCallback(async (userId: string) => {
-    const pendingNotificationsRef = collection(db, `users/${userId}/pendingNotifications`);
-    const mainNotificationsRef = collection(db, `users/${userId}/notifications`);
-    const q = query(pendingNotificationsRef);
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-        return;
-    }
-
-    const batch = writeBatch(db);
-
-    querySnapshot.forEach(docSnapshot => {
-        const data = docSnapshot.data() as Omit<Notification, 'id'>;
-        const newNotificationRef = doc(mainNotificationsRef);
-        batch.set(newNotificationRef, data);
-        batch.delete(docSnapshot.ref);
-    });
-
-    await batch.commit();
-  }, []);
-
+  // Listener for main notifications collection
   useEffect(() => {
     if (user) {
         const userNotificationsRef = collection(db, `users/${user.uid}/notifications`);
         const q = query(userNotificationsRef, orderBy('time', 'desc'));
+        
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const userNotifications = snapshot.docs.map(doc => {
                 const data = doc.data();
@@ -69,15 +49,36 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
             
             setNotifications(userNotifications);
         });
-        
-        // Check for pending notifications on initial load and move them
-        fetchAndClearPendingNotifications(user.uid);
 
         return () => unsubscribe();
     } else {
         setNotifications([]);
     }
-  }, [user, fetchAndClearPendingNotifications]);
+  }, [user]);
+
+  // Listener for pending notifications to move them in real-time
+  useEffect(() => {
+    if (user) {
+      const pendingNotificationsRef = collection(db, `users/${user.uid}/pendingNotifications`);
+      const unsubscribePending = onSnapshot(pendingNotificationsRef, async (snapshot) => {
+        if (!snapshot.empty) {
+          const mainNotificationsRef = collection(db, `users/${user.uid}/notifications`);
+          const batch = writeBatch(db);
+
+          snapshot.docs.forEach(docSnapshot => {
+            const data = docSnapshot.data() as Omit<Notification, 'id'>;
+            const newNotificationRef = doc(mainNotificationsRef);
+            batch.set(newNotificationRef, data);
+            batch.delete(docSnapshot.ref);
+          });
+
+          await batch.commit();
+        }
+      });
+
+      return () => unsubscribePending();
+    }
+  }, [user]);
 
 
   const markAsRead = useCallback(async (id: string) => {
