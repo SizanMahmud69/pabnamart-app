@@ -215,7 +215,7 @@ export default function OrderTrackingPage() {
                                             <div className="absolute top-4 left-0 w-full h-0.5 bg-muted-foreground/30" />
                                             <div 
                                                 className="absolute top-4 left-0 h-0.5 bg-primary transition-all duration-500"
-                                                style={{ width: `calc(${(currentStatusIndex / (statusSteps.length - 1)) * 100}% - 1rem)` }}
+                                                style={{ width: `${(currentStatusIndex / (statusSteps.length - 1)) * 100}%` }}
                                             />
                                             <div className="flex justify-between w-full">
                                             {statusSteps.map((status, index) => {
@@ -266,5 +266,8 @@ export default function OrderTrackingPage() {
             </div>
         </div>
     );
+
+    
+
 
     
