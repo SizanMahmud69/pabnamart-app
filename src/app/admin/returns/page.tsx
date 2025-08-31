@@ -36,7 +36,7 @@ async function createReturnNotification(userId: string, order: Order, status: 'a
             icon: status === 'approved' ? 'CheckCircle' : 'XCircle',
             title: `Return Request ${status === 'approved' ? 'Approved' : 'Rejected'}`,
             description: `Your return request for order #${order.orderNumber} has been ${status}.`,
-            href: status === 'approved' ? '/account/vouchers' : `/account/orders/${order.id}`
+            href: status === 'approved' ? '/vouchers' : `/account/orders/${order.id}`
         };
     }
     
