@@ -36,7 +36,10 @@ export default function DeliverySettingsPage() {
         const settingsDocRef = doc(db, 'settings', 'delivery');
         const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
             if (docSnap.exists()) {
-                setSettings(docSnap.data() as DeliverySettings);
+                // Ensure all fields from initialSettings are present
+                setSettings({ ...initialSettings, ...docSnap.data() });
+            } else {
+                setSettings(initialSettings);
             }
             setIsLoading(false);
         });
