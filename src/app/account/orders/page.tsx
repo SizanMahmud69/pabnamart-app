@@ -128,13 +128,16 @@ export default function OrdersPage() {
     return () => unsubscribe();
   }, [user]);
 
-  const filteredOrders = status === 'all' 
-    ? orders 
-    : status === 'return-requested'
-    ? orders.filter(order => order.status === 'return-requested' || order.status === 'returned')
-    : status === 'delivered'
-    ? orders.filter(order => order.status === 'delivered' || order.status === 'return-rejected')
-    : orders.filter(order => order.status === status);
+  const filteredOrders = useMemo(() => {
+    if (status === 'all') return orders;
+    if (status === 'return-requested') {
+      return orders.filter(order => ['return-requested', 'return-processing', 'returned', 'return-rejected'].includes(order.status));
+    }
+    if (status === 'delivered') {
+      return orders.filter(order => order.status === 'delivered');
+    }
+    return orders.filter(order => order.status === status);
+  }, [orders, status]);
     
   useEffect(() => {
     if (status === 'delivered') {
@@ -147,6 +150,17 @@ export default function OrdersPage() {
         const newViewedOrders = Array.from(new Set([...viewedOrders, ...deliveredOrderIds]));
         localStorage.setItem('viewedDeliveredOrders', JSON.stringify(newViewedOrders));
       }
+    }
+     if (status === 'return-requested') {
+        const returnOrderIds = filteredOrders
+            .filter(order => ['returned', 'return-rejected'].includes(order.status))
+            .map(order => order.id);
+        
+        if (returnOrderIds.length > 0) {
+            const viewedOrders = JSON.parse(localStorage.getItem('viewedReturnOrders') || '[]');
+            const newViewedOrders = Array.from(new Set([...viewedOrders, ...returnOrderIds]));
+            localStorage.setItem('viewedReturnOrders', JSON.stringify(newViewedOrders));
+        }
     }
   }, [status, filteredOrders]);
     
@@ -170,6 +184,8 @@ export default function OrdersPage() {
               return <Badge variant="destructive">Return Rejected</Badge>;
           case 'returned':
               return <Badge className="bg-blue-100 text-blue-800 capitalize">Returned</Badge>;
+          case 'return-processing':
+              return <Badge className="bg-yellow-100 text-yellow-800 capitalize">Return Processing</Badge>;
           default:
               return <Badge className="capitalize bg-primary hover:bg-primary text-primary-foreground">{orderStatus.replace('-', ' ')}</Badge>
       }

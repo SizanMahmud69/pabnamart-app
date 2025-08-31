@@ -64,6 +64,7 @@ export default function AccountPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [ordersLoading, setOrdersLoading] = useState(true);
     const [viewedDeliveredOrders, setViewedDeliveredOrders] = useState<string[]>([]);
+    const [viewedReturnOrders, setViewedReturnOrders] = useState<string[]>([]);
 
     const unusedVoucherCount = useMemo(() => {
         if (!appUser) return 0;
@@ -93,9 +94,13 @@ export default function AccountPage() {
     }, [user]);
     
     useEffect(() => {
-        const stored = localStorage.getItem('viewedDeliveredOrders');
-        if (stored) {
-            setViewedDeliveredOrders(JSON.parse(stored));
+        const storedDelivered = localStorage.getItem('viewedDeliveredOrders');
+        if (storedDelivered) {
+            setViewedDeliveredOrders(JSON.parse(storedDelivered));
+        }
+        const storedReturns = localStorage.getItem('viewedReturnOrders');
+        if (storedReturns) {
+            setViewedReturnOrders(JSON.parse(storedReturns));
         }
     }, []);
     
@@ -130,13 +135,17 @@ export default function AccountPage() {
         order => order.status === 'delivered' && !viewedDeliveredOrders.includes(order.id)
     ).length;
     
+    const newReturnCount = orders.filter(
+        order => (order.status === 'return-requested' || order.status === 'return-processing' || order.status === 'returned' || order.status === 'return-rejected') && !viewedReturnOrders.includes(order.id)
+    ).length;
+
     const orderStatuses: OrderStatusProps[] = [
         { icon: Wallet, label: "To Pay", count: getCount('pending'), href: "/account/orders?status=pending" },
         { icon: PackageIcon, label: "To Process", count: getCount('processing'), href: "/account/orders?status=processing" },
         { icon: Box, label: "To Ship", count: getCount('shipped'), href: "/account/orders?status=shipped" },
         { icon: Truck, label: "To Receive", count: getCount('in-transit'), href: "/account/orders?status=in-transit" },
         { icon: PackageCheck, label: "Delivered", count: newDeliveredCount, href: "/account/orders?status=delivered" },
-        { icon: Undo2, label: "My Returns", count: getCount('return-requested'), href: "/account/orders?status=return-requested" },
+        { icon: Undo2, label: "My Returns", count: newReturnCount, href: "/account/orders?status=return-requested" },
     ];
     
     const services: ServiceItemProps[] = [
