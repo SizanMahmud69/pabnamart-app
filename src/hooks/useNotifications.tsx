@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Notification } from '@/types';
 import { useAuth } from './useAuth';
 import { LogIn, Truck, Gift, Tag, PackageCheck, CheckCircle, XCircle, type LucideIcon } from 'lucide-react';
-import { getFirestore, doc, onSnapshot, collection, query, writeBatch, getDocs, updateDoc } from 'firebase/firestore';
+import { getFirestore, onSnapshot, collection, query, writeBatch, getDocs, updateDoc, doc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 const db = getFirestore(app);
@@ -45,11 +45,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
     const batch = writeBatch(db);
 
-    querySnapshot.forEach(doc => {
-        const data = doc.data() as Omit<Notification, 'id'>;
+    querySnapshot.forEach(docSnapshot => {
+        const data = docSnapshot.data() as Omit<Notification, 'id'>;
         const newNotificationRef = doc(mainNotificationsRef);
         batch.set(newNotificationRef, data);
-        batch.delete(doc.ref);
+        batch.delete(docSnapshot.ref);
     });
 
     await batch.commit();
