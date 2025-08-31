@@ -15,44 +15,32 @@ import type { Order, Voucher, Notification, DeliverySettings } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { createAndSendNotification } from '@/app/actions';
 
 const db = getFirestore(app);
 
-async function createReturnNotification(userId: string, orderNumber: string, status: 'approved' | 'rejected' | 'processing', returnAddress?: string) {
+async function createReturnNotification(userId: string, order: Order, status: 'approved' | 'rejected' | 'processing') {
     if (!userId) return;
 
-    let notification: Omit<Notification, 'id'>;
+    let notificationData: Omit<Notification, 'id' | 'read' | 'time'>;
 
     if (status === 'processing') {
-        notification = {
+        notificationData = {
             icon: 'Truck',
             title: `Return Request Accepted`,
-            description: `Your return request for order #${orderNumber} has been accepted. Please send the items back to us.`,
-            time: new Date().toISOString(),
-            read: false,
-            href: `/account/orders/${orderNumber}` // Should be order ID, will fix later if buggy
+            description: `Your return request for order #${order.orderNumber} has been accepted. Please send the items back to us.`,
+            href: `/account/orders/${order.id}`
         };
     } else {
-        notification = {
+        notificationData = {
             icon: status === 'approved' ? 'CheckCircle' : 'XCircle',
             title: `Return Request ${status === 'approved' ? 'Approved' : 'Rejected'}`,
-            description: `Your return request for order #${orderNumber} has been ${status}.`,
-            time: new Date().toISOString(),
-            read: false,
-            href: status === 'approved' ? '/vouchers' : `/account/orders?status=return-rejected`
+            description: `Your return request for order #${order.orderNumber} has been ${status}.`,
+            href: status === 'approved' ? '/account/vouchers' : `/account/orders/${order.id}`
         };
     }
     
-    // Find the order document by order number to link to it.
-     const ordersRef = collection(db, 'orders');
-     const q = query(ordersRef, where('orderNumber', '==', orderNumber));
-     const orderSnapshot = await getDocs(q);
-     if (!orderSnapshot.empty) {
-        notification.href = `/account/orders/${orderSnapshot.docs[0].id}`;
-     }
-
-
-    await addDoc(collection(db, `users/${userId}/pendingNotifications`), notification);
+    await createAndSendNotification(userId, notificationData);
 }
 
 export default function AdminReturnManagement() {
@@ -98,7 +86,7 @@ export default function AdminReturnManagement() {
             return;
         }
         await updateDoc(orderDoc, { status });
-        await createReturnNotification(order.userId, order.orderNumber, 'processing', deliverySettings.returnAddress);
+        await createReturnNotification(order.userId, order, 'processing');
         toast({
             title: "Return Request Received",
             description: "The user has been notified to send the product back."
@@ -133,7 +121,7 @@ export default function AdminReturnManagement() {
                 await setDoc(availableVouchersRef, { vouchers: [newVoucher] });
             }
            
-            await createReturnNotification(order.userId, order.orderNumber, 'approved');
+            await createReturnNotification(order.userId, order, 'approved');
             toast({
                 title: "Return Approved",
                 description: `A voucher for ৳${subtotal} has been made available to the user.`
@@ -148,7 +136,7 @@ export default function AdminReturnManagement() {
             });
         }
     } else if (status === 'return-rejected') {
-        await createReturnNotification(order.userId, order.orderNumber, 'rejected');
+        await createReturnNotification(order.userId, order, 'rejected');
         toast({
             title: "Return Rejected",
             description: `The return request for order #${order.orderNumber} has been rejected.`

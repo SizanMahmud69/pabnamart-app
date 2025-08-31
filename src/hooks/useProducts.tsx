@@ -7,6 +7,7 @@ import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc
 import app from '@/lib/firebase';
 import { useOffers } from './useOffers';
 import { PackageCheck } from 'lucide-react';
+import { createAndSendNotification } from '@/app/actions';
 
 interface ProductContextType {
   products: Product[];
@@ -150,23 +151,17 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       const q = query(wishlistsRef, where('productIds', 'array-contains', product.id));
       const querySnapshot = await getDocs(q);
 
-      const batch = writeBatch(db);
-
-      querySnapshot.forEach(userDoc => {
+      const notificationPromises = querySnapshot.docs.map(userDoc => {
           const userId = userDoc.id;
-          const notification: Omit<Notification, 'id'> = {
+          return createAndSendNotification(userId, {
               icon: 'PackageCheck',
               title: "Item Back in Stock!",
               description: `The item you wanted, "${product.name}", is now available.`,
-              time: new Date().toLocaleDateString(),
-              read: false,
               href: `/products/${product.id}`
-          };
-          const notificationRef = doc(collection(db, `users/${userId}/pendingNotifications`));
-          batch.set(notificationRef, notification);
+          });
       });
 
-      await batch.commit();
+      await Promise.all(notificationPromises);
 
   }, []);
 

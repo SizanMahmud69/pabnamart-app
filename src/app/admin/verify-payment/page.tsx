@@ -15,21 +15,9 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import { createAndSendNotification } from '@/app/actions';
 
 const db = getFirestore(app);
-
-async function createPaymentVerifiedNotification(userId: string, orderNumber: string) {
-    if (!userId) return;
-    const notification: Omit<Notification, 'id'> = {
-        icon: 'Truck',
-        title: `Payment Verified for #${orderNumber}`,
-        description: `Your payment has been verified and your order is now being processed for shipping.`,
-        time: new Date().toISOString(),
-        read: false,
-        href: `/account/orders?status=processing`
-    };
-    await addDoc(collection(db, `users/${userId}/pendingNotifications`), notification);
-}
 
 export default function VerifyPaymentPage() {
     const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
@@ -87,7 +75,12 @@ export default function VerifyPaymentPage() {
                 status: 'processing',
                 statusHistory: arrayUnion(newStatusHistoryEntry)
             });
-            await createPaymentVerifiedNotification(order.userId, order.orderNumber);
+            await createAndSendNotification(order.userId, {
+                icon: 'Truck',
+                title: `Payment Verified for #${order.orderNumber}`,
+                description: `Your payment has been verified and your order is now being processed for shipping.`,
+                href: `/account/orders?status=processing`
+            });
             toast({
                 title: "Payment Verified",
                 description: "The order has been moved to 'Processing'.",

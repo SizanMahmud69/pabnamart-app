@@ -18,21 +18,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { createAndSendNotification } from '@/app/actions';
 
 const db = getFirestore(app);
-
-async function createNotification(userId: string, orderNumber: string, status: OrderStatus) {
-    if (!userId) return;
-    const notification: Omit<Notification, 'id'> = {
-        icon: 'Truck',
-        title: `Order #${orderNumber} is now ${status.replace('-', ' ')}`,
-        description: `Your order has been updated. You can track its progress in your account.`,
-        time: new Date().toISOString(),
-        read: false,
-        href: `/account/orders?status=${status}`
-    };
-    await addDoc(collection(db, `users/${userId}/pendingNotifications`), notification);
-}
 
 const TABS = [
     { value: 'all', label: 'All' },
@@ -102,7 +90,13 @@ export default function AdminOrderManagement() {
         }
 
         await updateDoc(orderDocRef, updateData);
-        await createNotification(order.userId, order.orderNumber, newStatus);
+        
+        await createAndSendNotification(order.userId, {
+            icon: 'Truck',
+            title: `Order #${order.orderNumber} is now ${newStatus.replace('-', ' ')}`,
+            description: `Your order has been updated. You can track its progress in your account.`,
+            href: `/account/orders?status=${newStatus}`
+        });
     };
 
     const handleDeleteOrder = async () => {

@@ -5,7 +5,7 @@ import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import admin from '@/lib/firebase-admin';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
-import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product, StatusHistory } from "@/types";
+import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product, StatusHistory, Notification, User } from "@/types";
 import { revalidatePath } from "next/cache";
 
 const db = getFirestore();
@@ -151,4 +151,45 @@ export async function placeOrder(
     console.error("Error placing order:", error);
     return { success: false, message: error.message || 'Failed to place order.' };
   }
+}
+
+export async function createAndSendNotification(userId: string, notificationData: Omit<Notification, 'id' | 'time' | 'read'>) {
+    if (!userId) return;
+
+    // 1. Save notification to Firestore
+    const notification: Omit<Notification, 'id'> = {
+        ...notificationData,
+        time: new Date().toISOString(),
+        read: false,
+    };
+    await db.collection(`users/${userId}/notifications`).add(notification);
+
+    // 2. Send Push Notification via FCM
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) return;
+
+    const user = userDoc.data() as User;
+    const fcmTokens = user.fcmTokens || [];
+
+    if (fcmTokens.length === 0) return;
+
+    const payload = {
+        tokens: fcmTokens,
+        notification: {
+            title: notification.title,
+            body: notification.description,
+        },
+        webpush: {
+            fcm_options: {
+                link: notification.href || '/',
+            },
+        },
+    };
+
+    try {
+        await admin.messaging().sendMulticast(payload);
+    } catch (error) {
+        console.error('Error sending FCM notification:', error);
+        // Here you might want to handle invalid tokens, etc.
+    }
 }
