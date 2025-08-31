@@ -105,19 +105,23 @@ export default function OrderTrackingPage() {
             'return-rejected': 'Return Rejected'
         };
 
-        if (order && ['return-requested', 'return-processing', 'returned'].includes(order.status)) {
+        if (!order) {
+            return { statusSteps: baseStatusSteps, currentStatusIndex: -1, statusIcons: icons, statusLabels: labels };
+        }
+
+        if (['return-requested', 'return-processing', 'returned'].includes(order.status)) {
              const allSteps = [...baseStatusSteps, ...returnStatusSteps];
              const currentIndex = allSteps.indexOf(order.status);
              return { statusSteps: allSteps, currentStatusIndex: currentIndex, statusIcons: icons, statusLabels: labels };
         }
 
-        if (order && order.status === 'return-rejected') {
+        if (order.status === 'return-rejected') {
             const allSteps = [...baseStatusSteps, ...returnRejectedStatusSteps];
             const currentIndex = allSteps.indexOf(order.status);
             return { statusSteps: allSteps, currentStatusIndex: currentIndex, statusIcons: icons, statusLabels: labels };
         }
         
-        const currentIndex = order ? baseStatusSteps.indexOf(order.status) : -1;
+        const currentIndex = baseStatusSteps.indexOf(order.status);
         return { statusSteps: baseStatusSteps, currentStatusIndex: currentIndex, statusIcons: icons, statusLabels: labels };
     }, [order]);
 
