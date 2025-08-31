@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const db = getFirestore(app);
 
@@ -21,17 +22,17 @@ const baseStatusSteps: OrderStatus[] = ['processing', 'shipped', 'in-transit', '
 const returnStatusSteps: OrderStatus[] = ['return-requested', 'return-processing', 'returned'];
 
 
-const TrackingStep = ({ icon: Icon, label, isCompleted, isCurrent, date }: { icon: LucideIcon, label: string, isCompleted: boolean, isCurrent: boolean, date?: string }) => (
-    <div className="flex flex-col items-center text-center">
+const TrackingStep = ({ icon: Icon, label, isCompleted, isCurrent, date }: { icon: any, label: string, isCompleted: boolean, isCurrent: boolean, date?: string }) => (
+    <div className="flex flex-col items-center text-center px-4">
         <div className={cn(
-            "w-8 h-8 rounded-full border-2 flex items-center justify-center",
+            "w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0",
             isCompleted ? "bg-primary border-primary text-primary-foreground" : "bg-muted border-muted-foreground/30",
             isCurrent && "ring-4 ring-primary/30"
         )}>
            <Icon className="h-4 w-4" />
         </div>
         <p className={cn(
-            "text-xs mt-1 w-20",
+            "text-xs mt-1 w-20 whitespace-normal",
             isCompleted || isCurrent ? "font-semibold text-foreground" : "text-muted-foreground"
         )}>{label}</p>
         {date && isCompleted && (
@@ -82,7 +83,7 @@ export default function OrderTrackingPage() {
     };
     
     const { statusSteps, currentStatusIndex, statusIcons, statusLabels } = useMemo(() => {
-        const icons: { [key in OrderStatus]?: LucideIcon } = {
+        const icons: { [key in OrderStatus]?: any } = {
             'processing': Package,
             'shipped': Truck,
             'in-transit': Truck,
@@ -200,37 +201,41 @@ export default function OrderTrackingPage() {
                                         Last updated: {format(new Date(order.statusHistory?.slice(-1)[0].date || order.date), "PPP p")}
                                     </p>
 
-                                    <div className="mt-8 relative flex justify-between items-start">
-                                        <div className="absolute top-4 left-0 w-full h-0.5 bg-muted-foreground/30" />
-                                        <div 
-                                            className="absolute top-4 left-0 h-0.5 bg-primary transition-all duration-500"
-                                            style={{ width: `${(currentStatusIndex / (statusSteps.length - 1)) * 100}%` }}
-                                        />
-                                        {statusSteps.map((status, index) => {
-                                            const Icon = statusIcons[status] || Package;
-                                            const label = statusLabels[status] || status;
-                                            
-                                            let isCompleted = currentStatusIndex >= index;
-                                            // Handle special case for 'returned' where previous return steps are also completed.
-                                            if (order.status === 'returned' && ['return-requested', 'return-processing'].includes(status)) {
-                                                isCompleted = true;
-                                            } else if (order.status === 'return-processing' && status === 'return-requested') {
-                                                isCompleted = true;
-                                            }
+                                    <ScrollArea className="w-full whitespace-nowrap pt-8">
+                                        <div className="relative flex items-start pb-4">
+                                            <div className="absolute top-4 left-0 w-full h-0.5 bg-muted-foreground/30" />
+                                            <div 
+                                                className="absolute top-4 left-0 h-0.5 bg-primary transition-all duration-500"
+                                                style={{ width: `calc(${(currentStatusIndex / (statusSteps.length - 1)) * 100}% - 1rem)` }}
+                                            />
+                                            <div className="flex justify-between w-full">
+                                            {statusSteps.map((status, index) => {
+                                                const Icon = statusIcons[status] || Package;
+                                                const label = statusLabels[status] || status;
+                                                
+                                                let isCompleted = currentStatusIndex >= index;
+                                                if (order.status === 'returned' && ['return-requested', 'return-processing'].includes(status)) {
+                                                    isCompleted = true;
+                                                } else if (order.status === 'return-processing' && status === 'return-requested') {
+                                                    isCompleted = true;
+                                                }
 
-
-                                            return (
-                                                <TrackingStep 
-                                                    key={status}
-                                                    icon={Icon}
-                                                    label={label}
-                                                    isCompleted={isCompleted}
-                                                    isCurrent={currentStatusIndex === index}
-                                                    date={statusDates[status]}
-                                                />
-                                            )
-                                        })}
-                                    </div>
+                                                return (
+                                                    <TrackingStep 
+                                                        key={status}
+                                                        icon={Icon}
+                                                        label={label}
+                                                        isCompleted={isCompleted}
+                                                        isCurrent={currentStatusIndex === index}
+                                                        date={statusDates[status]}
+                                                    />
+                                                )
+                                            })}
+                                            </div>
+                                        </div>
+                                        <ScrollBar orientation="horizontal" />
+                                    </ScrollArea>
+                                    
                                     <div className="mt-4 text-center">
                                         <Button asChild variant="link">
                                             <Link href={`/account/orders/${order.id}`}>See Full Shipping Details</Link>
@@ -250,4 +255,5 @@ export default function OrderTrackingPage() {
             </div>
         </div>
     );
-}
+
+    
