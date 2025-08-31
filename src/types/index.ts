@@ -92,6 +92,7 @@ export interface OrderItem {
   quantity: number;
   image: string;
   returnPolicy?: number;
+  shippingTime?: string;
 }
 
 export interface ShippingAddress {

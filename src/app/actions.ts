@@ -109,7 +109,8 @@ export async function placeOrder(
               price: item.price,
               quantity: item.quantity,
               image: item.images[0],
-              returnPolicy: productData?.returnPolicy ?? 0, // Default to 0 if undefined
+              returnPolicy: productData?.returnPolicy ?? 0,
+              shippingTime: productData?.shippingTime,
             }
           }),
           total: totalAmount,
