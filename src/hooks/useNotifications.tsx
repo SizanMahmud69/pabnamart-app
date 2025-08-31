@@ -34,23 +34,25 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
 
   const fetchAndClearPendingNotifications = useCallback(async (userId: string) => {
-    const notificationsRef = collection(db, `users/${userId}/pendingNotifications`);
-    const q = query(notificationsRef);
+    const pendingNotificationsRef = collection(db, `users/${userId}/pendingNotifications`);
+    const mainNotificationsRef = collection(db, `users/${userId}/notifications`);
+    const q = query(pendingNotificationsRef);
     const querySnapshot = await getDocs(q);
     
-    const pending: Notification[] = [];
+    if (querySnapshot.empty) {
+        return;
+    }
+
     const batch = writeBatch(db);
 
     querySnapshot.forEach(doc => {
         const data = doc.data() as Omit<Notification, 'id'>;
-        pending.push({ ...data, id: doc.id, time: new Date(data.time).toLocaleDateString() });
-        batch.delete(doc.ref); // Delete after fetching
+        const newNotificationRef = doc(mainNotificationsRef);
+        batch.set(newNotificationRef, data);
+        batch.delete(doc.ref);
     });
 
-    if (!querySnapshot.empty) {
-        await batch.commit();
-        setNotifications(prev => [...pending.reverse(), ...prev]);
-    }
+    await batch.commit();
   }, []);
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
             setNotifications(userNotifications);
         });
         
-        // Check for pending notifications on initial load
+        // Check for pending notifications on initial load and move them
         fetchAndClearPendingNotifications(user.uid);
 
         return () => unsubscribe();
