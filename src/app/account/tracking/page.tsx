@@ -18,8 +18,8 @@ const db = getFirestore(app);
 
 const statusSteps: OrderStatus[] = ['processing', 'shipped', 'in-transit', 'delivered'];
 
-const TrackingStep = ({ step, label, isCompleted, isCurrent }: { step: number, label: string, isCompleted: boolean, isCurrent: boolean }) => (
-    <div className="flex flex-col items-center">
+const TrackingStep = ({ step, label, isCompleted, isCurrent, date }: { step: number, label: string, isCompleted: boolean, isCurrent: boolean, date?: string }) => (
+    <div className="flex flex-col items-center text-center">
         <div className={cn(
             "w-6 h-6 rounded-full border-2 flex items-center justify-center",
             isCompleted ? "bg-primary border-primary" : "bg-muted border-muted-foreground/30",
@@ -28,9 +28,12 @@ const TrackingStep = ({ step, label, isCompleted, isCurrent }: { step: number, l
             {isCompleted && <div className="w-3 h-3 bg-primary-foreground rounded-full" />}
         </div>
         <p className={cn(
-            "text-xs mt-1",
+            "text-xs mt-1 w-20",
             isCompleted || isCurrent ? "font-semibold text-foreground" : "text-muted-foreground"
         )}>{label}</p>
+        {date && isCompleted && (
+            <p className="text-xs text-muted-foreground mt-1">{format(new Date(date), 'PP')}</p>
+        )}
     </div>
 );
 
@@ -87,6 +90,15 @@ export default function OrderTrackingPage() {
     const estimatedDate = getEstimatedDeliveryDate();
     const currentStatusIndex = order ? statusSteps.indexOf(order.status) : -1;
 
+    const statusDates = useMemo(() => {
+        if (!order?.statusHistory) return {};
+        return order.statusHistory.reduce((acc, history) => {
+            acc[history.status] = history.date;
+            return acc;
+        }, {} as Record<OrderStatus, string>);
+    }, [order]);
+
+
     return (
         <div className="bg-purple-50/30 min-h-screen">
             <div className="container mx-auto max-w-2xl px-4 py-8">
@@ -140,7 +152,7 @@ export default function OrderTrackingPage() {
                                 <CardContent className="p-6">
                                     <h3 className="text-lg font-bold text-center capitalize">{order.status.replace('-', ' ')}</h3>
                                     <p className="text-center text-muted-foreground text-sm">
-                                        Last updated: {format(new Date(order.date), "PPP p")}
+                                        Last updated: {format(new Date(order.statusHistory?.slice(-1)[0].date || order.date), "PPP p")}
                                     </p>
 
                                     <div className="mt-8 relative flex justify-between items-start">
@@ -156,6 +168,7 @@ export default function OrderTrackingPage() {
                                                 label={status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
                                                 isCompleted={currentStatusIndex >= index}
                                                 isCurrent={currentStatusIndex === index}
+                                                date={statusDates[status]}
                                             />
                                         ))}
                                     </div>

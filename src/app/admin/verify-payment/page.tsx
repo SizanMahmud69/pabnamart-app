@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, MoreHorizontal, Eye } from 'lucide-react';
 import Link from 'next/link';
-import type { Order, User as AppUser, Notification } from '@/types';
-import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where, addDoc } from 'firebase/firestore';
+import type { Order, User as AppUser, Notification, StatusHistory } from '@/types';
+import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, where, addDoc, arrayUnion } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
@@ -79,7 +79,14 @@ export default function VerifyPaymentPage() {
     const handleVerifyPayment = async (order: Order) => {
         try {
             const orderDocRef = doc(db, 'orders', order.id);
-            await updateDoc(orderDocRef, { status: 'processing' });
+            const newStatusHistoryEntry: StatusHistory = {
+                status: 'processing',
+                date: new Date().toISOString()
+            };
+            await updateDoc(orderDocRef, { 
+                status: 'processing',
+                statusHistory: arrayUnion(newStatusHistoryEntry)
+            });
             await createPaymentVerifiedNotification(order.userId, order.orderNumber);
             toast({
                 title: "Payment Verified",

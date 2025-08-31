@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Eye, Truck, PackageCheck, MoreHorizontal, CircleDollarSign, Trash2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import type { Order, OrderStatus, User as AppUser, Notification } from '@/types';
-import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, orderBy, addDoc, deleteDoc } from 'firebase/firestore';
+import type { Order, OrderStatus, User as AppUser, Notification, StatusHistory } from '@/types';
+import { collection, doc, getDoc, onSnapshot, getFirestore, updateDoc, query, orderBy, addDoc, deleteDoc, arrayUnion } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -86,10 +86,18 @@ export default function AdminOrderManagement() {
 
     const handleStatusChange = async (order: Order, newStatus: OrderStatus) => {
         const orderDocRef = doc(db, 'orders', order.id);
-        const updateData: { status: OrderStatus; deliveryDate?: string } = { status: newStatus };
+        const newStatusHistoryEntry: StatusHistory = {
+            status: newStatus,
+            date: new Date().toISOString()
+        };
+        
+        const updateData: { status: OrderStatus; deliveryDate?: string; statusHistory: any } = {
+            status: newStatus,
+            statusHistory: arrayUnion(newStatusHistoryEntry)
+        };
         
         if (newStatus === 'delivered') {
-            updateData.deliveryDate = new Date().toISOString();
+            updateData.deliveryDate = newStatusHistoryEntry.date;
         }
 
         await updateDoc(orderDocRef, updateData);
@@ -277,5 +285,3 @@ export default function AdminOrderManagement() {
         </>
     );
 }
-
-    

@@ -113,6 +113,11 @@ export interface PaymentDetails {
   merchantNumber: string;
 }
 
+export interface StatusHistory {
+  status: OrderStatus;
+  date: string;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -128,6 +133,7 @@ export interface Order {
   isReviewed?: boolean;
   usedVoucherCode?: string;
   voucherDiscount?: number;
+  statusHistory?: StatusHistory[];
 }
 
 export interface DeliverySettings {

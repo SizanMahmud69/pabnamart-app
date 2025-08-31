@@ -5,7 +5,7 @@ import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import admin from '@/lib/firebase-admin';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
-import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product } from "@/types";
+import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product, StatusHistory } from "@/types";
 import { revalidatePath } from "next/cache";
 
 const db = getFirestore();
@@ -98,6 +98,9 @@ export async function placeOrder(
             status = 'pending'; 
         }
 
+        const currentDate = Timestamp.now().toDate().toISOString();
+        const initialStatusHistory: StatusHistory[] = [{ status, date: currentDate }];
+
         const orderData: Omit<Order, 'id'> = {
           orderNumber: generateOrderNumber(),
           userId,
@@ -115,7 +118,8 @@ export async function placeOrder(
           }),
           total: totalAmount,
           status: status,
-          date: Timestamp.now().toDate().toISOString(),
+          date: currentDate,
+          statusHistory: initialStatusHistory,
           shippingAddress,
           paymentMethod,
           isReviewed: false,
