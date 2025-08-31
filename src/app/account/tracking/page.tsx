@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, PackageSearch, Loader2 } from "lucide-react";
+import { ArrowLeft, Search, PackageSearch, Loader2, CheckCircle, Package, Undo2 } from "lucide-react";
 import Link from "next/link";
 import type { Order, OrderStatus } from '@/types';
 import { getFirestore, collection, query, where, getDocs, limit } from 'firebase/firestore';
@@ -17,16 +17,18 @@ import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
 
 const db = getFirestore(app);
 
-const statusSteps: OrderStatus[] = ['processing', 'shipped', 'in-transit', 'delivered'];
+const baseStatusSteps: OrderStatus[] = ['processing', 'shipped', 'in-transit', 'delivered'];
+const returnStatusSteps: OrderStatus[] = ['return-requested', 'returned'];
 
-const TrackingStep = ({ step, label, isCompleted, isCurrent, date }: { step: number, label: string, isCompleted: boolean, isCurrent: boolean, date?: string }) => (
+
+const TrackingStep = ({ icon: Icon, label, isCompleted, isCurrent, date }: { icon: LucideIcon, label: string, isCompleted: boolean, isCurrent: boolean, date?: string }) => (
     <div className="flex flex-col items-center text-center">
         <div className={cn(
-            "w-6 h-6 rounded-full border-2 flex items-center justify-center",
-            isCompleted ? "bg-primary border-primary" : "bg-muted border-muted-foreground/30",
+            "w-8 h-8 rounded-full border-2 flex items-center justify-center",
+            isCompleted ? "bg-primary border-primary text-primary-foreground" : "bg-muted border-muted-foreground/30",
             isCurrent && "ring-4 ring-primary/30"
         )}>
-            {isCompleted && <div className="w-3 h-3 bg-primary-foreground rounded-full" />}
+           <Icon className="h-4 w-4" />
         </div>
         <p className={cn(
             "text-xs mt-1 w-20",
@@ -78,6 +80,35 @@ export default function OrderTrackingPage() {
             setIsLoading(false);
         }
     };
+    
+    const { statusSteps, currentStatusIndex, statusIcons, statusLabels } = useMemo(() => {
+        const icons: { [key in OrderStatus]?: LucideIcon } = {
+            'processing': Package,
+            'shipped': Truck,
+            'in-transit': Truck,
+            'delivered': CheckCircle,
+            'return-requested': Undo2,
+            'returned': Package
+        };
+        const labels: { [key in OrderStatus]?: string } = {
+            'processing': 'Processing',
+            'shipped': 'Shipped',
+            'in-transit': 'In-Transit',
+            'delivered': 'Delivered',
+            'return-requested': 'Return Request',
+            'returned': 'Returned',
+        };
+
+        if (order && (order.status === 'return-requested' || order.status === 'returned' || order.status === 'return-rejected')) {
+             const allSteps = [...baseStatusSteps, ...returnStatusSteps];
+             const currentIndex = order.status === 'returned' ? allSteps.indexOf('returned') : allSteps.indexOf('return-requested');
+             return { statusSteps: allSteps, currentStatusIndex: currentIndex, statusIcons: icons, statusLabels: labels };
+        }
+        
+        const currentIndex = order ? baseStatusSteps.indexOf(order.status) : -1;
+        return { statusSteps: baseStatusSteps, currentStatusIndex: currentIndex, statusIcons: icons, statusLabels: labels };
+    }, [order]);
+
 
     const getEstimatedDeliveryDate = () => {
         if (!order || !isClient) return null;
@@ -92,7 +123,6 @@ export default function OrderTrackingPage() {
     };
 
     const estimatedDate = getEstimatedDeliveryDate();
-    const currentStatusIndex = order ? statusSteps.indexOf(order.status) : -1;
 
     const statusDates = useMemo(() => {
         if (!order?.statusHistory) return {};
@@ -143,7 +173,14 @@ export default function OrderTrackingPage() {
                         </div>
                     ) : order ? (
                         <div className="space-y-6">
-                            {estimatedDate && (
+                             {order.status === 'delivered' || order.status === 'return-requested' || order.status === 'returned' || order.status === 'return-rejected' ? (
+                                <div className="bg-green-100/60 rounded-lg p-6 text-center">
+                                    <p className="text-sm text-green-700">Delivered On</p>
+                                    <p className="text-3xl font-bold text-green-800">{format(new Date(order.deliveryDate!), 'eeee')}</p>
+                                    <p className="text-5xl font-bold text-green-600">{format(new Date(order.deliveryDate!), 'd')}</p>
+                                    <p className="text-xl text-green-700">{format(new Date(order.deliveryDate!), 'MMMM yyyy')}</p>
+                                </div>
+                            ) : estimatedDate && (
                                 <div className="bg-muted/50 rounded-lg p-6 text-center">
                                     <p className="text-sm text-muted-foreground">Estimated Delivery</p>
                                     <p className="text-3xl font-bold">{format(estimatedDate, 'eeee')}</p>
@@ -160,21 +197,32 @@ export default function OrderTrackingPage() {
                                     </p>
 
                                     <div className="mt-8 relative flex justify-between items-start">
-                                        <div className="absolute top-3 left-0 w-full h-0.5 bg-muted-foreground/30" />
+                                        <div className="absolute top-4 left-0 w-full h-0.5 bg-muted-foreground/30" />
                                         <div 
-                                            className="absolute top-3 left-0 h-0.5 bg-primary transition-all duration-500"
+                                            className="absolute top-4 left-0 h-0.5 bg-primary transition-all duration-500"
                                             style={{ width: `${(currentStatusIndex / (statusSteps.length - 1)) * 100}%` }}
                                         />
-                                        {statusSteps.map((status, index) => (
-                                            <TrackingStep 
-                                                key={status}
-                                                step={index + 1} 
-                                                label={status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
-                                                isCompleted={currentStatusIndex >= index}
-                                                isCurrent={currentStatusIndex === index}
-                                                date={statusDates[status]}
-                                            />
-                                        ))}
+                                        {statusSteps.map((status, index) => {
+                                            const Icon = statusIcons[status] || Package;
+                                            const label = statusLabels[status] || status;
+                                            
+                                            let isCompleted = currentStatusIndex >= index;
+                                            // Handle special case for 'returned' where 'return-requested' is also completed.
+                                            if (order.status === 'returned' && status === 'return-requested') {
+                                                isCompleted = true;
+                                            }
+
+                                            return (
+                                                <TrackingStep 
+                                                    key={status}
+                                                    icon={Icon}
+                                                    label={label}
+                                                    isCompleted={isCompleted}
+                                                    isCurrent={currentStatusIndex === index}
+                                                    date={statusDates[status]}
+                                                />
+                                            )
+                                        })}
                                     </div>
                                     <div className="mt-4 text-center">
                                         <Button asChild variant="link">
