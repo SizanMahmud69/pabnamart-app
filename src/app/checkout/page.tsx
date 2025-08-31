@@ -153,7 +153,7 @@ function CheckoutPage() {
                 description: "Thank you for your purchase.",
             });
             clearCart();
-            router.push('/account/orders?status=shipped');
+            router.push('/account/orders?status=processing');
         } else {
             toast({
                 title: "Order Failed",
