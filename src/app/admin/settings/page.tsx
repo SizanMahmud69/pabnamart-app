@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useTransition } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Image as ImageIcon, Truck, CreditCard, Loader2, LayoutGrid } from "lucide-react";
+import { ArrowLeft, ArrowRight, Image as ImageIcon, Truck, CreditCard, Loader2, LayoutGrid, UserCog } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
@@ -26,6 +27,12 @@ const settingsItems = [
         description: "Add, edit and delete product categories.",
         icon: LayoutGrid,
         href: "/admin/settings/categories"
+    },
+    {
+        title: "Moderator Settings",
+        description: "Manage moderator accounts and permissions.",
+        icon: UserCog,
+        href: "/admin/settings/moderators"
     }
 ];
 

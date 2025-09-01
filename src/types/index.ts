@@ -71,6 +71,17 @@ export interface Notification {
     href?: string;
 }
 
+export interface ModeratorPermissions {
+  canManageProducts: boolean;
+  canManageUsers: boolean;
+  canManageOrders: boolean;
+  canVerifyPayments: boolean;
+  canManageReturns: boolean;
+  canManageOffers: boolean;
+  canManageVouchers: boolean;
+  canManageSettings: boolean;
+}
+
 export interface User {
   uid: string;
   email: string | null;
@@ -81,6 +92,8 @@ export interface User {
   shippingAddresses?: ShippingAddress[];
   usedVoucherCodes?: string[];
   fcmTokens?: string[];
+  role?: 'user' | 'moderator';
+  permissions?: ModeratorPermissions;
 }
 
 export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned' | 'return-requested' | 'processing' | 'return-rejected' | 'return-processing';

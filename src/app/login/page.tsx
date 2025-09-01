@@ -12,6 +12,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import app from '@/lib/firebase';
+import type { User as AppUser } from '@/types';
 
 const GoogleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -23,6 +26,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const db = getFirestore(app);
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -55,7 +59,25 @@ export default function LoginPage() {
     }
 
     try {
-      await login(email, password);
+      const userCredential = await login(email, password);
+      
+      // Check if user is a moderator
+      const userDocRef = doc(db, 'users', userCredential.user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      if (userDocSnap.exists()) {
+          const userData = userDocSnap.data() as AppUser;
+          if (userData.role === 'moderator') {
+              localStorage.setItem('isModerator', 'true');
+              localStorage.setItem('moderatorPermissions', JSON.stringify(userData.permissions || {}));
+              toast({
+                  title: "Moderator Login Successful",
+                  description: "Welcome to the Admin Panel!",
+              });
+              router.push("/admin");
+              return;
+          }
+      }
+
       toast({
         title: "Login Successful",
         description: "Welcome back!",

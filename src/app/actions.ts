@@ -5,7 +5,7 @@ import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import admin from '@/lib/firebase-admin';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
-import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product, StatusHistory, Notification, User } from "@/types";
+import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product, StatusHistory, Notification, User, ModeratorPermissions } from "@/types";
 import { revalidatePath } from "next/cache";
 
 const db = getFirestore();
@@ -19,6 +19,50 @@ export async function getProductRecommendations(input: ProductRecommendationsInp
     throw new Error("Failed to fetch product recommendations.");
   }
 }
+
+export async function createModerator(email: string, password: string, permissions: ModeratorPermissions) {
+    try {
+        const userRecord = await admin.auth().createUser({
+            email,
+            password,
+            displayName: 'Moderator',
+        });
+
+        const moderatorData: Partial<User> = {
+            email,
+            displayName: 'Moderator',
+            role: 'moderator',
+            permissions,
+            status: 'active',
+            joined: new Date().toISOString(),
+        };
+
+        await db.collection('users').doc(userRecord.uid).set(moderatorData);
+        return { success: true, message: 'Moderator created successfully.' };
+    } catch (error: any) {
+        console.error("Error creating moderator:", error);
+        return { success: false, message: error.message || 'Failed to create moderator.' };
+    }
+}
+
+export async function updateModeratorPermissions(uid: string, permissions: ModeratorPermissions) {
+    if (!uid) {
+        return { success: false, message: 'Moderator ID is missing.' };
+    }
+    try {
+        const userDocRef = db.collection('users').doc(uid);
+        await userDocRef.update({ permissions });
+        return { success: true, message: 'Permissions updated successfully.' };
+    } catch (error: any) {
+        console.error("Error updating permissions:", error);
+        return { success: false, message: error.message || 'Failed to update permissions.' };
+    }
+}
+
+export async function deleteModerator(uid: string) {
+    return deleteUserAccount(uid);
+}
+
 
 export async function deleteUserAccount(uid: string) {
     if (!uid) {
