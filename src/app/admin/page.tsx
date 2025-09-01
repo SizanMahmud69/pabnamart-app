@@ -57,6 +57,13 @@ const allMenuItems = [
         icon: Ticket,
         href: "/admin/vouchers",
         permissionKey: 'canManageVouchers'
+    },
+    {
+        title: "Settings",
+        description: "Configure site-wide settings.",
+        icon: Settings,
+        href: "/admin/settings",
+        permissionKey: 'canManageSettings'
     }
 ];
 

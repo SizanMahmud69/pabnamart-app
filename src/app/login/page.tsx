@@ -61,9 +61,9 @@ export default function LoginPage() {
     try {
       const userCredential = await login(email, password);
       
-      // Check if user is a moderator
       const userDocRef = doc(db, 'users', userCredential.user.uid);
       const userDocSnap = await getDoc(userDocRef);
+
       if (userDocSnap.exists()) {
           const userData = userDocSnap.data() as AppUser;
           if (userData.role === 'moderator') {
