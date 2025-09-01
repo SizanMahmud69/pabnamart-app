@@ -1,35 +1,29 @@
-// Scripts for Firebase products are always available at the well-known
-// URL: '/__/firebase/version.json'.
-importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
-// Parse the config from the query string
-const urlParams = new URLSearchParams(location.search);
-const firebaseConfig = {
-    apiKey: urlParams.get('apiKey'),
-    authDomain: urlParams.get('authDomain'),
-    projectId: urlParams.get('projectId'),
-    storageBucket: urlParams.get('storageBucket'),
-    messagingSenderId: urlParams.get('messagingSenderId'),
-    appId: urlParams.get('appId'),
-};
+// Scripts for firebase and firebase messaging
+importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js");
 
-// Initialize the Firebase app in the service worker with the parsed config
+// Initialize the Firebase app in the service worker by passing in the messagingSenderId.
+const urlParams = new URLSearchParams(self.location.search);
+const firebaseConfig = Object.fromEntries(urlParams.entries());
+
 firebase.initializeApp(firebaseConfig);
 
-// Retrieve an instance of Firebase Messaging so that it can handle background
-// messages.
+// Retrieve an instance of Firebase Messaging so that it can handle background messages.
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  console.log(
+    "[firebase-messaging-sw.js] Received background message ",
+    payload
+  );
+  
+  const notificationTitle = payload.notification.title || "New Notification";
+  const notificationOptions = {
+    body: payload.notification.body || "",
+    icon: payload.notification.icon || "/icons/icon-192x192.png", // Provide a default icon
+    image: payload.notification.image,
+  };
 
-    const notificationTitle = payload.notification.title;
-    const notificationOptions = {
-        body: payload.notification.body,
-        icon: payload.notification.icon || '/favicon.ico', // Default icon
-        image: payload.notification.image
-    };
-
-    self.registration.showNotification(notificationTitle, notificationOptions);
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
