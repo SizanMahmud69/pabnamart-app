@@ -15,6 +15,7 @@ import { usePathname } from 'next/navigation';
 import { ProductProvider } from '@/hooks/useProducts';
 import { OfferProvider } from '@/hooks/useOffers';
 import { WishlistProvider } from '@/hooks/useWishlist';
+import { FirebaseMessagingProvider } from '@/lib/firebase';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -44,10 +45,12 @@ function RootLayoutContent({
                 <CartProvider>
                   <WishlistProvider>
                     <NotificationProvider>
-                      {!isAdminPage && <Header />}
-                      <main className={isAdminPage ? '' : "pb-16 md:pb-0"}>{children}</main>
-                      <Toaster />
-                      {!isAdminPage && <BottomNav />}
+                      <FirebaseMessagingProvider>
+                        {!isAdminPage && <Header />}
+                        <main className={isAdminPage ? '' : "pb-16 md:pb-0"}>{children}</main>
+                        <Toaster />
+                        {!isAdminPage && <BottomNav />}
+                      </FirebaseMessagingProvider>
                     </NotificationProvider>
                   </WishlistProvider>
                 </CartProvider>

@@ -1,6 +1,9 @@
 
+"use client";
+
 import { initializeApp, getApp, getApps, type FirebaseOptions } from 'firebase/app';
 import { getMessaging } from 'firebase/messaging';
+import { useEffect } from 'react';
 
 export const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk",
@@ -36,9 +39,14 @@ export const registerServiceWorker = () => {
   }
 };
 
-if (typeof window !== 'undefined') {
-  registerServiceWorker();
-}
+// A component that handles service worker registration on the client side
+export const FirebaseMessagingProvider = ({ children }: { children: React.ReactNode }) => {
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
+  return <>{children}</>;
+};
 
 
 export default app;
