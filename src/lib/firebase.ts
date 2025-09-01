@@ -20,7 +20,13 @@ export const messaging = (typeof window !== 'undefined') ? getMessaging(app) : n
 // Function to register the service worker
 export const registerServiceWorker = () => {
   if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    const firebaseConfigParams = new URLSearchParams(firebaseConfig as Record<string, string>).toString();
+    const firebaseConfigParams = new URLSearchParams(
+      Object.entries(firebaseConfig).reduce((acc, [key, value]) => {
+        if (value) acc[key] = value;
+        return acc;
+      }, {} as Record<string, string>)
+    ).toString();
+    
     navigator.serviceWorker.register(`/firebase-messaging-sw.js?${firebaseConfigParams}`, { scope: '/' })
       .then(registration => {
         console.log('Service Worker registered with scope:', registration.scope);
