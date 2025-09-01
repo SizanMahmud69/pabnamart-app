@@ -1,38 +1,43 @@
 
 "use client";
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, ArrowRight, Image as ImageIcon, Truck, CreditCard, Loader2, LayoutGrid, UserCog } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import type { ModeratorPermissions } from '@/types';
 
-const settingsItems = [
+const allSettingsItems = [
     {
         title: "Delivery Settings",
         description: "Set the standard delivery charge for orders.",
         icon: Truck,
-        href: "/admin/settings/delivery"
+        href: "/admin/settings/delivery",
+        permissionKey: 'canManageDeliverySettings'
     },
     {
         title: "Payment Settings",
         description: "Manage payment gateways and logos.",
         icon: CreditCard,
-        href: "/admin/settings/payment"
+        href: "/admin/settings/payment",
+        permissionKey: 'canManagePaymentSettings'
     },
     {
         title: "Category Settings",
         description: "Add, edit and delete product categories.",
         icon: LayoutGrid,
-        href: "/admin/settings/categories"
+        href: "/admin/settings/categories",
+        permissionKey: 'canManageCategorySettings'
     },
     {
         title: "Moderator Settings",
         description: "Manage moderator accounts and permissions.",
         icon: UserCog,
-        href: "/admin/settings/moderators"
+        href: "/admin/settings/moderators",
+        permissionKey: 'canManageModeratorSettings'
     }
 ];
 
@@ -40,6 +45,29 @@ export default function AdminSettingsPage() {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [loadingHref, setLoadingHref] = useState<string | null>(null);
+    const [permissions, setPermissions] = useState<ModeratorPermissions | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        const adminStatus = localStorage.getItem('isAdmin') === 'true';
+        setIsAdmin(adminStatus);
+        if (!adminStatus) {
+            const storedPermissions = localStorage.getItem('moderatorPermissions');
+            if (storedPermissions) {
+                setPermissions(JSON.parse(storedPermissions));
+            }
+        }
+    }, []);
+
+    const settingsItems = useMemo(() => {
+        if (isAdmin) {
+            return allSettingsItems;
+        }
+        if (permissions) {
+            return allSettingsItems.filter(item => permissions[item.permissionKey as keyof ModeratorPermissions]);
+        }
+        return [];
+    }, [isAdmin, permissions]);
 
     const handleNavigation = (href: string) => {
         setLoadingHref(href);

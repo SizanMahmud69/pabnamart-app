@@ -15,6 +15,7 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { updateModeratorPermissions } from '@/app/actions';
+import { Separator } from '@/components/ui/separator';
 
 const db = getFirestore(app);
 
@@ -26,7 +27,13 @@ const permissionOptions: { id: keyof ModeratorPermissions, label: string }[] = [
     { id: 'canManageReturns', label: 'Manage Returns' },
     { id: 'canManageOffers', label: 'Manage Offers' },
     { id: 'canManageVouchers', label: 'Manage Vouchers' },
-    { id: 'canManageSettings', label: 'Manage Settings' },
+];
+
+const settingsPermissionOptions: { id: keyof ModeratorPermissions, label: string }[] = [
+    { id: 'canManageDeliverySettings', label: 'Delivery Settings' },
+    { id: 'canManagePaymentSettings', label: 'Payment Settings' },
+    { id: 'canManageCategorySettings', label: 'Category Settings' },
+    { id: 'canManageModeratorSettings', label: 'Moderator Settings' },
 ];
 
 export default function EditModeratorPage() {
@@ -43,7 +50,10 @@ export default function EditModeratorPage() {
         canManageReturns: false,
         canManageOffers: false,
         canManageVouchers: false,
-        canManageSettings: false,
+        canManageDeliverySettings: false,
+        canManagePaymentSettings: false,
+        canManageCategorySettings: false,
+        canManageModeratorSettings: false,
     });
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -60,7 +70,7 @@ export default function EditModeratorPage() {
                 const data = { ...docSnap.data(), uid: docSnap.id } as User;
                 setModerator(data);
                 if (data.permissions) {
-                    setPermissions(data.permissions);
+                    setPermissions(prev => ({...prev, ...data.permissions}));
                 }
             } else {
                 toast({ title: "Error", description: "Moderator not found.", variant: "destructive" });
@@ -108,11 +118,32 @@ export default function EditModeratorPage() {
                             <CardTitle>Edit Moderator Permissions</CardTitle>
                             <CardDescription>Editing permissions for {moderator.email}</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-6">
                             <div className="space-y-2">
-                                <Label className="font-semibold">Permissions</Label>
+                                <Label className="font-semibold">General Permissions</Label>
                                 <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
                                     {permissionOptions.map(option => (
+                                        <div key={option.id} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={option.id}
+                                                checked={permissions[option.id]}
+                                                onCheckedChange={() => handlePermissionChange(option.id)}
+                                                disabled={isSaving}
+                                            />
+                                            <Label htmlFor={option.id} className="font-normal cursor-pointer">
+                                                {option.label}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="space-y-2">
+                                <Label className="font-semibold">Settings Permissions</Label>
+                                <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
+                                    {settingsPermissionOptions.map(option => (
                                         <div key={option.id} className="flex items-center space-x-2">
                                             <Checkbox
                                                 id={option.id}

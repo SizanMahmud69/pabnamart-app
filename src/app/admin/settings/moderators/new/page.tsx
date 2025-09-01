@@ -13,6 +13,7 @@ import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createModerator } from '@/app/actions';
 import type { ModeratorPermissions } from '@/types';
+import { Separator } from '@/components/ui/separator';
 
 const permissionOptions: { id: keyof ModeratorPermissions, label: string }[] = [
     { id: 'canManageProducts', label: 'Manage Products' },
@@ -22,7 +23,13 @@ const permissionOptions: { id: keyof ModeratorPermissions, label: string }[] = [
     { id: 'canManageReturns', label: 'Manage Returns' },
     { id: 'canManageOffers', label: 'Manage Offers' },
     { id: 'canManageVouchers', label: 'Manage Vouchers' },
-    { id: 'canManageSettings', label: 'Manage Settings' },
+];
+
+const settingsPermissionOptions: { id: keyof ModeratorPermissions, label: string }[] = [
+    { id: 'canManageDeliverySettings', label: 'Delivery Settings' },
+    { id: 'canManagePaymentSettings', label: 'Payment Settings' },
+    { id: 'canManageCategorySettings', label: 'Category Settings' },
+    { id: 'canManageModeratorSettings', label: 'Moderator Settings' },
 ];
 
 export default function NewModeratorPage() {
@@ -39,7 +46,10 @@ export default function NewModeratorPage() {
         canManageReturns: false,
         canManageOffers: false,
         canManageVouchers: false,
-        canManageSettings: false,
+        canManageDeliverySettings: false,
+        canManagePaymentSettings: false,
+        canManageCategorySettings: false,
+        canManageModeratorSettings: false,
     });
     const [isCreating, setIsCreating] = useState(false);
 
@@ -77,7 +87,7 @@ export default function NewModeratorPage() {
                             <CardTitle>Add New Moderator</CardTitle>
                             <CardDescription>Create a new moderator account and set their permissions.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-6">
                             <div className="space-y-2">
                                 <Label htmlFor="email">Moderator Email</Label>
                                 <Input
@@ -110,9 +120,28 @@ export default function NewModeratorPage() {
                                 </Button>
                             </div>
                             <div className="space-y-2">
-                                <Label className="font-semibold">Permissions</Label>
+                                <Label className="font-semibold">General Permissions</Label>
                                 <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
                                     {permissionOptions.map(option => (
+                                        <div key={option.id} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={option.id}
+                                                checked={permissions[option.id]}
+                                                onCheckedChange={() => handlePermissionChange(option.id)}
+                                                disabled={isCreating}
+                                            />
+                                            <Label htmlFor={option.id} className="font-normal cursor-pointer">
+                                                {option.label}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <Separator />
+                             <div className="space-y-2">
+                                <Label className="font-semibold">Settings Permissions</Label>
+                                <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
+                                    {settingsPermissionOptions.map(option => (
                                         <div key={option.id} className="flex items-center space-x-2">
                                             <Checkbox
                                                 id={option.id}

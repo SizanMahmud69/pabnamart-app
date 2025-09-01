@@ -79,7 +79,10 @@ export interface ModeratorPermissions {
   canManageReturns: boolean;
   canManageOffers: boolean;
   canManageVouchers: boolean;
-  canManageSettings: boolean;
+  canManageDeliverySettings: boolean;
+  canManagePaymentSettings: boolean;
+  canManageCategorySettings: boolean;
+  canManageModeratorSettings: boolean;
 }
 
 export interface User {

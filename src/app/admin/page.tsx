@@ -63,7 +63,12 @@ const allMenuItems = [
         description: "Configure site-wide settings.",
         icon: Settings,
         href: "/admin/settings",
-        permissionKey: 'canManageSettings'
+        permissionKey: [
+            'canManageDeliverySettings',
+            'canManagePaymentSettings',
+            'canManageCategorySettings',
+            'canManageModeratorSettings'
+        ]
     }
 ];
 
@@ -90,7 +95,14 @@ const AdminDashboard = () => {
             return allMenuItems;
         }
         if (permissions) {
-            return allMenuItems.filter(item => permissions[item.permissionKey as keyof ModeratorPermissions]);
+             return allMenuItems.filter(item => {
+                if (Array.isArray(item.permissionKey)) {
+                    // If it's an array of keys, check if the moderator has at least one of them.
+                    return item.permissionKey.some(key => permissions[key as keyof ModeratorPermissions]);
+                }
+                // Otherwise, it's a single key.
+                return permissions[item.permissionKey as keyof ModeratorPermissions];
+            });
         }
         return [];
     }, [isAdmin, permissions]);
