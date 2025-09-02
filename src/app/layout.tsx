@@ -16,6 +16,7 @@ import { ProductProvider } from '@/hooks/useProducts';
 import { OfferProvider } from '@/hooks/useOffers';
 import { WishlistProvider } from '@/hooks/useWishlist';
 import VoucherPopup from '@/components/VoucherPopup';
+import FlashSalePopup from '@/components/FlashSalePopup';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -50,6 +51,7 @@ function RootLayoutContent({
                         <Toaster />
                         {!isAdminPage && <BottomNav />}
                         {!isAdminPage && <VoucherPopup />}
+                        {!isAdminPage && <FlashSalePopup />}
                     </NotificationProvider>
                   </WishlistProvider>
                 </CartProvider>

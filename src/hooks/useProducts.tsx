@@ -8,6 +8,7 @@ import app from '@/lib/firebase';
 import { useOffers } from './useOffers';
 import { PackageCheck } from 'lucide-react';
 import { createAndSendNotification } from '@/app/actions';
+import { useAuth } from './useAuth';
 
 interface ProductContextType {
   products: Product[];
@@ -17,6 +18,8 @@ interface ProductContextType {
   loading: boolean;
   getFlashSaleProducts: () => { products: Product[], closestExpiry: string | null };
   getFlashSalePrice: (product: Product) => number;
+  newestFlashSaleProduct: Product | null;
+  markFlashSaleAsSeen: (productId: number) => void;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -35,7 +38,9 @@ const roundPrice = (price: number): number => {
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [baseProducts, setBaseProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newestFlashSaleProduct, setNewestFlashSaleProduct] = useState<Product | null>(null);
   const { activeOffers } = useOffers();
+  const { user } = useAuth();
 
   useEffect(() => {
     const productsCollectionRef = collection(db, 'products');
@@ -121,6 +126,32 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     return { products: saleProducts, closestExpiry };
   }, [productsWithOffers, getFlashSalePrice, baseProducts]);
 
+    // Logic for new flash sale popup
+    useEffect(() => {
+        const { products: saleProducts } = getFlashSaleProducts();
+        if (user && saleProducts.length > 0) {
+            const latestFlashSaleProduct = saleProducts.sort((a, b) => b.id - a.id)[0];
+            const seenProducts = JSON.parse(localStorage.getItem(`seenFlashSales_${user.uid}`) || '[]');
+
+            if (latestFlashSaleProduct && !seenProducts.includes(latestFlashSaleProduct.id)) {
+                setNewestFlashSaleProduct(latestFlashSaleProduct);
+            } else {
+                setNewestFlashSaleProduct(null);
+            }
+        } else {
+            setNewestFlashSaleProduct(null);
+        }
+    }, [getFlashSaleProducts, user]);
+
+    const markFlashSaleAsSeen = useCallback((productId: number) => {
+        if (!user) return;
+        const seenProducts = JSON.parse(localStorage.getItem(`seenFlashSales_${user.uid}`) || '[]');
+        if (!seenProducts.includes(productId)) {
+            const newSeenProducts = [...seenProducts, productId];
+            localStorage.setItem(`seenFlashSales_${user.uid}`, JSON.stringify(newSeenProducts));
+        }
+        setNewestFlashSaleProduct(null);
+    }, [user]);
 
   const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
     const newId = new Date().getTime(); // Simple way to generate a unique ID
@@ -205,7 +236,17 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <ProductContext.Provider value={{ products: productsWithOffers, addProduct, updateProduct, deleteProduct, loading, getFlashSaleProducts, getFlashSalePrice }}>
+    <ProductContext.Provider value={{ 
+        products: productsWithOffers, 
+        addProduct, 
+        updateProduct, 
+        deleteProduct, 
+        loading, 
+        getFlashSaleProducts, 
+        getFlashSalePrice,
+        newestFlashSaleProduct,
+        markFlashSaleAsSeen
+    }}>
       {children}
     </ProductContext.Provider>
   );
