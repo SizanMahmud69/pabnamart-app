@@ -40,6 +40,7 @@ export default function NewVoucherPage() {
                 description,
                 discountType,
                 isReturnVoucher: false, // Explicitly set for admin-created vouchers
+                createdAt: new Date().toISOString(),
             });
             
             toast({

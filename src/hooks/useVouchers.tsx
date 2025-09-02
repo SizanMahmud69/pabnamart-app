@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Voucher } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
-import { getFirestore, doc, onSnapshot, setDoc, getDoc, arrayUnion } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, getDoc, arrayUnion, collection, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 interface VoucherContextType {
@@ -13,6 +13,8 @@ interface VoucherContextType {
   availableReturnVouchers: Voucher[];
   collectVoucher: (voucher: Voucher) => void;
   voucherCount: number;
+  newestVoucher: Voucher | null;
+  markVoucherAsSeen: (code: string) => void;
 }
 
 const VoucherContext = createContext<VoucherContextType | undefined>(undefined);
@@ -22,9 +24,26 @@ const db = getFirestore(app);
 export const VoucherProvider = ({ children }: { children: ReactNode }) => {
   const [collectedVouchers, setCollectedVouchers] = useState<Voucher[]>([]);
   const [availableReturnVouchers, setAvailableReturnVouchers] = useState<Voucher[]>([]);
+  const [allVouchers, setAllVouchers] = useState<Voucher[]>([]);
+  const [newestVoucher, setNewestVoucher] = useState<Voucher | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Fetch all general vouchers
+  useEffect(() => {
+    const vouchersRef = collection(db, 'vouchers');
+    const q = query(vouchersRef, orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const vouchersData = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() } as Voucher))
+            .filter(v => !v.isReturnVoucher);
+        setAllVouchers(vouchersData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Handle user-specific vouchers
   useEffect(() => {
     if (user) {
       // Listener for collected vouchers
@@ -56,6 +75,32 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       setCollectedVouchers([]);
       setAvailableReturnVouchers([]);
     }
+  }, [user]);
+
+  // Logic for new voucher popup
+  useEffect(() => {
+    if (user && allVouchers.length > 0) {
+      const latestVoucher = allVouchers[0];
+      const seenVouchers = JSON.parse(localStorage.getItem(`seenVouchers_${user.uid}`) || '[]');
+      
+      if (latestVoucher && !seenVouchers.includes(latestVoucher.code)) {
+        setNewestVoucher(latestVoucher);
+      } else {
+        setNewestVoucher(null);
+      }
+    } else {
+        setNewestVoucher(null);
+    }
+  }, [allVouchers, user]);
+
+  const markVoucherAsSeen = useCallback((code: string) => {
+    if (!user) return;
+    const seenVouchers = JSON.parse(localStorage.getItem(`seenVouchers_${user.uid}`) || '[]');
+    if (!seenVouchers.includes(code)) {
+        const newSeenVouchers = [...seenVouchers, code];
+        localStorage.setItem(`seenVouchers_${user.uid}`, JSON.stringify(newSeenVouchers));
+    }
+    setNewestVoucher(null);
   }, [user]);
 
   const collectVoucher = useCallback(async (voucher: Voucher) => {
@@ -108,6 +153,8 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
         availableReturnVouchers,
         collectVoucher,
         voucherCount,
+        newestVoucher,
+        markVoucherAsSeen,
       }}
     >
       {children}

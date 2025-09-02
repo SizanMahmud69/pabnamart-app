@@ -51,6 +51,7 @@ export interface Voucher {
     discountType?: 'order' | 'shipping';
     isReturnVoucher?: boolean;
     collectedDate?: string;
+    createdAt?: string;
 }
 
 export interface Offer {
@@ -83,6 +84,7 @@ export interface ModeratorPermissions {
   canManagePaymentSettings: boolean;
   canManageCategorySettings: boolean;
   canManageModeratorSettings: boolean;
+  canManageReviews: boolean;
 }
 
 export interface User {
