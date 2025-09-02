@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useVouchers } from '@/hooks/useVouchers';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from './ui/button';
 import { Ticket, Download, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -38,6 +38,12 @@ export default function VoucherPopup() {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
             <DialogContent className="sm:max-w-md p-0 border-0 overflow-hidden">
+                 <DialogHeader className="sr-only">
+                    <DialogTitle>New Voucher Available</DialogTitle>
+                    <DialogDescription>
+                        A new voucher is available for you to collect. {newestVoucher.description}
+                    </DialogDescription>
+                </DialogHeader>
                 <div className="relative bg-gradient-to-br from-purple-500 to-pink-500 p-8 text-white text-center flex flex-col items-center justify-center space-y-4">
                     <Button
                         variant="ghost"
