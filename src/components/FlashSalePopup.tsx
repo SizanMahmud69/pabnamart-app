@@ -40,7 +40,7 @@ export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
                 }
             };
         }
-    }, [flashSalePopupProduct]);
+    }, [flashSalePopupProduct, onOpenChange]);
 
     const handleClose = () => {
         if (flashSalePopupProduct) {
