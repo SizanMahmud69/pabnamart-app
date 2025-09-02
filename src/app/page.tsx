@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useEffect, Suspense, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense, useMemo, useTransition } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import type { Product } from '@/types';
 import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
@@ -44,6 +44,7 @@ const defaultBanner = {
 const bannerLayouts = ['left', 'right', 'center'];
 
 function HomePageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
   const { products: allProducts, getFlashSaleProducts, loading: productsLoading } = useProducts();
@@ -53,6 +54,8 @@ function HomePageContent() {
   const [topRated, setTopRated] = useState<Product[]>([]);
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
   const [visibleProductsCount, setVisibleProductsCount] = useState(9);
+  const [isVoucherLoading, startVoucherTransition] = useTransition();
+
 
   useEffect(() => {
     if (allProducts.length > 0) {
@@ -117,6 +120,12 @@ function HomePageContent() {
     setVisibleProductsCount(prevCount => prevCount + 9);
   };
 
+  const handleVoucherClick = () => {
+    startVoucherTransition(() => {
+      router.push('/vouchers');
+    });
+  };
+
   if (searchQuery) {
     return <Suspense fallback={<div>Loading...</div>}><SearchPageContent searchQuery={searchQuery} /></Suspense>;
   }
@@ -173,7 +182,7 @@ function HomePageContent() {
         </Carousel>
         
         {/* Collect Vouchers Section */}
-        <Link href="/vouchers" className="block hover:shadow-lg transition-shadow rounded-lg">
+        <div onClick={handleVoucherClick} className="block hover:shadow-lg transition-shadow rounded-lg cursor-pointer">
           <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-0">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -183,10 +192,14 @@ function HomePageContent() {
                   <p className="text-sm text-gray-600">Get extra savings on your next purchase.</p>
                 </div>
               </div>
-              <ArrowRight className="h-6 w-6 text-gray-700" />
+              {isVoucherLoading ? (
+                <Loader2 className="h-6 w-6 text-gray-700 animate-spin" />
+              ) : (
+                <ArrowRight className="h-6 w-6 text-gray-700" />
+              )}
             </CardContent>
           </Card>
-        </Link>
+        </div>
 
         {/* Flash Sale Section */}
         <FlashSale products={flashSaleProducts} />
