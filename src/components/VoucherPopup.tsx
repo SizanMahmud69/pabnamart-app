@@ -8,16 +8,22 @@ import { Button } from './ui/button';
 import { Ticket, Download, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export default function VoucherPopup() {
+interface VoucherPopupProps {
+    isFlashSalePopupOpen: boolean;
+}
+
+export default function VoucherPopup({ isFlashSalePopupOpen }: VoucherPopupProps) {
     const { newestVoucher, markVoucherAsSeen } = useVouchers();
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        if (newestVoucher) {
+        if (newestVoucher && !isFlashSalePopupOpen) {
             setIsOpen(true);
+        } else {
+            setIsOpen(false);
         }
-    }, [newestVoucher]);
+    }, [newestVoucher, isFlashSalePopupOpen]);
 
     const handleClose = () => {
         if (newestVoucher) {

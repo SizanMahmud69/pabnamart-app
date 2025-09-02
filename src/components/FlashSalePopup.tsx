@@ -10,7 +10,11 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { rgbToHsl } from '@/lib/utils';
 
-export default function FlashSalePopup() {
+interface FlashSalePopupProps {
+    onOpenChange: (open: boolean) => void;
+}
+
+export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
     const { newestFlashSaleProduct, markFlashSaleAsSeen } = useProducts();
     const [isOpen, setIsOpen] = useState(false);
     const [bgColor, setBgColor] = useState('from-purple-500 to-pink-500');
@@ -19,6 +23,7 @@ export default function FlashSalePopup() {
     useEffect(() => {
         if (newestFlashSaleProduct) {
             setIsOpen(true);
+            onOpenChange(true);
             const img = new window.Image();
             img.crossOrigin = "Anonymous";
             img.src = newestFlashSaleProduct.images[0];
@@ -42,19 +47,29 @@ export default function FlashSalePopup() {
             markFlashSaleAsSeen(newestFlashSaleProduct.id);
         }
         setIsOpen(false);
+        onOpenChange(false);
     };
 
     const handleShopNow = () => {
         handleClose();
         router.push('/flash-sale');
     };
+    
+    const handleOpenChange = (open: boolean) => {
+        if (!open) {
+            handleClose();
+        } else {
+            setIsOpen(true);
+            onOpenChange(true);
+        }
+    }
 
     if (!newestFlashSaleProduct) {
         return null;
     }
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
             <DialogContent className="w-[90vw] max-w-sm p-0 border-0 overflow-hidden rounded-xl">
                  <DialogHeader className="sr-only">
                     <DialogTitle>New Flash Sale Item</DialogTitle>

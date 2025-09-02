@@ -17,6 +17,7 @@ import { OfferProvider } from '@/hooks/useOffers';
 import { WishlistProvider } from '@/hooks/useWishlist';
 import VoucherPopup from '@/components/VoucherPopup';
 import FlashSalePopup from '@/components/FlashSalePopup';
+import { useState } from 'react';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -35,6 +36,8 @@ function RootLayoutContent({
 }>) {
   const pathname = usePathname();
   const isAdminPage = pathname.startsWith('/admin');
+  const [isFlashSalePopupOpen, setIsFlashSalePopupOpen] = useState(false);
+
 
   return (
     <html lang="en">
@@ -50,8 +53,8 @@ function RootLayoutContent({
                         <main className={isAdminPage ? '' : "pb-16 md:pb-0"}>{children}</main>
                         <Toaster />
                         {!isAdminPage && <BottomNav />}
-                        {!isAdminPage && <VoucherPopup />}
-                        {!isAdminPage && <FlashSalePopup />}
+                        {!isAdminPage && <VoucherPopup isFlashSalePopupOpen={isFlashSalePopupOpen} />}
+                        {!isAdminPage && <FlashSalePopup onOpenChange={setIsFlashSalePopupOpen} />}
                     </NotificationProvider>
                   </WishlistProvider>
                 </CartProvider>
