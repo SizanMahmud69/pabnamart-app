@@ -37,7 +37,7 @@ export default function VoucherPopup() {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent className="sm:max-w-md p-0 border-0 overflow-hidden">
+            <DialogContent className="w-[90vw] max-w-sm p-0 border-0 overflow-hidden rounded-xl">
                  <DialogHeader className="sr-only">
                     <DialogTitle>New Voucher Available</DialogTitle>
                     <DialogDescription>
@@ -48,7 +48,7 @@ export default function VoucherPopup() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute top-2 right-2 h-8 w-8 text-white/70 hover:text-white hover:bg-white/20"
+                        className="absolute top-2 right-2 h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 rounded-full"
                         onClick={handleClose}
                     >
                         <X className="h-5 w-5" />
