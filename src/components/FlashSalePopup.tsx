@@ -15,18 +15,18 @@ interface FlashSalePopupProps {
 }
 
 export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
-    const { newestFlashSaleProduct, markFlashSaleAsSeen } = useProducts();
+    const { flashSalePopupProduct, markFlashSaleAsSeen } = useProducts();
     const [isOpen, setIsOpen] = useState(false);
     const [bgColor, setBgColor] = useState('from-purple-500 to-pink-500');
     const router = useRouter();
 
     useEffect(() => {
-        if (newestFlashSaleProduct) {
+        if (flashSalePopupProduct) {
             setIsOpen(true);
             onOpenChange(true);
             const img = new window.Image();
             img.crossOrigin = "Anonymous";
-            img.src = newestFlashSaleProduct.images[0];
+            img.src = flashSalePopupProduct.images[0];
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = 1;
@@ -40,11 +40,11 @@ export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
                 }
             };
         }
-    }, [newestFlashSaleProduct]);
+    }, [flashSalePopupProduct]);
 
     const handleClose = () => {
-        if (newestFlashSaleProduct) {
-            markFlashSaleAsSeen(newestFlashSaleProduct.id);
+        if (flashSalePopupProduct) {
+            markFlashSaleAsSeen(flashSalePopupProduct.id);
         }
         setIsOpen(false);
         onOpenChange(false);
@@ -64,7 +64,7 @@ export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
         }
     }
 
-    if (!newestFlashSaleProduct) {
+    if (!flashSalePopupProduct) {
         return null;
     }
 
@@ -74,7 +74,7 @@ export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
                  <DialogHeader className="sr-only">
                     <DialogTitle>New Flash Sale Item</DialogTitle>
                     <DialogDescription>
-                        A new item has been added to our flash sale: {newestFlashSaleProduct.name}
+                        A new item has been added to our flash sale: {flashSalePopupProduct.name}
                     </DialogDescription>
                 </DialogHeader>
                 <div className={`relative bg-gradient-to-br ${bgColor} p-6 text-center flex flex-col items-center justify-center space-y-4`}>
@@ -89,8 +89,8 @@ export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
                     
                     <div className="relative w-40 h-40 rounded-lg overflow-hidden shadow-lg border-4 border-white">
                          <Image 
-                            src={newestFlashSaleProduct.images[0]} 
-                            alt={newestFlashSaleProduct.name} 
+                            src={flashSalePopupProduct.images[0]} 
+                            alt={flashSalePopupProduct.name} 
                             fill 
                             className="object-cover"
                             sizes="160px"
@@ -102,10 +102,10 @@ export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
                     <h2 className="text-xl font-bold text-gray-900">New Flash Sale Item!</h2>
                     
                      <div className="bg-black/5 p-4 rounded-lg w-full">
-                        <p className="font-semibold text-gray-800 truncate">{newestFlashSaleProduct.name}</p>
+                        <p className="font-semibold text-gray-800 truncate">{flashSalePopupProduct.name}</p>
                         <p className="mt-1">
-                            <span className="text-2xl font-bold text-primary">৳{newestFlashSaleProduct.price}</span>
-                            <span className="ml-2 text-gray-600 line-through">৳{newestFlashSaleProduct.originalPrice}</span>
+                            <span className="text-2xl font-bold text-primary">৳{flashSalePopupProduct.price}</span>
+                            <span className="ml-2 text-gray-600 line-through">৳{flashSalePopupProduct.originalPrice}</span>
                         </p>
                     </div>
 

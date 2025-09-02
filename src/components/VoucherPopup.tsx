@@ -13,21 +13,21 @@ interface VoucherPopupProps {
 }
 
 export default function VoucherPopup({ isFlashSalePopupOpen }: VoucherPopupProps) {
-    const { newestVoucher, markVoucherAsSeen } = useVouchers();
+    const { popupVoucher, markVoucherAsSeen } = useVouchers();
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        if (newestVoucher && !isFlashSalePopupOpen) {
+        if (popupVoucher && !isFlashSalePopupOpen) {
             setIsOpen(true);
         } else {
             setIsOpen(false);
         }
-    }, [newestVoucher, isFlashSalePopupOpen]);
+    }, [popupVoucher, isFlashSalePopupOpen]);
 
     const handleClose = () => {
-        if (newestVoucher) {
-            markVoucherAsSeen(newestVoucher.code);
+        if (popupVoucher) {
+            markVoucherAsSeen(popupVoucher.code);
         }
         setIsOpen(false);
     };
@@ -37,7 +37,7 @@ export default function VoucherPopup({ isFlashSalePopupOpen }: VoucherPopupProps
         router.push('/vouchers');
     };
 
-    if (!newestVoucher) {
+    if (!popupVoucher) {
         return null;
     }
 
@@ -47,7 +47,7 @@ export default function VoucherPopup({ isFlashSalePopupOpen }: VoucherPopupProps
                  <DialogHeader className="sr-only">
                     <DialogTitle>New Voucher Available</DialogTitle>
                     <DialogDescription>
-                        A new voucher is available for you to collect. {newestVoucher.description}
+                        A new voucher is available for you to collect. {popupVoucher.description}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="relative bg-gradient-to-br from-purple-500 to-pink-500 p-8 text-white text-center flex flex-col items-center justify-center space-y-4">
@@ -66,9 +66,9 @@ export default function VoucherPopup({ isFlashSalePopupOpen }: VoucherPopupProps
                     
                     <div className="bg-white/20 p-4 rounded-lg w-full">
                         <p className="font-bold text-3xl">
-                           {newestVoucher.discountType === 'shipping' ? 'Free Shipping' : (newestVoucher.type === 'fixed' ? `৳${newestVoucher.discount} Off` : `${newestVoucher.discount}% Off`)}
+                           {popupVoucher.discountType === 'shipping' ? 'Free Shipping' : (popupVoucher.type === 'fixed' ? `৳${popupVoucher.discount} Off` : `${popupVoucher.discount}% Off`)}
                         </p>
-                        <p className="mt-1 text-sm">{newestVoucher.description}</p>
+                        <p className="mt-1 text-sm">{popupVoucher.description}</p>
                     </div>
 
                     <p className="text-xs text-white/80">

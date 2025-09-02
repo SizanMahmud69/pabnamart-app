@@ -13,7 +13,7 @@ interface VoucherContextType {
   availableReturnVouchers: Voucher[];
   collectVoucher: (voucher: Voucher) => void;
   voucherCount: number;
-  newestVoucher: Voucher | null;
+  popupVoucher: Voucher | null;
   markVoucherAsSeen: (code: string) => void;
 }
 
@@ -25,7 +25,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
   const [collectedVouchers, setCollectedVouchers] = useState<Voucher[]>([]);
   const [availableReturnVouchers, setAvailableReturnVouchers] = useState<Voucher[]>([]);
   const [allVouchers, setAllVouchers] = useState<Voucher[]>([]);
-  const [newestVoucher, setNewestVoucher] = useState<Voucher | null>(null);
+  const [popupVoucher, setPopupVoucher] = useState<Voucher | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -79,19 +79,25 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
 
   // Logic for new voucher popup
   useEffect(() => {
-    if (user && allVouchers.length > 0) {
-      const latestVoucher = allVouchers[0];
+    if (user && allVouchers.length > 0 && collectedVouchers) {
       const seenVouchers = JSON.parse(localStorage.getItem(`seenVouchers_${user.uid}`) || '[]');
+      const collectedVoucherCodes = new Set(collectedVouchers.map(v => v.code));
       
-      if (latestVoucher && !seenVouchers.includes(latestVoucher.code)) {
-        setNewestVoucher(latestVoucher);
+      const uncollectedAndUnseenVouchers = allVouchers.filter(
+        v => !collectedVoucherCodes.has(v.code) && !seenVouchers.includes(v.code)
+      );
+
+      if (uncollectedAndUnseenVouchers.length > 0) {
+        // Pick a random voucher from the uncollected and unseen list
+        const randomIndex = Math.floor(Math.random() * uncollectedAndUnseenVouchers.length);
+        setPopupVoucher(uncollectedAndUnseenVouchers[randomIndex]);
       } else {
-        setNewestVoucher(null);
+        setPopupVoucher(null);
       }
     } else {
-        setNewestVoucher(null);
+        setPopupVoucher(null);
     }
-  }, [allVouchers, user]);
+  }, [allVouchers, collectedVouchers, user]);
 
   const markVoucherAsSeen = useCallback((code: string) => {
     if (!user) return;
@@ -100,7 +106,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
         const newSeenVouchers = [...seenVouchers, code];
         localStorage.setItem(`seenVouchers_${user.uid}`, JSON.stringify(newSeenVouchers));
     }
-    setNewestVoucher(null);
+    setPopupVoucher(null);
   }, [user]);
 
   const collectVoucher = useCallback(async (voucher: Voucher) => {
@@ -153,7 +159,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
         availableReturnVouchers,
         collectVoucher,
         voucherCount,
-        newestVoucher,
+        popupVoucher,
         markVoucherAsSeen,
       }}
     >

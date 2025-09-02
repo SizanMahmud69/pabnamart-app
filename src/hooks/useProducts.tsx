@@ -18,7 +18,7 @@ interface ProductContextType {
   loading: boolean;
   getFlashSaleProducts: () => { products: Product[], closestExpiry: string | null };
   getFlashSalePrice: (product: Product) => number;
-  newestFlashSaleProduct: Product | null;
+  flashSalePopupProduct: Product | null;
   markFlashSaleAsSeen: (productId: number) => void;
 }
 
@@ -38,7 +38,7 @@ const roundPrice = (price: number): number => {
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [baseProducts, setBaseProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newestFlashSaleProduct, setNewestFlashSaleProduct] = useState<Product | null>(null);
+  const [flashSalePopupProduct, setFlashSalePopupProduct] = useState<Product | null>(null);
   const { activeOffers } = useOffers();
   const { user } = useAuth();
 
@@ -130,16 +130,17 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const { products: saleProducts } = getFlashSaleProducts();
         if (user && saleProducts.length > 0) {
-            const latestFlashSaleProduct = saleProducts.sort((a, b) => b.id - a.id)[0];
             const seenProducts = JSON.parse(localStorage.getItem(`seenFlashSales_${user.uid}`) || '[]');
+            const unseenSaleProducts = saleProducts.filter(p => !seenProducts.includes(p.id));
 
-            if (latestFlashSaleProduct && !seenProducts.includes(latestFlashSaleProduct.id)) {
-                setNewestFlashSaleProduct(latestFlashSaleProduct);
+            if (unseenSaleProducts.length > 0) {
+                const randomIndex = Math.floor(Math.random() * unseenSaleProducts.length);
+                setFlashSalePopupProduct(unseenSaleProducts[randomIndex]);
             } else {
-                setNewestFlashSaleProduct(null);
+                setFlashSalePopupProduct(null);
             }
         } else {
-            setNewestFlashSaleProduct(null);
+            setFlashSalePopupProduct(null);
         }
     }, [getFlashSaleProducts, user]);
 
@@ -150,7 +151,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
             const newSeenProducts = [...seenProducts, productId];
             localStorage.setItem(`seenFlashSales_${user.uid}`, JSON.stringify(newSeenProducts));
         }
-        setNewestFlashSaleProduct(null);
+        setFlashSalePopupProduct(null);
     }, [user]);
 
   const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
@@ -244,7 +245,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         loading, 
         getFlashSaleProducts, 
         getFlashSalePrice,
-        newestFlashSaleProduct,
+        flashSalePopupProduct,
         markFlashSaleAsSeen
     }}>
       {children}
