@@ -111,7 +111,7 @@ export default function OrderDetailsPage() {
                     <CardHeader>
                         <CardTitle className="flex justify-between items-center">
                             <span>Order #{order.orderNumber}</span>
-                             <Badge variant="secondary" className="capitalize text-base">{order.status.replace('-', ' ')}</Badge>
+                             <Badge variant="secondary" className="capitalize text-base print:hidden">{order.status.replace('-', ' ')}</Badge>
                         </CardTitle>
                         <CardDescription>
                             Date: {new Date(order.date).toLocaleString()}
