@@ -135,7 +135,7 @@ export default function AdminUserManagement() {
                                                                 <Eye className="mr-2 h-4 w-4" />
                                                                 View Details
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => handleBanUser(user)}>
+                                                            <DropdownMenuItem onSelect={() => handleBanUser(user)}>
                                                                 <Ban className="mr-2 h-4 w-4" />
                                                                 {user.status === 'active' ? 'Ban User' : 'Unban User'}
                                                             </DropdownMenuItem>
