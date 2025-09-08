@@ -105,8 +105,8 @@ function ProductDetailPageContent() {
                                 alt={`${product.name} image ${index + 1}`}
                                 fill
                                 className="object-cover"
-                                sizes="(max-width: 768px) 100vw, 50vw"
                                 data-ai-hint="product image"
+                                unoptimized
                             />
                         </div>
                         </CarouselItem>

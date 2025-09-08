@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -53,6 +54,7 @@ export default function Categories() {
                                             fill
                                             className="object-cover"
                                             sizes="64px"
+                                            unoptimized
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-muted" />

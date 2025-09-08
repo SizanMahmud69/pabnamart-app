@@ -158,6 +158,7 @@ function HomePageContent() {
                           height={400}
                           className="object-cover w-full h-48 md:h-64"
                           data-ai-hint={banner.aiHint}
+                          unoptimized
                         />
                         <div className={cn(
                             "absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6",

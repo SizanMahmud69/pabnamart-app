@@ -109,6 +109,7 @@ export default function AiRecommendations({ searchQuery, currentProducts }: AiRe
                             sizes="100px"
                             className="object-cover"
                             data-ai-hint="product image"
+                            unoptimized
                           />
                         </div>
                         <div>

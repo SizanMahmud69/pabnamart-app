@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -38,8 +39,8 @@ export default function ShoppingCartSheet({ children }: { children: ReactNode })
                         alt={item.name}
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         data-ai-hint="product image"
+                        unoptimized
                       />
                     </div>
                     <div className="flex-grow">

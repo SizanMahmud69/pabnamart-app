@@ -106,8 +106,8 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
               "object-cover transition-transform duration-300 group-hover:scale-105",
               isSoldOut && "filter grayscale"
             )}
-            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
             data-ai-hint="product lifestyle"
+            unoptimized
           />
            {hasDiscount && !isSoldOut && discountAmount > 0 && (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">

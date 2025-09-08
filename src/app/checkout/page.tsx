@@ -267,7 +267,7 @@ function CheckoutPage() {
                         <div key={item.id} className="flex justify-between items-center text-sm">
                             <div className="flex items-center gap-3">
                                 <div className="relative h-16 w-16 rounded-md overflow-hidden border">
-                                    <Image src={item.images[0]} alt={item.name} fill className="object-cover" data-ai-hint="product image" />
+                                    <Image src={item.images[0]} alt={item.name} fill className="object-cover" data-ai-hint="product image" unoptimized />
                                 </div>
                                 <div>
                                     <p className="font-semibold">{item.name}</p>

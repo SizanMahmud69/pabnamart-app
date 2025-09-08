@@ -157,7 +157,7 @@ function PaymentGatewayPage() {
                                     onClick={() => setSelectedMethod(method.name)}
                                 >
                                     <div className="relative w-[60px] h-[36px]">
-                                        <Image src={method.logo} alt={method.name} fill style={{ objectFit: 'contain' }} data-ai-hint={method.hint} />
+                                        <Image src={method.logo} alt={method.name} fill style={{ objectFit: 'contain' }} data-ai-hint={method.hint} unoptimized />
                                     </div>
                                     <p className="text-sm font-semibold mt-2">{method.name}</p>
                                 </div>

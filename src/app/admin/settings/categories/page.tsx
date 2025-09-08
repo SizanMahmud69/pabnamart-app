@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -141,7 +142,7 @@ export default function CategorySettingsPage() {
                                     <li key={cat.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                         <div className="flex items-center gap-4">
                                             {cat.image && (
-                                                <Image src={cat.image} alt={cat.name} width={40} height={40} className="rounded-md object-cover" />
+                                                <Image src={cat.image} alt={cat.name} width={40} height={40} className="rounded-md object-cover" unoptimized />
                                             )}
                                             <span className="font-medium">{cat.name}</span>
                                         </div>

@@ -213,7 +213,7 @@ export default function WriteReviewPage() {
                             {order.items.map(item => (
                                 <div key={item.id} className="space-y-4 p-4 border rounded-lg">
                                     <div className="flex items-center gap-4">
-                                        <Image src={item.image} alt={item.name} width={64} height={64} className="rounded-md border" />
+                                        <Image src={item.image} alt={item.name} width={64} height={64} className="rounded-md border" unoptimized />
                                         <h3 className="font-semibold text-lg">{item.name}</h3>
                                     </div>
                                     <div className="space-y-2">

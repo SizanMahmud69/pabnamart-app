@@ -88,6 +88,7 @@ export default function CartPage() {
                                     className="object-cover"
                                     sizes="100px"
                                     data-ai-hint="product image"
+                                    unoptimized
                                     />
                                 </div>
                                 <div className="flex-grow min-w-0">
