@@ -58,7 +58,7 @@ export default function LoginPage() {
 
     try {
       const userCredential = await login(email, password);
-      const db = getFirestore(app!);
+      const db = getFirestore(app);
       const userDocRef = doc(db, 'users', userCredential.user.uid);
       const userDocSnap = await getDoc(userDocRef);
 

@@ -23,7 +23,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import type { User as AppUser } from '@/types';
 
-const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc1376789db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
+const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -47,10 +47,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!app) {
-      setLoading(false);
-      return;
-    }
     const auth = getAuth(app);
     const db = getFirestore(app);
 
@@ -75,7 +71,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    if (!app) throw new Error("Firebase not initialized");
     const auth = getAuth(app);
     const db = getFirestore(app);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -99,7 +94,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signup = async (email: string, password: string, displayName: string) => {
-    if (!app) throw new Error("Firebase not initialized");
     const auth = getAuth(app);
     const db = getFirestore(app);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -128,7 +122,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
-    if (!app) throw new Error("Firebase not initialized");
     const auth = getAuth(app);
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
@@ -161,19 +154,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const logout = () => {
-    if (!app) return Promise.reject("Firebase not initialized");
     const auth = getAuth(app);
     return signOut(auth);
   };
 
   const sendPasswordReset = (email: string) => {
-    if (!app) throw new Error("Firebase not initialized");
     const auth = getAuth(app);
     return sendPasswordResetEmail(auth, email);
   };
   
   const updateUserDisplayName = async (displayName: string) => {
-    if (!app) throw new Error("Firebase not initialized");
     const auth = getAuth(app);
     const db = getFirestore(app);
     if (auth.currentUser) {
@@ -187,7 +177,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserPassword = async (currentPassword: string, newPassword: string) => {
-    if (!app) throw new Error("Firebase not initialized");
     const auth = getAuth(app);
     const user = auth.currentUser;
     if (user && user.email) {
@@ -210,7 +199,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserProfilePicture = async (photoURL: string) => {
-    if (!app) throw new Error("Firebase not initialized");
     const auth = getAuth(app);
     const db = getFirestore(app);
     const currentUser = auth.currentUser;
