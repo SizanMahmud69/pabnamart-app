@@ -22,9 +22,8 @@ import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import type { User as AppUser } from '@/types';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
+const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc1376789db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -162,7 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const logout = () => {
-    if (!app) return Promise.resolve();
+    if (!app) return Promise.reject("Firebase not initialized");
     const auth = getAuth(app);
     return signOut(auth);
   };
