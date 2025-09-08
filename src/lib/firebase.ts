@@ -2,7 +2,7 @@
 "use client";
 
 import { initializeApp, getApp, getApps, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
-import { getMessaging } from 'firebase/messaging';
+import { getMessaging, Messaging } from 'firebase/messaging';
 
 export const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,6 +13,17 @@ export const firebaseConfig: FirebaseOptions = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const messaging = (typeof window !== 'undefined' && app) ? getMessaging(app) : null;
+const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+let messagingInstance: Messaging | null = null;
+
+if (typeof window !== 'undefined' && app.options.projectId) {
+    try {
+        messagingInstance = getMessaging(app);
+    } catch (e) {
+        console.error("Failed to initialize Firebase Messaging", e);
+    }
+}
+
+export const messaging = messagingInstance;
 export default app;
