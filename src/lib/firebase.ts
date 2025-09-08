@@ -13,16 +13,20 @@ export const firebaseConfig: FirebaseOptions = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp | null = null;
-if (typeof window !== 'undefined' && !getApps().length) {
-    if (firebaseConfig.apiKey) {
-        app = initializeApp(firebaseConfig);
-    } else {
-        console.warn("Firebase API key is missing. Firebase will not be initialized.");
+function getFirebaseApp(): FirebaseApp | null {
+    if (typeof window === 'undefined') {
+        return null;
     }
-} else if (typeof window !== 'undefined') {
-    app = getApp();
+    if (getApps().length > 0) {
+        return getApp();
+    }
+    if (firebaseConfig.apiKey) {
+        return initializeApp(firebaseConfig);
+    }
+    console.warn("Firebase API key is missing. Firebase will not be initialized.");
+    return null;
 }
 
+const app = getFirebaseApp();
 export const messaging = (typeof window !== 'undefined' && app) ? getMessaging(app) : null;
 export default app;
