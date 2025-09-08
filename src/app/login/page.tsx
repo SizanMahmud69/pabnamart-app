@@ -26,8 +26,6 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const db = getFirestore(app);
-
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,7 +58,7 @@ export default function LoginPage() {
 
     try {
       const userCredential = await login(email, password);
-      
+      const db = getFirestore(app!);
       const userDocRef = doc(db, 'users', userCredential.user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
