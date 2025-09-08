@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { ShoppingBag, Star, Undo2, Edit, Ticket, Info } from "lucide-react";
 import type { Order, OrderItem } from '@/types';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -136,7 +136,7 @@ const OrderReturnButton = ({ order }: { order: Order }) => {
     )
 }
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const status = searchParams.get('status') || 'all';
@@ -324,5 +324,14 @@ export default function OrdersPage() {
     </div>
   );
 }
+
+export default function OrdersPage() {
+    return (
+        <Suspense fallback={<LoadingSpinner />}>
+            <OrdersPageContent />
+        </Suspense>
+    );
+}
+    
 
     
