@@ -10,7 +10,8 @@ import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 
-export default function Header() {
+
+function HeaderContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -44,57 +45,65 @@ export default function Header() {
     pathname === '/cart' ||
     pathname === '/checkout';
 
+  if (isSimpleHeaderPage) {
+    return (
+      <div className="flex w-full items-center justify-center">
+           <Link href="/">
+              <span className="text-2xl font-bold text-primary whitespace-nowrap">PabnaMart</span>
+          </Link>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Link 
+        href="/" 
+        className={cn(
+            "flex items-center gap-2 transition-all duration-300 ease-in-out",
+            isSearchFocused ? "opacity-0 w-0" : "opacity-100 w-auto"
+        )}
+        aria-hidden={isSearchFocused}
+        tabIndex={isSearchFocused ? -1 : 0}
+      >
+        <span className="text-2xl font-bold text-primary whitespace-nowrap">PabnaMart</span>
+      </Link>
+
+      <div className={cn(
+        "flex-1 transition-all duration-300 ease-in-out",
+        isSearchFocused ? "max-w-full" : "max-w-xs"
+      )}>
+        <form onSubmit={handleSearch} className="relative flex w-full">
+            <Input
+            type="search"
+            placeholder="Search for products..."
+            className="w-full rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+            />
+            <Button type="submit" className="rounded-l-none">
+                <Search className="h-5 w-5" />
+            </Button>
+        </form>
+      </div>
+      <div className="hidden md:flex items-center">
+          <Button asChild variant="ghost" size="icon">
+              <Link href={user ? "/account" : "/login"}>
+                  {user ? <User /> : <LogIn />}
+              </Link>
+          </Button>
+      </div>
+    </>
+  );
+}
+
+export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4 transition-all duration-300">
-        {isSimpleHeaderPage ? (
-            <div className="flex w-full items-center justify-center">
-                 <Link href="/">
-                    <span className="text-2xl font-bold text-primary whitespace-nowrap">PabnaMart</span>
-                </Link>
-            </div>
-        ) : (
-            <>
-                <Link 
-                href="/" 
-                className={cn(
-                    "flex items-center gap-2 transition-all duration-300 ease-in-out",
-                    isSearchFocused ? "opacity-0 w-0" : "opacity-100 w-auto"
-                )}
-                aria-hidden={isSearchFocused}
-                tabIndex={isSearchFocused ? -1 : 0}
-                >
-                <span className="text-2xl font-bold text-primary whitespace-nowrap">PabnaMart</span>
-                </Link>
-
-                <div className={cn(
-                "flex-1 transition-all duration-300 ease-in-out",
-                isSearchFocused ? "max-w-full" : "max-w-xs"
-                )}>
-                <form onSubmit={handleSearch} className="relative flex w-full">
-                    <Input
-                    type="search"
-                    placeholder="Search for products..."
-                    className="w-full rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setIsSearchFocused(true)}
-                    onBlur={() => setIsSearchFocused(false)}
-                    />
-                    <Button type="submit" className="rounded-l-none">
-                        <Search className="h-5 w-5" />
-                    </Button>
-                </form>
-                </div>
-                <div className="hidden md:flex items-center">
-                    <Button asChild variant="ghost" size="icon">
-                        <Link href={user ? "/account" : "/login"}>
-                            {user ? <User /> : <LogIn />}
-                        </Link>
-                    </Button>
-                </div>
-            </>
-        )}
+        <HeaderContent />
       </div>
     </header>
   );

@@ -17,7 +17,8 @@ import { OfferProvider } from '@/hooks/useOffers';
 import { WishlistProvider } from '@/hooks/useWishlist';
 import VoucherPopup from '@/components/VoucherPopup';
 import FlashSalePopup from '@/components/FlashSalePopup';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -49,7 +50,11 @@ function RootLayoutContent({
                 <CartProvider>
                   <WishlistProvider>
                     <NotificationProvider>
-                        {!isAdminPage && <Header />}
+                        {!isAdminPage && (
+                           <Suspense fallback={<div className="h-16 bg-background border-b" />}>
+                             <Header />
+                           </Suspense>
+                        )}
                         <main className={isAdminPage ? '' : "pb-16 md:pb-0"}>{children}</main>
                         <Toaster />
                         {!isAdminPage && <BottomNav />}
