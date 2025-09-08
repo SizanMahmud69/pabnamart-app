@@ -22,7 +22,7 @@ Follow these steps to deploy your application to Vercel using GitHub.
     Go to your GitHub account and create a new repository. Do not initialize it with a `README.md` file.
 
 2.  **Initialize Git in Your Local Project:**
-    Open a terminal in your project's root directory and run the following commands:
+    Open a terminal in your project's root directory and run the following commands one by one:
     ```bash
     git init -b main
     git add .
@@ -30,10 +30,11 @@ Follow these steps to deploy your application to Vercel using GitHub.
     ```
 
 3.  **Connect to Your GitHub Repository:**
-    Copy the URL of the repository you created on GitHub and run the following command, replacing `your-repo-url` with your actual repository URL:
+    Run the following command, replacing `<your-repo-url>` with your actual repository URL from GitHub.
     ```bash
-    git remote add origin your-repo-url
+    git remote add origin <your-repo-url>
     ```
+    *Example: `git remote add origin https://github.com/your-username/pabnamart-app.git`*
 
 4.  **Push Your Code:**
     Upload your code to the GitHub repository with this command:
