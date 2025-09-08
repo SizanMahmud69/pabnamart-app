@@ -2,7 +2,7 @@
 "use client";
 
 import { initializeApp, getApp, getApps, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
-import { getMessaging, Messaging } from 'firebase/messaging';
+import { getMessaging, type Messaging } from 'firebase/messaging';
 
 export const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,7 +13,22 @@ export const firebaseConfig: FirebaseOptions = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+function createFirebaseApp(config: FirebaseOptions): FirebaseApp {
+    if (getApps().length > 0) {
+        return getApp();
+    }
+
+    if (!config.apiKey || !config.projectId) {
+        console.error("Firebase config is missing API key or Project ID.");
+        // Return a dummy app object or handle this case as needed
+        // This helps prevent crashes during server-side rendering or build.
+        return {} as FirebaseApp;
+    }
+
+    return initializeApp(config);
+}
+
+const app: FirebaseApp = createFirebaseApp(firebaseConfig);
 
 let messagingInstance: Messaging | null = null;
 
