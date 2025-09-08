@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Voucher } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
-import { getFirestore, doc, onSnapshot, setDoc, getDoc, arrayUnion, collection, query, orderBy } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, getDoc, arrayUnion, collection, query, orderBy, type Firestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 interface VoucherContextType {
@@ -19,9 +19,8 @@ interface VoucherContextType {
 
 const VoucherContext = createContext<VoucherContextType | undefined>(undefined);
 
-const db = getFirestore(app);
-
 export const VoucherProvider = ({ children }: { children: ReactNode }) => {
+  const [db, setDb] = useState<Firestore | null>(null);
   const [collectedVouchers, setCollectedVouchers] = useState<Voucher[]>([]);
   const [availableReturnVouchers, setAvailableReturnVouchers] = useState<Voucher[]>([]);
   const [allVouchers, setAllVouchers] = useState<Voucher[]>([]);
@@ -29,8 +28,15 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (app) {
+      setDb(getFirestore(app));
+    }
+  }, []);
+
   // Fetch all general vouchers
   useEffect(() => {
+    if (!db) return;
     const vouchersRef = collection(db, 'vouchers');
     const q = query(vouchersRef, orderBy('createdAt', 'desc'));
 
@@ -41,11 +47,11 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
         setAllVouchers(vouchersData);
     });
     return () => unsubscribe();
-  }, []);
+  }, [db]);
 
   // Handle user-specific vouchers
   useEffect(() => {
-    if (user) {
+    if (user && db) {
       // Listener for collected vouchers
       const collectedVoucherRef = doc(db, 'userVouchers', user.uid);
       const unsubscribeCollected = onSnapshot(collectedVoucherRef, (docSnap) => {
@@ -75,7 +81,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       setCollectedVouchers([]);
       setAvailableReturnVouchers([]);
     }
-  }, [user]);
+  }, [user, db]);
 
   // Logic for new voucher popup
   useEffect(() => {
@@ -118,6 +124,8 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
         });
         return;
     }
+    
+    if (!db) return;
       
     const voucherRef = doc(db, 'userVouchers', user.uid);
     const docSnap = await getDoc(voucherRef);
@@ -148,7 +156,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       title: "Voucher Collected!",
       description: `Voucher ${voucher.code} has been added to your account.`,
     });
-  }, [toast, user]);
+  }, [toast, user, db]);
 
   const voucherCount = collectedVouchers.length;
 

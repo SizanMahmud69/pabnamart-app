@@ -5,11 +5,9 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Notification } from '@/types';
 import { useAuth } from './useAuth';
 import { LogIn, Truck, Gift, Tag, PackageCheck, CheckCircle, XCircle, type LucideIcon } from 'lucide-react';
-import { getFirestore, onSnapshot, collection, query, writeBatch, getDocs, updateDoc, doc, orderBy, deleteDoc, arrayUnion } from 'firebase/firestore';
+import { getFirestore, onSnapshot, collection, query, writeBatch, getDocs, updateDoc, doc, orderBy, deleteDoc, arrayUnion, type Firestore } from 'firebase/firestore';
 import app, { messaging } from '@/lib/firebase';
 import { getToken, onMessage } from 'firebase/messaging';
-
-const db = getFirestore(app);
 
 export const iconMap: { [key: string]: LucideIcon } = {
     LogIn,
@@ -31,11 +29,18 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
+  const [db, setDb] = useState<Firestore | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { user, appUser } = useAuth();
 
+  useEffect(() => {
+    if (app) {
+      setDb(getFirestore(app));
+    }
+  }, []);
+
   const requestNotificationPermission = useCallback(async () => {
-    if (!messaging || !user || !appUser) return;
+    if (!messaging || !user || !appUser || !db) return;
     
     try {
         const permission = await Notification.requestPermission();
@@ -62,7 +67,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
         console.error('An error occurred while retrieving token. ', err);
     }
-  }, [user, appUser]);
+  }, [user, appUser, db]);
 
   useEffect(() => {
     if (user && appUser) {
@@ -83,7 +88,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
   // Listener for main notifications collection
   useEffect(() => {
-    if (user) {
+    if (user && db) {
         const userNotificationsRef = collection(db, `users/${user.uid}/notifications`);
         const q = query(userNotificationsRef, orderBy('time', 'desc'));
         
@@ -101,11 +106,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     } else {
         setNotifications([]);
     }
-  }, [user]);
+  }, [user, db]);
 
   // Listener for pending notifications to move them in real-time
   useEffect(() => {
-    if (user) {
+    if (user && db) {
       const pendingNotificationsRef = collection(db, `users/${user.uid}/pendingNotifications`);
       const unsubscribePending = onSnapshot(pendingNotificationsRef, async (snapshot) => {
         if (!snapshot.empty) {
@@ -125,17 +130,17 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
       return () => unsubscribePending();
     }
-  }, [user]);
+  }, [user, db]);
 
 
   const markAsRead = useCallback(async (id: string) => {
-    if (!user) return;
+    if (!user || !db) return;
     const notification = notifications.find(n => n.id === id);
     if (notification && !notification.read) {
         const notificationRef = doc(db, `users/${user.uid}/notifications`, id);
         await updateDoc(notificationRef, { read: true });
     }
-  }, [user, notifications]);
+  }, [user, notifications, db]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

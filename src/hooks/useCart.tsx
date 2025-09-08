@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect,
 import type { CartItem, Product, ShippingAddress } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
-import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, getDoc, Firestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { useDeliveryCharge } from './useDeliveryCharge';
 import { useProducts } from './useProducts';
@@ -32,9 +32,8 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const db = getFirestore(app);
-
 export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const [db, setDb] = useState<Firestore | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
   const isInitialLoad = useRef(true);
@@ -46,13 +45,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const updateFirestoreCart = useCallback(async (uid: string, items: CartItem[], selectedIds: number[]) => {
-      const cartRef = doc(db, 'carts', uid);
-      await setDoc(cartRef, { items, selectedItemIds: selectedIds });
+  useEffect(() => {
+    if (app) {
+      setDb(getFirestore(app));
+    }
   }, []);
 
+  const updateFirestoreCart = useCallback(async (uid: string, items: CartItem[], selectedIds: number[]) => {
+      if (!db) return;
+      const cartRef = doc(db, 'carts', uid);
+      await setDoc(cartRef, { items, selectedItemIds: selectedIds });
+  }, [db]);
+
   useEffect(() => {
-    if (user) {
+    if (user && db) {
       isInitialLoad.current = true;
       const cartRef = doc(db, 'carts', user.uid);
       const cartUnsubscribe = onSnapshot(cartRef, (docSnap) => {
@@ -105,7 +111,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setSelectedShippingAddress(null);
       isInitialLoad.current = true;
     }
-  }, [user]);
+  }, [user, db]);
   
   // Save to Firestore whenever selected items or cart items change
   useEffect(() => {
@@ -194,7 +200,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [removeFromCart, user]);
 
   const clearCart = useCallback(async () => {
-    if (!user) return;
+    if (!user || !db) return;
     const itemsToKeep = cartItems.filter(item => !selectedItemIds.includes(item.id));
     const newSelectedItemIds: number[] = [];
     setCartItems(itemsToKeep);
@@ -204,7 +210,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const cartRef = doc(db, 'carts', user.uid);
     await setDoc(cartRef, { items: itemsToKeep, selectedItemIds: newSelectedItemIds });
 
-  }, [user, cartItems, selectedItemIds]);
+  }, [user, cartItems, selectedItemIds, db]);
 
   const toggleSelectItem = (productId: number) => {
       setSelectedItemIds(prev => 

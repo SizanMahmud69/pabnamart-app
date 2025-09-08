@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { Product } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
-import { getFirestore, doc, onSnapshot, setDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, arrayUnion, arrayRemove, getDoc, type Firestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { useProducts } from './useProducts';
 
@@ -19,9 +19,8 @@ interface WishlistContextType {
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
-const db = getFirestore(app);
-
 export const WishlistProvider = ({ children }: { children: ReactNode }) => {
+  const [db, setDb] = useState<Firestore | null>(null);
   const [wishlistItemIds, setWishlistItemIds] = useState<number[]>([]);
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const { products } = useProducts();
@@ -29,7 +28,13 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (app) {
+      setDb(getFirestore(app));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user && db) {
       const wishlistRef = doc(db, 'wishlists', user.uid);
       const unsubscribe = onSnapshot(wishlistRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -47,7 +52,7 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
       setWishlistItemIds([]);
       setWishlistItems([]);
     }
-  }, [user, products]);
+  }, [user, products, db]);
 
   const addToWishlist = useCallback(async (product: Product) => {
     if (!user) {
@@ -58,6 +63,7 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
         });
         return;
     }
+    if (!db) return;
 
     const wishlistRef = doc(db, 'wishlists', user.uid);
     try {
@@ -75,10 +81,10 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error adding to wishlist:", error);
         toast({ title: "Error", description: "Could not add item to wishlist.", variant: "destructive" });
     }
-  }, [user, toast]);
+  }, [user, toast, db]);
 
   const removeFromWishlist = useCallback(async (productId: number) => {
-    if (!user) return;
+    if (!user || !db) return;
     const wishlistRef = doc(db, 'wishlists', user.uid);
     try {
       await setDoc(wishlistRef, { productIds: arrayRemove(productId) }, { merge: true });
@@ -90,7 +96,7 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error removing from wishlist:", error);
         toast({ title: "Error", description: "Could not remove item from wishlist.", variant: "destructive" });
     }
-  }, [user, toast]);
+  }, [user, toast, db]);
   
   const isInWishlist = useCallback((productId: number) => {
     return wishlistItemIds.includes(productId);
