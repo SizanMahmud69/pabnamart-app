@@ -270,8 +270,6 @@ export default function OrderTrackingPage() {
             </div>
         </div>
     );
-
-    
-
+}
 
     
