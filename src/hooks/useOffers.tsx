@@ -14,13 +14,16 @@ interface OfferContextType {
 
 const OfferContext = createContext<OfferContextType | undefined>(undefined);
 
-const db = getFirestore(app);
-
 export const OfferProvider = ({ children }: { children: ReactNode }) => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!app) {
+      setLoading(false);
+      return;
+    }
+    const db = getFirestore(app);
     const unsubscribe = onSnapshot(collection(db, 'offers'), (snapshot) => {
         const offersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Offer));
         setOffers(offersData);

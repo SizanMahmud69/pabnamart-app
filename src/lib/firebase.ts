@@ -4,7 +4,6 @@
 import { initializeApp, getApp, getApps, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
 import { getMessaging } from 'firebase/messaging';
 
-// It's okay for these values to be undefined during the build process
 export const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -15,15 +14,15 @@ export const firebaseConfig: FirebaseOptions = {
 };
 
 let app: FirebaseApp | null = null;
-if (typeof window !== 'undefined') {
-  if (firebaseConfig.apiKey) {
-      app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  } else {
-      console.warn("Firebase API key is missing. Firebase will not be initialized.");
-  }
+if (typeof window !== 'undefined' && !getApps().length) {
+    if (firebaseConfig.apiKey) {
+        app = initializeApp(firebaseConfig);
+    } else {
+        console.warn("Firebase API key is missing. Firebase will not be initialized.");
+    }
+} else if (typeof window !== 'undefined') {
+    app = getApp();
 }
 
-
-// Initialize Firebase Cloud Messaging and get a reference to the service
 export const messaging = (typeof window !== 'undefined' && app) ? getMessaging(app) : null;
 export default app;

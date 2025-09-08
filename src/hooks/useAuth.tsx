@@ -24,11 +24,6 @@ import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestor
 import type { User as AppUser } from '@/types';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
 const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
 interface AuthContextType {
@@ -53,6 +48,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!app) {
+      setLoading(false);
+      return;
+    }
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       if (user) {
@@ -74,10 +76,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
+    if (!app) throw new Error("Firebase not initialized");
+    const auth = getAuth(app);
+    const db = getFirestore(app);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const firebaseUser = userCredential.user;
 
-    // Check user status in Firestore before allowing login
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     const userDocSnap = await getDoc(userDocRef);
 
@@ -96,12 +100,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signup = async (email: string, password: string, displayName: string) => {
+    if (!app) throw new Error("Firebase not initialized");
+    const auth = getAuth(app);
+    const db = getFirestore(app);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const firebaseUser = userCredential.user;
     
     await updateProfile(firebaseUser, { displayName, photoURL: DEFAULT_AVATAR_URL });
     
-    // Create user document in Firestore
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     const newAppUser: Omit<AppUser, 'uid'> = {
         email: firebaseUser.email,
@@ -115,25 +121,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     await setDoc(userDocRef, newAppUser);
 
-    const authInstance = getAuth(app);
-    if (authInstance.currentUser) {
-        await updateProfile(authInstance.currentUser, { displayName, photoURL: DEFAULT_AVATAR_URL });
-        setUser({ ...authInstance.currentUser });
+    if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { displayName, photoURL: DEFAULT_AVATAR_URL });
+        setUser({ ...auth.currentUser });
     }
     return userCredential;
   };
 
   const signInWithGoogle = async () => {
+    if (!app) throw new Error("Firebase not initialized");
+    const auth = getAuth(app);
+    const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const firebaseUser = result.user;
 
-    // Check if user exists in Firestore
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     const userDocSnap = await getDoc(userDocRef);
 
     if (!userDocSnap.exists()) {
-      // New user, create a document in Firestore
       const newAppUser: Omit<AppUser, 'uid'> = {
         email: firebaseUser.email,
         displayName: firebaseUser.displayName,
@@ -156,14 +162,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const logout = () => {
+    if (!app) return Promise.resolve();
+    const auth = getAuth(app);
     return signOut(auth);
   };
 
   const sendPasswordReset = (email: string) => {
+    if (!app) throw new Error("Firebase not initialized");
+    const auth = getAuth(app);
     return sendPasswordResetEmail(auth, email);
   };
   
   const updateUserDisplayName = async (displayName: string) => {
+    if (!app) throw new Error("Firebase not initialized");
+    const auth = getAuth(app);
+    const db = getFirestore(app);
     if (auth.currentUser) {
         await updateProfile(auth.currentUser, { displayName });
         const userDocRef = doc(db, 'users', auth.currentUser.uid);
@@ -175,6 +188,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserPassword = async (currentPassword: string, newPassword: string) => {
+    if (!app) throw new Error("Firebase not initialized");
+    const auth = getAuth(app);
     const user = auth.currentUser;
     if (user && user.email) {
         const credential = EmailAuthProvider.credential(user.email, currentPassword);
@@ -196,6 +211,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserProfilePicture = async (photoURL: string) => {
+    if (!app) throw new Error("Firebase not initialized");
+    const auth = getAuth(app);
+    const db = getFirestore(app);
     const currentUser = auth.currentUser;
     if (!currentUser) {
         throw new Error("No user is signed in.");
@@ -206,14 +224,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userDocRef = doc(db, 'users', currentUser.uid);
     await setDoc(userDocRef, { photoURL }, { merge: true });
 
-    // Update the user state directly to force a re-render with the new photoURL
     setUser(prevUser => {
       if (!prevUser) return null;
-      // Create a new object to ensure React detects the state change
       const newUser = { ...prevUser, photoURL: photoURL };
-      // Manually update the properties that might not be immediately available
-      // on the cloned object to match the official FirebaseUser type.
-      // This part is a bit of a workaround to satisfy TypeScript and React's state updates.
       Object.assign(newUser, {
         ...currentUser,
         photoURL: photoURL

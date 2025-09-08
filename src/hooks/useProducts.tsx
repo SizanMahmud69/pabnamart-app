@@ -24,8 +24,6 @@ interface ProductContextType {
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
-const db = getFirestore(app);
-
 const roundPrice = (price: number): number => {
     const decimalPart = price - Math.floor(price);
     if (decimalPart > 0 && decimalPart <= 0.50) {
@@ -43,6 +41,11 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
 
   useEffect(() => {
+    if (!app) {
+        setLoading(false);
+        return;
+    }
+    const db = getFirestore(app);
     const productsCollectionRef = collection(db, 'products');
     const q = query(productsCollectionRef, orderBy('id', 'desc'));
     
@@ -155,6 +158,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     }, [user]);
 
   const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
+    if (!app) return;
+    const db = getFirestore(app);
     const newId = new Date().getTime(); // Simple way to generate a unique ID
     const newProduct: Product = { 
       ...productData, 
@@ -179,6 +184,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const sendStockNotifications = useCallback(async (product: Product) => {
+      if (!app) return;
+      const db = getFirestore(app);
       const wishlistsRef = collection(db, 'wishlists');
       const q = query(wishlistsRef, where('productIds', 'array-contains', product.id));
       const querySnapshot = await getDocs(q);
@@ -198,6 +205,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateProduct = async (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
+    if (!app) return;
+    const db = getFirestore(app);
     const productDocRef = doc(db, 'products', productId.toString());
     const existingProduct = baseProducts.find(p => p.id === productId);
 
@@ -232,6 +241,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
 
   const deleteProduct = async (productId: number) => {
+    if (!app) return;
+    const db = getFirestore(app);
     const productDoc = doc(db, 'products', productId.toString());
     await deleteDoc(productDoc);
   };

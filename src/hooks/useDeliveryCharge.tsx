@@ -6,8 +6,6 @@ import type { DeliverySettings } from '@/types';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
-const db = getFirestore(app);
-
 const defaultSettings: DeliverySettings = {
   insidePabnaSmall: 60,
   insidePabnaLarge: 80,
@@ -22,6 +20,11 @@ export const useDeliveryCharge = () => {
   const [settings, setSettings] = useState<DeliverySettings | null>(null);
 
   useEffect(() => {
+    if (!app) {
+        setSettings(defaultSettings);
+        return;
+    }
+    const db = getFirestore(app);
     const settingsDocRef = doc(db, 'settings', 'delivery');
     const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
         if (docSnap.exists()) {
