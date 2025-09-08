@@ -59,7 +59,7 @@ Follow these steps to deploy your application to Vercel using GitHub.
     *   `NEXT_PUBLIC_FIREBASE_API_KEY`: `AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk`
     *   `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`: `pabnamart.firebaseapp.com`
     *   `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: `pabnamart`
-    *   `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`: `pabnamart.firebasestorage.app`
+    *   `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`: `pabnamart.appspot.com`
     *   `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`: `600614180848`
     *   `NEXT_PUBLIC_FIREBASE_APP_ID`: `1:600614180848:web:6f4e21fb4f5b6cd42a6f35`
     
