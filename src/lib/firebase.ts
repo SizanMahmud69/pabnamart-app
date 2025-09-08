@@ -1,7 +1,7 @@
 
 "use client";
 
-import { initializeApp, getApp, getApps, type FirebaseOptions } from 'firebase/app';
+import { initializeApp, getApp, getApps, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
 import { getMessaging } from 'firebase/messaging';
 
 // It's okay for these values to be undefined during the build process
@@ -14,11 +14,13 @@ export const firebaseConfig: FirebaseOptions = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase only if all keys are provided
-const app = firebaseConfig.apiKey ? (!getApps().length ? initializeApp(firebaseConfig) : getApp()) : null;
-
-if (!app) {
-    console.warn("Firebase config is missing or incomplete. Firebase will not be initialized.");
+let app: FirebaseApp | null = null;
+if (typeof window !== 'undefined') {
+  if (firebaseConfig.apiKey) {
+      app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  } else {
+      console.warn("Firebase API key is missing. Firebase will not be initialized.");
+  }
 }
 
 
