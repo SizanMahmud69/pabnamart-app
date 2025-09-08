@@ -18,50 +18,10 @@ interface ProductCardProps {
   size?: 'default' | 'small';
 }
 
-// Helper function to convert RGB to HSL
-function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
-    r /= 255; g /= 255; b /= 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
-
-    if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-    }
-    return [h * 360, s * 100, l * 100];
-}
-
 export default function ProductCard({ product, isFlashSaleContext = false, size = 'default' }: ProductCardProps) {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
-  const [cardBgColor, setCardBgColor] = useState('hsl(var(--card))');
-
-  useEffect(() => {
-    const img = new window.Image();
-    img.crossOrigin = "Anonymous";
-    img.src = product.images[0];
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1;
-      canvas.height = 1;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(img, 0, 0, 1, 1);
-        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-        const [h, s] = rgbToHsl(r, g, b);
-        // Using a high lightness value for a pastel/light background
-        setCardBgColor(`hsl(${h}, ${s}%, 95%)`);
-      }
-    };
-  }, [product.images]);
-
-
+  
   const price = product.price;
   const originalPrice = product.originalPrice;
   const hasDiscount = originalPrice && originalPrice > price;
@@ -82,22 +42,12 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   
   const isSmall = size === 'small';
 
-  const textShadowStyle = {
-    textShadow: '0px 1px 3px rgba(255, 255, 255, 0.7)'
-  };
-  
-  const dropShadowStyle = {
-    filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.2))'
-  };
-
-
   return (
     <Card 
       className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-all duration-300 hover:shadow-lg group"
-      style={{ backgroundColor: cardBgColor, border: 'none' }}
     >
        <Link href={productLink} className="block">
-        <div className="relative aspect-square w-full overflow-hidden">
+        <div className="relative aspect-square w-full overflow-hidden bg-muted">
           <Image
             src={product.images[0]}
             alt={product.name}
@@ -128,42 +78,41 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
         </div>
       </Link>
       <CardContent className={cn("flex flex-col flex-grow space-y-2", isSmall ? "p-2" : "p-3")}>
-        <p className="text-xs text-muted-foreground truncate" style={textShadowStyle}>{product.category}</p>
+        <p className="text-xs text-muted-foreground truncate">{product.category}</p>
         <h3 
           className={cn(
-              "font-semibold text-gray-800 leading-snug flex-grow h-10", 
+              "font-semibold text-gray-800 leading-snug flex-grow", 
               isSmall ? "text-xs h-8" : "text-sm h-10"
           )}
-          style={textShadowStyle}
         >
             <Link href={productLink} className="hover:text-primary">
                 <span className="truncate-2-lines">{product.name}</span>
             </Link>
         </h3>
         {isSmall ? (
-             <div className="flex items-center justify-around text-xs text-muted-foreground" style={dropShadowStyle}>
-                <div className="text-center">
-                    <Star className="w-4 h-4 mx-auto fill-accent text-accent" />
-                    <span style={textShadowStyle}>{product.rating.toFixed(1)}</span>
+             <div className="flex items-center justify-around text-xs text-muted-foreground">
+                <div className="text-center flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-accent text-accent" />
+                    <span>{product.rating.toFixed(1)}</span>
                 </div>
                 <div className="text-center">
-                    <span className="font-semibold" style={textShadowStyle}>Sold</span>
-                    <p style={textShadowStyle}>{product.sold || 0}</p>
+                    <span className="font-semibold">Sold</span>
+                    <p>{product.sold || 0}</p>
                 </div>
             </div>
         ) : (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground" style={dropShadowStyle}>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Star className="w-4 h-4 fill-accent text-accent" />
-                <span style={textShadowStyle}>{product.rating.toFixed(1)}</span>
-                <span style={textShadowStyle}>|</span>
-                <span style={textShadowStyle}>Sold {product.sold || 0}</span>
+                <span>{product.rating.toFixed(1)}</span>
+                <span>|</span>
+                <span>Sold {product.sold || 0}</span>
             </div>
         )}
         <div className="flex justify-between items-center mt-auto">
           <div>
-            <p className={cn("font-bold text-primary", isSmall ? "text-base" : "text-lg")} style={dropShadowStyle}>৳{price}</p>
+            <p className={cn("font-bold text-primary", isSmall ? "text-base" : "text-lg")}>৳{price}</p>
             {hasDiscount && (
-              <p className={cn("text-muted-foreground line-through", isSmall ? "text-[10px]" : "text-xs")} style={dropShadowStyle}>
+              <p className={cn("text-muted-foreground line-through", isSmall ? "text-[10px]" : "text-xs")}>
                 ৳{originalPrice}
               </p>
             )}
