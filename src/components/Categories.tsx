@@ -1,22 +1,24 @@
-
 "use client";
 
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
-import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy, type Firestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Category } from '@/types';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import Image from 'next/image';
-
-const db = getFirestore(app);
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!app) {
+        setLoading(false);
+        return;
+    }
+    const db = getFirestore(app);
     const categoriesRef = collection(db, 'categories');
     const q = query(categoriesRef, orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
