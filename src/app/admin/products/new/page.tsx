@@ -75,7 +75,7 @@ export default function NewProductPage() {
         
         const finalImageUrls = imageUrls.map(url => url.trim()).filter(url => url !== '');
         if (finalImageUrls.length === 0) {
-            finalImageUrls.push('https://picsum.photos/600/600');
+            finalImageUrls.push('https://i.ibb.co/gV28rC7/default-image.jpg');
         }
 
         const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
