@@ -16,10 +16,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 Follow these steps to deploy your application to Vercel using GitHub.
 
-### Step 1: Push to GitHub
+### Step 1: Push to GitHub for the First Time
 
 1.  **Create a New GitHub Repository:**
-    Go to your GitHub account and create a new repository. Do not initialize it with a `README.md` file.
+    Go to your GitHub account and create a new repository. **Do not** initialize it with a `README.md` or any other files.
 
 2.  **Initialize Git in Your Local Project:**
     Open a terminal in your project's root directory and run the following commands one by one:
@@ -35,6 +35,11 @@ Follow these steps to deploy your application to Vercel using GitHub.
     git remote add origin <your-repo-url>
     ```
     *Example: `git remote add origin https://github.com/your-username/pabnamart-app.git`*
+    
+    **If you see an error `remote origin already exists`**, it means a remote is already configured. You can fix it by running:
+    ```bash
+    git remote set-url origin <your-repo-url>
+    ```
 
 4.  **Push Your Code:**
     Upload your code to the GitHub repository with this command:
@@ -66,13 +71,33 @@ Follow these steps to deploy your application to Vercel using GitHub.
     
     **Admin SDK Variables (for server actions):**
     
-    To get the values for the next two variables, go to your **Firebase Project Settings > Service accounts**, and generate a new private key.
+    To get the values for the next two variables, go to your **Firebase Project Settings > Service accounts**, and generate a new private key. This will download a JSON file.
     
-    *   `FIREBASE_CLIENT_EMAIL`: Your Firebase service account's client email.
-    *   `FIREBASE_PRIVATE_KEY`: Your Firebase service account's private key.
+    *   `FIREBASE_CLIENT_EMAIL`: Your Firebase service account's `client_email` from the downloaded file.
+    *   `FIREBASE_PRIVATE_KEY`: Your Firebase service account's `private_key` from the downloaded file.
 
 4.  **Deploy:**
     - After adding the environment variables, click the "Deploy" button.
     - Vercel will automatically build and deploy your application. Once finished, you will be provided with a live URL.
 
-That's it! Your application is now live on Vercel.
+### Step 3: Pushing Future Changes
+
+After making any changes to your app, you need to push them to GitHub to update your live site. Open a terminal in your project and run these three commands:
+
+1.  **Stage your changes:**
+    ```bash
+    git add .
+    ```
+
+2.  **Commit your changes with a message:**
+    ```bash
+    git commit -m "Describe your changes here"
+    ```
+    *Example: `git commit -m "Updated homepage design"`*
+
+3.  **Push the changes to GitHub:**
+    ```bash
+    git push
+    ```
+
+That's it! Vercel will automatically detect the push and redeploy your website with the latest changes.
