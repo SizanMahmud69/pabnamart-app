@@ -48,7 +48,7 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       // This is required for Vercel Blob storage to work in server actions.
-      allowedOrigins: ['*.vercel.app', 'localhost:9002'],
+      allowedOrigins: ['*.vercel.app', 'localhost:3000'],
     },
   },
 };
