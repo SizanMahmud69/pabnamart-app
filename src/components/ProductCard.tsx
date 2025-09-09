@@ -51,13 +51,13 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
           <Image
             src={product.images[0]}
             alt={product.name}
-            fill
+            width={400}
+            height={400}
             className={cn(
-              "object-cover transition-transform duration-300 group-hover:scale-105",
+              "object-cover transition-transform duration-300 group-hover:scale-105 h-full w-full",
               isSoldOut && "filter grayscale"
             )}
             data-ai-hint="product lifestyle"
-            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
           />
            {hasDiscount && !isSoldOut && discountAmount > 0 && (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
