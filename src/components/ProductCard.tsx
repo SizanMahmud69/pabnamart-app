@@ -54,7 +54,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
             width={400}
             height={400}
             className={cn(
-              "object-cover transition-transform duration-300 group-hover:scale-105 h-full w-full",
+              "object-cover transition-transform duration-300 group-hover:scale-105",
               isSoldOut && "filter grayscale"
             )}
             data-ai-hint="product lifestyle"
