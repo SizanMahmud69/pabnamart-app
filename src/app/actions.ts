@@ -9,8 +9,6 @@ import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Vou
 import { revalidatePath } from "next/cache";
 import { put } from '@vercel/blob';
 
-const db = getFirestore();
-
 export async function getProductRecommendations(input: ProductRecommendationsInput): Promise<ProductRecommendationsOutput> {
   try {
     const recommendations = await getProductRecommendationsFlow(input);
@@ -29,6 +27,7 @@ export async function uploadImages(formData: FormData): Promise<{ urls: string[]
         if (image && image.size > 0) {
             const blob = await put(image.name, image, {
                 access: 'public',
+                token: process.env.BLOB_READ_WRITE_TOKEN,
             });
             uploadedUrls.push(blob.url);
         }
