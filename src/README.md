@@ -60,7 +60,7 @@ Follow these steps to deploy your application to Vercel using GitHub.
     - In the project configuration screen, find the "Environment Variables" section.
     - You need to add your Firebase project credentials here. These keys ensure your deployed application can connect to your Firebase services securely.
 
-    **Required Environment Variables:**
+    **Firebase Public Variables:**
     
     *   `NEXT_PUBLIC_FIREBASE_API_KEY`: `AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk`
     *   `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`: `pabnamart.firebaseapp.com`
@@ -69,16 +69,30 @@ Follow these steps to deploy your application to Vercel using GitHub.
     *   `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`: `600614180848`
     *   `NEXT_PUBLIC_FIREBASE_APP_ID`: `1:600614180848:web:6f4e21fb4f5b6cd42a6f35`
     
-    **Admin SDK Variables (for server actions):**
+    **Firebase Admin SDK Variables (for server actions):**
     
     To get the values for the next two variables, go to your **Firebase Project Settings > Service accounts**, and generate a new private key. This will download a JSON file.
     
     *   `FIREBASE_CLIENT_EMAIL`: Your Firebase service account's `client_email` from the downloaded file.
     *   `FIREBASE_PRIVATE_KEY`: Your Firebase service account's `private_key` from the downloaded file.
 
+    **Vercel Blob Storage (for image uploads - VERY IMPORTANT):**
+
+    1.  Go to your Vercel project's dashboard.
+    2.  Click on the **Storage** tab from the top menu.
+    3.  Create a new **Blob** store by clicking the "Create Database" button and selecting "Blob". Follow the on-screen instructions.
+    4.  After creation, Vercel will show you the store details. Go to the **.env.local** tab. Vercel will provide a `BLOB_READ_WRITE_TOKEN`. **Copy this token value.**
+    5.  Now, go back to your project's **Settings** tab.
+    6.  Click on **Environment Variables** from the left-side menu.
+    7.  Add a new environment variable:
+        -   **Name:** `BLOB_READ_WRITE_TOKEN`
+        -   **Value:** Paste the token you copied in step 4.
+    8.  Click **Save**.
+
 4.  **Deploy:**
-    - After adding the environment variables, click the "Deploy" button.
+    - After adding all the environment variables, click the "Deploy" button.
     - Vercel will automatically build and deploy your application. Once finished, you will be provided with a live URL.
+    - **Important:** If your deployment fails after adding the token, go to the "Deployments" tab in Vercel and redeploy the latest version.
 
 ### Step 3: Pushing Future Changes
 
