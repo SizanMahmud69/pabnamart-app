@@ -58,7 +58,6 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
             )}
             data-ai-hint="product lifestyle"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-            unoptimized
           />
            {hasDiscount && !isSoldOut && discountAmount > 0 && (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
