@@ -9,6 +9,8 @@ import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Vou
 import { revalidatePath } from "next/cache";
 import { put } from '@vercel/blob';
 
+const db = getFirestore(admin.apps[0]!);
+
 export async function getProductRecommendations(input: ProductRecommendationsInput): Promise<ProductRecommendationsOutput> {
   try {
     const recommendations = await getProductRecommendationsFlow(input);

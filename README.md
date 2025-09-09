@@ -76,6 +76,15 @@ Follow these steps to deploy your application to Vercel using GitHub.
     *   `FIREBASE_CLIENT_EMAIL`: Your Firebase service account's `client_email` from the downloaded file.
     *   `FIREBASE_PRIVATE_KEY`: Your Firebase service account's `private_key` from the downloaded file.
 
+    **Vercel Blob Storage (for image uploads):**
+
+    1.  Go to your Vercel project's dashboard.
+    2.  Click on the **Storage** tab.
+    3.  Create a new **Blob** store.
+    4.  After creation, Vercel will provide a `BLOB_READ_WRITE_TOKEN`. Copy this token.
+    5.  Go back to **Settings > Environment Variables** in your Vercel project.
+    6.  Add a new environment variable with the name `BLOB_READ_WRITE_TOKEN` and paste the copied token as the value.
+
 4.  **Deploy:**
     - After adding the environment variables, click the "Deploy" button.
     - Vercel will automatically build and deploy your application. Once finished, you will be provided with a live URL.
