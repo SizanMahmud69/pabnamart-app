@@ -47,7 +47,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
       className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-all duration-300 hover:shadow-lg group"
     >
        <Link href={productLink} className="block">
-        <div className="relative aspect-square w-full overflow-hidden bg-muted">
+        <div className="relative w-full overflow-hidden bg-muted">
           <Image
             src={product.images[0]}
             alt={product.name}
