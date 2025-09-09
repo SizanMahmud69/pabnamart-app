@@ -97,7 +97,7 @@ export default function ReturnDetailsPage() {
                                 {order.items.map(item => (
                                     <div key={item.id} className="flex items-center gap-4">
                                         <div className="relative h-16 w-16 rounded-md overflow-hidden border">
-                                            <Image src={item.image} alt={item.name} fill className="object-cover" sizes="64px" unoptimized />
+                                            <Image src={item.image} alt={item.name} fill className="object-cover" sizes="64px" />
                                         </div>
                                         <div className="flex-grow">
                                             <p className="font-medium">{item.name}</p>

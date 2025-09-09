@@ -57,6 +57,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
               isSoldOut && "filter grayscale"
             )}
             data-ai-hint="product lifestyle"
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
             unoptimized
           />
            {hasDiscount && !isSoldOut && discountAmount > 0 && (

@@ -94,7 +94,7 @@ export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
                             fill 
                             className="object-cover"
                             sizes="160px"
-                            unoptimized
+                            
                         />
                     </div>
                     

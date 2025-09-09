@@ -260,7 +260,7 @@ function OrdersPageContent() {
                                       <div className="flex -space-x-4">
                                         {order.items.slice(0, 4).map((item, index) => (
                                             <div key={item.id + '-' + index} className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-white">
-                                                <Image src={item.image} alt={item.name} fill sizes="48px" className="object-cover" unoptimized />
+                                                <Image src={item.image} alt={item.name} fill sizes="48px" className="object-cover" />
                                             </div>
                                         ))}
                                         {order.items.length > 4 && (
@@ -332,6 +332,3 @@ export default function OrdersPage() {
         </Suspense>
     );
 }
-    
-
-    

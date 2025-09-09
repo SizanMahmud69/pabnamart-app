@@ -40,7 +40,7 @@ export default function ShoppingCartSheet({ children }: { children: ReactNode })
                         fill
                         className="object-cover"
                         data-ai-hint="product image"
-                        unoptimized
+                        
                       />
                     </div>
                     <div className="flex-grow">

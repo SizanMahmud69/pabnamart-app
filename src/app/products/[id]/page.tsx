@@ -106,7 +106,7 @@ function ProductDetailPageContent() {
                                 fill
                                 className="object-cover"
                                 data-ai-hint="product image"
-                                unoptimized
+                                
                             />
                         </div>
                         </CarouselItem>
