@@ -142,8 +142,8 @@ export default function CategorySettingsPage() {
                                     <li key={cat.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                         <div className="flex items-center gap-4">
                                             {cat.image && (
-                                                <div className="relative h-10 w-10 rounded-md object-cover overflow-hidden">
-                                                    <Image src={cat.image} alt={cat.name} fill className="object-cover" />
+                                                <div className="relative h-10 w-10 rounded-md overflow-hidden">
+                                                    <Image src={cat.image} alt={cat.name} fill sizes="40px" className="object-cover" />
                                                 </div>
                                             )}
                                             <span className="font-medium">{cat.name}</span>

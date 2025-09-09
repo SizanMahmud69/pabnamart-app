@@ -155,6 +155,7 @@ function HomePageContent() {
                           src={banner.image}
                           alt={banner.title}
                           fill
+                          sizes="(max-width: 768px) 100vw, 50vw"
                           className="object-cover w-full"
                           data-ai-hint={banner.aiHint}
                         />

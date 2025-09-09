@@ -104,6 +104,7 @@ function ProductDetailPageContent() {
                                 src={img}
                                 alt={`${product.name} image ${index + 1}`}
                                 fill
+                                sizes="(max-width: 768px) 100vw, 50vw"
                                 className="object-cover"
                                 data-ai-hint="product image"
                             />

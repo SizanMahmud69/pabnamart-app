@@ -52,6 +52,7 @@ export default function Categories() {
                                             src={category.image}
                                             alt={category.name}
                                             fill
+                                            sizes="64px"
                                             className="object-cover"
                                         />
                                     ) : (

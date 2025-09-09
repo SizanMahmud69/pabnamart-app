@@ -214,7 +214,7 @@ export default function WriteReviewPage() {
                                 <div key={item.id} className="space-y-4 p-4 border rounded-lg">
                                     <div className="flex items-center gap-4">
                                         <div className="relative w-16 h-16 rounded-md border">
-                                            <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                            <Image src={item.image} alt={item.name} fill sizes="64px" className="object-cover" />
                                         </div>
                                     </div>
                                     <div className="space-y-2">

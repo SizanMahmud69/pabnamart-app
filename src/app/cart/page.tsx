@@ -85,6 +85,7 @@ export default function CartPage() {
                                     src={item.images[0]}
                                     alt={item.name}
                                     fill
+                                    sizes="96px"
                                     className="object-cover"
                                     data-ai-hint="product image"
                                     />

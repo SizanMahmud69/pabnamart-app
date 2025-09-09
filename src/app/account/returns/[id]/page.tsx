@@ -128,7 +128,7 @@ export default function ReturnRequestPage() {
                                         {order.items.map(item => (
                                             <div key={item.id} className="flex items-center gap-4">
                                                 <div className="relative h-16 w-16 rounded-md overflow-hidden border">
-                                                    <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                                    <Image src={item.image} alt={item.name} fill sizes="64px" className="object-cover" />
                                                 </div>
                                                 <div className="flex-grow">
                                                     <p className="font-medium">{item.name}</p>

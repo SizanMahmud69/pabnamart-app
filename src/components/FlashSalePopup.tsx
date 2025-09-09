@@ -91,7 +91,8 @@ export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
                          <Image 
                             src={flashSalePopupProduct.images[0]} 
                             alt={flashSalePopupProduct.name} 
-                            fill 
+                            fill
+                            sizes="160px"
                             className="object-cover"
                         />
                     </div>
