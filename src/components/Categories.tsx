@@ -46,15 +46,13 @@ export default function Categories() {
                     ) : (
                         categories.map((category) => (
                             <Link href={`/category/${encodeURIComponent(category.name)}`} key={category.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-purple-100/50 transition-colors w-24 text-center">
-                                <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden relative border">
+                                <div className="relative w-16 h-16 rounded-full flex items-center justify-center overflow-hidden border">
                                     {category.image ? (
                                         <Image
                                             src={category.image}
                                             alt={category.name}
                                             fill
                                             className="object-cover"
-                                            sizes="64px"
-                                            
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-muted" />

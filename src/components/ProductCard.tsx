@@ -47,12 +47,11 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
       className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-all duration-300 hover:shadow-lg group"
     >
        <Link href={productLink} className="block">
-        <div className="relative w-full overflow-hidden bg-muted">
+        <div className="relative w-full overflow-hidden bg-muted aspect-square">
           <Image
             src={product.images[0]}
             alt={product.name}
-            width={400}
-            height={400}
+            fill
             className={cn(
               "object-cover transition-transform duration-300 group-hover:scale-105",
               isSoldOut && "filter grayscale"

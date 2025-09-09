@@ -93,8 +93,6 @@ export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
                             alt={flashSalePopupProduct.name} 
                             fill 
                             className="object-cover"
-                            sizes="160px"
-                            
                         />
                     </div>
                     

@@ -123,7 +123,9 @@ export default function AdminProductManagement() {
                                       {filteredProducts.map(product => (
                                           <TableRow key={product.id}>
                                               <TableCell>
-                                                  <Image src={product.images[0]} alt={product.name} width={40} height={40} className="rounded-md object-cover" data-ai-hint="product image" />
+                                                  <div className="relative h-10 w-10 rounded-md object-cover overflow-hidden">
+                                                    <Image src={product.images[0]} alt={product.name} fill className="object-cover" data-ai-hint="product image" />
+                                                  </div>
                                               </TableCell>
                                               <TableCell className="font-medium">{product.name}</TableCell>
                                               <TableCell>{product.category}</TableCell>

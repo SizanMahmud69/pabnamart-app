@@ -106,10 +106,8 @@ export default function AiRecommendations({ searchQuery, currentProducts }: AiRe
                             src={product.images[0]}
                             alt={product.name}
                             fill
-                            sizes="100px"
                             className="object-cover"
                             data-ai-hint="product image"
-                            
                           />
                         </div>
                         <div>

@@ -178,7 +178,7 @@ export default function OrderDetailsPage() {
                                         <TableRow key={item.id}>
                                             <TableCell className="flex items-center gap-3">
                                                 <div className="relative h-12 w-12 rounded-md overflow-hidden border">
-                                                    <Image src={item.image} alt={item.name} fill className="object-cover" sizes="50px" />
+                                                    <Image src={item.image} alt={item.name} fill className="object-cover" />
                                                 </div>
                                                 <span className="font-medium">{item.name}</span>
                                             </TableCell>

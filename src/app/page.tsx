@@ -150,15 +150,13 @@ function HomePageContent() {
                 };
                 return (
                   <CarouselItem key={index}>
-                     <div className="relative text-white rounded-lg overflow-hidden">
+                     <div className="relative text-white rounded-lg overflow-hidden h-48 md:h-64">
                         <Image
                           src={banner.image}
                           alt={banner.title}
-                          width={1200}
-                          height={400}
-                          className="object-cover w-full h-48 md:h-64"
+                          fill
+                          className="object-cover w-full"
                           data-ai-hint={banner.aiHint}
-                          
                         />
                         <div className={cn(
                             "absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6",
