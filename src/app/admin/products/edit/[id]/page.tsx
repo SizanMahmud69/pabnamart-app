@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, PlusCircle, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Trash2, Loader2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product, Category } from '@/types';
@@ -18,6 +18,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
+import { uploadImages } from '@/app/actions';
+import Image from 'next/image';
 
 const db = getFirestore(app);
 
@@ -30,7 +32,8 @@ export default function EditProductPage() {
     const [product, setProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [category, setCategory] = useState('');
-    const [imageUrls, setImageUrls] = useState(['']);
+    const [imageUrls, setImageUrls] = useState<string[]>([]);
+    const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
     const [freeShipping, setFreeShipping] = useState(false);
     const [isFlashSale, setIsFlashSale] = useState(false);
     const [flashSaleEndDate, setFlashSaleEndDate] = useState('');
@@ -62,7 +65,7 @@ export default function EditProductPage() {
         if (productToEdit) {
             setProduct(productToEdit);
             setCategory(productToEdit.category);
-            setImageUrls(productToEdit.images.length > 0 ? productToEdit.images : ['']);
+            setImageUrls(productToEdit.images.length > 0 ? productToEdit.images : []);
             setFreeShipping(productToEdit.freeShipping || false);
             setIsFlashSale(productToEdit.isFlashSale || false);
             setFlashSaleEndDate(productToEdit.flashSaleEndDate || '');
@@ -70,20 +73,21 @@ export default function EditProductPage() {
         }
     }, [products, productId]);
 
-    const handleImageChange = (index: number, value: string) => {
-        const newImageUrls = [...imageUrls];
-        newImageUrls[index] = value;
-        setImageUrls(newImageUrls);
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const files = Array.from(e.target.files);
+            setNewImageFiles(prev => [...prev, ...files]);
+        }
+    };
+    
+    const removeExistingImage = (index: number) => {
+        setImageUrls(prev => prev.filter((_, i) => i !== index));
     };
 
-    const addImageUrlInput = () => {
-        setImageUrls([...imageUrls, '']);
+    const removeNewImage = (index: number) => {
+        setNewImageFiles(prev => prev.filter((_, i) => i !== index));
     };
 
-    const removeImageUrlInput = (index: number) => {
-        const newImageUrls = imageUrls.filter((_, i) => i !== index);
-        setImageUrls(newImageUrls);
-    };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -91,7 +95,16 @@ export default function EditProductPage() {
         setIsLoading(true);
         const formData = new FormData(e.currentTarget);
         
-        const finalImageUrls = imageUrls.map(url => url.trim()).filter(url => url !== '');
+        let uploadedImageUrls: string[] = [];
+        if (newImageFiles.length > 0) {
+            const imageFormData = new FormData();
+            newImageFiles.forEach(file => imageFormData.append('images', file));
+            const { urls } = await uploadImages(imageFormData);
+            uploadedImageUrls = urls;
+        }
+
+        const finalImageUrls = [...imageUrls, ...uploadedImageUrls];
+
         if (finalImageUrls.length === 0) {
             finalImageUrls.push('https://i.ibb.co/gV28rC7/default-image.jpg');
         }
@@ -153,6 +166,34 @@ export default function EditProductPage() {
                             <CardDescription>Update the details of the product.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                             <div className="space-y-2">
+                                <Label>Images</Label>
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                                    {imageUrls.map((url, index) => (
+                                        <div key={`existing-${index}`} className="relative group aspect-square">
+                                            <Image src={url} alt={`Existing image ${index + 1}`} fill sizes="128px" className="object-cover rounded-md" />
+                                            <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100" onClick={() => removeExistingImage(index)}>
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                     {newImageFiles.map((file, index) => (
+                                        <div key={`new-${index}`} className="relative group aspect-square">
+                                            <Image src={URL.createObjectURL(file)} alt={`New image ${index + 1}`} fill sizes="128px" className="object-cover rounded-md" />
+                                            <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100" onClick={() => removeNewImage(index)}>
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    <Label htmlFor="image-upload" className="flex flex-col items-center justify-center w-full aspect-square border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted">
+                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                                            <p className="mb-2 text-sm text-muted-foreground text-center">Click to upload</p>
+                                        </div>
+                                        <Input id="image-upload" type="file" multiple className="hidden" onChange={handleFileChange} accept="image/*" />
+                                    </Label>
+                                </div>
+                            </div>
                             <div className="space-y-2">
                                 <Label htmlFor="name">Product Name</Label>
                                 <Input id="name" name="name" defaultValue={product.name} required disabled={isLoading} />
@@ -250,45 +291,6 @@ export default function EditProductPage() {
                                     <Label htmlFor="return-policy">Return Policy (in days)</Label>
                                     <Input id="return-policy" name="returnPolicy" type="number" defaultValue={product.returnPolicy} disabled={isLoading} />
                                 </div>
-                            </div>
-
-                            <div className="space-y-2 border-t pt-4">
-                                <Label>Image URLs</Label>
-                                <div className="space-y-2">
-                                    {imageUrls.map((url, index) => (
-                                        <div key={index} className="flex items-center gap-2">
-                                            <Input
-                                                name={`image-${index}`}
-                                                value={url}
-                                                onChange={(e) => handleImageChange(index, e.target.value)}
-                                                placeholder="https://example.com/image.png"
-                                                disabled={isLoading}
-                                            />
-                                            {imageUrls.length > 1 && (
-                                                <Button
-                                                    type="button"
-                                                    variant="destructive"
-                                                    size="icon"
-                                                    onClick={() => removeImageUrlInput(index)}
-                                                    disabled={isLoading}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={addImageUrlInput}
-                                    className="mt-2"
-                                    disabled={isLoading}
-                                >
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    Add Image URL
-                                </Button>
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">

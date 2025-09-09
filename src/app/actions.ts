@@ -7,6 +7,7 @@ import admin from '@/lib/firebase-admin';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product, StatusHistory, Notification, User, ModeratorPermissions } from "@/types";
 import { revalidatePath } from "next/cache";
+import { put } from '@vercel/blob';
 
 const db = getFirestore();
 
@@ -19,6 +20,23 @@ export async function getProductRecommendations(input: ProductRecommendationsInp
     throw new Error("Failed to fetch product recommendations.");
   }
 }
+
+export async function uploadImages(formData: FormData): Promise<{ urls: string[] }> {
+    const images = formData.getAll('images') as File[];
+    const uploadedUrls: string[] = [];
+
+    for (const image of images) {
+        if (image && image.size > 0) {
+            const blob = await put(image.name, image, {
+                access: 'public',
+            });
+            uploadedUrls.push(blob.url);
+        }
+    }
+
+    return { urls: uploadedUrls };
+}
+
 
 export async function createModerator(email: string, password: string, permissions: ModeratorPermissions) {
     try {
