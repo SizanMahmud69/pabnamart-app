@@ -4,7 +4,7 @@ if (!admin.apps.length) {
   try {
     const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-    if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
+    if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey || !process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) {
         throw new Error('Firebase Admin environment variables are not set.');
     }
 
@@ -14,6 +14,7 @@ if (!admin.apps.length) {
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: privateKey,
       }),
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
   } catch (error) {
     console.error('Firebase admin initialization error', error);

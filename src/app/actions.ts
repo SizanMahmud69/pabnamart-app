@@ -12,7 +12,7 @@ import { randomUUID } from "crypto";
 
 const db = getFirestore(admin.apps[0]!);
 const storage = getStorage(admin.apps[0]!);
-const bucket = storage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
+const bucket = storage.bucket();
 
 
 export async function getProductRecommendations(input: ProductRecommendationsInput): Promise<ProductRecommendationsOutput> {
