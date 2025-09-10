@@ -7,9 +7,13 @@ import admin from '@/lib/firebase-admin';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product, StatusHistory, Notification, User, ModeratorPermissions } from "@/types";
 import { revalidatePath } from "next/cache";
-import { put } from '@vercel/blob';
+import { getStorage } from 'firebase-admin/storage';
+import { randomUUID } from "crypto";
 
 const db = getFirestore(admin.apps[0]!);
+const storage = getStorage(admin.apps[0]!);
+const bucket = storage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
+
 
 export async function getProductRecommendations(input: ProductRecommendationsInput): Promise<ProductRecommendationsOutput> {
   try {
@@ -27,14 +31,24 @@ export async function uploadImages(formData: FormData): Promise<{ urls: string[]
 
     for (const image of images) {
         if (image && image.size > 0) {
-            const blob = await put(image.name, image, {
-                access: 'public',
-                token: process.env.BLOB_READ_WRITE_TOKEN,
+            const buffer = Buffer.from(await image.arrayBuffer());
+            const fileName = `products/${randomUUID()}-${image.name}`;
+            const file = bucket.file(fileName);
+
+            await file.save(buffer, {
+                metadata: {
+                    contentType: image.type,
+                },
             });
-            uploadedUrls.push(blob.url);
+            
+            const [url] = await file.getSignedUrl({
+                action: 'read',
+                expires: '03-09-2491' // A very long-lived URL
+            });
+            uploadedUrls.push(url);
         }
     }
-
+    
     return { urls: uploadedUrls };
 }
 

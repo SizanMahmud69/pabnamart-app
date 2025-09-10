@@ -39,17 +39,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'i.ibb.co',
       },
-      {
-        protocol: "https",
-        hostname: "*.public.blob.vercel-storage.com",
-      },
     ],
-  },
-  experimental: {
-    serverActions: {
-      // This is required for Vercel Blob storage to work in server actions.
-      allowedOrigins: ['*.vercel.app', 'localhost:3000'],
-    },
   },
 };
 
