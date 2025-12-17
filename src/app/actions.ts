@@ -3,15 +3,16 @@
 
 import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai/flows/product-recommendations";
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
-import admin from '@/lib/firebase-admin';
+import getFirebaseAdmin from '@/lib/firebase-admin';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product, StatusHistory, Notification, User, ModeratorPermissions } from "@/types";
 import { revalidatePath } from "next/cache";
 import { getStorage } from 'firebase-admin/storage';
 import { randomUUID } from "crypto";
 
-const db = getFirestore(admin.apps[0]!);
-const storage = getStorage(admin.apps[0]!);
+const adminApp = getFirebaseAdmin();
+const db = getFirestore(adminApp);
+const storage = getStorage(adminApp);
 const bucket = storage.bucket();
 
 
@@ -55,7 +56,7 @@ export async function uploadImages(formData: FormData): Promise<{ urls: string[]
 
 export async function createModerator(email: string, password: string, permissions: ModeratorPermissions) {
     try {
-        const userRecord = await admin.auth().createUser({
+        const userRecord = await getFirebaseAdmin().auth().createUser({
             email,
             password,
             displayName: 'Moderator',
@@ -102,7 +103,7 @@ export async function deleteUserAccount(uid: string) {
       return { success: false, message: 'User ID is missing.' };
     }
     try {
-        await admin.auth().deleteUser(uid);
+        await getFirebaseAdmin().auth().deleteUser(uid);
         
         const userDocRef = db.collection('users').doc(uid);
         await userDocRef.delete();
@@ -264,7 +265,7 @@ export async function createAndSendNotification(userId: string, notificationData
     };
 
     try {
-        await admin.messaging().sendMulticast(payload);
+        await getFirebaseAdmin().messaging().sendMulticast(payload);
     } catch (error) {
         console.error('Error sending FCM notification:', error);
         // Here you might want to handle invalid tokens, etc.
