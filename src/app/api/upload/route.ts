@@ -1,20 +1,35 @@
-
-import { put } from '@vercel/blob';
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
  
 export async function POST(request: Request): Promise<NextResponse> {
-  const { searchParams } = new URL(request.url);
-  const filename = searchParams.get('filename');
+  const body = (await request.json()) as HandleUploadBody;
  
-  if (!filename || !request.body) {
-    return NextResponse.json({ message: 'No file to upload.' }, { status: 400 });
+  try {
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+      onBeforeUpload: async (pathname) => {
+        // Generate a random pathname for the blob
+        const filename = `${pathname}-${Math.random().toString(36).slice(2)}`;
+        return {
+          pathname: filename,
+          // Disallow overwriting existing blobs
+          // You can generate a random string for the pathname
+          // to avoid collisions, but then you would need to
+          // keep track of the random pathname somewhere.
+          allowBody: true,
+        };
+      },
+      onUploadCompleted: async ({ blob, token }) => {
+        console.log('blob upload completed', blob, token);
+      },
+    });
+ 
+    return NextResponse.json(jsonResponse);
+  } catch (error) {
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 },
+    );
   }
-
-  const blob = await put(filename, request.body, {
-    access: 'public',
-  });
- 
-  return NextResponse.json(blob);
 }
-
-    
