@@ -19,10 +19,8 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import Image from 'next/image';
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 export default function EditProductPage() {
     const router = useRouter();
@@ -94,15 +92,24 @@ export default function EditProductPage() {
         e.preventDefault();
         if (!product) return;
         setIsLoading(true);
-        const formData = new FormData(e.currentTarget);
+        const form = new FormData(e.currentTarget);
         
         let uploadedImageUrls: string[] = [];
         if (newImageFiles.length > 0) {
              try {
                 for (const file of newImageFiles) {
-                    const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
-                    await uploadBytes(storageRef, file);
-                    const url = await getDownloadURL(storageRef);
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    const response = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to upload image.');
+                    }
+                    const { url } = await response.json();
                     uploadedImageUrls.push(url);
                 }
             } catch (error) {
@@ -123,20 +130,23 @@ export default function EditProductPage() {
             finalImageUrls.push('https://i.ibb.co/gV28rC7/default-image.jpg');
         }
 
+        const originalPriceValue = form.get('originalPrice') as string;
+        const returnPolicyValue = form.get('returnPolicy') as string;
+
         const updatedProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
-            name: formData.get('name') as string,
-            description: formData.get('description') as string,
-            price: parseFloat(formData.get('price') as string),
-            originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
-            stock: parseInt(formData.get('stock') as string, 10),
+            name: form.get('name') as string,
+            description: form.get('description') as string,
+            price: parseFloat(form.get('price') as string) || 0,
+            originalPrice: originalPriceValue ? parseFloat(originalPriceValue) : undefined,
+            stock: parseInt(form.get('stock') as string, 10) || 0,
             category: category,
             images: finalImageUrls,
-            details: formData.get('details') as string,
+            details: form.get('details') as string,
             freeShipping: freeShipping,
             isFlashSale: isFlashSale,
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
-            flashSaleDiscount: isFlashSale ? flashSaleDiscount : undefined,
-            returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,
+            flashSaleDiscount: isFlashSale ? (flashSaleDiscount || undefined) : undefined,
+            returnPolicy: returnPolicyValue ? parseInt(returnPolicyValue, 10) : undefined,
         };
 
         try {
@@ -320,5 +330,7 @@ export default function EditProductPage() {
         </div>
     );
 }
+
+    
 
     
