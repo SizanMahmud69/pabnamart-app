@@ -10,12 +10,6 @@ import { revalidatePath } from "next/cache";
 import { getStorage } from 'firebase-admin/storage';
 import { randomUUID } from "crypto";
 
-const adminApp = getFirebaseAdmin();
-const db = getFirestore(adminApp);
-const storage = getStorage(adminApp);
-const bucket = storage.bucket();
-
-
 export async function getProductRecommendations(input: ProductRecommendationsInput): Promise<ProductRecommendationsOutput> {
   try {
     const recommendations = await getProductRecommendationsFlow(input);
@@ -27,6 +21,10 @@ export async function getProductRecommendations(input: ProductRecommendationsInp
 }
 
 export async function uploadImages(formData: FormData): Promise<{ urls: string[] }> {
+    const adminApp = getFirebaseAdmin();
+    const storage = getStorage(adminApp);
+    const bucket = storage.bucket();
+    
     const images = formData.getAll('images') as File[];
     const uploadedUrls: string[] = [];
 
@@ -55,8 +53,10 @@ export async function uploadImages(formData: FormData): Promise<{ urls: string[]
 
 
 export async function createModerator(email: string, password: string, permissions: ModeratorPermissions) {
+    const adminApp = getFirebaseAdmin();
+    const db = getFirestore(adminApp);
     try {
-        const userRecord = await getFirebaseAdmin().auth().createUser({
+        const userRecord = await adminApp.auth().createUser({
             email,
             password,
             displayName: 'Moderator',
@@ -80,6 +80,8 @@ export async function createModerator(email: string, password: string, permissio
 }
 
 export async function updateModeratorPermissions(uid: string, permissions: ModeratorPermissions) {
+    const adminApp = getFirebaseAdmin();
+    const db = getFirestore(adminApp);
     if (!uid) {
         return { success: false, message: 'Moderator ID is missing.' };
     }
@@ -99,11 +101,13 @@ export async function deleteModerator(uid: string) {
 
 
 export async function deleteUserAccount(uid: string) {
+    const adminApp = getFirebaseAdmin();
+    const db = getFirestore(adminApp);
     if (!uid) {
       return { success: false, message: 'User ID is missing.' };
     }
     try {
-        await getFirebaseAdmin().auth().deleteUser(uid);
+        await adminApp.auth().deleteUser(uid);
         
         const userDocRef = db.collection('users').doc(uid);
         await userDocRef.delete();
@@ -132,6 +136,8 @@ export async function placeOrder(
   usedVoucher?: Voucher | null,
   voucherDiscount?: number | null,
 ) {
+  const adminApp = getFirebaseAdmin();
+  const db = getFirestore(adminApp);
   if (!userId || !cartItems || cartItems.length === 0) {
     return { success: false, message: 'Invalid order data.' };
   }
@@ -232,6 +238,8 @@ export async function placeOrder(
 }
 
 export async function createAndSendNotification(userId: string, notificationData: Omit<Notification, 'id' | 'time' | 'read'>) {
+    const adminApp = getFirebaseAdmin();
+    const db = getFirestore(adminApp);
     if (!userId) return;
 
     // 1. Save notification to Firestore
@@ -265,9 +273,11 @@ export async function createAndSendNotification(userId: string, notificationData
     };
 
     try {
-        await getFirebaseAdmin().messaging().sendMulticast(payload);
+        await adminApp.messaging().sendMulticast(payload);
     } catch (error) {
         console.error('Error sending FCM notification:', error);
         // Here you might want to handle invalid tokens, etc.
     }
 }
+
+    
