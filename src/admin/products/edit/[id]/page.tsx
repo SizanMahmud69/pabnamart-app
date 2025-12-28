@@ -223,11 +223,11 @@ export default function EditProductPage() {
                              <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Discount Price</Label>
-                                    <Input id="price" name="price" type="number" defaultValue={product.price} required disabled={isLoading} />
+                                    <Input id="price" name="price" type="number" step="0.01" defaultValue={product.price} required disabled={isLoading} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="originalPrice">Original Price</Label>
-                                    <Input id="originalPrice" name="originalPrice" type="number" defaultValue={product.originalPrice} disabled={isLoading} />
+                                    <Input id="originalPrice" name="originalPrice" type="number" step="0.01" defaultValue={product.originalPrice} disabled={isLoading} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="stock">Product Stock</Label>
@@ -320,4 +320,5 @@ export default function EditProductPage() {
         </div>
     );
 }
+
     
