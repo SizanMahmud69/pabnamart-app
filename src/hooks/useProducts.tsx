@@ -73,6 +73,19 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const productsData = snapshot.docs.map(doc => doc.data() as Product);
       setBaseProducts(productsData);
+      
+      // One-time cleanup for the problematic product
+      const problematicUrl = "https://spysu3pcs4jwex37.public.blob.vercel-storage.com/Screenshot_2025-12-28-19-45-19-533_com.android.chrome-KxCUO1zBCGmfsG50Hc1ggdvkipjVe0.jpg";
+      const problematicProduct = productsData.find(p => p.images.includes(problematicUrl));
+      if (problematicProduct) {
+          const productDocRef = doc(db, 'products', problematicProduct.id.toString());
+          deleteDoc(productDocRef).then(() => {
+              console.log("Problematic product deleted successfully.");
+          }).catch(err => {
+              console.error("Error deleting problematic product:", err);
+          });
+      }
+
       setLoading(false);
     }, (error) => {
       console.error("Error fetching products:", error);
@@ -270,4 +283,5 @@ export const useProducts = () => {
   return context;
 };
 
+    
     
