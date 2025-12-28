@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, PlusCircle, Trash2, Loader2, Upload, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product, Category } from '@/types';
@@ -18,10 +18,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import { uploadImages } from '@/app/actions';
 import Image from 'next/image';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { randomUUID } from "crypto";
 
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 export default function EditProductPage() {
     const router = useRouter();
@@ -97,14 +99,13 @@ export default function EditProductPage() {
         
         let uploadedImageUrls: string[] = [];
         if (newImageFiles.length > 0) {
-            const imageFormData = new FormData();
-            newImageFiles.forEach(file => imageFormData.append('images', file));
-            try {
-                const result = await uploadImages(imageFormData);
-                 if (!result || !result.urls) {
-                    throw new Error("Image upload failed to return URLs.");
+             try {
+                for (const file of newImageFiles) {
+                    const storageRef = ref(storage, `products/${randomUUID()}-${file.name}`);
+                    await uploadBytes(storageRef, file);
+                    const url = await getDownloadURL(storageRef);
+                    uploadedImageUrls.push(url);
                 }
-                uploadedImageUrls = result.urls;
             } catch (error) {
                 console.error("Image upload failed:", error);
                 toast({
@@ -320,7 +321,3 @@ export default function EditProductPage() {
         </div>
     );
 }
-
-    
-
-    

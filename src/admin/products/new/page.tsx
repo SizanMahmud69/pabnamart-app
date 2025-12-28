@@ -17,10 +17,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import { uploadImages } from '@/app/actions';
 import Image from 'next/image';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { randomUUID } from "crypto";
 
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 export default function NewProductPage() {
     const router = useRouter();
@@ -73,14 +75,13 @@ export default function NewProductPage() {
         
         let uploadedImageUrls: string[] = [];
         if (imageFiles.length > 0) {
-            const imageFormData = new FormData();
-            imageFiles.forEach(file => imageFormData.append('images', file));
             try {
-                const result = await uploadImages(imageFormData);
-                if (!result || !result.urls) {
-                    throw new Error("Image upload failed to return URLs.");
+                for (const file of imageFiles) {
+                    const storageRef = ref(storage, `products/${randomUUID()}-${file.name}`);
+                    await uploadBytes(storageRef, file);
+                    const url = await getDownloadURL(storageRef);
+                    uploadedImageUrls.push(url);
                 }
-                uploadedImageUrls = result.urls;
             } catch (error) {
                  console.error("Image upload failed:", error);
                  toast({
@@ -282,7 +283,3 @@ export default function NewProductPage() {
         </div>
     );
 }
-
-    
-
-    

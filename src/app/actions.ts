@@ -20,38 +20,6 @@ export async function getProductRecommendations(input: ProductRecommendationsInp
   }
 }
 
-export async function uploadImages(formData: FormData): Promise<{ urls: string[] }> {
-    const adminApp = getFirebaseAdmin();
-    const storage = getStorage(adminApp);
-    const bucket = storage.bucket();
-    
-    const images = formData.getAll('images') as File[];
-    const uploadedUrls: string[] = [];
-
-    for (const image of images) {
-        if (image && image.size > 0) {
-            const buffer = Buffer.from(await image.arrayBuffer());
-            const fileName = `products/${randomUUID()}-${image.name}`;
-            const file = bucket.file(fileName);
-
-            await file.save(buffer, {
-                metadata: {
-                    contentType: image.type,
-                },
-            });
-            
-            const [url] = await file.getSignedUrl({
-                action: 'read',
-                expires: '03-09-2491' // A very long-lived URL
-            });
-            uploadedUrls.push(url);
-        }
-    }
-    
-    return { urls: uploadedUrls };
-}
-
-
 export async function createModerator(email: string, password: string, permissions: ModeratorPermissions) {
     const adminApp = getFirebaseAdmin();
     const db = getFirestore(adminApp);
@@ -279,5 +247,3 @@ export async function createAndSendNotification(userId: string, notificationData
         // Here you might want to handle invalid tokens, etc.
     }
 }
-
-    
