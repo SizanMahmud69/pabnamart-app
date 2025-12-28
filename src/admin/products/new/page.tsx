@@ -97,11 +97,14 @@ export default function NewProductPage() {
             uploadedImageUrls.push('https://i.ibb.co/gV28rC7/default-image.jpg');
         }
 
+        const originalPriceValue = formData.get('originalPrice') as string;
+        const returnPolicyValue = formData.get('returnPolicy') as string;
+
         const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             price: parseFloat(formData.get('price') as string) || 0,
-            originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
+            originalPrice: originalPriceValue ? parseFloat(originalPriceValue) : undefined,
             stock: parseInt(formData.get('stock') as string, 10) || 0,
             category: category,
             images: uploadedImageUrls,
@@ -110,7 +113,7 @@ export default function NewProductPage() {
             isFlashSale: isFlashSale,
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
             flashSaleDiscount: isFlashSale ? flashSaleDiscount : undefined,
-            returnPolicy: formData.get('returnPolicy') ? parseInt(formData.get('returnPolicy') as string, 10) : undefined,
+            returnPolicy: returnPolicyValue ? parseInt(returnPolicyValue, 10) : undefined,
         };
 
         try {
