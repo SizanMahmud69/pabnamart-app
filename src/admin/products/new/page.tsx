@@ -18,7 +18,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import Image from 'next/image';
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const db = getFirestore(app);
 
@@ -69,16 +68,21 @@ export default function NewProductPage() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsLoading(true);
-        const formData = new FormData(e.currentTarget);
+        const form = new FormData(e.currentTarget);
         
         let uploadedImageUrls: string[] = [];
         if (imageFiles.length > 0) {
             try {
-                const storage = getStorage(app);
                 for (const file of imageFiles) {
-                    const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
-                    await uploadBytes(storageRef, file);
-                    const url = await getDownloadURL(storageRef);
+                    const response = await fetch(`/api/upload?filename=${file.name}`, {
+                        method: 'POST',
+                        body: file,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to upload image.');
+                    }
+                    const { url } = await response.json();
                     uploadedImageUrls.push(url);
                 }
             } catch (error) {
@@ -97,18 +101,18 @@ export default function NewProductPage() {
             uploadedImageUrls.push('https://i.ibb.co/gV28rC7/default-image.jpg');
         }
 
-        const originalPriceValue = formData.get('originalPrice') as string;
-        const returnPolicyValue = formData.get('returnPolicy') as string;
+        const originalPriceValue = form.get('originalPrice') as string;
+        const returnPolicyValue = form.get('returnPolicy') as string;
 
         const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
-            name: formData.get('name') as string,
-            description: formData.get('description') as string,
-            price: parseFloat(formData.get('price') as string) || 0,
+            name: form.get('name') as string,
+            description: form.get('description') as string,
+            price: parseFloat(form.get('price') as string) || 0,
             originalPrice: originalPriceValue ? parseFloat(originalPriceValue) : undefined,
-            stock: parseInt(formData.get('stock') as string, 10) || 0,
+            stock: parseInt(form.get('stock') as string, 10) || 0,
             category: category,
             images: uploadedImageUrls,
-            details: formData.get('details') as string,
+            details: form.get('details') as string,
             freeShipping: freeShipping,
             isFlashSale: isFlashSale,
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
@@ -285,5 +289,3 @@ export default function NewProductPage() {
         </div>
     );
 }
-
-    
