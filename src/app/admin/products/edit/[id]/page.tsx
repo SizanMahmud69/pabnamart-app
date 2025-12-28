@@ -332,5 +332,3 @@ export default function EditProductPage() {
 }
 
     
-
-    
