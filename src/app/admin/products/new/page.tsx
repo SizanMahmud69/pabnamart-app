@@ -74,12 +74,9 @@ export default function NewProductPage() {
         if (imageFiles.length > 0) {
             try {
                 for (const file of imageFiles) {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    
-                    const response = await fetch('/api/upload', {
+                    const response = await fetch(`/api/upload?filename=${file.name}`, {
                         method: 'POST',
-                        body: formData,
+                        body: file,
                     });
 
                     if (!response.ok) {
@@ -292,5 +289,3 @@ export default function NewProductPage() {
         </div>
     );
 }
-
-    
