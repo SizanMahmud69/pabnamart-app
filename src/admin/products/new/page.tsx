@@ -19,7 +19,6 @@ import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/f
 import app from '@/lib/firebase';
 import Image from 'next/image';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { randomUUID } from "crypto";
 
 const db = getFirestore(app);
 const storage = getStorage(app);
@@ -77,7 +76,7 @@ export default function NewProductPage() {
         if (imageFiles.length > 0) {
             try {
                 for (const file of imageFiles) {
-                    const storageRef = ref(storage, `products/${randomUUID()}-${file.name}`);
+                    const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
                     await uploadBytes(storageRef, file);
                     const url = await getDownloadURL(storageRef);
                     uploadedImageUrls.push(url);
@@ -283,3 +282,4 @@ export default function NewProductPage() {
         </div>
     );
 }
+    
