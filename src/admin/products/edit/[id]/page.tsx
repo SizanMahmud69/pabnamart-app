@@ -22,7 +22,6 @@ import Image from 'next/image';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 export default function EditProductPage() {
     const router = useRouter();
@@ -99,6 +98,7 @@ export default function EditProductPage() {
         let uploadedImageUrls: string[] = [];
         if (newImageFiles.length > 0) {
              try {
+                const storage = getStorage(app);
                 for (const file of newImageFiles) {
                     const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
                     await uploadBytes(storageRef, file);
@@ -328,3 +328,4 @@ export default function EditProductPage() {
     
 
     
+
