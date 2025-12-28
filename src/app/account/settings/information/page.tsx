@@ -11,8 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { uploadImages } from '@/app/actions';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import app from '@/lib/firebase';
 
+const storage = getStorage(app);
 const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
 
@@ -53,21 +55,20 @@ function AccountInformationPage() {
     
     const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file) return;
+        if (!file || !user) return;
 
         setIsPhotoLoading(true);
-        const formData = new FormData();
-        formData.append('images', file);
 
         try {
-            const { urls } = await uploadImages(formData);
-            if (urls.length > 0) {
-                await updateUserProfilePicture(urls[0]);
-                toast({
-                    title: "Success",
-                    description: "Profile picture updated successfully."
-                });
-            }
+            const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            await updateUserProfilePicture(downloadURL);
+            toast({
+                title: "Success",
+                description: "Profile picture updated successfully."
+            });
         } catch (error: any) {
             toast({
                 title: "Update Failed",
@@ -148,3 +149,5 @@ function AccountInformationPage() {
 
 
 export default withAuth(AccountInformationPage);
+
+    

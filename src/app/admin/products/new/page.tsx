@@ -17,10 +17,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import { uploadImages } from '@/app/actions';
 import Image from 'next/image';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 export default function NewProductPage() {
     const router = useRouter();
@@ -73,10 +74,23 @@ export default function NewProductPage() {
         
         let uploadedImageUrls: string[] = [];
         if (imageFiles.length > 0) {
-            const imageFormData = new FormData();
-            imageFiles.forEach(file => imageFormData.append('images', file));
-            const { urls } = await uploadImages(imageFormData);
-            uploadedImageUrls = urls;
+            try {
+                for (const file of imageFiles) {
+                    const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
+                    await uploadBytes(storageRef, file);
+                    const url = await getDownloadURL(storageRef);
+                    uploadedImageUrls.push(url);
+                }
+            } catch (error) {
+                 console.error("Image upload failed:", error);
+                 toast({
+                    title: "Error",
+                    description: "Failed to upload images. Please check your storage configuration.",
+                    variant: "destructive"
+                });
+                 setIsLoading(false);
+                 return;
+            }
         }
 
         if (uploadedImageUrls.length === 0) {
@@ -268,3 +282,5 @@ export default function NewProductPage() {
         </div>
     );
 }
+
+    
