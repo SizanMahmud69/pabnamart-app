@@ -41,10 +41,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '*.public.blob.vercel-storage.com',
+        hostname: 'spysu3pcs4jwex37.public.blob.vercel-storage.com',
       }
     ],
   },
 };
 
 export default nextConfig;
+
