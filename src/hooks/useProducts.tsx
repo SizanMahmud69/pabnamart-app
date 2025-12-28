@@ -32,6 +32,27 @@ const roundPrice = (price: number): number => {
     return Math.round(price);
 };
 
+// Helper function to convert undefined to null recursively
+const convertUndefinedToNull = (obj: any) => {
+    if (obj === null || obj === undefined) {
+        return null;
+    }
+    if (Array.isArray(obj)) {
+        return obj.map(v => convertUndefinedToNull(v));
+    }
+    if (typeof obj === 'object') {
+        const newObj: { [key: string]: any } = {};
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                const value = obj[key];
+                newObj[key] = value === undefined ? null : convertUndefinedToNull(value);
+            }
+        }
+        return newObj;
+    }
+    return obj;
+};
+
 
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [baseProducts, setBaseProducts] = useState<Product[]>([]);
@@ -169,7 +190,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       sold: 0,
     };
     const productDoc = doc(db, 'products', newId.toString());
-    await setDoc(productDoc, newProduct);
+    const sanitizedProduct = convertUndefinedToNull(newProduct);
+    await setDoc(productDoc, sanitizedProduct);
   };
   
   const sendStockNotifications = useCallback(async (product: Product) => {
@@ -211,7 +233,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         sold: existingProduct?.sold || 0,
     };
 
-    await updateDoc(productDocRef, dataToUpdate);
+    const sanitizedData = convertUndefinedToNull(dataToUpdate);
+    await updateDoc(productDocRef, sanitizedData);
   };
 
 
@@ -246,3 +269,5 @@ export const useProducts = () => {
   }
   return context;
 };
+
+    
