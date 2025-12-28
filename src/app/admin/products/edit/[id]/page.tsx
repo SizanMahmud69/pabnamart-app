@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import Image from 'next/image';
+import type { PutBlobResult } from '@vercel/blob';
 
 const db = getFirestore(app);
 
@@ -38,6 +39,7 @@ export default function EditProductPage() {
     const [flashSaleEndDate, setFlashSaleEndDate] = useState('');
     const [flashSaleDiscount, setFlashSaleDiscount] = useState<number | undefined>(undefined);
     const [categories, setCategories] = useState<Category[]>([]);
+    const inputFileRef = useRef<HTMLInputElement>(null);
 
 
     useEffect(() => {
@@ -98,16 +100,19 @@ export default function EditProductPage() {
         if (newImageFiles.length > 0) {
              try {
                 for (const file of newImageFiles) {
-                    const response = await fetch(`/api/upload?filename=${file.name}`, {
-                        method: 'POST',
-                        body: file,
-                    });
+                    const response = await fetch(
+                        `/api/upload?filename=${file.name}`,
+                        {
+                          method: 'POST',
+                          body: file,
+                        },
+                      );
                     
                     if (!response.ok) {
                         throw new Error('Failed to upload image.');
                     }
-                    const { url } = await response.json();
-                    uploadedImageUrls.push(url);
+                    const newBlob = (await response.json()) as PutBlobResult;
+                    uploadedImageUrls.push(newBlob.url);
                 }
             } catch (error) {
                 console.error("Image upload failed:", error);
@@ -211,7 +216,7 @@ export default function EditProductPage() {
                                             <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
                                             <p className="mb-2 text-sm text-muted-foreground text-center">Click to upload</p>
                                         </div>
-                                        <Input id="image-upload" type="file" multiple className="hidden" onChange={handleFileChange} accept="image/*" />
+                                        <Input id="image-upload" type="file" multiple className="hidden" onChange={handleFileChange} accept="image/*" ref={inputFileRef} />
                                     </Label>
                                 </div>
                             </div>
