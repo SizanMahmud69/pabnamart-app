@@ -100,9 +100,9 @@ export default function NewProductPage() {
         const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
-            price: parseFloat(formData.get('price') as string),
+            price: parseFloat(formData.get('price') as string) || 0,
             originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
-            stock: parseInt(formData.get('stock') as string, 10),
+            stock: parseInt(formData.get('stock') as string, 10) || 0,
             category: category,
             images: uploadedImageUrls,
             details: formData.get('details') as string,
@@ -282,6 +282,8 @@ export default function NewProductPage() {
         </div>
     );
 }
+    
+
     
 
     

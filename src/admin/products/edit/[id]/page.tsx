@@ -126,9 +126,9 @@ export default function EditProductPage() {
         const updatedProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
-            price: parseFloat(formData.get('price') as string),
+            price: parseFloat(formData.get('price') as string) || 0,
             originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
-            stock: parseInt(formData.get('stock') as string, 10),
+            stock: parseInt(formData.get('stock') as string, 10) || 0,
             category: category,
             images: finalImageUrls,
             details: formData.get('details') as string,
@@ -320,6 +320,8 @@ export default function EditProductPage() {
         </div>
     );
 }
+
+    
 
     
 
