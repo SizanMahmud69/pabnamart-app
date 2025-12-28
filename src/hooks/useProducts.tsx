@@ -160,25 +160,14 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
     if (!app) return;
     const db = getFirestore(app);
-    const newId = new Date().getTime(); // Simple way to generate a unique ID
+    const newId = new Date().getTime(); 
     const newProduct: Product = { 
       ...productData, 
       id: newId,
       rating: 0,
       reviews: [],
       sold: 0,
-      isFlashSale: productData.isFlashSale || false,
-      flashSaleEndDate: productData.flashSaleEndDate || '',
-      flashSaleDiscount: productData.flashSaleDiscount,
     };
-     // Ensure optional fields are not undefined
-    if (newProduct.flashSaleDiscount === undefined) {
-      delete newProduct.flashSaleDiscount;
-    }
-    if (!newProduct.flashSaleEndDate) {
-        delete newProduct.flashSaleEndDate;
-    }
-
     const productDoc = doc(db, 'products', newId.toString());
     await setDoc(productDoc, newProduct);
   };
@@ -216,25 +205,11 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     
     const dataToUpdate: Partial<Product> = {
         ...productData,
-        id: productId,
+        id: productId, // Ensure ID is part of the update data for consistency
         rating: existingProduct?.rating || 0,
         reviews: existingProduct?.reviews || [],
         sold: existingProduct?.sold || 0,
-        isFlashSale: productData.isFlashSale || false,
     };
-
-    // Ensure optional fields are not undefined
-    if (productData.flashSaleDiscount !== undefined) {
-      dataToUpdate.flashSaleDiscount = productData.flashSaleDiscount;
-    } else {
-      delete dataToUpdate.flashSaleDiscount;
-    }
-    
-    if (productData.flashSaleEndDate) {
-      dataToUpdate.flashSaleEndDate = productData.flashSaleEndDate;
-    } else {
-      delete dataToUpdate.flashSaleEndDate;
-    }
 
     await updateDoc(productDocRef, dataToUpdate);
   };
