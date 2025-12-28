@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'spysu3pcs4jwex37.public.blob.vercel-storage.com',
+        hostname: '**.public.blob.vercel-storage.com',
       }
     ],
   },
