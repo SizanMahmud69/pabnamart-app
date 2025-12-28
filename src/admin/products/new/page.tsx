@@ -76,8 +76,11 @@ export default function NewProductPage() {
             const imageFormData = new FormData();
             imageFiles.forEach(file => imageFormData.append('images', file));
             try {
-                const { urls } = await uploadImages(imageFormData);
-                uploadedImageUrls = urls;
+                const result = await uploadImages(imageFormData);
+                if (!result || !result.urls) {
+                    throw new Error("Image upload failed to return URLs.");
+                }
+                uploadedImageUrls = result.urls;
             } catch (error) {
                  console.error("Image upload failed:", error);
                  toast({
@@ -279,3 +282,5 @@ export default function NewProductPage() {
         </div>
     );
 }
+
+    
