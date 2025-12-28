@@ -138,7 +138,7 @@ export default function EditProductPage() {
             freeShipping: freeShipping,
             isFlashSale: isFlashSale,
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
-            flashSaleDiscount: isFlashSale ? flashSaleDiscount : undefined,
+            flashSaleDiscount: isFlashSale ? (flashSaleDiscount || undefined) : undefined,
             returnPolicy: returnPolicyValue ? parseInt(returnPolicyValue, 10) : undefined,
         };
 
@@ -323,7 +323,6 @@ export default function EditProductPage() {
         </div>
     );
 }
-
     
 
     
