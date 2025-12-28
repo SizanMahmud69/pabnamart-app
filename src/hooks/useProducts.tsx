@@ -75,7 +75,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       setBaseProducts(productsData);
       
       // One-time cleanup for the problematic product
-      const problematicUrl = "https://spysu3pcs4jwex37.public.blob.vercel-storage.com/Screenshot_2025-12-28-19-45-19-533_com.android.chrome-KxCUO1zBCGmfsG50Hc1ggdvkipjVe0.jpg";
+      const problematicUrl = "https://spysu3pcs4jwex37.public.blob.vercel-storage.com/Screenshot_2025-12-28-17-03-20-197_com.android.chrome-GVHBKPUXKX2bDbGqTzcHGpnLbfWhFt.png";
       const problematicProduct = productsData.find(p => p.images.includes(problematicUrl));
       if (problematicProduct) {
           const productDocRef = doc(db, 'products', problematicProduct.id.toString());
@@ -284,4 +284,6 @@ export const useProducts = () => {
 };
 
     
+    
+
     
