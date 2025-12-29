@@ -13,9 +13,6 @@ export async function POST(request: Request): Promise<NextResponse> {
         return {
           pathname: filename,
           // Disallow overwriting existing blobs
-          // You can generate a random string for the pathname
-          // to avoid collisions, but then you would need to
-          // keep track of the random pathname somewhere.
         };
       },
       onUploadCompleted: async ({ blob, token }) => {
