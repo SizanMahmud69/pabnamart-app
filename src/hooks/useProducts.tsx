@@ -74,13 +74,13 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       const productsData = snapshot.docs.map(doc => doc.data() as Product);
       setBaseProducts(productsData);
       
-      // One-time cleanup for the problematic product
-      const problematicUrl = "https://spysu3pcs4jwex37.public.blob.vercel-storage.com/Screenshot_2025-12-28-17-03-20-197_com.android.chrome-GVHBKPUXKX2bDbGqTzcHGpnLbfWhFt.png";
+      // One-time cleanup for the problematic product causing the crash
+      const problematicUrl = "https://spysu3pcs4jwex37.public.blob.vercel-storage.com/Screenshot_2025-12-29-17-42-33-745_com.android.chrome-YCOs61CTrciswHXcuupNFgIhbWn5mV.jpg";
       const problematicProduct = productsData.find(p => p.images.includes(problematicUrl));
       if (problematicProduct) {
           const productDocRef = doc(db, 'products', problematicProduct.id.toString());
           deleteDoc(productDocRef).then(() => {
-              console.log("Problematic product deleted successfully.");
+              console.log("Problematic product deleted successfully to prevent crash.");
           }).catch(err => {
               console.error("Error deleting problematic product:", err);
           });
