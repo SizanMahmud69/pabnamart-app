@@ -247,9 +247,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const shippingFee = useMemo(() => {
     if (selectedCartCount === 0) return 0;
     
-    // Free shipping is applied only if *every* selected item is eligible for it.
-    const allItemsHaveFreeShipping = selectedCartItems.every(item => item.freeShipping);
-    if (allItemsHaveFreeShipping) {
+    // If ANY selected item has free shipping, the whole order gets free shipping.
+    const anyItemHasFreeShipping = selectedCartItems.some(item => item.freeShipping);
+    if (anyItemHasFreeShipping) {
       return 0;
     }
 
