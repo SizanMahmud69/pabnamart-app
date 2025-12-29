@@ -174,10 +174,14 @@ export async function placeOrder(
           shippingAddress,
           paymentMethod,
           isReviewed: false,
-          ...(usedVoucher && { usedVoucherCode: usedVoucher.code }),
-          ...(voucherDiscount && { voucherDiscount: voucherDiscount }),
           ...(paymentDetails && { paymentDetails }),
         };
+
+        if (usedVoucher && voucherDiscount) {
+            orderData.usedVoucherCode = usedVoucher.code;
+            orderData.voucherDiscount = voucherDiscount;
+        }
+
         transaction.set(orderRef, orderData);
 
         // 3. Clear user's cart
