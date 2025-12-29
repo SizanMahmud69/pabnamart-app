@@ -121,19 +121,13 @@ export default function AdminProductManagement() {
                                   </TableHeader>
                                   <TableBody>
                                       {filteredProducts.map(product => {
-                                        const problematicHost = "spysu3pcs4jwex37.public.blob.vercel-storage.com";
                                         const defaultImage = "https://i.ibb.co/gV28rC7/default-image.jpg";
                                         let imageUrl = product.images?.[0] || defaultImage;
 
                                         try {
-                                          const url = new URL(imageUrl);
-                                          if (url.hostname === problematicHost) {
-                                            imageUrl = defaultImage;
-                                          }
+                                          new URL(imageUrl);
                                         } catch (e) {
-                                          if (!imageUrl || !imageUrl.startsWith('http')) {
-                                              imageUrl = defaultImage;
-                                          }
+                                          imageUrl = defaultImage;
                                         }
                                         
                                         return (

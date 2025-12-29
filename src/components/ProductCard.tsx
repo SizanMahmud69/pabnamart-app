@@ -42,21 +42,14 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   
   const isSmall = size === 'small';
 
-  // Fallback for the problematic image
-  const problematicHost = "spysu3pcs4jwex37.public.blob.vercel-storage.com";
   const defaultImage = "https://i.ibb.co/gV28rC7/default-image.jpg";
   let imageUrl = product.images?.[0] || defaultImage;
 
+  // Basic check for a valid URL to prevent errors if the src is invalid
   try {
-    const url = new URL(imageUrl);
-    if (url.hostname === problematicHost) {
-      imageUrl = defaultImage;
-    }
+    new URL(imageUrl);
   } catch (e) {
-    // If URL is invalid for some reason, use default
-    if (!imageUrl || !imageUrl.startsWith('http')) {
-        imageUrl = defaultImage;
-    }
+    imageUrl = defaultImage;
   }
 
   return (
