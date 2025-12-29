@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -217,7 +218,7 @@ export default function NewProductPage() {
                                         {uniqueCategories.map(cat => (
                                             <SelectItem key={cat.id} value={cat.name}>
                                                 {cat.name}
-                                            SelectItem>
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
