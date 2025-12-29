@@ -1,7 +1,5 @@
-
 "use client";
 
-import Image from 'next/image';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,11 +32,10 @@ export default function ShoppingCartSheet({ children }: { children: ReactNode })
                 {cartItems.map(item => (
                   <div key={item.id} className="flex items-center gap-4">
                     <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md">
-                       <Image
+                       <img
                         src={item.images[0]}
                         alt={item.name}
-                        fill
-                        className="object-cover"
+                        className="object-cover w-full h-full"
                         data-ai-hint="product image"
                       />
                     </div>

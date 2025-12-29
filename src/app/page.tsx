@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, Suspense, useMemo, useTransition } from 'react';
@@ -7,7 +6,6 @@ import type { Product } from '@/types';
 import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -151,12 +149,10 @@ function HomePageContent() {
                 return (
                   <CarouselItem key={index}>
                      <div className="relative text-white rounded-lg overflow-hidden h-48 md:h-64">
-                        <Image
+                        <img
                           src={banner.image}
                           alt={banner.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                          className="object-cover w-full"
+                          className="object-cover w-full h-full"
                           data-ai-hint={banner.aiHint}
                         />
                         <div className={cn(
@@ -346,6 +342,7 @@ function SearchPageContent({ searchQuery }: { searchQuery: string }) {
      <div className="bg-purple-50/30 min-h-screen">
       <div className="container mx-auto px-4 py-6 space-y-8">
         <AiRecommendations searchQuery={searchQuery} currentProducts={products} />
+        
         <div>
            <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">{`Results for "${searchQuery}"`}</h2>

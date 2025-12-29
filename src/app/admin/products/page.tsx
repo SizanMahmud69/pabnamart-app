@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';

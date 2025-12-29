@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -16,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { withAuth, useAuth } from "@/hooks/useAuth";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { placeOrder } from "@/app/actions";
@@ -267,7 +265,7 @@ function CheckoutPage() {
                         <div key={item.id} className="flex justify-between items-center text-sm">
                             <div className="flex items-center gap-3">
                                 <div className="relative h-16 w-16 rounded-md overflow-hidden border">
-                                    <Image src={item.images[0]} alt={item.name} fill sizes="64px" className="object-cover" data-ai-hint="product image" />
+                                    <img src={item.images[0]} alt={item.name} className="object-cover w-full h-full" data-ai-hint="product image" />
                                 </div>
                                 <div>
                                     <p className="font-semibold">{item.name}</p>

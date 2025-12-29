@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -13,7 +12,6 @@ import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, or
 import app from '@/lib/firebase';
 import type { Category } from '@/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import Image from 'next/image';
 
 const db = getFirestore(app);
 
@@ -143,7 +141,7 @@ export default function CategorySettingsPage() {
                                         <div className="flex items-center gap-4">
                                             {cat.image && (
                                                 <div className="relative h-10 w-10 rounded-md overflow-hidden">
-                                                    <Image src={cat.image} alt={cat.name} fill sizes="40px" className="object-cover" />
+                                                    <img src={cat.image} alt={cat.name} className="object-cover w-full h-full" />
                                                 </div>
                                             )}
                                             <span className="font-medium">{cat.name}</span>

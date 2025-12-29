@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -18,7 +17,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import Image from 'next/image';
 import type { PutBlobResult } from '@vercel/blob';
 
 const db = getFirestore(app);
@@ -27,7 +25,7 @@ export default function EditProductPage() {
     const router = useRouter();
     const params = useParams();
     const productId = Number(params.id);
-    const { toast } = useToast();
+    const { toast } } from useToast();
     const { products, updateProduct } = useProducts();
     const [product, setProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -197,7 +195,7 @@ export default function EditProductPage() {
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                                     {imageUrls.map((url, index) => (
                                         <div key={`existing-${index}`} className="relative group aspect-square">
-                                            <Image src={url} alt={`Existing image ${index + 1}`} fill sizes="128px" className="object-cover rounded-md" />
+                                            <img src={url} alt={`Existing image ${index + 1}`} className="object-cover w-full h-full rounded-md" />
                                             <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100" onClick={() => removeExistingImage(index)}>
                                                 <X className="h-4 w-4" />
                                             </Button>
@@ -205,7 +203,7 @@ export default function EditProductPage() {
                                     ))}
                                      {newImageFiles.map((file, index) => (
                                         <div key={`new-${index}`} className="relative group aspect-square">
-                                            <Image src={URL.createObjectURL(file)} alt={`New image ${index + 1}`} fill sizes="128px" className="object-cover rounded-md" />
+                                            <img src={URL.createObjectURL(file)} alt={`New image ${index + 1}`} className="object-cover w-full h-full rounded-md" />
                                             <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100" onClick={() => removeNewImage(index)}>
                                                 <X className="h-4 w-4" />
                                             </Button>

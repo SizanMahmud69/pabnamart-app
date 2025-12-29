@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -7,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from './ui/button';
 import { Zap, ShoppingCart, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { rgbToHsl } from '@/lib/utils';
 
 interface FlashSalePopupProps {
@@ -88,12 +86,10 @@ export default function FlashSalePopup({ onOpenChange }: FlashSalePopupProps) {
                     </Button>
                     
                     <div className="relative w-40 h-40 rounded-lg overflow-hidden shadow-lg border-4 border-white">
-                         <Image 
+                         <img 
                             src={flashSalePopupProduct.images[0]} 
                             alt={flashSalePopupProduct.name} 
-                            fill
-                            sizes="160px"
-                            className="object-cover"
+                            className="object-cover w-full h-full"
                         />
                     </div>
                     

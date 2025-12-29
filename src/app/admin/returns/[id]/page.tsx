@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,7 +11,6 @@ import app from '@/lib/firebase';
 import type { Order } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 
 const db = getFirestore(app);
@@ -97,7 +95,7 @@ export default function ReturnDetailsPage() {
                                 {order.items.map(item => (
                                     <div key={item.id} className="flex items-center gap-4">
                                         <div className="relative h-16 w-16 rounded-md overflow-hidden border">
-                                            <Image src={item.image} alt={item.name} fill className="object-cover" sizes="64px" />
+                                            <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
                                         </div>
                                         <div className="flex-grow">
                                             <p className="font-medium">{item.name}</p>

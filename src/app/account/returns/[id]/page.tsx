@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,9 +11,8 @@ import app from '@/lib/firebase';
 import type { Order } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import Image from 'next/image';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 
@@ -128,7 +126,7 @@ export default function ReturnRequestPage() {
                                         {order.items.map(item => (
                                             <div key={item.id} className="flex items-center gap-4">
                                                 <div className="relative h-16 w-16 rounded-md overflow-hidden border">
-                                                    <Image src={item.image} alt={item.name} fill sizes="64px" className="object-cover" />
+                                                    <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
                                                 </div>
                                                 <div className="flex-grow">
                                                     <p className="font-medium">{item.name}</p>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -14,7 +13,6 @@ import type { Order, DeliverySettings } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -185,7 +183,7 @@ export default function UserOrderDetailsPage() {
                                             <TableRow key={item.id}>
                                                 <TableCell className="flex items-center gap-3">
                                                     <div className="relative h-12 w-12 rounded-md overflow-hidden border">
-                                                        <Image src={item.image} alt={item.name} fill sizes="48px" className="object-cover" />
+                                                        <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
                                                     </div>
                                                     <span className="font-medium">{item.name}</span>
                                                 </TableCell>

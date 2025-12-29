@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -15,7 +14,6 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -260,7 +258,7 @@ function OrdersPageContent() {
                                       <div className="flex -space-x-4">
                                         {order.items.slice(0, 4).map((item, index) => (
                                             <div key={item.id + '-' + index} className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-white">
-                                                <Image src={item.image} alt={item.name} fill sizes="48px" className="object-cover" />
+                                                <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
                                             </div>
                                         ))}
                                         {order.items.length > 4 && (

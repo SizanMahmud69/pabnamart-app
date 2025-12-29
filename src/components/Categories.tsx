@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -8,7 +7,6 @@ import { getFirestore, collection, onSnapshot, query, orderBy, type Firestore } 
 import app from '@/lib/firebase';
 import type { Category } from '@/types';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import Image from 'next/image';
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -48,12 +46,10 @@ export default function Categories() {
                             <Link href={`/category/${encodeURIComponent(category.name)}`} key={category.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-purple-100/50 transition-colors w-24 text-center">
                                 <div className="relative w-16 h-16 rounded-full flex items-center justify-center overflow-hidden border">
                                     {category.image ? (
-                                        <Image
+                                        <img
                                             src={category.image}
                                             alt={category.name}
-                                            fill
-                                            sizes="64px"
-                                            className="object-cover"
+                                            className="object-cover w-full h-full"
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-muted" />

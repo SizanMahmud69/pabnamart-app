@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,9 +11,8 @@ import app from '@/lib/firebase';
 import type { Order, Review, Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import Image from 'next/image';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from '@/hooks/useAuth';
 
 const db = getFirestore(app);
@@ -214,7 +212,7 @@ export default function WriteReviewPage() {
                                 <div key={item.id} className="space-y-4 p-4 border rounded-lg">
                                     <div className="flex items-center gap-4">
                                         <div className="relative w-16 h-16 rounded-md border">
-                                            <Image src={item.image} alt={item.name} fill sizes="64px" className="object-cover" />
+                                            <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
                                         </div>
                                     </div>
                                     <div className="space-y-2">

@@ -1,9 +1,7 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -157,7 +155,7 @@ function PaymentGatewayPage() {
                                     onClick={() => setSelectedMethod(method.name)}
                                 >
                                     <div className="relative w-[60px] h-[36px]">
-                                        <Image src={method.logo} alt={method.name} fill sizes="60px" style={{ objectFit: 'contain' }} data-ai-hint={method.hint} />
+                                        <img src={method.logo} alt={method.name} style={{ objectFit: 'contain', width: '100%', height: '100%' }} data-ai-hint={method.hint} />
                                     </div>
                                     <p className="text-sm font-semibold mt-2">{method.name}</p>
                                 </div>

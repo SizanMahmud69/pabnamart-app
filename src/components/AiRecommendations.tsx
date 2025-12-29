@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useTransition } from 'react';
@@ -13,7 +12,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { getProductRecommendations } from '@/app/actions';
 import { useProducts } from '@/hooks/useProducts';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Lightbulb } from 'lucide-react';
 import type { Product } from '@/types';
@@ -102,12 +100,10 @@ export default function AiRecommendations({ searchQuery, currentProducts }: AiRe
                     <Card className="overflow-hidden transition-shadow hover:shadow-lg">
                       <CardContent className="flex items-center gap-4 p-4">
                         <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md">
-                          <Image
+                          <img
                             src={product.images[0]}
                             alt={product.name}
-                            fill
-                            sizes="96px"
-                            className="object-cover"
+                            className="object-cover w-full h-full"
                             data-ai-hint="product image"
                           />
                         </div>

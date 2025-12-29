@@ -1,9 +1,7 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
 import { useCart } from "@/hooks/useCart";
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,12 +79,10 @@ export default function CartPage() {
                                     onCheckedChange={() => toggleSelectItem(item.id)}
                                 />
                                 <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border">
-                                    <Image
+                                    <img
                                     src={item.images[0]}
                                     alt={item.name}
-                                    fill
-                                    sizes="96px"
-                                    className="object-cover"
+                                    className="object-cover w-full h-full"
                                     data-ai-hint="product image"
                                     />
                                 </div>

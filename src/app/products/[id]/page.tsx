@@ -1,8 +1,6 @@
-
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
-import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import StarRating from '@/components/StarRating';
@@ -100,12 +98,10 @@ function ProductDetailPageContent() {
                     {product.images.map((img, index) => (
                         <CarouselItem key={index}>
                         <div className="aspect-square relative bg-muted">
-                            <Image
+                            <img
                                 src={img}
                                 alt={`${product.name} image ${index + 1}`}
-                                fill
-                                sizes="(max-width: 768px) 100vw, 50vw"
-                                className="object-cover"
+                                className="object-cover w-full h-full"
                                 data-ai-hint="product image"
                             />
                         </div>
