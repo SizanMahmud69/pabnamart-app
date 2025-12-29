@@ -75,8 +75,9 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       setBaseProducts(productsData);
       
       // One-time cleanup for the problematic product causing the crash
-      const problematicUrl = "https://spysu3pcs4jwex37.public.blob.vercel-storage.com/Screenshot_2025-12-29-17-42-33-745_com.android.chrome-YCOs61CTrciswHXcuupNFgIhbWn5mV.jpg";
-      const problematicProduct = productsData.find(p => p.images.includes(problematicUrl));
+      const problematicUrl = "https://spysu3pcs4jwex37.public.blob.vercel-storage.com";
+      const problematicProduct = productsData.find(p => p.images.some(img => img.includes(problematicUrl)));
+      
       if (problematicProduct) {
           const productDocRef = doc(db, 'products', problematicProduct.id.toString());
           deleteDoc(productDocRef).then(() => {
@@ -282,8 +283,3 @@ export const useProducts = () => {
   }
   return context;
 };
-
-    
-    
-
-    
