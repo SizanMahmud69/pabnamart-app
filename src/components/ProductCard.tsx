@@ -42,6 +42,23 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   
   const isSmall = size === 'small';
 
+  // Fallback for the problematic image
+  const problematicHost = "spysu3pcs4jwex37.public.blob.vercel-storage.com";
+  const defaultImage = "https://i.ibb.co/gV28rC7/default-image.jpg";
+  let imageUrl = product.images[0];
+
+  try {
+    const url = new URL(imageUrl);
+    if (url.hostname === problematicHost) {
+      imageUrl = defaultImage;
+    }
+  } catch (e) {
+    // If URL is invalid for some reason, use default
+    if (!imageUrl || !imageUrl.startsWith('http')) {
+        imageUrl = defaultImage;
+    }
+  }
+
   return (
     <Card 
       className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-all duration-300 hover:shadow-lg group"
@@ -49,7 +66,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
        <Link href={productLink} className="block">
         <div className="relative w-full overflow-hidden bg-muted aspect-square">
           <Image
-            src={product.images[0]}
+            src={imageUrl}
             alt={product.name}
             width={400}
             height={400}
