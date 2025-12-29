@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, PlusCircle, Star, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -125,7 +124,7 @@ export default function AdminProductManagement() {
                                         let imageUrl = product.images?.[0] || defaultImage;
 
                                         try {
-                                          new URL(imageUrl);
+                                          if (imageUrl) new URL(imageUrl);
                                         } catch (e) {
                                           imageUrl = defaultImage;
                                         }
@@ -134,7 +133,7 @@ export default function AdminProductManagement() {
                                           <TableRow key={product.id}>
                                               <TableCell>
                                                   <div className="relative h-10 w-10 rounded-md overflow-hidden">
-                                                    <Image src={imageUrl} alt={product.name} fill sizes="40px" className="object-cover" data-ai-hint="product image" />
+                                                    <img src={imageUrl} alt={product.name} className="object-cover w-full h-full" data-ai-hint="product image" loading="lazy" />
                                                   </div>
                                               </TableCell>
                                               <TableCell className="font-medium">{product.name}</TableCell>

@@ -1,7 +1,6 @@
 
 "use client";
 
-import Image from 'next/image';
 import Link from 'next/link';
 import type { Product } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -47,7 +46,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
 
   // Basic check for a valid URL to prevent errors if the src is invalid
   try {
-    new URL(imageUrl);
+    if (imageUrl) new URL(imageUrl);
   } catch (e) {
     imageUrl = defaultImage;
   }
@@ -58,16 +57,15 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
     >
        <Link href={productLink} className="block">
         <div className="relative w-full overflow-hidden bg-muted aspect-square">
-          <Image
+          <img
             src={imageUrl}
             alt={product.name}
-            width={400}
-            height={400}
             className={cn(
               "object-cover w-full h-full transition-transform duration-300 group-hover:scale-105",
               isSoldOut && "filter grayscale"
             )}
             data-ai-hint="product lifestyle"
+            loading="lazy"
           />
            {hasDiscount && !isSoldOut && discountAmount > 0 && (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
