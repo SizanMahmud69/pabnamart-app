@@ -120,11 +120,27 @@ export default function AdminProductManagement() {
                                       </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                      {filteredProducts.map(product => (
+                                      {filteredProducts.map(product => {
+                                        const problematicHost = "spysu3pcs4jwex37.public.blob.vercel-storage.com";
+                                        const defaultImage = "https://i.ibb.co/gV28rC7/default-image.jpg";
+                                        let imageUrl = product.images?.[0] || defaultImage;
+
+                                        try {
+                                          const url = new URL(imageUrl);
+                                          if (url.hostname === problematicHost) {
+                                            imageUrl = defaultImage;
+                                          }
+                                        } catch (e) {
+                                          if (!imageUrl || !imageUrl.startsWith('http')) {
+                                              imageUrl = defaultImage;
+                                          }
+                                        }
+                                        
+                                        return (
                                           <TableRow key={product.id}>
                                               <TableCell>
                                                   <div className="relative h-10 w-10 rounded-md overflow-hidden">
-                                                    <Image src={product.images[0]} alt={product.name} fill sizes="40px" className="object-cover" data-ai-hint="product image" />
+                                                    <Image src={imageUrl} alt={product.name} fill sizes="40px" className="object-cover" data-ai-hint="product image" />
                                                   </div>
                                               </TableCell>
                                               <TableCell className="font-medium">{product.name}</TableCell>
@@ -182,7 +198,7 @@ export default function AdminProductManagement() {
                                                   </DropdownMenu>
                                               </TableCell>
                                           </TableRow>
-                                      ))}
+                                      )})}
                                   </TableBody>
                               </Table>
                           </TabsContent>

@@ -45,7 +45,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   // Fallback for the problematic image
   const problematicHost = "spysu3pcs4jwex37.public.blob.vercel-storage.com";
   const defaultImage = "https://i.ibb.co/gV28rC7/default-image.jpg";
-  let imageUrl = product.images[0];
+  let imageUrl = product.images?.[0] || defaultImage;
 
   try {
     const url = new URL(imageUrl);
