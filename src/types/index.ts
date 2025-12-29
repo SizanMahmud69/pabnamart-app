@@ -35,6 +35,7 @@ export interface Product {
   flashSaleEndDate?: string;
   flashSaleDiscount?: number;
   hasOffer?: boolean;
+  createdAt: string;
 }
 
 export interface CartItem extends Product {

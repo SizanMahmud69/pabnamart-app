@@ -68,25 +68,12 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     }
     const db = getFirestore(app);
     const productsCollectionRef = collection(db, 'products');
-    const q = query(productsCollectionRef, orderBy('id', 'desc'));
+    const q = query(productsCollectionRef, orderBy('createdAt', 'desc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const productsData = snapshot.docs.map(doc => doc.data() as Product);
       setBaseProducts(productsData);
       
-      // One-time cleanup for the problematic product causing the crash
-      const problematicUrl = "https://spysu3pcs4jwex37.public.blob.vercel-storage.com";
-      const problematicProduct = productsData.find(p => p.images.some(img => img.includes(problematicUrl)));
-      
-      if (problematicProduct) {
-          const productDocRef = doc(db, 'products', problematicProduct.id.toString());
-          deleteDoc(productDocRef).then(() => {
-              console.log("Problematic product deleted successfully to prevent crash.");
-          }).catch(err => {
-              console.error("Error deleting problematic product:", err);
-          });
-      }
-
       setLoading(false);
     }, (error) => {
       console.error("Error fetching products:", error);
@@ -196,12 +183,13 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     if (!app) return;
     const db = getFirestore(app);
     const newId = new Date().getTime(); 
-    const newProduct: Product = { 
+    const newProduct: Omit<Product, 'reviews'> & { reviews: Review[] | undefined } = { 
       ...productData, 
       id: newId,
       rating: 0,
       reviews: [],
       sold: 0,
+      createdAt: new Date().toISOString(),
     };
     const productDoc = doc(db, 'products', newId.toString());
     const sanitizedProduct = convertUndefinedToNull(newProduct);
