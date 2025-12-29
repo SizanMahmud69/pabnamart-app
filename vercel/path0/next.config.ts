@@ -1,6 +1,5 @@
 
 import type {NextConfig} from 'next';
-import path from 'path';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -45,16 +44,6 @@ const nextConfig: NextConfig = {
         hostname: '**.public.blob.vercel-storage.com',
       }
     ],
-  },
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      const swDest = path.join(__dirname, 'public', 'firebase-messaging-sw.js');
-      config.resolve.alias['firebase/messaging'] = path.resolve(
-        __dirname,
-        'node_modules/firebase/messaging'
-      );
-    }
-    return config;
   },
 };
 
