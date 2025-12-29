@@ -7,11 +7,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     const jsonResponse = await handleUpload({
       body: request.body,
       request,
-      onBeforeUpload: async (pathname) => {
+      onBeforeUpload: async ({ filename }) => {
         // Generate a random pathname for the blob
-        const filename = `${pathname}-${Math.random().toString(36).slice(2)}`;
+        const blobFilename = `${filename}-${Math.random().toString(36).slice(2)}`;
         return {
-          pathname: filename,
+          pathname: blobFilename,
           // Disallow overwriting existing blobs
         };
       },
