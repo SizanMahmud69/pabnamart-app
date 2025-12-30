@@ -116,17 +116,14 @@ export async function placeOrder(
      await db.runTransaction(async (transaction) => {
         const productRefs = cartItems.map(item => db.collection('products').doc(item.id.toString()));
         const productDocs = await transaction.getAll(...productRefs);
-        const productsData: { [id: number]: Product } = {};
 
         // 1. Update product stock and sold count
         for (const [index, doc] of productDocs.entries()) {
-            const item = cartItems[index];
-            
             if (!doc.exists) {
-                throw new Error(`Product with ID ${item.id} not found.`);
+                throw new Error(`Product with ID ${cartItems[index].id} not found.`);
             }
             const productData = doc.data() as Product;
-            productsData[item.id] = productData;
+            const item = cartItems[index];
 
             const newStock = (productData.stock || 0) - item.quantity;
             const newSoldCount = (productData.sold || 0) + item.quantity;
@@ -152,17 +149,14 @@ export async function placeOrder(
         const orderData: Omit<Order, 'id'> = {
           orderNumber: generateOrderNumber(),
           userId,
-          items: cartItems.map(item => {
-            const productData = productsData[item.id];
-            return {
-              id: item.id,
-              name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-              image: item.images[0],
-              returnPolicy: productData?.returnPolicy ?? 0,
-            }
-          }),
+          items: cartItems.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.images[0],
+            returnPolicy: item.returnPolicy ?? 0,
+          })),
           total: totalAmount,
           status: status,
           date: currentDate,
