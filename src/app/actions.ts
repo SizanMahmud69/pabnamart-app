@@ -110,7 +110,6 @@ export async function placeOrder(
     return { success: false, message: 'Invalid order data.' };
   }
 
-  // Create a clean array of items for the order
   const itemsForOrder: OrderItem[] = cartItems.map(item => ({
       id: item.id,
       name: item.name,
@@ -124,7 +123,6 @@ export async function placeOrder(
      const orderRef = db.collection('orders').doc();
      
      await db.runTransaction(async (transaction) => {
-        // Read all products first
         const productRefs = itemsForOrder.map(item => db.collection('products').doc(item.id.toString()));
         const productDocs = await transaction.getAll(...productRefs);
         
@@ -180,8 +178,6 @@ export async function placeOrder(
         const cartRef = db.collection('carts').doc(userId);
         const cartDoc = await transaction.get(cartRef);
         if (cartDoc.exists) {
-            // This part is now handled on the client in useCart clearCart, 
-            // but we leave it here as a fallback server-side cleanup.
             const currentCartItems: CartItem[] = cartDoc.data()?.items || [];
             const idsToRemove = new Set(cartItems.map(item => item.id));
             const newCartItems = currentCartItems.filter(item => !idsToRemove.has(item.id));
@@ -249,3 +245,5 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
+
+    
