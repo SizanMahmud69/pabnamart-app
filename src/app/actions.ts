@@ -112,25 +112,21 @@ export async function placeOrder(
 
   try {
      const orderRef = db.collection('orders').doc();
-     const productRefs = cartItems.map(item => db.collection('products').doc(item.id.toString()));
-
+     
      await db.runTransaction(async (transaction) => {
+        const productRefs = cartItems.map(item => db.collection('products').doc(item.id.toString()));
         const productDocs = await transaction.getAll(...productRefs);
         const productsData: { [id: number]: Product } = {};
-        productDocs.forEach(doc => {
-            if (doc.exists) {
-                productsData[Number(doc.id)] = doc.data() as Product;
-            }
-        });
 
         // 1. Update product stock and sold count
-        for (const item of cartItems) {
-            const productRef = db.collection('products').doc(item.id.toString());
-            const productData = productsData[item.id];
-
-            if (!productData) {
+        for (const [index, doc] of productDocs.entries()) {
+            const item = cartItems[index];
+            
+            if (!doc.exists) {
                 throw new Error(`Product with ID ${item.id} not found.`);
             }
+            const productData = doc.data() as Product;
+            productsData[item.id] = productData;
 
             const newStock = (productData.stock || 0) - item.quantity;
             const newSoldCount = (productData.sold || 0) + item.quantity;
@@ -139,9 +135,9 @@ export async function placeOrder(
                 throw new Error(`Not enough stock for ${item.name}.`);
             }
 
-            transaction.update(productRef, { stock: newStock, sold: newSoldCount });
+            transaction.update(doc.ref, { stock: newStock, sold: newSoldCount });
         }
-
+        
         // 2. Create the order document
         let status: OrderStatus = 'pending';
         if (paymentMethod === 'cod') {
@@ -190,7 +186,6 @@ export async function placeOrder(
         
         // 4. Handle used voucher
         if (usedVoucher) {
-            // Add voucher code to user's used voucher list for both regular and return vouchers
             const userRef = db.collection('users').doc(userId);
             transaction.update(userRef, {
                 usedVoucherCodes: FieldValue.arrayUnion(usedVoucher.code)
