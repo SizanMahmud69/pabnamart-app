@@ -80,7 +80,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           if (isInitialLoad.current) {
             // If there are selected IDs in Firestore, use them.
             // Otherwise, default to selecting all items in the cart.
-            if (data.selectedItemIds && Array.isArray(data.selectedItemIds)) {
+            if (data.selectedItemIds && Array.isArray(data.selectedItemIds) && data.selectedItemIds.length > 0) {
                 setSelectedItemIds(data.selectedItemIds);
             } else {
                 setSelectedItemIds(itemsFromDb.map((item: CartItem) => item.id));
