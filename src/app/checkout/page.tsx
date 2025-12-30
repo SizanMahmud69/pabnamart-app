@@ -66,8 +66,9 @@ function CheckoutPage() {
   }, [collectedVouchers, appUser]);
 
   const returnVouchers = useMemo(() => {
-      return collectedVouchers.filter(v => v.isReturnVoucher);
-  }, [collectedVouchers]);
+      const usedCodes = appUser?.usedVoucherCodes || [];
+      return collectedVouchers.filter(v => v.isReturnVoucher && !usedCodes.includes(v.code));
+  }, [collectedVouchers, appUser]);
 
 
   const handleApplyVoucher = (code: string) => {
