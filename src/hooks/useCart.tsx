@@ -125,61 +125,66 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [selectedItemIds, cartItems, user, updateFirestoreCart]);
 
-  const addToCart = useCallback((product: Product, isFlashSaleContext = false) => {
-    if (!user) {
-        toast({
-            title: "Please log in",
-            description: "You need to be logged in to add items to your cart.",
-            variant: "destructive"
+    const addToCart = useCallback((product: Product, isFlashSaleContext = false) => {
+        if (!user) {
+            toast({
+                title: "Please log in",
+                description: "You need to be logged in to add items to your cart.",
+                variant: "destructive"
+            });
+            router.push('/login');
+            return;
+        }
+
+        const price = isFlashSaleContext ? getFlashSalePrice(product) : product.price;
+
+        setCartItems(prevCartItems => {
+            const existingItem = prevCartItems.find(item => item.id === product.id);
+            
+            if (existingItem) {
+              return prevCartItems.map(item => 
+                item.id === product.id 
+                  ? { ...item, quantity: item.quantity + 1 }
+                  : item
+              );
+            }
+
+            const productForCart: Omit<Product, 'reviews' | 'createdAt'> & { quantity: number } = {
+                id: product.id,
+                name: product.name,
+                description: product.description,
+                price: price,
+                originalPrice: product.originalPrice,
+                rating: product.rating,
+                category: product.category,
+                images: product.images,
+                stock: product.stock,
+                sold: product.sold,
+                details: product.details,
+                freeShipping: product.freeShipping,
+                returnPolicy: product.returnPolicy,
+                isFlashSale: product.isFlashSale,
+                flashSaleEndDate: product.flashSaleEndDate,
+                flashSaleDiscount: product.flashSaleDiscount,
+                hasOffer: product.hasOffer,
+                quantity: 1,
+            };
+
+            return [...prevCartItems, productForCart as CartItem];
         });
-        router.push('/login');
-        return;
-    }
 
-    const price = isFlashSaleContext ? getFlashSalePrice(product) : product.price;
-    const originalPrice = product.originalPrice;
-
-    setCartItems(prevCartItems => {
-        const existingItem = prevCartItems.find(item => item.id === product.id);
-        
-        if (existingItem) {
-          return prevCartItems.map(item => 
-            item.id === product.id 
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          );
-        }
-
-        const productForCart: Product = { ...product };
-        for (const key in productForCart) {
-            if ((productForCart as any)[key] === undefined) {
-                (productForCart as any)[key] = null;
+        setSelectedItemIds(prevSelectedIds => {
+            if (!prevSelectedIds.includes(product.id)) {
+                return [...prevSelectedIds, product.id];
             }
-        }
+            return prevSelectedIds;
+        });
 
-        return [
-            ...prevCartItems,
-            { 
-              ...productForCart, 
-              quantity: 1,
-              price,
-              originalPrice: originalPrice ?? null,
-            }
-        ];
-    });
-
-    setSelectedItemIds(prevSelectedIds => {
-        if (!prevSelectedIds.includes(product.id)) {
-            return [...prevSelectedIds, product.id];
-        }
-        return prevSelectedIds;
-    });
-
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    });
-  }, [user, toast, router, getFlashSalePrice]);
+        toast({
+          title: "Added to cart",
+          description: `${product.name} has been added to your cart.`,
+        });
+    }, [user, toast, router, getFlashSalePrice]);
 
   const removeFromCart = useCallback((productId: number) => {
     if (!user) return;
