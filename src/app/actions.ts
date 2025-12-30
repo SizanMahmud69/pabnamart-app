@@ -179,16 +179,10 @@ export async function placeOrder(
         transaction.set(orderRef, orderData);
 
         const cartRef = db.collection('carts').doc(userId);
-        const cartDoc = await transaction.get(cartRef);
-        if (cartDoc.exists) {
-            const currentCartItems: CartItem[] = cartDoc.data()?.items || [];
-            const idsToRemove = new Set(cartItems.map(item => item.id));
-            const newCartItems = currentCartItems.filter(item => !idsToRemove.has(item.id));
-            transaction.update(cartRef, {
-                items: newCartItems,
-                selectedItemIds: []
-            });
-        }
+        transaction.update(cartRef, {
+            items: [],
+            selectedItemIds: []
+        });
         
         if (usedVoucher) {
             const userRef = db.collection('users').doc(userId);
@@ -248,3 +242,5 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
+
+    
