@@ -117,12 +117,11 @@ export async function placeOrder(
         const productRefs = cartItems.map(item => db.collection('products').doc(item.id.toString()));
         const productDocs = await transaction.getAll(...productRefs);
 
-        // 1. Update product stock and sold count
-        for (const [index, doc] of productDocs.entries()) {
-            if (!doc.exists) {
+        for (const [index, productDoc] of productDocs.entries()) {
+            if (!productDoc.exists) {
                 throw new Error(`Product with ID ${cartItems[index].id} not found.`);
             }
-            const productData = doc.data() as Product;
+            const productData = productDoc.data() as Product;
             const item = cartItems[index];
 
             const newStock = (productData.stock || 0) - item.quantity;
@@ -132,10 +131,9 @@ export async function placeOrder(
                 throw new Error(`Not enough stock for ${item.name}.`);
             }
 
-            transaction.update(doc.ref, { stock: newStock, sold: newSoldCount });
+            transaction.update(productDoc.ref, { stock: newStock, sold: newSoldCount });
         }
         
-        // 2. Create the order document
         let status: OrderStatus = 'pending';
         if (paymentMethod === 'cod') {
             status = 'processing';
@@ -165,20 +163,17 @@ export async function placeOrder(
           paymentMethod,
           isReviewed: false,
           ...(paymentDetails && { paymentDetails }),
+          ...(usedVoucher && voucherDiscount && {
+              usedVoucherCode: usedVoucher.code,
+              voucherDiscount: voucherDiscount,
+          })
         };
-
-        if (usedVoucher && voucherDiscount) {
-            orderData.usedVoucherCode = usedVoucher.code;
-            orderData.voucherDiscount = voucherDiscount;
-        }
 
         transaction.set(orderRef, orderData);
 
-        // 3. Clear user's cart
         const cartRef = db.collection('carts').doc(userId);
         transaction.set(cartRef, { items: [] });
         
-        // 4. Handle used voucher
         if (usedVoucher) {
             const userRef = db.collection('users').doc(userId);
             transaction.update(userRef, {
@@ -194,7 +189,7 @@ export async function placeOrder(
     return { success: true, message: 'Order placed successfully.', orderId: orderRef.id };
   } catch (error: any) {
     console.error("Error placing order:", error);
-    return { success: false, message: error.message || 'Failed to place order.' };
+    return { success: false, message: error.message || 'An unexpected error occurred while placing your order.' };
   }
 }
 
@@ -203,7 +198,6 @@ export async function createAndSendNotification(userId: string, notificationData
     const db = getFirestore(adminApp);
     if (!userId) return;
 
-    // 1. Save notification to Firestore
     const notification: Omit<Notification, 'id'> = {
         ...notificationData,
         time: new Date().toISOString(),
@@ -211,7 +205,6 @@ export async function createAndSendNotification(userId: string, notificationData
     };
     await db.collection(`users/${userId}/notifications`).add(notification);
 
-    // 2. Send Push Notification via FCM
     const userDoc = await db.collection('users').doc(userId).get();
     if (!userDoc.exists) return;
 
@@ -237,6 +230,5 @@ export async function createAndSendNotification(userId: string, notificationData
         await adminApp.messaging().sendMulticast(payload);
     } catch (error) {
         console.error('Error sending FCM notification:', error);
-        // Here you might want to handle invalid tokens, etc.
     }
 }
