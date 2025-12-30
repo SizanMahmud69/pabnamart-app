@@ -251,5 +251,3 @@ export async function createAndSendNotification(userId: string, notificationData
         // Here you might want to handle invalid tokens, etc.
     }
 }
-
-    
