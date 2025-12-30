@@ -386,3 +386,5 @@ function CheckoutPage() {
 }
 
 export default withAuth(CheckoutPage);
+
+  
