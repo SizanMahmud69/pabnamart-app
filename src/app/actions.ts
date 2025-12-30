@@ -164,16 +164,23 @@ export async function placeOrder(
           ...(usedVoucher && voucherDiscount && {
               usedVoucherCode: usedVoucher.code,
               voucherDiscount: voucherDiscount,
-          })
+          }),
+          ...(paymentDetails && { paymentDetails: paymentDetails })
         };
 
         transaction.set(orderRef, orderData);
 
         const cartRef = db.collection('carts').doc(userId);
-        transaction.update(cartRef, {
-            items: FieldValue.arrayRemove(...cartItems),
-            selectedItemIds: []
-        });
+        const cartDoc = await transaction.get(cartRef);
+        if (cartDoc.exists) {
+            const currentCartItems: CartItem[] = cartDoc.data()?.items || [];
+            const idsToRemove = new Set(cartItems.map(item => item.id));
+            const newCartItems = currentCartItems.filter(item => !idsToRemove.has(item.id));
+            transaction.update(cartRef, {
+                items: newCartItems,
+                selectedItemIds: []
+            });
+        }
         
         if (usedVoucher) {
             const userRef = db.collection('users').doc(userId);
