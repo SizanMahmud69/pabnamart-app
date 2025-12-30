@@ -13,7 +13,6 @@ import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, or
 import app from '@/lib/firebase';
 import type { Category } from '@/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import Image from 'next/image';
 import type { PutBlobResult } from '@vercel/blob';
 
 const db = getFirestore(app);
@@ -136,7 +135,7 @@ export default function CategorySettingsPage() {
                                      <div className="aspect-square w-full">
                                         {newCategoryImageFile ? (
                                             <div className="relative group aspect-square">
-                                                <Image src={URL.createObjectURL(newCategoryImageFile)} alt="New category image" fill sizes="128px" className="object-cover rounded-md" />
+                                                <img src={URL.createObjectURL(newCategoryImageFile)} alt="New category image" className="object-cover w-full h-full rounded-md" />
                                                 <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100" onClick={() => setNewCategoryImageFile(null)}>
                                                     <X className="h-4 w-4" />
                                                 </Button>
@@ -176,7 +175,7 @@ export default function CategorySettingsPage() {
                                         <div className="flex items-center gap-4">
                                             {cat.image && (
                                                 <div className="relative h-10 w-10 rounded-md overflow-hidden">
-                                                    <Image src={cat.image} alt={cat.name} fill sizes="40px" className="object-cover" />
+                                                    <img src={cat.image} alt={cat.name} className="object-cover w-full h-full" />
                                                 </div>
                                             )}
                                             <span className="font-medium">{cat.name}</span>
@@ -214,4 +213,3 @@ export default function CategorySettingsPage() {
         </div>
     );
 }
-

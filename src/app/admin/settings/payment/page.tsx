@@ -15,7 +15,6 @@ import { Separator } from '@/components/ui/separator';
 import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { PutBlobResult } from '@vercel/blob';
-import Image from 'next/image';
 
 const db = getFirestore(app);
 
@@ -133,7 +132,7 @@ export default function PaymentSettingsPage() {
                 <div className="w-full aspect-video border-2 border-dashed rounded-lg flex items-center justify-center">
                     {previewUrl ? (
                         <div className="relative w-full h-full">
-                            <Image src={previewUrl} alt={`${gateway} logo preview`} layout="fill" objectFit="contain" className="p-2" />
+                            <img src={previewUrl} alt={`${gateway} logo preview`} className="p-2 object-contain w-full h-full" />
                             <Button 
                                 type="button" 
                                 size="icon" 
