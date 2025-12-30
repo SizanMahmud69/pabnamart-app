@@ -9,6 +9,10 @@ import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Vou
 import { revalidatePath } from "next/cache";
 import { getStorage } from 'firebase-admin/storage';
 import { randomUUID } from "crypto";
+import { headers } from "next/headers";
+import { auth } from "firebase-admin";
+import type { OrderPayload } from "./checkout/page";
+
 
 export async function getProductRecommendations(input: ProductRecommendationsInput): Promise<ProductRecommendationsOutput> {
   try {
@@ -94,99 +98,161 @@ function generateOrderNumber(): string {
 }
 
 
-export async function placeOrder(
-  userId: string,
-  cartItems: CartItem[],
-  totalAmount: number,
-  shippingAddress: Omit<ShippingAddress, 'id' | 'default'>,
-  paymentMethod: string,
-  paymentDetails?: PaymentDetails,
-  usedVoucher?: Voucher | null,
-  voucherDiscount?: number | null,
-) {
+async function getUserIdFromSession(): Promise<string | null> {
+    const idToken = headers().get('Authorization')?.split('Bearer ')[1];
+    if (!idToken) {
+        return null;
+    }
+    try {
+        const decodedToken = await auth().verifyIdToken(idToken);
+        return decodedToken.uid;
+    } catch (error) {
+        console.error('Error verifying ID token:', error);
+        return null;
+    }
+}
+
+
+export async function placeOrder(payload: OrderPayload) {
   const adminApp = getFirebaseAdmin();
   const db = getFirestore(adminApp);
 
-  if (!userId || !cartItems || cartItems.length === 0) {
-    return { success: false, message: 'Invalid order data.' };
+  const userId = await getUserIdFromSession();
+
+  if (!userId) {
+      return { success: false, message: 'User not authenticated.' };
+  }
+  
+  if (!payload.items || payload.items.length === 0) {
+    return { success: false, message: 'Invalid order data. No items in order.' };
   }
 
-  const itemsForOrder: OrderItem[] = cartItems.map(item => ({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-      image: item.images[0],
-      returnPolicy: item.returnPolicy ?? 0,
-  }));
-  
-  const roundedTotalAmount = Math.round(totalAmount);
+  const orderRef = db.collection('orders').doc();
 
   try {
-     const orderRef = db.collection('orders').doc();
-     
      await db.runTransaction(async (transaction) => {
-        const productRefs = itemsForOrder.map(item => db.collection('products').doc(item.id.toString()));
+        const userDoc = await transaction.get(db.collection('users').doc(userId));
+        if (!userDoc.exists) {
+            throw new Error('User not found.');
+        }
+        const userData = userDoc.data() as User;
+        
+        const shippingAddress = userData.shippingAddresses?.find(addr => addr.id === payload.shippingAddressId);
+        if (!shippingAddress) {
+            throw new Error('Shipping address not found.');
+        }
+
+        const productRefs = payload.items.map(item => db.collection('products').doc(item.id.toString()));
         const productDocs = await transaction.getAll(...productRefs);
         
+        let subtotal = 0;
+        const itemsForOrder: OrderItem[] = [];
+
         for (let i = 0; i < productDocs.length; i++) {
             const productDoc = productDocs[i];
-            const item = itemsForOrder[i];
+            const item = payload.items[i];
 
             if (!productDoc.exists) {
                 throw new Error(`Product with ID ${item.id} not found.`);
             }
             const productData = productDoc.data() as Product;
 
-            const newStock = (productData.stock || 0) - item.quantity;
-            const newSoldCount = (productData.sold || 0) + item.quantity;
-
-            if (newStock < 0) {
-                throw new Error(`Not enough stock for ${item.name}.`);
-            }
+            // Use server-side price
+            const price = productData.price;
+            subtotal += price * item.quantity;
             
+            itemsForOrder.push({
+                id: productData.id,
+                name: productData.name,
+                price: price,
+                quantity: item.quantity,
+                image: productData.images[0],
+                returnPolicy: productData.returnPolicy ?? 0,
+            });
+
+            const newStock = (productData.stock || 0) - item.quantity;
+            if (newStock < 0) {
+                throw new Error(`Not enough stock for ${productData.name}.`);
+            }
+            const newSoldCount = (productData.sold || 0) + item.quantity;
             transaction.update(productRefs[i], { stock: newStock, sold: newSoldCount });
         }
         
+        // Server-side voucher calculation
+        let voucherDiscount = 0;
+        let usedVoucher: Voucher | null = null;
+        if (payload.voucherCode) {
+            const voucherDoc = await transaction.get(db.collection('vouchers').doc(payload.voucherCode));
+            if (voucherDoc.exists) {
+                const voucherData = voucherDoc.data() as Voucher;
+                if (!userData.usedVoucherCodes?.includes(voucherData.code)) {
+                     if (!voucherData.minSpend || subtotal >= voucherData.minSpend) {
+                        usedVoucher = voucherData;
+                        if (voucherData.type === 'fixed') {
+                            voucherDiscount = voucherData.discount;
+                        } else {
+                            voucherDiscount = (subtotal * voucherData.discount) / 100;
+                        }
+                    }
+                }
+            }
+        }
+        
+        const subtotalAfterDiscount = subtotal - voucherDiscount;
+
+        // Server-side shipping fee calculation
+        const deliverySettingsDoc = await transaction.get(db.collection('settings').doc('delivery'));
+        let shippingFee = 0;
+        if (deliverySettingsDoc.exists) {
+            const settings = deliverySettingsDoc.data() as any;
+            const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
+            const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
+
+            if (isInsidePabna) {
+                shippingFee = itemCount <= 5 ? settings.insidePabnaSmall : settings.insidePabnaLarge;
+            } else {
+                shippingFee = itemCount <= 5 ? settings.outsidePabnaSmall : settings.outsidePabnaLarge;
+            }
+        }
+        
+        // Final total calculation
+        const finalTotal = Math.round(subtotalAfterDiscount + shippingFee);
+
         let status: OrderStatus = 'pending';
-        if (paymentMethod === 'cod') {
+        if (payload.paymentMethod === 'cod') {
             status = 'processing';
-        } else if (paymentMethod === 'online') {
-            status = 'pending'; 
         }
 
         const currentDate = Timestamp.now().toDate().toISOString();
         const initialStatusHistory: StatusHistory[] = [{ status, date: currentDate }];
+        
+        const { id, default: isDefault, ...shippingAddressData } = shippingAddress;
 
         const orderData: Omit<Order, 'id'> = {
           orderNumber: generateOrderNumber(),
           userId,
           items: itemsForOrder,
-          total: roundedTotalAmount,
+          total: finalTotal,
           status: status,
           date: currentDate,
           statusHistory: initialStatusHistory,
-          shippingAddress,
-          paymentMethod,
+          shippingAddress: shippingAddressData,
+          paymentMethod: payload.paymentMethod,
           isReviewed: false,
-          ...(usedVoucher && voucherDiscount && {
+          ...(usedVoucher && {
               usedVoucherCode: usedVoucher.code,
               voucherDiscount: voucherDiscount,
           }),
-          ...(paymentDetails && { paymentDetails: paymentDetails })
+          ...(payload.paymentDetails && { paymentDetails: payload.paymentDetails })
         };
 
         transaction.set(orderRef, orderData);
 
         const cartRef = db.collection('carts').doc(userId);
-        transaction.update(cartRef, {
-            items: [],
-            selectedItemIds: []
-        });
+        transaction.update(cartRef, { items: [], selectedItemIds: [] });
         
         if (usedVoucher) {
-            const userRef = db.collection('users').doc(userId);
-            transaction.update(userRef, {
+            transaction.update(userDoc.ref, {
                 usedVoucherCodes: FieldValue.arrayUnion(usedVoucher.code)
             });
         }
@@ -242,5 +308,3 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
-
-    

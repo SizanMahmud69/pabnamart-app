@@ -7,41 +7,35 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, Loader2 } from "lucide-react";
-import type { CartItem, ShippingAddress, Voucher } from "@/types";
+import type { OrderPayload } from "@/app/checkout/page";
 import { withAuth } from "@/hooks/useAuth";
 
-interface OrderDetails {
-    cartItems: CartItem[];
-    finalTotal: number;
-    shippingAddress: ShippingAddress;
-    paymentMethod: string;
-    voucher: Voucher | null;
-}
-
 function PaymentPage() {
-    const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+    const [orderPayload, setOrderPayload] = useState<OrderPayload | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        const storedDetails = sessionStorage.getItem('orderDetails');
-        if (storedDetails) {
-            setOrderDetails(JSON.parse(storedDetails));
+        const storedPayload = sessionStorage.getItem('orderPayload');
+        if (storedPayload) {
+            setOrderPayload(JSON.parse(storedPayload));
         } else {
-            // If no details, redirect to checkout, but not during loading
             if(!isLoading) router.push('/checkout');
         }
     }, [router, isLoading]);
 
     const handleConfirmPayment = () => {
         setIsLoading(true);
-        // Instead of processing payment here, we navigate to the gateway page
         router.push('/payment/gateway');
     };
     
-    if (!orderDetails) {
+    if (!orderPayload) {
         return null;
     }
+
+    // This is a temporary placeholder for total calculation
+    // In a real app, this should be securely fetched or recalculated on this page
+    const totalAmount = orderPayload.items.reduce((acc, item) => acc + (item.quantity * 100), 0); // Dummy price
 
     return (
         <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
@@ -53,20 +47,16 @@ function PaymentPage() {
                     <CardContent className="space-y-4">
                         <div className="flex justify-between font-bold text-lg">
                             <span>Total Amount</span>
-                            <span>৳{orderDetails.finalTotal}</span>
+                            {/* This total is illustrative. The final total is calculated on the server. */}
+                            <span>...</span>
                         </div>
                         <Separator />
                         <div>
-                            <h4 className="font-semibold mb-2">Shipping to:</h4>
-                            <p className="text-sm text-muted-foreground">
-                                {orderDetails.shippingAddress.fullName}<br />
-                                {orderDetails.shippingAddress.address}, {orderDetails.shippingAddress.area}, {orderDetails.shippingAddress.city}<br />
-                                {orderDetails.shippingAddress.phone}
-                            </p>
+                            <h4 className="font-semibold mb-2">Shipping to your default address</h4>
                         </div>
                         <Separator />
                         <div className="text-center">
-                            <p className="text-muted-foreground">You will be redirected to the payment gateway.</p>
+                            <p className="text-muted-foreground">You will be redirected to the payment gateway to complete your purchase.</p>
                         </div>
                     </CardContent>
                     <CardFooter>
@@ -89,6 +79,5 @@ function PaymentPage() {
         </div>
     );
 }
-
 
 export default withAuth(PaymentPage);

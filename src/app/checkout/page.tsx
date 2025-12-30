@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Voucher, ShippingAddress as ShippingAddressType } from "@/types";
+import type { Voucher, ShippingAddress as ShippingAddressType, Order } from "@/types";
 import { CreditCard, Truck, AlertCircle, Home, Building, Minus, Plus, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
@@ -40,13 +40,27 @@ const paymentMethods = [
     }
 ]
 
+export interface OrderPayload {
+    items: { id: number; quantity: number }[];
+    shippingAddressId: string;
+    paymentMethod: string;
+    voucherCode?: string;
+    paymentDetails?: {
+        gateway: string;
+        transactionId: string;
+        payerNumber: string;
+        merchantNumber: string;
+    };
+}
+
+
 function CheckoutPage() {
   const { selectedCartItems, selectedCartTotal, selectedCartCount, updateQuantity, clearCart, shippingFee, selectedShippingAddress } = useCart();
   const { user, appUser } = useAuth();
   const { collectedVouchers } = useVouchers();
   
   const [loading, setLoading] = useState(true);
-  const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -59,7 +73,6 @@ function CheckoutPage() {
     }
   }, [user]);
 
-
   const availableVouchers = useMemo(() => {
     const usedCodes = appUser?.usedVoucherCodes || [];
     return collectedVouchers.filter(v => !v.isReturnVoucher && !usedCodes.includes(v.code));
@@ -69,30 +82,35 @@ function CheckoutPage() {
       const usedCodes = appUser?.usedVoucherCodes || [];
       return collectedVouchers.filter(v => v.isReturnVoucher && !usedCodes.includes(v.code));
   }, [collectedVouchers, appUser]);
+  
+  const selectedVoucher = useMemo(() => {
+    if (!selectedVoucherCode) return null;
+    return collectedVouchers.find(v => v.code === selectedVoucherCode) || null;
+  }, [selectedVoucherCode, collectedVouchers]);
 
 
   const handleApplyVoucher = (code: string) => {
     if (!code || code === "none") {
-        setSelectedVoucher(null);
+        setSelectedVoucherCode(undefined);
         setError(null);
         return;
     }
 
     const voucher = collectedVouchers.find(v => v.code === code);
     if (!voucher) {
-      setSelectedVoucher(null);
+      setSelectedVoucherCode(undefined);
       setError(null);
       return;
     }
 
     if (voucher.minSpend && selectedCartTotal < voucher.minSpend) {
         setError(`You need to spend at least ৳${voucher.minSpend} to use this voucher.`);
-        setSelectedVoucher(null);
+        setSelectedVoucherCode(undefined);
         return;
     }
 
     setError(null);
-    setSelectedVoucher(voucher);
+    setSelectedVoucherCode(code);
   };
   
   const { orderDiscount, shippingDiscount, totalDiscount } = useMemo(() => {
@@ -128,24 +146,21 @@ function CheckoutPage() {
     
     setIsPlacingOrder(true);
     
+    const payload: OrderPayload = {
+      items: selectedCartItems.map(item => ({ id: item.id, quantity: item.quantity })),
+      shippingAddressId: selectedShippingAddress.id,
+      paymentMethod: selectedPaymentMethod,
+      voucherCode: selectedVoucherCode,
+    };
+    
     if (selectedPaymentMethod === 'online') {
-        const orderDetails = {
-            cartItems: selectedCartItems,
-            finalTotal,
-            shippingAddress: selectedShippingAddress,
-            paymentMethod: selectedPaymentMethod,
-            voucher: selectedVoucher,
-            voucherDiscount: totalDiscount
-        };
-        sessionStorage.setItem('orderDetails', JSON.stringify(orderDetails));
+        sessionStorage.setItem('orderPayload', JSON.stringify(payload));
         router.push('/payment');
         return;
     }
 
-    const { id, default: isDefault, ...shippingAddressData } = selectedShippingAddress;
-
     try {
-        const result = await placeOrder(user.uid, selectedCartItems, finalTotal, shippingAddressData, selectedPaymentMethod, undefined, selectedVoucher, totalDiscount);
+        const result = await placeOrder(payload);
 
         if (result.success) {
             toast({

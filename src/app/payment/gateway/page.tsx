@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Copy } from "lucide-react";
-import type { CartItem, ShippingAddress, Voucher, PaymentDetails, PaymentSettings } from "@/types";
+import type { PaymentSettings, User } from "@/types";
+import { OrderPayload } from "@/app/checkout/page";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
@@ -18,15 +20,6 @@ import app from '@/lib/firebase';
 
 const db = getFirestore(app);
 
-interface OrderDetails {
-    cartItems: CartItem[];
-    finalTotal: number;
-    shippingAddress: ShippingAddress;
-    paymentMethod: string;
-    voucher: Voucher | null;
-    voucherDiscount: number;
-}
-
 const initialPaymentMethods = [
     { name: 'bKash', logo: '', merchantNumber: '', hint: 'bKash logo' },
     { name: 'Nagad', logo: '', merchantNumber: '', hint: 'Nagad logo' },
@@ -34,12 +27,13 @@ const initialPaymentMethods = [
 ];
 
 function PaymentGatewayPage() {
-    const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+    const [orderPayload, setOrderPayload] = useState<OrderPayload | null>(null);
     const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
     const [trxId, setTrxId] = useState('');
     const [paymentNumber, setPaymentNumber] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentMethods, setPaymentMethods] = useState(initialPaymentMethods);
+    const [totalAmount, setTotalAmount] = useState(0); // State to hold the final total
     
     const router = useRouter();
     const { user } = useAuth();
@@ -47,9 +41,9 @@ function PaymentGatewayPage() {
     const { toast } = useToast();
 
     useEffect(() => {
-        const storedDetails = sessionStorage.getItem('orderDetails');
-        if (storedDetails) {
-            setOrderDetails(JSON.parse(storedDetails));
+        const storedPayload = sessionStorage.getItem('orderPayload');
+        if (storedPayload) {
+            setOrderPayload(JSON.parse(storedPayload));
         } else {
             router.push('/checkout');
         }
@@ -67,11 +61,15 @@ function PaymentGatewayPage() {
             }
         });
 
+        // This is a workaround. In a real scenario, you'd fetch this total from a secure source.
+        const cartTotal = sessionStorage.getItem('finalTotalForPayment') || '0';
+        setTotalAmount(parseInt(cartTotal, 10));
+
         return () => unsubscribe();
     }, [router]);
 
     const handleConfirmPayment = async () => {
-        if (!orderDetails || !user || !trxId || !paymentNumber || !selectedMethod) {
+        if (!orderPayload || !user || !trxId || !paymentNumber || !selectedMethod) {
             toast({
                 title: "Information Missing",
                 description: "Please select a method and provide all details.",
@@ -81,27 +79,28 @@ function PaymentGatewayPage() {
         }
         setIsProcessing(true);
 
-        const { cartItems, finalTotal, shippingAddress, voucher, voucherDiscount } = orderDetails;
-        const { id, default: isDefault, ...shippingAddressData } = shippingAddress;
-        
-        const paymentDetails: PaymentDetails = {
-            gateway: selectedMethod,
-            transactionId: trxId,
-            payerNumber: paymentNumber,
-            merchantNumber: paymentMethods.find(m => m.name === selectedMethod)?.merchantNumber || ''
+        const payloadWithDetails: OrderPayload = {
+            ...orderPayload,
+            paymentDetails: {
+                gateway: selectedMethod,
+                transactionId: trxId,
+                payerNumber: paymentNumber,
+                merchantNumber: paymentMethods.find(m => m.name === selectedMethod)?.merchantNumber || ''
+            }
         };
 
         try {
-            const result = await placeOrder(user.uid, cartItems, finalTotal, shippingAddressData, 'online', paymentDetails, voucher, voucherDiscount);
+            const result = await placeOrder(payloadWithDetails);
 
-            if (result.success) {
+            if (result.success && result.orderId) {
                 toast({
                     title: "Order Placed!",
                     description: "Your payment will be verified within 10 minutes.",
                 });
                 clearCart();
-                sessionStorage.removeItem('orderDetails');
-                router.push('/account/orders?status=pending');
+                sessionStorage.removeItem('orderPayload');
+                sessionStorage.removeItem('finalTotalForPayment');
+                router.push(`/account/orders/${result.orderId}`);
             } else {
                 toast({
                     title: "Order Failed",
@@ -126,7 +125,28 @@ function PaymentGatewayPage() {
         toast({ title: "Copied!", description: "Merchant number copied to clipboard." });
     }
     
-    if (!orderDetails) {
+    useEffect(() => {
+        // Recalculate total on client to display. This is for display only.
+        // The actual total is calculated on the server.
+        async function calculateDisplayTotal() {
+            if (orderPayload) {
+                const tempTotal = 1; // You can't securely calculate this on the client
+                                     // We just show a placeholder.
+                                     // A better approach would be to have `placeOrder` return the final total
+                                     // before payment, but that complicates the flow.
+                                     // For now, we get it from session storage as a workaround.
+                const cartTotal = sessionStorage.getItem('finalTotalForPayment') || '0';
+                setTotalAmount(parseInt(cartTotal, 10));
+            }
+        }
+        calculateDisplayTotal();
+    }, [orderPayload]);
+
+    useEffect(() => {
+        sessionStorage.setItem('finalTotalForPayment', String(totalAmount));
+    }, [totalAmount]);
+
+    if (!orderPayload) {
         return null;
     }
 
@@ -140,7 +160,7 @@ function PaymentGatewayPage() {
                             Please pay the following amount to complete your purchase.
                         </CardDescription>
                         <p className="text-4xl font-bold text-primary pt-2">
-                            ৳{orderDetails.finalTotal}
+                            ৳{totalAmount}
                         </p>
                     </CardHeader>
                     <CardContent className="space-y-4">
