@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect,
 import type { CartItem, Product, ShippingAddress } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
-import { getFirestore, doc, onSnapshot, setDoc, getDoc, Firestore } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, getDoc, Firestore, updateDoc, arrayRemove, FieldValue } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { useDeliveryCharge } from './useDeliveryCharge';
 import { useProducts } from './useProducts';
@@ -178,15 +178,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [user, toast, router, getFlashSalePrice]);
 
-  const removeFromCart = useCallback((productId: number) => {
-    if (!user) return;
-    setCartItems(prev => prev.filter(item => item.id !== productId));
+  const removeFromCart = useCallback(async (productId: number) => {
+    if (!user || !db) return;
+    const itemToRemove = cartItems.find(item => item.id === productId);
+    if (!itemToRemove) return;
+
+    const cartRef = doc(db, 'carts', user.uid);
+    await updateDoc(cartRef, {
+        items: arrayRemove(itemToRemove)
+    });
     setSelectedItemIds(prev => prev.filter(id => id !== productId));
     toast({
       title: "Removed from cart",
       description: `The item has been removed from your cart.`,
     });
-  }, [user, toast]);
+  }, [user, toast, db, cartItems]);
 
   const updateQuantity = useCallback((productId: number, quantity: number) => {
     if (!user) return;
@@ -201,14 +207,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const clearCart = useCallback(async () => {
     if (!user || !db) return;
-    const itemsToKeep = cartItems.filter(item => !selectedItemIds.includes(item.id));
-    const newSelectedItemIds: number[] = [];
-    setCartItems(itemsToKeep);
-    setSelectedItemIds(newSelectedItemIds);
+    const itemsToRemove = cartItems.filter(item => selectedItemIds.includes(item.id));
+    if (itemsToRemove.length === 0) return;
     
-    // Clear only the selected items from the cart for the user in firestore
     const cartRef = doc(db, 'carts', user.uid);
-    await setDoc(cartRef, { items: itemsToKeep, selectedItemIds: newSelectedItemIds });
+
+    await updateDoc(cartRef, {
+      items: arrayRemove(...itemsToRemove),
+      selectedItemIds: []
+    });
 
   }, [user, cartItems, selectedItemIds, db]);
 

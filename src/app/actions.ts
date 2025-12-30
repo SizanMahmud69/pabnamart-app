@@ -114,8 +114,6 @@ export async function placeOrder(
      const orderRef = db.collection('orders').doc();
      
      await db.runTransaction(async (transaction) => {
-        const productUpdates = [];
-
         for (const item of cartItems) {
             const productRef = db.collection('products').doc(item.id.toString());
             const productDoc = await transaction.get(productRef);
@@ -172,7 +170,10 @@ export async function placeOrder(
         transaction.set(orderRef, orderData);
 
         const cartRef = db.collection('carts').doc(userId);
-        transaction.set(cartRef, { items: [] });
+        transaction.update(cartRef, {
+            items: FieldValue.arrayRemove(...cartItems),
+            selectedItemIds: []
+        });
         
         if (usedVoucher) {
             const userRef = db.collection('users').doc(userId);
@@ -232,5 +233,3 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
-
-    
