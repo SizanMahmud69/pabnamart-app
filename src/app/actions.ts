@@ -124,9 +124,13 @@ export async function placeOrder(
      const orderRef = db.collection('orders').doc();
      
      await db.runTransaction(async (transaction) => {
-        for (const item of itemsForOrder) {
-            const productRef = db.collection('products').doc(item.id.toString());
-            const productDoc = await transaction.get(productRef);
+        // Read all products first
+        const productRefs = itemsForOrder.map(item => db.collection('products').doc(item.id.toString()));
+        const productDocs = await transaction.getAll(...productRefs);
+        
+        for (let i = 0; i < productDocs.length; i++) {
+            const productDoc = productDocs[i];
+            const item = itemsForOrder[i];
 
             if (!productDoc.exists) {
                 throw new Error(`Product with ID ${item.id} not found.`);
@@ -140,7 +144,7 @@ export async function placeOrder(
                 throw new Error(`Not enough stock for ${item.name}.`);
             }
             
-            transaction.update(productRef, { stock: newStock, sold: newSoldCount });
+            transaction.update(productRefs[i], { stock: newStock, sold: newSoldCount });
         }
         
         let status: OrderStatus = 'pending';
@@ -243,3 +247,4 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
+
