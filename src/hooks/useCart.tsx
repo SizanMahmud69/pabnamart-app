@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect,
 import type { CartItem, Product, ShippingAddress } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
-import { getFirestore, doc, onSnapshot, setDoc, getDoc, Firestore, updateDoc, arrayRemove, FieldValue } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, getDoc, Firestore, updateDoc, arrayRemove, arrayUnion, FieldValue } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { useDeliveryCharge } from './useDeliveryCharge';
 import { useProducts } from './useProducts';
@@ -54,7 +54,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const updateFirestoreCart = useCallback(async (uid: string, items: CartItem[], selectedIds: number[]) => {
       if (!db) return;
       const cartRef = doc(db, 'carts', uid);
-      await setDoc(cartRef, { items, selectedItemIds: selectedIds });
+      try {
+        await setDoc(cartRef, { items, selectedItemIds: selectedIds }, { merge: true });
+      } catch (error) {
+        console.error("Failed to update cart in Firestore:", error);
+      }
   }, [db]);
 
   useEffect(() => {
@@ -67,7 +71,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           const itemsFromDb = data.items || [];
           
           setCartItems(currentItems => {
-            // Only update if the data from Firestore is different from the current state
             if (JSON.stringify(currentItems) !== JSON.stringify(itemsFromDb)) {
               return itemsFromDb;
             }
@@ -75,6 +78,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           });
           
           if (isInitialLoad.current) {
+            // If there are selected IDs in Firestore, use them.
+            // Otherwise, default to selecting all items in the cart.
             if (data.selectedItemIds && Array.isArray(data.selectedItemIds)) {
                 setSelectedItemIds(data.selectedItemIds);
             } else {
@@ -145,7 +150,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           );
         }
 
-        // Create a Firestore-compatible product object
         const productForCart: Product = { ...product };
         for (const key in productForCart) {
             if ((productForCart as any)[key] === undefined) {
@@ -164,7 +168,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         ];
     });
 
-    // Automatically select newly added item
     setSelectedItemIds(prevSelectedIds => {
         if (!prevSelectedIds.includes(product.id)) {
             return [...prevSelectedIds, product.id];
@@ -178,21 +181,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [user, toast, router, getFlashSalePrice]);
 
-  const removeFromCart = useCallback(async (productId: number) => {
-    if (!user || !db) return;
-    const itemToRemove = cartItems.find(item => item.id === productId);
-    if (!itemToRemove) return;
-
-    const cartRef = doc(db, 'carts', user.uid);
-    await updateDoc(cartRef, {
-        items: arrayRemove(itemToRemove)
-    });
+  const removeFromCart = useCallback((productId: number) => {
+    if (!user) return;
+    setCartItems(prev => prev.filter(item => item.id !== productId));
     setSelectedItemIds(prev => prev.filter(id => id !== productId));
     toast({
       title: "Removed from cart",
       description: `The item has been removed from your cart.`,
     });
-  }, [user, toast, db, cartItems]);
+  }, [user, toast]);
 
   const updateQuantity = useCallback((productId: number, quantity: number) => {
     if (!user) return;
@@ -207,14 +204,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const clearCart = useCallback(async () => {
     if (!user || !db) return;
-    const itemsToRemove = cartItems.filter(item => selectedItemIds.includes(item.id));
-    if (itemsToRemove.length === 0) return;
     
-    const cartRef = doc(db, 'carts', user.uid);
+    // Get the full list of items to remove based on selectedItemIds
+    const itemsToRemoveFromState = cartItems.filter(item => selectedItemIds.includes(item.id));
+    
+    // Create a new cart state without the removed items
+    const newCartItems = cartItems.filter(item => !selectedItemIds.includes(item.id));
 
+    setCartItems(newCartItems);
+    setSelectedItemIds([]);
+
+    // Persist the change to Firestore
+    const cartRef = doc(db, 'carts', user.uid);
     await updateDoc(cartRef, {
-      items: arrayRemove(...itemsToRemove),
-      selectedItemIds: []
+        items: newCartItems,
+        selectedItemIds: []
     });
 
   }, [user, cartItems, selectedItemIds, db]);
@@ -254,7 +258,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const shippingFee = useMemo(() => {
     if (selectedCartCount === 0) return 0;
     
-    // If ANY selected item has free shipping, the whole order gets free shipping.
     const anyItemHasFreeShipping = selectedCartItems.some(item => item.freeShipping);
     if (anyItemHasFreeShipping) {
       return 0;
@@ -271,7 +274,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   }, [selectedCartItems, selectedCartCount, selectedShippingAddress, chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge]);
 
-  // When navigating to checkout, save selected items to session storage
   useEffect(() => {
     if (pathname === '/checkout') {
       sessionStorage.setItem('checkoutItems', JSON.stringify(selectedCartItems));

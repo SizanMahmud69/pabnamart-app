@@ -180,6 +180,8 @@ export async function placeOrder(
         const cartRef = db.collection('carts').doc(userId);
         const cartDoc = await transaction.get(cartRef);
         if (cartDoc.exists) {
+            // This part is now handled on the client in useCart clearCart, 
+            // but we leave it here as a fallback server-side cleanup.
             const currentCartItems: CartItem[] = cartDoc.data()?.items || [];
             const idsToRemove = new Set(cartItems.map(item => item.id));
             const newCartItems = currentCartItems.filter(item => !idsToRemove.has(item.id));
