@@ -110,11 +110,21 @@ export async function placeOrder(
     return { success: false, message: 'Invalid order data.' };
   }
 
+  // Create a clean array of items for the order
+  const itemsForOrder: OrderItem[] = cartItems.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      image: item.images[0],
+      returnPolicy: item.returnPolicy ?? 0,
+  }));
+
   try {
      const orderRef = db.collection('orders').doc();
      
      await db.runTransaction(async (transaction) => {
-        for (const item of cartItems) {
+        for (const item of itemsForOrder) {
             const productRef = db.collection('products').doc(item.id.toString());
             const productDoc = await transaction.get(productRef);
 
@@ -146,14 +156,7 @@ export async function placeOrder(
         const orderData: Omit<Order, 'id'> = {
           orderNumber: generateOrderNumber(),
           userId,
-          items: cartItems.map(item => ({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.images[0],
-            returnPolicy: item.returnPolicy ?? 0,
-          })),
+          items: itemsForOrder,
           total: totalAmount,
           status: status,
           date: currentDate,
