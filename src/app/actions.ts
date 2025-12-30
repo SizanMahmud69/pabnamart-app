@@ -162,7 +162,6 @@ export async function placeOrder(
           shippingAddress,
           paymentMethod,
           isReviewed: false,
-          ...(paymentDetails && { paymentDetails }),
           ...(usedVoucher && voucherDiscount && {
               usedVoucherCode: usedVoucher.code,
               voucherDiscount: voucherDiscount,
