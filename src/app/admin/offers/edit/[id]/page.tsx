@@ -10,22 +10,13 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-import { doc, getDoc, getFirestore, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, updateDoc, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Offer } from '@/types';
+import type { Offer, Category } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const db = getFirestore(app);
-
-const categories = [
-  "Men's Fashion",
-  "Women's Fashion",
-  "Cosmetics",
-  "Groceries",
-  "Mobile & Computers",
-  "Electronics",
-];
 
 export default function EditOfferPage() {
     const router = useRouter();
@@ -36,6 +27,17 @@ export default function EditOfferPage() {
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [category, setCategory] = useState('');
+    const [categories, setCategories] = useState<Category[]>([]);
+
+    useEffect(() => {
+        const categoriesRef = collection(db, 'categories');
+        const q = query(categoriesRef, orderBy('createdAt', 'asc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+            setCategories(cats);
+        });
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         if (!offerId) return;
@@ -119,8 +121,8 @@ export default function EditOfferPage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categories.map(cat => (
-                                            <SelectItem key={cat} value={cat}>
-                                                {cat}
+                                            <SelectItem key={cat.id} value={cat.name}>
+                                                {cat.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
