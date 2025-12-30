@@ -106,6 +106,7 @@ export async function placeOrder(
 ) {
   const adminApp = getFirebaseAdmin();
   const db = getFirestore(adminApp);
+
   if (!userId || !cartItems || cartItems.length === 0) {
     return { success: false, message: 'Invalid order data.' };
   }
@@ -118,6 +119,8 @@ export async function placeOrder(
       image: item.images[0],
       returnPolicy: item.returnPolicy ?? 0,
   }));
+  
+  const roundedTotalAmount = Math.round(totalAmount);
 
   try {
      const orderRef = db.collection('orders').doc();
@@ -159,7 +162,7 @@ export async function placeOrder(
           orderNumber: generateOrderNumber(),
           userId,
           items: itemsForOrder,
-          total: totalAmount,
+          total: roundedTotalAmount,
           status: status,
           date: currentDate,
           statusHistory: initialStatusHistory,
@@ -245,5 +248,3 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
-
-    
