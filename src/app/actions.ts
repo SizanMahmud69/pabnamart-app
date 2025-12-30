@@ -114,15 +114,16 @@ export async function placeOrder(
      const orderRef = db.collection('orders').doc();
      
      await db.runTransaction(async (transaction) => {
-        const productRefs = cartItems.map(item => db.collection('products').doc(item.id.toString()));
-        const productDocs = await transaction.getAll(...productRefs);
+        const productUpdates = [];
 
-        for (const [index, productDoc] of productDocs.entries()) {
+        for (const item of cartItems) {
+            const productRef = db.collection('products').doc(item.id.toString());
+            const productDoc = await transaction.get(productRef);
+
             if (!productDoc.exists) {
-                throw new Error(`Product with ID ${cartItems[index].id} not found.`);
+                throw new Error(`Product with ID ${item.id} not found.`);
             }
             const productData = productDoc.data() as Product;
-            const item = cartItems[index];
 
             const newStock = (productData.stock || 0) - item.quantity;
             const newSoldCount = (productData.sold || 0) + item.quantity;
@@ -130,8 +131,8 @@ export async function placeOrder(
             if (newStock < 0) {
                 throw new Error(`Not enough stock for ${item.name}.`);
             }
-
-            transaction.update(productDoc.ref, { stock: newStock, sold: newSoldCount });
+            
+            transaction.update(productRef, { stock: newStock, sold: newSoldCount });
         }
         
         let status: OrderStatus = 'pending';
@@ -231,3 +232,5 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
+
+    
