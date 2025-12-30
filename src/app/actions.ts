@@ -226,7 +226,14 @@ export async function placeOrder(payload: OrderPayload) {
         const currentDate = Timestamp.now().toDate().toISOString();
         const initialStatusHistory: StatusHistory[] = [{ status, date: currentDate }];
         
-        const { id, default: isDefault, ...shippingAddressData } = shippingAddress;
+        const shippingAddressData = {
+            fullName: shippingAddress.fullName,
+            phone: shippingAddress.phone,
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            area: shippingAddress.area,
+            type: shippingAddress.type,
+        };
 
         const orderData: Omit<Order, 'id'> = {
           orderNumber: generateOrderNumber(),
