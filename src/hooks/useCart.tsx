@@ -80,10 +80,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           if (isInitialLoad.current) {
             // If there are selected IDs in Firestore, use them.
             // Otherwise, default to selecting all items in the cart.
-            if (data.selectedItemIds && Array.isArray(data.selectedItemIds) && data.selectedItemIds.length > 0) {
+            if (data.selectedItemIds && Array.isArray(data.selectedItemIds)) {
                 setSelectedItemIds(data.selectedItemIds);
-            } else {
-                setSelectedItemIds(itemsFromDb.map((item: CartItem) => item.id));
             }
             isInitialLoad.current = false;
           }
@@ -148,7 +146,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                   : item
               );
             }
-
+            
+            // Create a clean object for the cart, excluding complex fields like 'reviews'
             const productForCart: Omit<Product, 'reviews' | 'createdAt'> & { quantity: number } = {
                 id: product.id,
                 name: product.name,
