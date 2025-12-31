@@ -136,6 +136,9 @@ export async function placeOrder(payload: OrderPayload) {
             throw new Error('User not found.');
         }
         const userData = userDoc.data() as User;
+        if (!userData.shippingAddresses) {
+            userData.shippingAddresses = [];
+        }
         
         const shippingAddress = userData.shippingAddresses?.find(addr => addr.id === payload.shippingAddressId);
         if (!shippingAddress) {
@@ -203,7 +206,7 @@ export async function placeOrder(payload: OrderPayload) {
         // Server-side shipping fee calculation
         const deliverySettingsDoc = await transaction.get(db.collection('settings').doc('delivery'));
         let shippingFee = 0;
-        if (deliverySettingsDoc.exists) {
+        if (deliverySettingsDoc.exists()) {
             const settings = deliverySettingsDoc.data() as any;
             const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
             const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
