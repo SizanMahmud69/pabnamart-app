@@ -38,8 +38,16 @@ export interface Product {
   createdAt: any;
 }
 
-export interface CartItem extends Product {
+export interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  images: string[];
+  stock: number;
   quantity: number;
+  freeShipping?: boolean;
+  category: string;
 }
 
 export interface Voucher {
@@ -110,7 +118,7 @@ export interface OrderItem {
   price: number;
   quantity: number;
   image: string;
-  returnPolicy?: number;
+  returnPolicy: number;
 }
 
 export interface ShippingAddress {

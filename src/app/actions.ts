@@ -5,9 +5,8 @@ import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
 import getFirebaseAdmin from '@/lib/firebase-admin';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
-import type { CartItem, Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product, StatusHistory, Notification, User, ModeratorPermissions, OrderItem } from "@/types";
+import type { Order, OrderStatus, ShippingAddress, PaymentDetails, Voucher, Product, StatusHistory, Notification, User, ModeratorPermissions, OrderItem, CartItem } from "@/types";
 import { revalidatePath } from "next/cache";
-import { getStorage } from 'firebase-admin/storage';
 import { randomUUID } from "crypto";
 import { headers } from "next/headers";
 import { auth } from "firebase-admin";
@@ -218,7 +217,6 @@ export async function placeOrder(payload: OrderPayload) {
             }
         }
         
-        // Final total calculation
         const finalTotal = Math.round(subtotalAfterDiscount + shippingFee);
 
         let status: OrderStatus = 'pending';

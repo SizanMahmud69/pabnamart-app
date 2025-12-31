@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Voucher, ShippingAddress as ShippingAddressType, Order } from "@/types";
+import type { ShippingAddress } from '@/types';
 import { CreditCard, Truck, AlertCircle, Home, Building, Minus, Plus, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
@@ -22,6 +21,13 @@ import { placeOrder } from "@/app/actions";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Badge } from "@/components/ui/badge";
 
+export interface OrderPayload {
+    items: { id: number; quantity: number }[];
+    shippingAddressId: string;
+    paymentMethod: string;
+    voucherCode?: string;
+}
+
 const paymentMethods = [
     {
         id: 'cod',
@@ -34,20 +40,6 @@ const paymentMethods = [
         icon: CreditCard
     }
 ]
-
-export interface OrderPayload {
-    items: { id: number; quantity: number }[];
-    shippingAddressId: string;
-    paymentMethod: string;
-    voucherCode?: string;
-    paymentDetails?: {
-        gateway: string;
-        transactionId: string;
-        payerNumber: string;
-        merchantNumber: string;
-    };
-}
-
 
 function CheckoutPage() {
   const { selectedCartItems, selectedCartTotal, selectedCartCount, updateQuantity, clearCart, shippingFee, selectedShippingAddress } = useCart();
@@ -108,8 +100,8 @@ function CheckoutPage() {
     setSelectedVoucherCode(code);
   };
   
-  const { orderDiscount, shippingDiscount, totalDiscount } = useMemo(() => {
-    if (!selectedVoucher || shippingFee === null) return { orderDiscount: 0, shippingDiscount: 0, totalDiscount: 0 };
+  const { orderDiscount, shippingDiscount } = useMemo(() => {
+    if (!selectedVoucher || shippingFee === null) return { orderDiscount: 0, shippingDiscount: 0 };
     
     let calculatedDiscount = 0;
     if (selectedVoucher.type === 'fixed') {
@@ -120,10 +112,10 @@ function CheckoutPage() {
 
     if (selectedVoucher.discountType === 'shipping') {
       const discount = Math.min(calculatedDiscount, shippingFee);
-      return { orderDiscount: 0, shippingDiscount: discount, totalDiscount: discount };
+      return { orderDiscount: 0, shippingDiscount: discount };
     }
     
-    return { orderDiscount: calculatedDiscount, shippingDiscount: 0, totalDiscount: calculatedDiscount };
+    return { orderDiscount: calculatedDiscount, shippingDiscount: 0 };
   }, [selectedVoucher, selectedCartTotal, shippingFee]);
 
 
@@ -132,9 +124,7 @@ function CheckoutPage() {
   const finalTotal = Math.round(subtotalWithDiscount + shippingFeeWithDiscount);
 
   const handlePlaceOrder = async () => {
-    if (!user) return;
-
-    if (!selectedShippingAddress) {
+    if (!user || !selectedShippingAddress) {
         toast({ title: "Error", description: "Please select a shipping address.", variant: "destructive"});
         return;
     }
@@ -150,9 +140,6 @@ function CheckoutPage() {
     
     if (selectedPaymentMethod === 'online') {
         sessionStorage.setItem('orderPayload', JSON.stringify(payload));
-        // Pass the final total to the payment page via session storage.
-        // This is a client-side convenience and the final amount is ALWAYS recalculated on the server.
-        sessionStorage.setItem('finalTotalForPayment', String(finalTotal));
         router.push('/payment');
         return;
     }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
@@ -78,8 +77,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           });
           
           if (isInitialLoad.current) {
-            // If there are selected IDs in Firestore, use them.
-            // Otherwise, default to selecting all items in the cart.
             if (data.selectedItemIds && Array.isArray(data.selectedItemIds)) {
                 setSelectedItemIds(data.selectedItemIds);
             }
@@ -116,7 +113,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, db]);
   
-  // Save to Firestore whenever selected items or cart items change
   useEffect(() => {
     if (!isInitialLoad.current && user) {
       updateFirestoreCart(user.uid, cartItems, selectedItemIds);
@@ -147,26 +143,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
               );
             }
             
-            // Create a clean object for the cart, excluding complex fields.
             const productForCart: CartItem = {
                 id: product.id,
                 name: product.name,
-                description: product.description,
                 price: price,
                 originalPrice: product.originalPrice,
-                rating: product.rating,
-                category: product.category,
                 images: product.images,
                 stock: product.stock,
-                sold: product.sold,
-                details: product.details,
                 freeShipping: product.freeShipping,
-                returnPolicy: product.returnPolicy,
-                isFlashSale: product.isFlashSale,
-                flashSaleEndDate: product.flashSaleEndDate,
-                flashSaleDiscount: product.flashSaleDiscount,
-                hasOffer: product.hasOffer,
-                createdAt: product.createdAt,
+                category: product.category,
                 quantity: 1,
             };
 
@@ -210,16 +195,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const clearCart = useCallback(async () => {
     if (!user || !db) return;
     
-    // Get the full list of items to remove based on selectedItemIds
-    const itemsToRemoveFromState = cartItems.filter(item => selectedItemIds.includes(item.id));
-    
-    // Create a new cart state without the removed items
     const newCartItems = cartItems.filter(item => !selectedItemIds.includes(item.id));
 
     setCartItems(newCartItems);
     setSelectedItemIds([]);
 
-    // Persist the change to Firestore
     const cartRef = doc(db, 'carts', user.uid);
     await updateDoc(cartRef, {
         items: newCartItems,

@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,7 @@ import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
 import { placeOrder } from "@/app/actions";
 import { cn } from "@/lib/utils";
-import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, getDoc, collection } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -26,6 +25,48 @@ const initialPaymentMethods = [
     { name: 'Nagad', logo: '', merchantNumber: '', hint: 'Nagad logo' },
     { name: 'Rocket', logo: '', merchantNumber: '', hint: 'Rocket logo' },
 ];
+
+async function calculateServerTotal(payload: OrderPayload): Promise<number> {
+    const productRefs = payload.items.map(item => doc(db, 'products', item.id.toString()));
+    const productDocs = await Promise.all(productRefs.map(ref => getDoc(ref)));
+    
+    let subtotal = 0;
+    for (let i = 0; i < productDocs.length; i++) {
+        const productDoc = productDocs[i];
+        const item = payload.items[i];
+        if (productDoc.exists()) {
+            const productData = productDoc.data() as any;
+            subtotal += productData.price * item.quantity;
+        }
+    }
+
+    let voucherDiscount = 0;
+    if (payload.voucherCode) {
+        const voucherDoc = await getDoc(doc(db, 'vouchers', payload.voucherCode));
+        if (voucherDoc.exists()) {
+            const voucherData = voucherDoc.data() as any;
+            if (!voucherData.minSpend || subtotal >= voucherData.minSpend) {
+                if (voucherData.type === 'fixed') {
+                    voucherDiscount = voucherData.discount;
+                } else {
+                    voucherDiscount = (subtotal * voucherData.discount) / 100;
+                }
+            }
+        }
+    }
+    
+    const subtotalAfterDiscount = subtotal - voucherDiscount;
+
+    const deliverySettingsDoc = await getDoc(doc(db, 'settings', 'delivery'));
+    let shippingFee = 0;
+    if (deliverySettingsDoc.exists()) {
+        const settings = deliverySettingsDoc.data() as any;
+        shippingFee = settings.outsidePabnaSmall || 120;
+    }
+
+    return Math.round(subtotalAfterDiscount + shippingFee);
+}
+
 
 function PaymentGatewayPage() {
     const [orderPayload, setOrderPayload] = useState<OrderPayload | null>(null);
@@ -44,11 +85,10 @@ function PaymentGatewayPage() {
 
     useEffect(() => {
         const storedPayload = sessionStorage.getItem('orderPayload');
-        const finalTotal = sessionStorage.getItem('finalTotalForPayment');
-
-        if (storedPayload && finalTotal) {
-            setOrderPayload(JSON.parse(storedPayload));
-            setTotalAmount(Number(finalTotal));
+        if (storedPayload) {
+            const payload = JSON.parse(storedPayload);
+            setOrderPayload(payload);
+            calculateServerTotal(payload).then(amount => setTotalAmount(amount));
         } else {
             router.push('/checkout');
             return;
@@ -82,7 +122,7 @@ function PaymentGatewayPage() {
         }
         setIsProcessing(true);
 
-        const payloadWithDetails: OrderPayload = {
+        const payloadWithDetails: OrderPayload & { paymentDetails: any } = {
             ...orderPayload,
             paymentDetails: {
                 gateway: selectedMethod,
@@ -102,7 +142,6 @@ function PaymentGatewayPage() {
                 });
                 clearCart();
                 sessionStorage.removeItem('orderPayload');
-                sessionStorage.removeItem('finalTotalForPayment');
                 router.push(`/account/orders/${result.orderId}`);
             } else {
                 toast({
