@@ -12,30 +12,31 @@ import { withAuth } from "@/hooks/useAuth";
 
 function PaymentPage() {
     const [orderPayload, setOrderPayload] = useState<OrderPayload | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [totalAmount, setTotalAmount] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
         const storedPayload = sessionStorage.getItem('orderPayload');
-        if (storedPayload) {
+        const finalTotal = sessionStorage.getItem('finalTotalForPayment');
+
+        if (storedPayload && finalTotal) {
             setOrderPayload(JSON.parse(storedPayload));
+            setTotalAmount(Number(finalTotal));
         } else {
-            if(!isLoading) router.push('/checkout');
+            router.push('/checkout');
         }
-    }, [router, isLoading]);
+        setIsLoading(false);
+    }, [router]);
 
     const handleConfirmPayment = () => {
         setIsLoading(true);
         router.push('/payment/gateway');
     };
     
-    if (!orderPayload) {
+    if (isLoading || !orderPayload) {
         return null;
     }
-
-    // This is a temporary placeholder for total calculation
-    // In a real app, this should be securely fetched or recalculated on this page
-    const totalAmount = orderPayload.items.reduce((acc, item) => acc + (item.quantity * 100), 0); // Dummy price
 
     return (
         <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
@@ -46,9 +47,8 @@ function PaymentPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex justify-between font-bold text-lg">
-                            <span>Total Amount</span>
-                            {/* This total is illustrative. The final total is calculated on the server. */}
-                            <span>...</span>
+                            <span>Total Amount to Pay</span>
+                            <span>৳{totalAmount}</span>
                         </div>
                         <Separator />
                         <div>

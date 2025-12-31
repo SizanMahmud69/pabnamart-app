@@ -19,13 +19,8 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { placeOrder } from "@/app/actions";
-import { doc, getFirestore, onSnapshot } from "firebase/firestore";
-import app from "@/lib/firebase";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { useDeliveryCharge } from "@/hooks/useDeliveryCharge";
 import { Badge } from "@/components/ui/badge";
-
-const db = getFirestore(app);
 
 const paymentMethods = [
     {
@@ -155,6 +150,9 @@ function CheckoutPage() {
     
     if (selectedPaymentMethod === 'online') {
         sessionStorage.setItem('orderPayload', JSON.stringify(payload));
+        // Pass the final total to the payment page via session storage.
+        // This is a client-side convenience and the final amount is ALWAYS recalculated on the server.
+        sessionStorage.setItem('finalTotalForPayment', String(finalTotal));
         router.push('/payment');
         return;
     }
@@ -168,7 +166,7 @@ function CheckoutPage() {
                 description: "Thank you for your purchase.",
             });
             clearCart();
-            router.push('/account/orders?status=processing');
+            router.push(`/account/orders/${result.orderId}`);
         } else {
             toast({
                 title: "Order Failed",
@@ -386,5 +384,3 @@ function CheckoutPage() {
 }
 
 export default withAuth(CheckoutPage);
-
-  

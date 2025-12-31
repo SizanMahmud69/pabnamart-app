@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Copy } from "lucide-react";
-import type { PaymentSettings, User } from "@/types";
-import { OrderPayload } from "@/app/checkout/page";
+import type { PaymentSettings } from "@/types";
+import type { OrderPayload } from "@/app/checkout/page";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +17,7 @@ import { placeOrder } from "@/app/actions";
 import { cn } from "@/lib/utils";
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const db = getFirestore(app);
 
@@ -33,7 +34,8 @@ function PaymentGatewayPage() {
     const [paymentNumber, setPaymentNumber] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentMethods, setPaymentMethods] = useState(initialPaymentMethods);
-    const [totalAmount, setTotalAmount] = useState(0); // State to hold the final total
+    const [totalAmount, setTotalAmount] = useState(0);
+    const [loading, setLoading] = useState(true);
     
     const router = useRouter();
     const { user } = useAuth();
@@ -42,10 +44,14 @@ function PaymentGatewayPage() {
 
     useEffect(() => {
         const storedPayload = sessionStorage.getItem('orderPayload');
-        if (storedPayload) {
+        const finalTotal = sessionStorage.getItem('finalTotalForPayment');
+
+        if (storedPayload && finalTotal) {
             setOrderPayload(JSON.parse(storedPayload));
+            setTotalAmount(Number(finalTotal));
         } else {
             router.push('/checkout');
+            return;
         }
 
         const settingsDocRef = doc(db, 'settings', 'payment');
@@ -59,11 +65,8 @@ function PaymentGatewayPage() {
                     return method;
                 }));
             }
+            setLoading(false);
         });
-
-        // This is a workaround. In a real scenario, you'd fetch this total from a secure source.
-        const cartTotal = sessionStorage.getItem('finalTotalForPayment') || '0';
-        setTotalAmount(parseInt(cartTotal, 10));
 
         return () => unsubscribe();
     }, [router]);
@@ -124,30 +127,9 @@ function PaymentGatewayPage() {
         navigator.clipboard.writeText(text);
         toast({ title: "Copied!", description: "Merchant number copied to clipboard." });
     }
-    
-    useEffect(() => {
-        // Recalculate total on client to display. This is for display only.
-        // The actual total is calculated on the server.
-        async function calculateDisplayTotal() {
-            if (orderPayload) {
-                const tempTotal = 1; // You can't securely calculate this on the client
-                                     // We just show a placeholder.
-                                     // A better approach would be to have `placeOrder` return the final total
-                                     // before payment, but that complicates the flow.
-                                     // For now, we get it from session storage as a workaround.
-                const cartTotal = sessionStorage.getItem('finalTotalForPayment') || '0';
-                setTotalAmount(parseInt(cartTotal, 10));
-            }
-        }
-        calculateDisplayTotal();
-    }, [orderPayload]);
 
-    useEffect(() => {
-        sessionStorage.setItem('finalTotalForPayment', String(totalAmount));
-    }, [totalAmount]);
-
-    if (!orderPayload) {
-        return null;
+    if (loading) {
+        return <LoadingSpinner />;
     }
 
     return (

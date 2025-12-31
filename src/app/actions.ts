@@ -11,7 +11,7 @@ import { getStorage } from 'firebase-admin/storage';
 import { randomUUID } from "crypto";
 import { headers } from "next/headers";
 import { auth } from "firebase-admin";
-import type { OrderPayload } from "../checkout/page";
+import type { OrderPayload } from "./checkout/page";
 
 
 export async function getProductRecommendations(input: ProductRecommendationsInput): Promise<ProductRecommendationsOutput> {
@@ -318,5 +318,3 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
-
-    
