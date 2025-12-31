@@ -155,7 +155,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const { products: saleProducts } = getFlashSaleProducts();
         if (user && saleProducts.length > 0) {
-            const seenProducts = JSON.parse(localStorage.getItem(`seenFlashSales_${user.uid}`) || '[]');
+            const seenProducts = JSON.parse(localStorage.getItem(`seenFlashSales_${'\'\'\''}user.uid\'\'\'}`) || '[]');
             const unseenSaleProducts = saleProducts.filter(p => !seenProducts.includes(p.id));
 
             if (unseenSaleProducts.length > 0) {
@@ -171,10 +171,10 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
     const markFlashSaleAsSeen = useCallback((productId: number) => {
         if (!user) return;
-        const seenProducts = JSON.parse(localStorage.getItem(`seenFlashSales_${user.uid}`) || '[]');
+        const seenProducts = JSON.parse(localStorage.getItem(`seenFlashSales_${'\'\'\''}user.uid\'\'\'}`) || '[]');
         if (!seenProducts.includes(productId)) {
             const newSeenProducts = [...seenProducts, productId];
-            localStorage.setItem(`seenFlashSales_${user.uid}`, JSON.stringify(newSeenProducts));
+            localStorage.setItem(`seenFlashSales_${'\'\'\''}user.uid\'\'\'}`, JSON.stringify(newSeenProducts));
         }
         setFlashSalePopupProduct(null);
     }, [user]);
@@ -189,7 +189,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       rating: 0,
       reviews: [],
       sold: 0,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     const productDoc = doc(db, 'products', newId.toString());
     const sanitizedProduct = convertUndefinedToNull(newProduct);
@@ -208,8 +208,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
           return createAndSendNotification(userId, {
               icon: 'PackageCheck',
               title: "Item Back in Stock!",
-              description: `The item you wanted, "${product.name}", is now available.`,
-              href: `/products/${product.id}`
+              description: `The item you wanted, "${'\'\'\''}product.name\'\'\'}", is now available.`,
+              href: `/products/${'\'\'\''}product.id\'\'\'}`
           });
       });
 
