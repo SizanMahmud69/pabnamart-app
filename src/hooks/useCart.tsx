@@ -147,8 +147,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
               );
             }
             
-            // Create a clean object for the cart, excluding complex fields like 'reviews'
-            const productForCart: Omit<Product, 'reviews' | 'createdAt'> & { quantity: number } = {
+            // Create a clean object for the cart, excluding complex fields.
+            const productForCart: CartItem = {
                 id: product.id,
                 name: product.name,
                 description: product.description,
@@ -166,10 +166,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 flashSaleEndDate: product.flashSaleEndDate,
                 flashSaleDiscount: product.flashSaleDiscount,
                 hasOffer: product.hasOffer,
+                createdAt: product.createdAt,
                 quantity: 1,
             };
 
-            return [...prevCartItems, productForCart as CartItem];
+            return [...prevCartItems, productForCart];
         });
 
         setSelectedItemIds(prevSelectedIds => {
