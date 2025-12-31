@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
@@ -167,7 +168,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
         toast({
           title: "Added to cart",
-          description: `${product.name} has been added to your cart.`,
+          description: `${'\'\'\''}${product.name}${'\'\'\''} has been added to your cart.`,
         });
     }, [user, toast, router, getFlashSalePrice]);
 
