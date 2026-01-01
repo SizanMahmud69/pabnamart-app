@@ -184,9 +184,9 @@ export async function placeOrder(payload: OrderPayload) {
         let voucherDiscount = 0;
         let usedVoucher: Voucher | null = null;
         if (payload.voucherCode) {
-            const voucherDoc = await transaction.get(db.collection('vouchers').doc(payload.voucherCode));
-            if (voucherDoc.exists) {
-                const voucherData = voucherDoc.data() as Voucher;
+            const voucherDocSnap = await transaction.get(db.collection('vouchers').doc(payload.voucherCode));
+            if (voucherDocSnap.exists) {
+                const voucherData = voucherDocSnap.data() as Voucher;
                 if (!userData.usedVoucherCodes?.includes(voucherData.code)) {
                      if (!voucherData.minSpend || subtotal >= voucherData.minSpend) {
                         usedVoucher = voucherData;
@@ -200,12 +200,12 @@ export async function placeOrder(payload: OrderPayload) {
             }
         }
         
-        const subtotalAfterDiscount = subtotal - voucherDiscount;
+        const subtotalAfterDiscount = Math.max(0, subtotal - voucherDiscount);
 
-        const deliverySettingsDoc = await transaction.get(db.collection('settings').doc('delivery'));
+        const deliverySettingsDocSnap = await transaction.get(db.collection('settings').doc('delivery'));
         let shippingFee = 0;
-        if (deliverySettingsDoc.exists()) {
-            const settings = deliverySettingsDoc.data() as any;
+        if (deliverySettingsDocSnap.exists) {
+            const settings = deliverySettingsDocSnap.data() as any;
             const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
             const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
 
