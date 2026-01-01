@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { getFirestore, doc, onSnapshot, getDoc, collection } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from "@/components/LoadingSpinner";
+import type { Product, Voucher } from '@/types';
 
 const db = getFirestore(app);
 
@@ -122,7 +124,7 @@ function PaymentGatewayPage() {
         }
         setIsProcessing(true);
 
-        const payloadWithDetails: OrderPayload & { paymentDetails: any } = {
+        const payloadWithDetails: OrderPayload = {
             ...orderPayload,
             paymentDetails: {
                 gateway: selectedMethod,
@@ -241,3 +243,5 @@ function PaymentGatewayPage() {
 }
 
 export default withAuth(PaymentGatewayPage);
+
+    

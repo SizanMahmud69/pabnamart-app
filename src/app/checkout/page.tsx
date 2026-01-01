@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -26,6 +27,12 @@ export interface OrderPayload {
     shippingAddressId: string;
     paymentMethod: string;
     voucherCode?: string;
+    paymentDetails?: {
+        gateway: string;
+        transactionId: string;
+        payerNumber: string;
+        merchantNumber: string;
+    };
 }
 
 const paymentMethods = [
@@ -371,3 +378,5 @@ function CheckoutPage() {
 }
 
 export default withAuth(CheckoutPage);
+
+    

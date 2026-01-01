@@ -160,7 +160,6 @@ export async function placeOrder(payload: OrderPayload) {
     let voucherDiscount = 0;
     let usedVoucher: Voucher | null = null;
     const existingUsedVouchers = userData.usedVoucherCodes || [];
-    let updatedUsedVouchers = [...existingUsedVouchers];
 
     if (payload.voucherCode && !existingUsedVouchers.includes(payload.voucherCode)) {
         const voucherDocSnap = await db.collection('vouchers').doc(payload.voucherCode).get();
@@ -173,7 +172,6 @@ export async function placeOrder(payload: OrderPayload) {
                 } else {
                     voucherDiscount = (preSubtotal * voucherData.discount) / 100;
                 }
-                updatedUsedVouchers.push(voucherData.code);
             }
         }
     }
@@ -267,7 +265,9 @@ export async function placeOrder(payload: OrderPayload) {
         transaction.set(cartRef, { items: [], selectedItemIds: [] }, { merge: true });
         
         if (usedVoucher) {
-            transaction.update(userDocRef, { usedVoucherCodes: updatedUsedVouchers });
+            transaction.update(userDocRef, {
+              usedVoucherCodes: FieldValue.arrayUnion(usedVoucher.code),
+            });
         }
      });
     
