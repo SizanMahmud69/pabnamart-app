@@ -168,7 +168,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
         toast({
           title: "Added to cart",
-          description: `${'\'\'\''}${product.name}${'\'\'\''} has been added to your cart.`,
+          description: `${product.name} has been added to your cart.`,
         });
     }, [user, toast, router, getFlashSalePrice]);
 
@@ -250,7 +250,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const itemCount = selectedCartItems.reduce((total, item) => total + item.quantity, 0);
-    const isInsidePabna = selectedShippingAddress?.city.toLowerCase().trim() === 'pabna';
+    const isInsidePabna = !!selectedShippingAddress && selectedShippingAddress.city.toLowerCase().trim() === 'pabna';
 
     if (isInsidePabna) {
         return itemCount >= 1 && itemCount <= 5 ? chargeInsidePabnaSmall : chargeInsidePabnaLarge;
