@@ -125,20 +125,22 @@ export async function placeOrder(payload: OrderPayload) {
   if (!payload.items || payload.items.length === 0) {
     return { success: false, message: 'Invalid order data. No items in order.' };
   }
-
-  const orderRef = db.collection('orders').doc();
-
+  
   try {
-     await db.runTransaction(async (transaction) => {
-        const userDoc = await transaction.get(db.collection('users').doc(userId));
-        if (!userDoc.exists) {
-            throw new Error('User not found.');
-        }
-        const userData = userDoc.data() as User;
-        if (!userData.shippingAddresses) {
-            userData.shippingAddresses = [];
-        }
-        
+    const userDocRef = db.collection('users').doc(userId);
+    const userDoc = await userDocRef.get();
+    
+    if (!userDoc.exists) {
+        throw new Error('User not found.');
+    }
+    const userData = userDoc.data() as User;
+    if (!userData.shippingAddresses) {
+        userData.shippingAddresses = [];
+    }
+
+    const orderRef = db.collection('orders').doc();
+
+    await db.runTransaction(async (transaction) => {
         const shippingAddress = userData.shippingAddresses?.find(addr => addr.id === payload.shippingAddressId);
         if (!shippingAddress) {
             throw new Error('Shipping address not found.');
@@ -159,7 +161,6 @@ export async function placeOrder(payload: OrderPayload) {
             }
             const productData = productDoc.data() as Product;
 
-            // Use server-side price
             const price = productData.price;
             subtotal += price * item.quantity;
             
@@ -180,7 +181,6 @@ export async function placeOrder(payload: OrderPayload) {
             transaction.update(productRefs[i], { stock: newStock, sold: newSoldCount });
         }
         
-        // Server-side voucher calculation
         let voucherDiscount = 0;
         let usedVoucher: Voucher | null = null;
         if (payload.voucherCode) {
@@ -202,7 +202,6 @@ export async function placeOrder(payload: OrderPayload) {
         
         const subtotalAfterDiscount = subtotal - voucherDiscount;
 
-        // Server-side shipping fee calculation
         const deliverySettingsDoc = await transaction.get(db.collection('settings').doc('delivery'));
         let shippingFee = 0;
         if (deliverySettingsDoc.exists()) {
@@ -260,7 +259,7 @@ export async function placeOrder(payload: OrderPayload) {
         transaction.update(cartRef, { items: [], selectedItemIds: [] });
         
         if (usedVoucher) {
-            transaction.update(userDoc.ref, {
+            transaction.update(userDocRef, {
                 usedVoucherCodes: FieldValue.arrayUnion(usedVoucher.code)
             });
         }
@@ -316,3 +315,5 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
+
+    
