@@ -204,7 +204,7 @@ export async function placeOrder(payload: OrderPayload) {
 
         const deliverySettingsDocSnap = await transaction.get(db.collection('settings').doc('delivery'));
         let shippingFee = 0;
-        if (deliverySettingsDocSnap.exists) {
+        if (deliverySettingsDocSnap.exists()) {
             const settings = deliverySettingsDocSnap.data() as any;
             const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
             const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
