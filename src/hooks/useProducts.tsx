@@ -12,8 +12,8 @@ import { useAuth } from './useAuth';
 
 interface ProductContextType {
   products: Product[];
-  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => Promise<void>;
-  updateProduct: (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => Promise<void>;
+  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold' | 'createdAt'>) => Promise<void>;
+  updateProduct: (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold' | 'createdAt'>) => Promise<void>;
   deleteProduct: (productId: number) => Promise<void>;
   loading: boolean;
   getFlashSaleProducts: () => { products: Product[], closestExpiry: string | null };
@@ -40,7 +40,7 @@ const convertUndefinedToNull = (obj: any) => {
     if (Array.isArray(obj)) {
         return obj.map(v => convertUndefinedToNull(v));
     }
-    if (typeof obj === 'object') {
+    if (typeof obj === 'object' && !(obj instanceof Date)) {
         const newObj: { [key: string]: any } = {};
         for (const key in obj) {
             if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -179,17 +179,17 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         setFlashSalePopupProduct(null);
     }, [user]);
 
-  const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
+  const addProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold' | 'createdAt'>) => {
     if (!app) return;
     const db = getFirestore(app);
     const newId = new Date().getTime(); 
-    const newProduct: Omit<Product, 'reviews'> & { reviews: Review[] | undefined } = { 
+    const newProduct: Product = { 
       ...productData, 
       id: newId,
       rating: 0,
       reviews: [],
       sold: 0,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     };
     const productDoc = doc(db, 'products', newId.toString());
     const sanitizedProduct = convertUndefinedToNull(newProduct);
@@ -217,7 +217,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
   }, []);
 
-  const updateProduct = async (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'>) => {
+  const updateProduct = async (productId: number, productData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold' | 'createdAt'>) => {
     if (!app) return;
     const db = getFirestore(app);
     const productDocRef = doc(db, 'products', productId.toString());
@@ -227,12 +227,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         await sendStockNotifications(existingProduct);
     }
     
-    const dataToUpdate: Partial<Product> = {
+    const dataToUpdate = {
         ...productData,
-        id: productId, // Ensure ID is part of the update data for consistency
-        rating: existingProduct?.rating || 0,
-        reviews: existingProduct?.reviews || [],
-        sold: existingProduct?.sold || 0,
     };
 
     const sanitizedData = convertUndefinedToNull(dataToUpdate);

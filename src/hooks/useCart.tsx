@@ -32,6 +32,14 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const roundPrice = (price: number): number => {
+    const decimalPart = price - Math.floor(price);
+    if (decimalPart > 0 && decimalPart <= 0.50) {
+        return Math.floor(price);
+    }
+    return Math.round(price);
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [db, setDb] = useState<Firestore | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -147,8 +155,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             const productForCart: CartItem = {
                 id: product.id,
                 name: product.name,
-                price: price,
-                originalPrice: product.originalPrice,
+                price: roundPrice(price),
+                originalPrice: product.originalPrice ? roundPrice(product.originalPrice) : undefined,
                 images: product.images,
                 stock: product.stock,
                 freeShipping: product.freeShipping,
