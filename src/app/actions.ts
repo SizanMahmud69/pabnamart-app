@@ -143,7 +143,6 @@ export async function placeOrder(payload: OrderPayload) {
         throw new Error('Shipping address not found.');
     }
 
-    // Pre-calculate subtotal to check voucher eligibility outside transaction
     let preSubtotal = 0;
     const productDetailsForTx = [];
     for (const item of payload.items) {
@@ -195,13 +194,16 @@ export async function placeOrder(payload: OrderPayload) {
     const finalTotal = Math.round(subtotalAfterDiscount + shippingFee);
 
     const orderRef = db.collection('orders').doc();
+    let updatedUsedVouchers = [...existingUsedVouchers];
+    if (usedVoucher && !updatedUsedVouchers.includes(usedVoucher.code)) {
+        updatedUsedVouchers.push(usedVoucher.code);
+    }
 
     await db.runTransaction(async (transaction) => {
         const itemsForOrder: OrderItem[] = [];
 
         for (const detail of productDetailsForTx) {
             const productRef = db.collection('products').doc(detail.id.toString());
-            // We must read inside the transaction to ensure atomicity
             const productDoc = await transaction.get(productRef); 
             if (!productDoc.exists) throw new Error(`Product ${detail.productData.name} disappeared.`);
             
@@ -264,10 +266,8 @@ export async function placeOrder(payload: OrderPayload) {
         const cartRef = db.collection('carts').doc(userId);
         transaction.set(cartRef, { items: [], selectedItemIds: [] }, { merge: true });
         
-        if (usedVoucher) {
-            transaction.update(userDocRef, {
-              usedVoucherCodes: FieldValue.arrayUnion(usedVoucher.code),
-            });
+        if (updatedUsedVouchers.length > existingUsedVouchers.length) {
+            transaction.update(userDocRef, { usedVoucherCodes: updatedUsedVouchers });
         }
      });
     
