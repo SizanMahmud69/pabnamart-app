@@ -138,86 +138,94 @@ export async function placeOrder(payload: OrderPayload) {
         userData.shippingAddresses = [];
     }
 
+    const shippingAddress = userData.shippingAddresses?.find(addr => addr.id === payload.shippingAddressId);
+    if (!shippingAddress) {
+        throw new Error('Shipping address not found.');
+    }
+
+    // Pre-calculate subtotal to check voucher eligibility outside transaction
+    let preSubtotal = 0;
+    const productDetailsForTx = [];
+    for (const item of payload.items) {
+        const productRef = db.collection('products').doc(item.id.toString());
+        const productDoc = await productRef.get();
+        if (!productDoc.exists) {
+            throw new Error(`Product with ID ${item.id} not found.`);
+        }
+        const productData = productDoc.data() as Product;
+        preSubtotal += productData.price * item.quantity;
+        productDetailsForTx.push({ ...item, productData });
+    }
+
+    let voucherDiscount = 0;
+    let usedVoucher: Voucher | null = null;
+    const existingUsedVouchers = userData.usedVoucherCodes || [];
+    let updatedUsedVouchers = [...existingUsedVouchers];
+
+    if (payload.voucherCode && !existingUsedVouchers.includes(payload.voucherCode)) {
+        const voucherDocSnap = await db.collection('vouchers').doc(payload.voucherCode).get();
+        if (voucherDocSnap.exists) {
+            const voucherData = voucherDocSnap.data() as Voucher;
+            if (!voucherData.minSpend || preSubtotal >= voucherData.minSpend) {
+                usedVoucher = voucherData;
+                if (voucherData.type === 'fixed') {
+                    voucherDiscount = voucherData.discount;
+                } else {
+                    voucherDiscount = (preSubtotal * voucherData.discount) / 100;
+                }
+                updatedUsedVouchers.push(voucherData.code);
+            }
+        }
+    }
+
+    const subtotalAfterDiscount = Math.max(0, preSubtotal - voucherDiscount);
+
+    const deliverySettingsDocSnap = await db.collection('settings').doc('delivery').get();
+    let shippingFee = 0;
+    if (deliverySettingsDocSnap.exists()) {
+        const settings = deliverySettingsDocSnap.data() as any;
+        const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
+        const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
+
+        if (isInsidePabna) {
+            shippingFee = itemCount <= 5 ? settings.insidePabnaSmall : settings.insidePabnaLarge;
+        } else {
+            shippingFee = itemCount <= 5 ? settings.outsidePabnaSmall : settings.outsidePabnaLarge;
+        }
+    }
+    
+    const finalTotal = Math.round(subtotalAfterDiscount + shippingFee);
+
     const orderRef = db.collection('orders').doc();
 
     await db.runTransaction(async (transaction) => {
-        const shippingAddress = userData.shippingAddresses?.find(addr => addr.id === payload.shippingAddressId);
-        if (!shippingAddress) {
-            throw new Error('Shipping address not found.');
-        }
-
-        const productRefs = payload.items.map(item => db.collection('products').doc(item.id.toString()));
-        const productDocs = await transaction.getAll(...productRefs);
-        
-        let subtotal = 0;
         const itemsForOrder: OrderItem[] = [];
 
-        for (let i = 0; i < productDocs.length; i++) {
-            const productDoc = productDocs[i];
-            const item = payload.items[i];
-
-            if (!productDoc.exists) {
-                throw new Error(`Product with ID ${item.id} not found.`);
-            }
+        for (const detail of productDetailsForTx) {
+            const productRef = db.collection('products').doc(detail.id.toString());
+            // We must read inside the transaction to ensure atomicity
+            const productDoc = await transaction.get(productRef); 
+            if (!productDoc.exists) throw new Error(`Product ${detail.productData.name} disappeared.`);
+            
             const productData = productDoc.data() as Product;
-
-            const price = productData.price;
-            subtotal += price * item.quantity;
+            const newStock = (productData.stock || 0) - detail.quantity;
+            if (newStock < 0) {
+                throw new Error(`Not enough stock for ${productData.name}.`);
+            }
             
             itemsForOrder.push({
                 id: productData.id,
                 name: productData.name,
-                price: price,
-                quantity: item.quantity,
+                price: productData.price,
+                quantity: detail.quantity,
                 image: productData.images[0],
                 returnPolicy: productData.returnPolicy ?? 0,
             });
 
-            const newStock = (productData.stock || 0) - item.quantity;
-            if (newStock < 0) {
-                throw new Error(`Not enough stock for ${productData.name}.`);
-            }
-            const newSoldCount = (productData.sold || 0) + item.quantity;
-            transaction.update(productRefs[i], { stock: newStock, sold: newSoldCount });
+            const newSoldCount = (productData.sold || 0) + detail.quantity;
+            transaction.update(productRef, { stock: newStock, sold: newSoldCount });
         }
         
-        let voucherDiscount = 0;
-        let usedVoucher: Voucher | null = null;
-        if (payload.voucherCode) {
-            const voucherDocSnap = await transaction.get(db.collection('vouchers').doc(payload.voucherCode));
-            if (voucherDocSnap.exists) {
-                const voucherData = voucherDocSnap.data() as Voucher;
-                if (!userData.usedVoucherCodes?.includes(voucherData.code)) {
-                     if (!voucherData.minSpend || subtotal >= voucherData.minSpend) {
-                        usedVoucher = voucherData;
-                        if (voucherData.type === 'fixed') {
-                            voucherDiscount = voucherData.discount;
-                        } else {
-                            voucherDiscount = (subtotal * voucherData.discount) / 100;
-                        }
-                    }
-                }
-            }
-        }
-        
-        const subtotalAfterDiscount = Math.max(0, subtotal - voucherDiscount);
-
-        const deliverySettingsDocSnap = await transaction.get(db.collection('settings').doc('delivery'));
-        let shippingFee = 0;
-        if (deliverySettingsDocSnap.exists()) {
-            const settings = deliverySettingsDocSnap.data() as any;
-            const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
-            const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
-
-            if (isInsidePabna) {
-                shippingFee = itemCount <= 5 ? settings.insidePabnaSmall : settings.insidePabnaLarge;
-            } else {
-                shippingFee = itemCount <= 5 ? settings.outsidePabnaSmall : settings.outsidePabnaLarge;
-            }
-        }
-        
-        const finalTotal = Math.round(subtotalAfterDiscount + shippingFee);
-
         let status: OrderStatus = 'pending';
         if (payload.paymentMethod === 'cod') {
             status = 'processing';
@@ -259,11 +267,7 @@ export async function placeOrder(payload: OrderPayload) {
         transaction.set(cartRef, { items: [], selectedItemIds: [] }, { merge: true });
         
         if (usedVoucher) {
-             const existingUsedVouchers = userData.usedVoucherCodes || [];
-             if (!existingUsedVouchers.includes(usedVoucher.code)) {
-                const updatedUsedVouchers = [...existingUsedVouchers, usedVoucher.code];
-                transaction.update(userDocRef, { usedVoucherCodes: updatedUsedVouchers });
-             }
+            transaction.update(userDocRef, { usedVoucherCodes: updatedUsedVouchers });
         }
      });
     
@@ -317,3 +321,5 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
+
+    
