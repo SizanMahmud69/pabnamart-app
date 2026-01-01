@@ -259,9 +259,11 @@ export async function placeOrder(payload: OrderPayload) {
         transaction.set(cartRef, { items: [], selectedItemIds: [] }, { merge: true });
         
         if (usedVoucher) {
-            transaction.update(userDocRef, {
-                usedVoucherCodes: FieldValue.arrayUnion(usedVoucher.code)
-            });
+             const existingUsedVouchers = userData.usedVoucherCodes || [];
+             if (!existingUsedVouchers.includes(usedVoucher.code)) {
+                const updatedUsedVouchers = [...existingUsedVouchers, usedVoucher.code];
+                transaction.update(userDocRef, { usedVoucherCodes: updatedUsedVouchers });
+             }
         }
      });
     
