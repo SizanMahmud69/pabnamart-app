@@ -153,7 +153,7 @@ export async function placeOrder(payload: OrderPayload) {
         }
         const productData = productDoc.data() as Product;
         preSubtotal += productData.price * item.quantity;
-        productDetailsForTx.push({ ...item, productData });
+        productDetailsForTx.push({ ...item, id: Number(item.id), productData });
     }
 
     let voucherDiscount = 0;
@@ -214,12 +214,12 @@ export async function placeOrder(payload: OrderPayload) {
             }
             
             itemsForOrder.push({
-                id: productData.id,
-                name: productData.name,
-                price: productData.price,
+                id: detail.productData.id,
+                name: detail.productData.name,
+                price: detail.productData.price,
                 quantity: detail.quantity,
-                image: productData.images[0],
-                returnPolicy: productData.returnPolicy ?? 0,
+                image: detail.productData.images[0],
+                returnPolicy: detail.productData.returnPolicy ?? 0,
             });
 
             const newSoldCount = (productData.sold || 0) + detail.quantity;
@@ -321,5 +321,3 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
-
-    
