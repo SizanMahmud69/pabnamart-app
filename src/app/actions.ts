@@ -134,11 +134,8 @@ export async function placeOrder(payload: OrderPayload) {
         throw new Error('User not found.');
     }
     const userData = userDoc.data() as User;
-    if (!userData.shippingAddresses) {
-        userData.shippingAddresses = [];
-    }
 
-    const shippingAddress = userData.shippingAddresses?.find(addr => addr.id === payload.shippingAddressId);
+    const shippingAddress = (userData.shippingAddresses || []).find(addr => addr.id === payload.shippingAddressId);
     if (!shippingAddress) {
         throw new Error('Shipping address not found.');
     }
@@ -321,3 +318,5 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
+
+    
