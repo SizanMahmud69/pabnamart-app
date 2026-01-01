@@ -256,7 +256,7 @@ export async function placeOrder(payload: OrderPayload) {
         transaction.set(orderRef, orderData);
 
         const cartRef = db.collection('carts').doc(userId);
-        transaction.update(cartRef, { items: [], selectedItemIds: [] });
+        transaction.set(cartRef, { items: [], selectedItemIds: [] }, { merge: true });
         
         if (usedVoucher) {
             transaction.update(userDocRef, {
@@ -315,5 +315,3 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
-
-    
