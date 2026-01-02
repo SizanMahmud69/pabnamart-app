@@ -30,7 +30,10 @@ const getStatusVariant = (status: Order['status']) => {
     }
 };
 
-const statusTabs = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
+const statusTabs: Order['status'][] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
+const allStatusTabs = ['all', ...statusTabs];
+const statusChangeOptions: Order['status'][] = ['cancelled', 'processing', 'shipped', 'delivered', 'returned'];
+
 
 export default function AdminOrderManagement() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -119,7 +122,7 @@ export default function AdminOrderManagement() {
                     <CardContent>
                         <Tabs value={activeTab} onValueChange={setActiveTab}>
                             <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7">
-                                {statusTabs.map(tab => (
+                                {allStatusTabs.map(tab => (
                                     <TabsTrigger key={tab} value={tab} className="capitalize">{tab}</TabsTrigger>
                                 ))}
                             </TabsList>
@@ -153,8 +156,8 @@ export default function AdminOrderManagement() {
                                                                     </DropdownMenuSubTrigger>
                                                                     <DropdownMenuPortal>
                                                                         <DropdownMenuSubContent>
-                                                                            {statusTabs.slice(1).map(status => (
-                                                                                <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order.id, status as Order['status'])} className="capitalize">
+                                                                            {statusChangeOptions.map(status => (
+                                                                                <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order.id, status)} className="capitalize">
                                                                                     {status}
                                                                                 </DropdownMenuItem>
                                                                             ))}
