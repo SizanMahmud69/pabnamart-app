@@ -1,3 +1,4 @@
+
 'use server';
 
 import 'dotenv/config';
@@ -216,6 +217,7 @@ export async function placeOrder(
     let voucherDiscount = 0;
     let shippingFeeWithDiscount = payload.shippingFee;
     let usedVoucher: Voucher | null = null;
+    let newUsageCount = 0;
 
     if (payload.voucherCode) {
       const voucherDocSnap = await db
@@ -227,26 +229,26 @@ export async function placeOrder(
         const userDoc = await db.collection('users').doc(payload.userId).get();
         const userData = userDoc.data() as User;
 
-        const isUsed = userData.usedVoucherCodes?.includes(voucher.code);
+        const currentUsage = userData.usedVouchers?.[voucher.code] || 0;
 
-        if (!isUsed) {
-          let preSubtotal = 0;
-          for (const item of payload.items) {
-            preSubtotal += item.price * item.quantity;
-          }
-
-          if (!voucher.minSpend || preSubtotal >= voucher.minSpend) {
-            usedVoucher = voucher;
-            if (voucher.discountType === 'shipping') {
-              shippingFeeWithDiscount = 0;
-            } else {
-              if (voucher.type === 'fixed') {
-                voucherDiscount = voucher.discount;
-              } else {
-                voucherDiscount = (preSubtotal * voucher.discount) / 100;
-              }
+        if (!voucher.usageLimit || currentUsage < voucher.usageLimit) {
+            let preSubtotal = 0;
+            for (const item of payload.items) {
+                preSubtotal += item.price * item.quantity;
             }
-          }
+            if (!voucher.minSpend || preSubtotal >= voucher.minSpend) {
+                usedVoucher = voucher;
+                newUsageCount = currentUsage + 1;
+                if (voucher.discountType === 'shipping') {
+                    shippingFeeWithDiscount = 0;
+                } else {
+                    if (voucher.type === 'fixed') {
+                        voucherDiscount = voucher.discount;
+                    } else {
+                        voucherDiscount = (preSubtotal * voucher.discount) / 100;
+                    }
+                }
+            }
         }
       }
     }
@@ -315,7 +317,7 @@ export async function placeOrder(
 
       if (usedVoucher) {
         transaction.update(userDocRef, {
-          usedVoucherCodes: FieldValue.arrayUnion(usedVoucher.code),
+            [`usedVouchers.${usedVoucher.code}`]: newUsageCount
         });
       }
 

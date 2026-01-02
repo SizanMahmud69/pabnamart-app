@@ -14,36 +14,27 @@ import { cn } from "@/lib/utils";
 function MyVouchersPage() {
     const { collectedVouchers } = useVouchers();
     const { appUser } = useAuth();
-    const usedVoucherCodes = appUser?.usedVoucherCodes || [];
-
-    const isUsed = (code: string) => usedVoucherCodes.includes(code);
+    
+    const isUsed = (code: string, limit?: number) => {
+        if (!appUser || !appUser.usedVouchers) return false;
+        const usageCount = appUser.usedVouchers[code] || 0;
+        return usageCount >= (limit || 1);
+    };
 
     const sortedVouchers = useMemo(() => {
+        if (!collectedVouchers) return [];
         return [...collectedVouchers].sort((a, b) => {
-            const aIsUsed = isUsed(a.code);
-            const bIsUsed = isUsed(b.code);
+            const aIsUsed = isUsed(a.code, a.usageLimit);
+            const bIsUsed = isUsed(b.code, b.usageLimit);
 
-            if (aIsUsed && !bIsUsed) {
-                return 1; // a (used) comes after b (unused)
-            }
-            if (!aIsUsed && bIsUsed) {
-                return -1; // a (unused) comes before b (used)
-            }
-
-            // If both are unused, sort by collection date descending (newest first)
-            if (!aIsUsed && !bIsUsed) {
-                const dateA = a.collectedDate ? new Date(a.collectedDate).getTime() : 0;
-                const dateB = b.collectedDate ? new Date(b.collectedDate).getTime() : 0;
-                return dateB - dateA;
-            }
-
-            // If both are used, you might want to sort them by date as well, or keep original order
-            // For now, let's keep their relative order (or sort by date descending too)
+            if (aIsUsed && !bIsUsed) return 1;
+            if (!aIsUsed && bIsUsed) return -1;
+            
             const dateA = a.collectedDate ? new Date(a.collectedDate).getTime() : 0;
             const dateB = b.collectedDate ? new Date(b.collectedDate).getTime() : 0;
             return dateB - dateA;
         });
-    }, [collectedVouchers, usedVoucherCodes]);
+    }, [collectedVouchers, appUser]);
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -75,7 +66,7 @@ function MyVouchersPage() {
                     <>
                         <div className="space-y-4">
                             {sortedVouchers.map((voucher) => {
-                                const used = isUsed(voucher.code);
+                                const used = isUsed(voucher.code, voucher.usageLimit);
                                 return (
                                     <div key={voucher.code} className={cn(
                                         "rounded-lg shadow-sm overflow-hidden border-0 transition-opacity",

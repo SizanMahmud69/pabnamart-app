@@ -10,7 +10,7 @@ import { ArrowLeft, PlusCircle, Edit, Trash2, MoreHorizontal, Loader2 } from 'lu
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
-import { collection, deleteDoc, doc, getFirestore, onSnapshot } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Voucher } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -29,7 +29,8 @@ export default function AdminVoucherManagement() {
 
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'vouchers'), (snapshot) => {
+    const q = query(collection(db, 'vouchers'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
         const vouchersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Voucher));
         setVouchers(vouchersData);
         setLoading(false);
@@ -87,6 +88,7 @@ export default function AdminVoucherManagement() {
                                     <TableHead>Type</TableHead>
                                     <TableHead>Value</TableHead>
                                     <TableHead>Min. Spend</TableHead>
+                                    <TableHead>Usage Limit</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -98,6 +100,7 @@ export default function AdminVoucherManagement() {
                                         <TableCell className="capitalize">{voucher.type}</TableCell>
                                         <TableCell>{voucher.type === 'fixed' ? `৳${voucher.discount}` : `${voucher.discount}%`}</TableCell>
                                         <TableCell>{voucher.minSpend ? `৳${voucher.minSpend}` : 'N/A'}</TableCell>
+                                        <TableCell>{voucher.usageLimit || 1}</TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

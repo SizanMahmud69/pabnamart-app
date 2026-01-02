@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from "react";
 
 export interface Review {
@@ -84,6 +85,7 @@ export interface Voucher {
     isReturnVoucher?: boolean;
     collectedDate?: string;
     createdAt?: string;
+    usageLimit?: number;
 }
 
 export interface Offer {
@@ -127,7 +129,7 @@ export interface User {
   status: 'active' | 'banned';
   joined: string;
   shippingAddresses?: ShippingAddress[];
-  usedVoucherCodes?: string[];
+  usedVouchers?: { [code: string]: number };
   fcmTokens?: string[];
   role?: 'user' | 'moderator';
   permissions?: ModeratorPermissions;

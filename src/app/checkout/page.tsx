@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 function CheckoutPage() {
-    const { user } = useAuth();
+    const { user, appUser } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
     const { 
@@ -93,6 +93,7 @@ function CheckoutPage() {
 
     const handleApplyVoucher = () => {
         setVoucherError(null);
+        setAppliedVoucher(null);
         if (!voucherCode) {
             setVoucherError("Please enter a voucher code.");
             return;
@@ -110,16 +111,16 @@ function CheckoutPage() {
             return;
         }
         
-        const db = getFirestore(app);
-        const userDocRef = doc(db, 'users', user!.uid);
-        getDoc(userDocRef).then(docSnap => {
-            if (docSnap.exists() && docSnap.data().usedVoucherCodes?.includes(voucherCode)) {
-                setVoucherError("This voucher has already been used.");
-            } else {
-                setAppliedVoucher(voucher);
-                toast({ title: "Voucher Applied!", description: `You've got a discount with ${voucher.code}.` });
+        if (appUser) {
+            const currentUsage = appUser.usedVouchers?.[voucherCode] || 0;
+            if (voucher.usageLimit && currentUsage >= voucher.usageLimit) {
+                setVoucherError("You have reached the usage limit for this voucher.");
+                return;
             }
-        })
+        }
+        
+        setAppliedVoucher(voucher);
+        toast({ title: "Voucher Applied!", description: `You've got a discount with ${voucher.code}.` });
     };
     
     const subtotalWithDiscount = useMemo(() => {
@@ -302,5 +303,3 @@ function CheckoutPage() {
 }
 
 export default withAuth(CheckoutPage);
-
-    

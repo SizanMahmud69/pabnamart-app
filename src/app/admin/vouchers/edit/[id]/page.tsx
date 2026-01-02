@@ -33,6 +33,8 @@ export default function EditVoucherPage() {
     const [minSpend, setMinSpend] = useState<number | undefined>(undefined);
     const [description, setDescription] = useState('');
     const [discountType, setDiscountType] = useState<'order' | 'shipping'>('order');
+    const [usageLimit, setUsageLimit] = useState<number | undefined>(1);
+
 
     useEffect(() => {
         if (!voucherId) return;
@@ -50,6 +52,7 @@ export default function EditVoucherPage() {
                 setMinSpend(data.minSpend);
                 setDescription(data.description);
                 setDiscountType(data.discountType || 'order');
+                setUsageLimit(data.usageLimit || 1);
             } else {
                 toast({ title: "Error", description: "Voucher not found.", variant: "destructive" });
                 router.push('/admin/vouchers');
@@ -71,6 +74,7 @@ export default function EditVoucherPage() {
                 minSpend: minSpend ? Number(minSpend) : null,
                 description,
                 discountType,
+                usageLimit: usageLimit ? Number(usageLimit) : 1,
             });
 
             toast({
@@ -110,7 +114,7 @@ export default function EditVoucherPage() {
                         <CardContent className="space-y-4">
                              <div className="space-y-2">
                                 <Label htmlFor="code">Voucher Code</Label>
-                                <Input id="code" value={voucherCode} onChange={(e) => setVoucherCode(e.target.value.toUpperCase())} required disabled={isSaving}/>
+                                <Input id="code" value={voucherCode} onChange={(e) => setVoucherCode(e.target.value.toUpperCase())} required disabled={true}/>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="description">Description</Label>
@@ -142,7 +146,7 @@ export default function EditVoucherPage() {
                                     </Select>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="discount">Discount Value</Label>
                                     <Input id="discount" type="number" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} required placeholder="e.g., 50 or 10" disabled={isSaving}/>
@@ -150,6 +154,10 @@ export default function EditVoucherPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="min-spend">Minimum Spend (৳)</Label>
                                     <Input id="min-spend" type="number" value={minSpend || ''} onChange={(e) => setMinSpend(e.target.value ? Number(e.target.value) : undefined)} placeholder="e.g., 500" disabled={isSaving}/>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="usage-limit">Usage Limit</Label>
+                                    <Input id="usage-limit" type="number" value={usageLimit || ''} onChange={(e) => setUsageLimit(e.target.value ? Number(e.target.value) : undefined)} placeholder="e.g., 1" required min={1} disabled={isSaving}/>
                                 </div>
                             </div>
                         </CardContent>

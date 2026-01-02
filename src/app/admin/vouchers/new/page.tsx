@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { collection, addDoc, getFirestore } from 'firebase/firestore';
+import { collection, addDoc, getFirestore, doc, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 
 const db = getFirestore(app);
@@ -27,19 +27,24 @@ export default function NewVoucherPage() {
     const [minSpend, setMinSpend] = useState<number | undefined>(undefined);
     const [description, setDescription] = useState('');
     const [discountType, setDiscountType] = useState<'order' | 'shipping'>('order');
+    const [usageLimit, setUsageLimit] = useState<number | undefined>(1);
+
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsCreating(true);
         try {
-            await addDoc(collection(db, 'vouchers'), {
+            // Use setDoc with the voucher code as the ID
+            const voucherRef = doc(db, 'vouchers', voucherCode);
+            await setDoc(voucherRef, {
                 code: voucherCode,
                 type: voucherType,
                 discount: Number(discount),
                 minSpend: minSpend ? Number(minSpend) : null,
                 description,
                 discountType,
-                isReturnVoucher: false, // Explicitly set for admin-created vouchers
+                isReturnVoucher: false,
+                usageLimit: usageLimit ? Number(usageLimit) : 1,
                 createdAt: new Date().toISOString(),
             });
             
@@ -50,7 +55,7 @@ export default function NewVoucherPage() {
             router.push('/admin/vouchers');
         } catch (error) {
             console.error("Error creating voucher: ", error);
-            toast({ title: "Error", description: "Failed to create voucher.", variant: "destructive"});
+            toast({ title: "Error", description: "Failed to create voucher. The code might already exist.", variant: "destructive"});
         } finally {
             setIsCreating(false);
         }
@@ -108,7 +113,7 @@ export default function NewVoucherPage() {
                                     </Select>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="discount">Discount Value</Label>
                                     <Input id="discount" type="number" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} required placeholder="e.g., 50 or 10" disabled={isCreating}/>
@@ -116,6 +121,10 @@ export default function NewVoucherPage() {
                                  <div className="space-y-2">
                                     <Label htmlFor="min-spend">Minimum Spend (৳)</Label>
                                     <Input id="min-spend" type="number" value={minSpend || ''} onChange={(e) => setMinSpend(e.target.value ? Number(e.target.value) : undefined)} placeholder="e.g., 500" disabled={isCreating}/>
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="usage-limit">Usage Limit</Label>
+                                    <Input id="usage-limit" type="number" value={usageLimit || ''} onChange={(e) => setUsageLimit(e.target.value ? Number(e.target.value) : undefined)} placeholder="e.g., 1" required min={1} disabled={isCreating}/>
                                 </div>
                             </div>
                         </CardContent>

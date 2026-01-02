@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
-import type { CartItem, Product, ShippingAddress } from '@/types';
+import type { CartItem, Product, ShippingAddress, User } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
 import { getFirestore, doc, onSnapshot, setDoc, getDoc, Firestore, updateDoc, arrayRemove, arrayUnion, FieldValue } from 'firebase/firestore';
@@ -46,7 +46,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
   const isInitialLoad = useRef(true);
-  const { user } = useAuth();
+  const { user, appUser } = useAuth();
   const { toast } = useToast();
   const { chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge } = useDeliveryCharge();
   const { getFlashSalePrice } = useProducts();
@@ -99,21 +99,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       
-      const userDocRef = doc(db, 'users', user.uid);
-      const userUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          const addresses = userData.shippingAddresses || [];
-          const defaultAddr = addresses.find((a: ShippingAddress) => a.default) || addresses[0] || null;
-          setSelectedShippingAddress(defaultAddr);
-        } else {
-            setSelectedShippingAddress(null);
-        }
-      });
+      const defaultAddr = appUser?.shippingAddresses?.find((a: ShippingAddress) => a.default) || appUser?.shippingAddresses?.[0] || null;
+      setSelectedShippingAddress(defaultAddr);
 
       return () => {
           cartUnsubscribe();
-          userUnsubscribe();
       };
     } else {
       setCartItems([]);
@@ -121,7 +111,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setSelectedShippingAddress(null);
       isInitialLoad.current = true;
     }
-  }, [user, db]);
+  }, [user, db, appUser]);
   
   useEffect(() => {
     if (!isInitialLoad.current && user) {

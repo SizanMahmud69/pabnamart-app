@@ -59,8 +59,12 @@ export default function AccountPage() {
 
     const unusedVoucherCount = useMemo(() => {
         if (!appUser) return 0;
-        const usedCodes = appUser.usedVoucherCodes || [];
-        return collectedVouchers.filter(v => !usedCodes.includes(v.code)).length;
+        const usedVouchersMap = appUser.usedVouchers || {};
+        return collectedVouchers.filter(v => {
+            const usageCount = usedVouchersMap[v.code] || 0;
+            const usageLimit = v.usageLimit || 1;
+            return usageCount < usageLimit;
+        }).length;
     }, [collectedVouchers, appUser]);
     
     useEffect(() => {
@@ -189,5 +193,3 @@ export default function AccountPage() {
         </div>
     );
 }
-
-    

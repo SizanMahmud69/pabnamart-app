@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         status: 'active',
         joined: new Date().toISOString(),
         shippingAddresses: [],
-        usedVoucherCodes: [],
+        usedVouchers: {},
     };
 
     await setDoc(userDocRef, newAppUser);
@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         status: 'active',
         joined: new Date().toISOString(),
         shippingAddresses: [],
-        usedVoucherCodes: [],
+        usedVouchers: {},
       };
       await setDoc(userDocRef, newAppUser);
     } else {
