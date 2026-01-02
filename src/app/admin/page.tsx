@@ -4,7 +4,7 @@
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ArrowRight, Tag, Ticket, Settings } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
 
@@ -15,6 +15,13 @@ const allMenuItems = [
         icon: Package,
         href: "/admin/products",
         permissionKey: 'canManageProducts'
+    },
+    {
+        title: "Order Management",
+        description: "View and process customer orders.",
+        icon: ShoppingCart,
+        href: "/admin/orders",
+        permissionKey: 'canManageOrders'
     },
     {
         title: "User Management",
