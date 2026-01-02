@@ -64,24 +64,6 @@ function MyOrdersPageContent() {
 
         return () => unsubscribe();
     }, [user, statusQuery]);
-
-    const handleReturnOrder = async (orderId: string) => {
-        const db = getFirestore(app);
-        const orderRef = doc(db, 'orders', orderId);
-        try {
-            await updateDoc(orderRef, { status: 'returned' });
-            toast({
-                title: "Order Return Requested",
-                description: "Your return request has been submitted.",
-            });
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "Failed to request return.",
-                variant: "destructive",
-            });
-        }
-    }
     
     if (loading) {
         return <LoadingSpinner />;
@@ -138,9 +120,11 @@ function MyOrdersPageContent() {
                                         <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
                                             <div className="flex gap-2">
                                                 {order.status === 'delivered' && (
-                                                    <Button variant="outline" size="sm" onClick={() => handleReturnOrder(order.id)}>
-                                                        <Undo2 className="mr-2 h-4 w-4" />
-                                                        Return
+                                                    <Button asChild variant="outline" size="sm">
+                                                        <Link href={`/account/returns?orderId=${order.id}`}>
+                                                            <Undo2 className="mr-2 h-4 w-4" />
+                                                            Return
+                                                        </Link>
                                                     </Button>
                                                 )}
                                             </div>
