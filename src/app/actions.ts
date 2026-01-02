@@ -140,89 +140,79 @@ export async function placeOrder(payload: OrderPayload) {
         throw new Error('Shipping address not found.');
     }
 
-    let preSubtotal = 0;
-    const productDetailsForTx = [];
-    for (const item of payload.items) {
-        const productRef = db.collection('products').doc(item.id.toString());
-        const productDoc = await productRef.get();
-        if (!productDoc.exists) {
-            throw new Error(`Product with ID ${item.id} not found.`);
-        }
-        const productData = productDoc.data() as Product;
-        preSubtotal += productData.price * item.quantity;
-        productDetailsForTx.push({ ...item, id: Number(item.id), productData });
-    }
-
-    let voucherDiscount = 0;
     let usedVoucher: Voucher | null = null;
-    const existingUsedVouchers = userData.usedVoucherCodes || [];
-
-    if (payload.voucherCode && !existingUsedVouchers.includes(payload.voucherCode)) {
+    if (payload.voucherCode) {
         const voucherDocSnap = await db.collection('vouchers').doc(payload.voucherCode).get();
         if (voucherDocSnap.exists) {
-            const voucherData = voucherDocSnap.data() as Voucher;
-            if (!voucherData.minSpend || preSubtotal >= voucherData.minSpend) {
-                usedVoucher = voucherData;
-                if (voucherData.type === 'fixed') {
-                    voucherDiscount = voucherData.discount;
-                } else {
-                    voucherDiscount = (preSubtotal * voucherData.discount) / 100;
-                }
-            }
-        }
-    }
-
-    const subtotalAfterDiscount = Math.max(0, preSubtotal - voucherDiscount);
-
-    const deliverySettingsDocSnap = await db.collection('settings').doc('delivery').get();
-    let shippingFee = 0;
-    if (deliverySettingsDocSnap.exists()) {
-        const settings = deliverySettingsDocSnap.data() as any;
-        const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
-        const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
-
-        if (isInsidePabna) {
-            shippingFee = itemCount <= 5 ? settings.insidePabnaSmall : settings.insidePabnaLarge;
-        } else {
-            shippingFee = itemCount <= 5 ? settings.outsidePabnaSmall : settings.outsidePabnaLarge;
+            usedVoucher = voucherDocSnap.data() as Voucher;
         }
     }
     
-    const finalTotal = Math.round(subtotalAfterDiscount + shippingFee);
-
+    const deliverySettingsDocSnap = await db.collection('settings').doc('delivery').get();
+    
     const orderRef = db.collection('orders').doc();
-    let updatedUsedVouchers = [...existingUsedVouchers];
-    if (usedVoucher && !updatedUsedVouchers.includes(usedVoucher.code)) {
-        updatedUsedVouchers.push(usedVoucher.code);
-    }
 
     await db.runTransaction(async (transaction) => {
+        let subtotal = 0;
         const itemsForOrder: OrderItem[] = [];
 
-        for (const detail of productDetailsForTx) {
-            const productRef = db.collection('products').doc(detail.id.toString());
+        for (const item of payload.items) {
+            const productRef = db.collection('products').doc(item.id.toString());
             const productDoc = await transaction.get(productRef); 
-            if (!productDoc.exists) throw new Error(`Product ${detail.productData.name} disappeared.`);
+            if (!productDoc.exists) throw new Error(`Product with ID ${item.id} not found.`);
             
             const productData = productDoc.data() as Product;
-            const newStock = (productData.stock || 0) - detail.quantity;
+            const newStock = (productData.stock || 0) - item.quantity;
             if (newStock < 0) {
                 throw new Error(`Not enough stock for ${productData.name}.`);
             }
             
+            // Use price from payload which is already rounded client-side
+            const priceForThisItem = item.price;
+            subtotal += priceForThisItem * item.quantity;
+
             itemsForOrder.push({
-                id: detail.productData.id,
-                name: detail.productData.name,
-                price: detail.price,
-                quantity: detail.quantity,
-                image: detail.productData.images[0],
-                returnPolicy: detail.productData.returnPolicy ?? 0,
+                id: productData.id,
+                name: productData.name,
+                price: priceForThisItem,
+                quantity: item.quantity,
+                image: productData.images[0],
+                returnPolicy: productData.returnPolicy ?? 0,
             });
 
-            const newSoldCount = (productData.sold || 0) + detail.quantity;
+            const newSoldCount = (productData.sold || 0) + item.quantity;
             transaction.update(productRef, { stock: newStock, sold: newSoldCount });
         }
         
+        let voucherDiscount = 0;
+        const existingUsedVouchers = userData.usedVoucherCodes || [];
+        if (usedVoucher && !existingUsedVouchers.includes(usedVoucher.code)) {
+            if (!usedVoucher.minSpend || subtotal >= usedVoucher.minSpend) {
+                if (usedVoucher.type === 'fixed') {
+                    voucherDiscount = usedVoucher.discount;
+                } else {
+                    voucherDiscount = (subtotal * usedVoucher.discount) / 100;
+                }
+            }
+        }
+
+        const subtotalAfterDiscount = Math.max(0, subtotal - voucherDiscount);
+
+        let shippingFee = 0;
+        if (deliverySettingsDocSnap.exists()) {
+            const settings = deliverySettingsDocSnap.data() as any;
+            const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
+            const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
+
+            if (isInsidePabna) {
+                shippingFee = itemCount <= 5 ? settings.insidePabnaSmall : settings.insidePabnaLarge;
+            } else {
+                shippingFee = itemCount <= 5 ? settings.outsidePabnaSmall : settings.outsidePabnaLarge;
+            }
+        }
+        
+        const finalTotal = Math.round(subtotalAfterDiscount + shippingFee);
+
         let status: OrderStatus = 'pending';
         if (payload.paymentMethod === 'cod') {
             status = 'processing';
@@ -251,7 +241,7 @@ export async function placeOrder(payload: OrderPayload) {
           shippingAddress: shippingAddressData,
           paymentMethod: payload.paymentMethod,
           isReviewed: false,
-          ...(usedVoucher && {
+          ...(usedVoucher && voucherDiscount > 0 && {
               usedVoucherCode: usedVoucher.code,
               voucherDiscount: voucherDiscount,
           }),
@@ -263,7 +253,8 @@ export async function placeOrder(payload: OrderPayload) {
         const cartRef = db.collection('carts').doc(userId);
         transaction.set(cartRef, { items: [], selectedItemIds: [] }, { merge: true });
         
-        if (updatedUsedVouchers.length > existingUsedVouchers.length) {
+        if (usedVoucher && voucherDiscount > 0 && !existingUsedVouchers.includes(usedVoucher.code)) {
+            const updatedUsedVouchers = [...existingUsedVouchers, usedVoucher.code];
             transaction.update(userDocRef, { usedVoucherCodes: updatedUsedVouchers });
         }
      });
@@ -318,5 +309,3 @@ export async function createAndSendNotification(userId: string, notificationData
         console.error('Error sending FCM notification:', error);
     }
 }
-
-    

@@ -11,7 +11,7 @@ import type { OrderPayload } from "@/app/checkout/page";
 import { withAuth } from "@/hooks/useAuth";
 import { getFirestore, collection, doc, getDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Product, Voucher, ShippingAddress, DeliverySettings } from '@/types';
+import type { Product, Voucher, ShippingAddress, DeliverySettings, User } from '@/types';
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { getAuth } from "firebase/auth";
 
@@ -24,11 +24,8 @@ async function calculateServerTotal(payload: OrderPayload): Promise<number> {
     
     let subtotal = 0;
     for (let i = 0; i < productDocs.length; i++) {
-        const productDoc = productDocs[i];
         const item = payload.items[i];
-        if (productDoc.exists()) {
-            subtotal += item.price * item.quantity;
-        }
+        subtotal += item.price * item.quantity;
     }
 
     let voucherDiscount = 0;
@@ -55,15 +52,18 @@ async function calculateServerTotal(payload: OrderPayload): Promise<number> {
         const user = getAuth(app).currentUser;
         if (user) {
             const userDoc = await getDoc(doc(db, 'users', user.uid));
-            const shippingAddress = (userDoc.data()?.shippingAddresses || []).find((a: any) => a.id === payload.shippingAddressId);
-            
-            if (shippingAddress) {
-                const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
-                const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
-                if (isInsidePabna) {
-                    shippingFee = itemCount <= 5 ? settings.insidePabnaSmall : settings.insidePabnaLarge;
-                } else {
-                    shippingFee = itemCount <= 5 ? settings.outsidePabnaSmall : settings.outsidePabnaLarge;
+             if (userDoc.exists()) {
+                const userData = userDoc.data() as User;
+                const shippingAddress = (userData.shippingAddresses || []).find((a: any) => a.id === payload.shippingAddressId);
+                
+                if (shippingAddress) {
+                    const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
+                    const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
+                    if (isInsidePabna) {
+                        shippingFee = itemCount <= 5 ? settings.insidePabnaSmall : settings.insidePabnaLarge;
+                    } else {
+                        shippingFee = itemCount <= 5 ? settings.outsidePabnaSmall : settings.outsidePabnaLarge;
+                    }
                 }
             }
         }
@@ -144,5 +144,3 @@ function PaymentPage() {
 }
 
 export default withAuth(PaymentPage);
-
-    
