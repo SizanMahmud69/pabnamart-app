@@ -1,5 +1,6 @@
 
 "use server";
+import 'dotenv/config';
 
 import { getProductRecommendations as getProductRecommendationsFlow } from "@/ai/flows/product-recommendations";
 import type { ProductRecommendationsInput, ProductRecommendationsOutput } from "@/ai/flows/product-recommendations";
