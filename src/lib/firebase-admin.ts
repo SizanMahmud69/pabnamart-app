@@ -2,11 +2,10 @@
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
 
-dotenv.config();
-
 let adminApp: admin.app.App;
 
 const getFirebaseAdmin = () => {
+  dotenv.config();
   if (admin.apps.length > 0) {
     return admin.apps[0]!;
   }
