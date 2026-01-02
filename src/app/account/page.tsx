@@ -2,20 +2,24 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Ticket, Settings, HelpCircle, Headphones, Star, Users, PackageSearch, ShoppingBag } from "lucide-react";
+import { Heart, Ticket, Settings, HelpCircle, Headphones, Star, Users, PackageSearch, ShoppingBag, ChevronRight, Package, Truck, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from 'lucide-react';
 import { useVouchers } from "@/hooks/useVouchers";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useWishlist } from "@/hooks/useWishlist";
+import { Separator } from "@/components/ui/separator";
+import type { Order } from "@/types";
+import { collection, getFirestore, limit, onSnapshot, query, where, orderBy } from "firebase/firestore";
+import app from "@/lib/firebase";
 
 
+const db = getFirestore(app);
 const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
 
@@ -34,10 +38,24 @@ const ServiceItem = ({ icon: Icon, label, href }: ServiceItemProps) => (
     </Link>
 )
 
+const OrderStatusIcon = ({ status }: { status: Order['status'] }) => {
+    const iconMap: { [key in Order['status']]: LucideIcon } = {
+        pending: Package,
+        processing: Package,
+        shipped: Truck,
+        delivered: CheckCircle,
+        cancelled: XCircle,
+        returned: XCircle,
+    };
+    const Icon = iconMap[status] || Package;
+    return <Icon className="h-6 w-6 text-primary" />;
+}
+
 export default function AccountPage() {
     const { collectedVouchers } = useVouchers();
     const { user, loading: authLoading, appUser } = useAuth();
     const { wishlistItems } = useWishlist();
+    const [orders, setOrders] = useState<Order[]>([]);
 
     const unusedVoucherCount = useMemo(() => {
         if (!appUser) return 0;
@@ -45,6 +63,20 @@ export default function AccountPage() {
         return collectedVouchers.filter(v => !usedCodes.includes(v.code)).length;
     }, [collectedVouchers, appUser]);
     
+    useEffect(() => {
+        if (!user) return;
+        
+        const ordersRef = collection(db, 'orders');
+        const q = query(ordersRef, where('userId', '==', user.uid), orderBy('date', 'desc'), limit(4));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const userOrders = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Order));
+            setOrders(userOrders);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
     if (authLoading) {
         return <LoadingSpinner />
     }
@@ -64,12 +96,23 @@ export default function AccountPage() {
     }
     
     const services: ServiceItemProps[] = [
-        { icon: ShoppingBag, label: "My Orders", href: "/account/orders" },
         { icon: HelpCircle, label: "Help Center", href: "/account/help" },
         { icon: Headphones, label: "Contact Customer", href: "/contact" },
         { icon: Star, label: "My Reviews", href: "/account/reviews" },
         { icon: Users, label: "My Affiliate", href: "/affiliate" },
     ];
+    
+    const orderStatuses = [
+        { status: 'pending', label: 'Pending' },
+        { status: 'processing', label: 'Processing' },
+        { status: 'shipped', label: 'Shipped' },
+        { status: 'delivered', label: 'Delivered' },
+    ];
+    
+    const getOrderStatusCount = (status: Order['status']) => {
+        return orders.filter(o => o.status === status).length;
+    }
+
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -104,6 +147,34 @@ export default function AccountPage() {
                     </CardContent>
                 </Card>
 
+                {/* My Orders Section */}
+                <Card className="shadow-sm">
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                            <CardTitle className="text-lg">My Orders</CardTitle>
+                            <Link href="/account/orders" className="flex items-center text-sm font-medium text-primary hover:underline">
+                                See All Orders
+                                <ChevronRight className="h-4 w-4" />
+                            </Link>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                       <div className="grid grid-cols-4 gap-2">
+                           {orderStatuses.map(({status, label}) => (
+                               <Link key={status} href="/account/orders" className="flex flex-col items-center gap-2 text-center text-xs font-medium p-2 rounded-lg hover:bg-muted">
+                                    <div className="relative">
+                                        <OrderStatusIcon status={status as Order['status']} />
+                                        {getOrderStatusCount(status as Order['status']) > 0 && (
+                                            <Badge className="absolute -top-2 -right-2 h-4 w-4 justify-center p-0">{getOrderStatusCount(status as Order['status'])}</Badge>
+                                        )}
+                                    </div>
+                                    <span>{label}</span>
+                               </Link>
+                           ))}
+                       </div>
+                    </CardContent>
+                </Card>
+
                 {/* More Services */}
                 <Card className="shadow-sm">
                      <CardHeader>
@@ -118,3 +189,5 @@ export default function AccountPage() {
         </div>
     );
 }
+
+    
