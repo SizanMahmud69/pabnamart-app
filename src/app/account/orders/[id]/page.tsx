@@ -24,6 +24,8 @@ const getStatusVariant = (status: Order['status']) => {
         case 'delivered': return 'default';
         case 'cancelled': return 'destructive';
         case 'returned': return 'destructive';
+        case 'return-requested': return 'secondary';
+        case 'return-approved': return 'default';
         default: return 'outline';
     }
 };
@@ -90,7 +92,7 @@ function OrderDetailsPage() {
                                 <CardTitle>Order #{order.orderNumber}</CardTitle>
                                 <CardDescription>Placed on {new Date(order.date).toLocaleDateString()}</CardDescription>
                             </div>
-                            <Badge variant={getStatusVariant(order.status)} className="capitalize text-lg">{order.status}</Badge>
+                            <Badge variant={getStatusVariant(order.status)} className="capitalize text-lg">{order.status.replace('-', ' ')}</Badge>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">

@@ -25,11 +25,13 @@ const getStatusVariant = (status: Order['status']) => {
         case 'delivered': return 'default';
         case 'cancelled': return 'destructive';
         case 'returned': return 'destructive';
+        case 'return-requested': return 'secondary';
+        case 'return-approved': return 'default';
         default: return 'outline';
     }
 };
 
-const statusTabs: Order['status'][] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
+const statusTabs: Order['status'][] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'return-requested', 'return-approved'];
 
 function MyOrdersPageContent() {
     const { user } = useAuth();
@@ -91,15 +93,15 @@ function MyOrdersPageContent() {
                             {orders.length > 0 ? (
                                 orders.map(order => (
                                     <Card key={order.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
-                                        <CardContent className="p-4 space-y-3">
-                                            <div className="flex justify-between items-start text-sm text-muted-foreground">
-                                                <div>
-                                                    <p>Order #{order.orderNumber}</p>
-                                                    <p>{new Date(order.date).toLocaleDateString()}</p>
-                                                </div>
-                                                <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
+                                        <CardHeader className="p-4 flex flex-row justify-between items-start">
+                                            <div>
+                                                <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
+                                                <CardDescription>{new Date(order.date).toLocaleDateString()}</CardDescription>
                                             </div>
-                                            <Separator />
+                                            <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace('-', ' ')}</Badge>
+                                        </CardHeader>
+                                        <CardContent className="p-4 space-y-3">
+                                            
                                             <div className="space-y-4">
                                                 {order.items.map(item => (
                                                     <div key={item.id} className="flex items-center gap-4">

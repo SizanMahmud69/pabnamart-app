@@ -3,7 +3,7 @@
 
 import { cn } from "@/lib/utils";
 import type { Order } from "@/types";
-import { Package, Truck, CheckCircle, Undo2 } from "lucide-react";
+import { Package, Truck, CheckCircle, Undo2, ShoppingBag } from "lucide-react";
 
 interface OrderStatusStepperProps {
   currentStatus: Order['status'];
@@ -16,6 +16,13 @@ const steps = [
   { status: 'delivered', label: 'Delivered', icon: CheckCircle },
 ];
 
+const returnSteps = [
+    { status: 'delivered', label: 'Delivered', icon: CheckCircle },
+    { status: 'return-requested', label: 'Return Requested', icon: Undo2 },
+    { status: 'return-approved', label: 'Return Approved', icon: CheckCircle },
+    { status: 'returned', label: 'Returned', icon: ShoppingBag },
+]
+
 const getStepIndex = (status: Order['status']) => {
     switch (status) {
         case 'pending': return 0;
@@ -23,27 +30,22 @@ const getStepIndex = (status: Order['status']) => {
         case 'shipped': return 2;
         case 'delivered': return 3;
         case 'cancelled': return -1;
-        case 'returned': return -2;
+        case 'return-requested': return 1;
+        case 'return-approved': return 2;
+        case 'returned': return 3;
         default: return 0;
     }
 }
 
 export default function OrderStatusStepper({ currentStatus }: OrderStatusStepperProps) {
+  const isReturnFlow = ['return-requested', 'return-approved', 'returned'].includes(currentStatus);
+  const activeSteps = isReturnFlow ? returnSteps : steps;
   const currentStepIndex = getStepIndex(currentStatus);
   
-  if (currentStepIndex === -1) {
+  if (currentStatus === 'cancelled') {
       return (
           <div className="flex justify-center items-center p-4 bg-destructive/10 rounded-lg">
               <h3 className="text-destructive font-semibold text-lg capitalize">{currentStatus}</h3>
-          </div>
-      )
-  }
-  
-   if (currentStepIndex === -2) {
-      return (
-          <div className="flex justify-center items-center p-4 bg-yellow-500/10 rounded-lg gap-2">
-              <Undo2 className="h-6 w-6 text-yellow-600" />
-              <h3 className="text-yellow-700 font-semibold text-lg capitalize">{currentStatus}</h3>
           </div>
       )
   }
@@ -52,10 +54,10 @@ export default function OrderStatusStepper({ currentStatus }: OrderStatusStepper
     <div className="w-full">
       <div className="flex justify-between items-center relative">
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-muted">
-            <div className="absolute left-0 top-0 h-full bg-primary transition-all duration-500" style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }} />
+            <div className="absolute left-0 top-0 h-full bg-primary transition-all duration-500" style={{ width: `${(currentStepIndex / (activeSteps.length - 1)) * 100}%` }} />
         </div>
         
-        {steps.map((step, index) => {
+        {activeSteps.map((step, index) => {
           const isActive = index <= currentStepIndex;
           const Icon = step.icon;
           return (

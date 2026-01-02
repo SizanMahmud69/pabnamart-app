@@ -37,7 +37,7 @@ function ReturnRequestPageContent() {
         const orderRef = doc(db, 'orders', orderId);
         const orderUnsub = onSnapshot(orderRef, (docSnap) => {
             if (docSnap.exists()) {
-                setOrder(docSnap.data() as Order);
+                setOrder({ ...docSnap.data(), id: docSnap.id } as Order);
             } else {
                  toast({ title: "Error", description: "Order not found.", variant: "destructive" });
                  router.push('/account/orders');
@@ -61,18 +61,18 @@ function ReturnRequestPageContent() {
     
     const handleConfirmReturn = async () => {
         if (!order || order.status !== 'delivered') {
-            toast({ title: "Cannot Return", description: "This order is not eligible for return.", variant: "destructive" });
+            toast({ title: "Cannot Request Return", description: "This order is not eligible for a return request.", variant: "destructive" });
             return;
         }
         setIsSubmitting(true);
         const orderRef = doc(db, 'orders', order.id);
         try {
-            await updateDoc(orderRef, { status: 'returned' });
+            await updateDoc(orderRef, { status: 'return-requested' });
             toast({
                 title: "Return Request Submitted",
                 description: "Your return request has been submitted for processing.",
             });
-            router.push(`/account/orders?status=returned`);
+            router.push(`/account/orders?status=return-requested`);
         } catch (error) {
              toast({ title: "Error", description: "Failed to submit return request.", variant: "destructive" });
         } finally {
@@ -99,7 +99,7 @@ function ReturnRequestPageContent() {
                             <CardTitle>Return Not Allowed</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p>This order is not eligible for return as it has not been delivered yet or a return has already been requested.</p>
+                            <p>This order is not eligible for return. A return may have already been requested or the order was not delivered.</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -129,7 +129,7 @@ function ReturnRequestPageContent() {
                             <ul>
                                 <li>Products can be returned within 7 days of delivery.</li>
                                 <li>The product must be in its original condition, unused, and with all original tags and packaging intact.</li>
-                                <li>Refunds or exchanges will be processed after we receive and inspect the returned item.</li>
+                                <li>An admin will review your request. If approved, you will receive a voucher for the order amount.</li>
                             </ul>
                         </div>
                         
@@ -162,7 +162,7 @@ function ReturnRequestPageContent() {
                                 </div>
                                 <div>
                                     <h4 className="font-semibold">3. Confirm Your Return Request</h4>
-                                    <p className="text-sm text-muted-foreground">After sending the package, click the button below to notify us. Our team will get in touch with you upon receiving the item.</p>
+                                    <p className="text-sm text-muted-foreground">After sending the package, click the button below to notify us. Our team will review your request.</p>
                                 </div>
                             </div>
                         </div>

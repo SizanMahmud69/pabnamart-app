@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
 
@@ -28,6 +29,13 @@ const allMenuItems = [
         icon: CreditCard,
         href: "/admin/verify-payments",
         permissionKey: 'canVerifyPayments'
+    },
+    {
+        title: "Return Requests",
+        description: "Manage customer return requests.",
+        icon: Undo2,
+        href: "/admin/returns",
+        permissionKey: 'canManageReturns'
     },
     {
         title: "User Management",
