@@ -9,7 +9,7 @@ import type {
   ProductRecommendationsInput,
   ProductRecommendationsOutput,
 } from '@/ai/flows/product-recommendations';
-import getFirebaseAdmin from '@/lib/firebase-admin';
+import admin from 'firebase-admin';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import type {
   Notification,
@@ -23,6 +23,43 @@ import type {
   Order,
 } from '@/types';
 import { revalidatePath } from 'next/cache';
+
+let adminApp: admin.app.App;
+
+const getFirebaseAdmin = () => {
+  if (admin.apps.length > 0) {
+    return admin.apps[0]!;
+  }
+
+  try {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+    if (
+      !process.env.FIREBASE_PROJECT_ID ||
+      !process.env.FIREBASE_CLIENT_EMAIL ||
+      !privateKey ||
+      !process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    ) {
+      throw new Error(
+        'Firebase Admin environment variables are not set. Ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, and NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET are configured.'
+      );
+    }
+
+    adminApp = admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: privateKey,
+      }),
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    });
+    return adminApp;
+  } catch (error) {
+    console.error('Firebase admin initialization error', error);
+    throw error;
+  }
+};
+
 
 export async function getProductRecommendations(
   input: ProductRecommendationsInput
@@ -182,8 +219,6 @@ export async function placeOrder(
   const db = getFirestore(adminApp);
 
   try {
-    let finalTotal = 0;
-    let finalSubtotal = 0;
     let voucherDiscount = 0;
     let shippingFeeWithDiscount = payload.shippingFee;
     let usedVoucher: Voucher | null = null;
