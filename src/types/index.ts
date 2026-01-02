@@ -72,6 +72,7 @@ export interface Order {
     shippingFee: number;
     voucherCode?: string;
     voucherDiscount?: number;
+    paymentAccountNumber?: string;
 }
 
 export interface Voucher {
@@ -185,4 +186,7 @@ export interface OrderPayload {
   voucherCode?: string;
   paymentMethod: string;
   transactionId?: string;
+  paymentAccountNumber?: string;
 }
+
+    

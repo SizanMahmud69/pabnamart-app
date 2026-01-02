@@ -98,10 +98,10 @@ export default function VerifyPaymentsPage() {
                                 <TableRow>
                                     <TableHead>Order ID</TableHead>
                                     <TableHead>Customer</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Total</TableHead>
                                     <TableHead>Payment Method</TableHead>
+                                    <TableHead>Account Number</TableHead>
                                     <TableHead>Transaction ID</TableHead>
+                                    <TableHead>Total</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -116,10 +116,10 @@ export default function VerifyPaymentsPage() {
                                             </Button>
                                         </TableCell>
                                         <TableCell>{users[order.userId]?.displayName || 'Loading...'}</TableCell>
-                                        <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                                        <TableCell>৳{order.total.toFixed(2)}</TableCell>
                                         <TableCell className="capitalize">{order.paymentMethod}</TableCell>
+                                        <TableCell className="font-mono">{order.paymentAccountNumber || 'N/A'}</TableCell>
                                         <TableCell className="font-mono">{order.transactionId || 'N/A'}</TableCell>
+                                        <TableCell>৳{order.total.toFixed(2)}</TableCell>
                                         <TableCell className="text-right">
                                             <Button size="sm" onClick={() => handleVerifyPayment(order.id)}>
                                                 <CheckCircle className="mr-2 h-4 w-4" />
@@ -142,3 +142,5 @@ export default function VerifyPaymentsPage() {
         </div>
     );
 }
+
+    

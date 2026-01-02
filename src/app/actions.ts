@@ -308,6 +308,7 @@ export async function placeOrder(
         orderNumber: generateOrderNumber(),
         paymentMethod: payload.paymentMethod,
         transactionId: payload.transactionId || '',
+        paymentAccountNumber: payload.paymentAccountNumber || '',
         shippingFee: shippingFeeWithDiscount,
         voucherCode: usedVoucher?.code || '',
         voucherDiscount: voucherDiscount,
@@ -348,3 +349,5 @@ export async function placeOrder(
     };
   }
 }
+
+    

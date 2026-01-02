@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { placeOrder } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import type { CartItem, ShippingAddress, PaymentSettings } from "@/types";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Copy } from "lucide-react";
 import Link from "next/link";
 import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 import app from "@/lib/firebase";
@@ -37,6 +37,7 @@ function OnlinePaymentPage() {
     const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
     const [paymentMethod, setPaymentMethod] = useState('');
     const [transactionId, setTransactionId] = useState('');
+    const [paymentAccountNumber, setPaymentAccountNumber] = useState('');
     const [isPlacingOrder, startOrderPlacement] = useTransition();
     const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
 
@@ -60,16 +61,29 @@ function OnlinePaymentPage() {
         return () => unsubscribe();
     }, []);
 
+    const handleCopyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text).then(() => {
+            toast({ title: "Copied!", description: "Merchant number copied to clipboard." });
+        }, (err) => {
+            toast({ title: "Error", description: "Failed to copy number.", variant: "destructive" });
+        });
+    };
+
     const handlePlaceOrder = () => {
         if (!checkoutData || !user) return;
         if (!paymentMethod) {
             toast({ title: "Payment Method", description: "Please select a payment method.", variant: "destructive" });
             return;
         }
+        if (!paymentAccountNumber) {
+            toast({ title: "Payment Account Number", description: "Please enter the account number you paid from.", variant: "destructive" });
+            return;
+        }
         if (!transactionId) {
             toast({ title: "Transaction ID", description: "Please enter the transaction ID.", variant: "destructive" });
             return;
         }
+
 
         startOrderPlacement(async () => {
             const result = await placeOrder({
@@ -80,6 +94,7 @@ function OnlinePaymentPage() {
                 voucherCode: checkoutData.voucherCode,
                 paymentMethod,
                 transactionId,
+                paymentAccountNumber,
             });
 
             if (result.success && result.orderId) {
@@ -98,6 +113,11 @@ function OnlinePaymentPage() {
     }
 
     const { total } = checkoutData;
+    
+    const merchantNumber = 
+        paymentMethod === 'bKash' ? paymentSettings.bkashMerchantNumber :
+        paymentMethod === 'Nagad' ? paymentSettings.nagadMerchantNumber :
+        paymentMethod === 'Rocket' ? paymentSettings.rocketMerchantNumber : '';
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -137,21 +157,32 @@ function OnlinePaymentPage() {
                         </RadioGroup>
 
                         {paymentMethod && (
-                            <div className="space-y-2 pt-4 border-t">
+                            <div className="space-y-4 pt-4 border-t">
                                 <p>Please send <strong>৳{total}</strong> to our {paymentMethod} merchant number:</p>
-                                <p className="font-mono text-lg font-bold text-center bg-muted p-2 rounded-md">
-                                    {paymentMethod === 'bKash' && paymentSettings.bkashMerchantNumber}
-                                    {paymentMethod === 'Nagad' && paymentSettings.nagadMerchantNumber}
-                                    {paymentMethod === 'Rocket' && paymentSettings.rocketMerchantNumber}
-                                </p>
-                                <p>Then, enter the transaction ID below.</p>
-                                <Label htmlFor="trxId">Transaction ID</Label>
-                                <Input id="trxId" placeholder="Enter your transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} required />
+                                <div className="flex items-center gap-2">
+                                     <p className="font-mono text-lg font-bold text-center bg-muted p-2 rounded-md flex-grow">
+                                        {merchantNumber}
+                                    </p>
+                                    <Button type="button" variant="outline" size="icon" onClick={() => handleCopyToClipboard(merchantNumber)}>
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <p className="text-sm text-muted-foreground">After payment, enter your payment account number and the transaction ID below.</p>
+                                
+                                <div className="space-y-2">
+                                    <Label htmlFor="paymentAccount">Your Payment Account Number</Label>
+                                    <Input id="paymentAccount" placeholder="e.g., 01xxxxxxxxx" value={paymentAccountNumber} onChange={(e) => setPaymentAccountNumber(e.target.value)} required />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="trxId">Transaction ID</Label>
+                                    <Input id="trxId" placeholder="Enter your transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} required />
+                                </div>
                             </div>
                         )}
                     </CardContent>
                     <CardFooter>
-                        <Button size="lg" className="w-full" onClick={handlePlaceOrder} disabled={isPlacingOrder || !paymentMethod || !transactionId}>
+                        <Button size="lg" className="w-full" onClick={handlePlaceOrder} disabled={isPlacingOrder || !paymentMethod || !transactionId || !paymentAccountNumber}>
                             {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {isPlacingOrder ? 'Placing Order...' : `Place Order (৳${total})`}
                         </Button>
@@ -163,3 +194,5 @@ function OnlinePaymentPage() {
 }
 
 export default withAuth(OnlinePaymentPage);
+
+    
