@@ -3,7 +3,6 @@ import type { LucideIcon } from "react";
 
 export interface Review {
   id: string;
-  orderId: string;
   productId: number;
   productName: string;
   user: {
@@ -110,17 +109,6 @@ export interface User {
   permissions?: ModeratorPermissions;
 }
 
-export type OrderStatus = 'pending' | 'shipped' | 'in-transit' | 'delivered' | 'returned' | 'return-requested' | 'processing' | 'return-rejected' | 'return-processing';
-
-export interface OrderItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-  returnPolicy: number;
-}
-
 export interface ShippingAddress {
     id: string;
     type: 'Home' | 'Office';
@@ -130,38 +118,6 @@ export interface ShippingAddress {
     city: string;
     area: string;
     default: boolean;
-}
-
-export interface PaymentDetails {
-  gateway: string;
-  transactionId: string;
-  payerNumber: string;
-  merchantNumber: string;
-}
-
-export interface StatusHistory {
-  status: OrderStatus;
-  date: string;
-}
-
-export interface Order {
-  id: string;
-  orderNumber: string;
-  userId: string;
-  items: OrderItem[];
-  total: number;
-  status: OrderStatus;
-  date: string;
-  deliveryDate?: string;
-  shippingAddress: Omit<ShippingAddress, 'id' | 'default'>;
-  paymentMethod: string;
-  paymentDetails?: PaymentDetails;
-  isReviewed?: boolean;
-  usedVoucherCode?: string;
-  voucherDiscount?: number;
-  statusHistory?: StatusHistory[];
-  returnReason?: string;
-  returnComments?: string;
 }
 
 export interface DeliverySettings {

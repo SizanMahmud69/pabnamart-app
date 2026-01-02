@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ShoppingCart, Undo2, ArrowRight, Tag, Ticket, ShieldCheck, Settings, Star, Loader2 } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
 
@@ -21,27 +22,6 @@ const allMenuItems = [
         icon: Users,
         href: "/admin/users",
         permissionKey: 'canManageUsers'
-    },
-    {
-        title: "Order Management",
-        description: "Track and process customer orders.",
-        icon: ShoppingCart,
-        href: "/admin/orders",
-        permissionKey: 'canManageOrders'
-    },
-    {
-        title: "Verify Payments",
-        description: "Verify pending online payments.",
-        icon: ShieldCheck,
-        href: "/admin/verify-payment",
-        permissionKey: 'canVerifyPayments'
-    },
-    {
-        title: "Return Requests",
-        description: "Manage and process return requests.",
-        icon: Undo2,
-        href: "/admin/returns",
-        permissionKey: 'canManageReturns'
     },
     {
         title: "Offer Management",
@@ -122,7 +102,7 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
                                         {isLoading ? (
-                                            <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                                            <ArrowRight className="h-5 w-5 text-muted-foreground animate-pulse" />
                                         ) : (
                                             <ArrowRight className="h-5 w-5 text-muted-foreground" />
                                         )}
