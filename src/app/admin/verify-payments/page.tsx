@@ -15,8 +15,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-
 
 const db = getFirestore(app);
 
@@ -131,7 +129,6 @@ export default function VerifyPaymentsPage() {
                                     <div>
                                         <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
                                         <CardDescription>{new Date(order.date).toLocaleString()} by {users[order.userId]?.displayName || '...'}</CardDescription>
-                                         <Badge variant="secondary" className="capitalize mt-2">{order.paymentMethod}</Badge>
                                     </div>
                                      <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -180,10 +177,6 @@ export default function VerifyPaymentsPage() {
                                         <p className="text-sm text-muted-foreground">Total Amount</p>
                                         <p className="text-xl font-bold">৳{order.total.toFixed(2)}</p>
                                     </div>
-                                    <Button onClick={() => handleUpdateStatus(order.id, 'processing')}>
-                                        <CheckCircle className="mr-2 h-4 w-4" />
-                                        Verify Payment
-                                    </Button>
                                 </CardFooter>
                             </Card>
                         )) : (
