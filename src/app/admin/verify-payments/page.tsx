@@ -13,7 +13,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
@@ -126,11 +126,12 @@ export default function VerifyPaymentsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {orders.length > 0 ? orders.map(order => (
-                            <Card key={order.id}>
+                            <Card key={order.id} className="shadow-md">
                                 <CardHeader className="flex flex-row items-start justify-between">
                                     <div>
                                         <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
                                         <CardDescription>{new Date(order.date).toLocaleString()} by {users[order.userId]?.displayName || '...'}</CardDescription>
+                                         <Badge variant="secondary" className="capitalize mt-2">{order.paymentMethod}</Badge>
                                     </div>
                                      <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -161,35 +162,25 @@ export default function VerifyPaymentsPage() {
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </CardHeader>
-                                <CardContent className="space-y-4">
-                                     <div className="space-y-2">
-                                        {order.items.map(item => (
-                                            <div key={item.id} className="flex items-center gap-4 py-2">
-                                                <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
-                                                <div className="flex-grow">
-                                                    <p className="font-semibold text-sm">{item.name}</p>
-                                                    <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                                                </div>
-                                                <p className="font-semibold text-sm">৳{item.price * item.quantity}</p>
+                                <CardContent className="space-y-2">
+                                    {order.items.map(item => (
+                                        <div key={item.id} className="flex items-center gap-4 py-2">
+                                            <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
+                                            <div className="flex-grow">
+                                                <p className="font-semibold text-sm">{item.name}</p>
+                                                <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                                             </div>
-                                        ))}
-                                    </div>
-                                    <Separator />
-                                     <div className="flex justify-between items-center bg-muted/50 p-3 rounded-md">
-                                        <div className="space-y-1">
-                                            <p className="text-xs font-semibold uppercase">Payment Details</p>
-                                            <Badge variant="secondary" className="capitalize">{order.paymentMethod}</Badge>
-                                            <p className="text-sm font-mono">{order.paymentAccountNumber}</p>
-                                            <p className="text-xs text-muted-foreground font-mono">{order.transactionId}</p>
+                                            <p className="font-semibold text-sm">৳{item.price * item.quantity}</p>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-xs text-muted-foreground">Total Amount</p>
-                                            <p className="text-xl font-bold">৳{order.total.toFixed(2)}</p>
-                                        </div>
-                                    </div>
+                                    ))}
                                 </CardContent>
-                                 <CardFooter>
-                                    <Button className="w-full" onClick={() => handleUpdateStatus(order.id, 'processing')}>
+                                <Separator />
+                                 <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
+                                    <div className="text-left">
+                                        <p className="text-sm text-muted-foreground">Total Amount</p>
+                                        <p className="text-xl font-bold">৳{order.total.toFixed(2)}</p>
+                                    </div>
+                                    <Button onClick={() => handleUpdateStatus(order.id, 'processing')}>
                                         <CheckCircle className="mr-2 h-4 w-4" />
                                         Verify Payment
                                     </Button>
