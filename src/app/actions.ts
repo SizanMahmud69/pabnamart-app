@@ -1,10 +1,7 @@
-
 'use server';
 
 import 'dotenv/config';
-import {
-  getProductRecommendations as getProductRecommendationsFlow,
-} from '@/ai/flows/product-recommendations';
+import { getProductRecommendations as getProductRecommendationsFlow } from '@/ai/flows/product-recommendations';
 import type {
   ProductRecommendationsInput,
   ProductRecommendationsOutput,
@@ -57,7 +54,6 @@ const getFirebaseAdmin = () => {
     throw error;
   }
 };
-
 
 export async function getProductRecommendations(
   input: ProductRecommendationsInput
@@ -338,10 +334,12 @@ export async function placeOrder(
 
     revalidatePath('/admin/orders');
     revalidatePath('/account/orders');
+    revalidatePath('/payment');
 
     return { success: true, orderId: transactionResult.orderId };
   } catch (error: any) {
     console.error('Failed to place order:', error);
+    revalidatePath('/payment');
     return {
       success: false,
       message: error.message || 'An unexpected error occurred.',
