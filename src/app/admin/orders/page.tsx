@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Eye } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -15,6 +15,7 @@ import type { Order, User } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const db = getFirestore(app);
 
@@ -91,10 +92,7 @@ export default function AdminOrderManagement() {
     
     const filteredOrders = useMemo(() => {
         if (activeTab === 'all') {
-            return orders.filter(order => !(order.status === 'pending' && order.paymentMethod !== 'cash-on-delivery'));
-        }
-        if (activeTab === 'pending') {
-            return orders.filter(order => order.status === 'pending' && order.paymentMethod === 'cash-on-delivery');
+            return orders;
         }
         return orders.filter(order => order.status === activeTab);
     }, [orders, activeTab]);
@@ -121,11 +119,14 @@ export default function AdminOrderManagement() {
                     </CardHeader>
                     <CardContent>
                         <Tabs value={activeTab} onValueChange={setActiveTab}>
-                            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7">
-                                {allStatusTabs.map(tab => (
-                                    <TabsTrigger key={tab} value={tab} className="capitalize">{tab}</TabsTrigger>
-                                ))}
-                            </TabsList>
+                            <ScrollArea className="w-full whitespace-nowrap rounded-md">
+                                <TabsList className="inline-flex w-max mb-4">
+                                    {allStatusTabs.map(tab => (
+                                        <TabsTrigger key={tab} value={tab} className="capitalize">{tab}</TabsTrigger>
+                                    ))}
+                                </TabsList>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
                             <TabsContent value={activeTab} className="mt-4">
                                {filteredOrders.length > 0 ? (
                                     <div className="space-y-4">
