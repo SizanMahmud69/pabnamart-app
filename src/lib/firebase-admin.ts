@@ -1,5 +1,4 @@
 
-import 'dotenv/config';
 import admin from 'firebase-admin';
 
 let adminApp: admin.app.App;
@@ -12,8 +11,15 @@ const getFirebaseAdmin = () => {
   try {
     const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-    if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey || !process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) {
-      throw new Error('Firebase Admin environment variables are not set. Ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, and NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET are configured.');
+    if (
+      !process.env.FIREBASE_PROJECT_ID ||
+      !process.env.FIREBASE_CLIENT_EMAIL ||
+      !privateKey ||
+      !process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    ) {
+      throw new Error(
+        'Firebase Admin environment variables are not set. Ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, and NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET are configured.'
+      );
     }
 
     adminApp = admin.initializeApp({
