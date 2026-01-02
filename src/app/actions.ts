@@ -37,11 +37,10 @@ const getFirebaseAdmin = () => {
     if (
       !process.env.FIREBASE_PROJECT_ID ||
       !process.env.FIREBASE_CLIENT_EMAIL ||
-      !privateKey ||
-      !process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+      !privateKey
     ) {
       throw new Error(
-        'Firebase Admin environment variables are not set. Ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, and NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET are configured.'
+        'Firebase Admin environment variables are not set. Ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY are configured.'
       );
     }
 
@@ -51,7 +50,6 @@ const getFirebaseAdmin = () => {
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: privateKey,
       }),
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
     return adminApp;
   } catch (error) {
