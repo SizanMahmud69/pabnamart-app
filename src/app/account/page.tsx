@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Ticket, Settings, HelpCircle, Headphones, Star, Users, PackageSearch } from "lucide-react";
+import { Heart, Ticket, Settings, HelpCircle, Headphones, Star, Users, PackageSearch, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from 'lucide-react';
 import { useVouchers } from "@/hooks/useVouchers";
@@ -64,6 +64,7 @@ export default function AccountPage() {
     }
     
     const services: ServiceItemProps[] = [
+        { icon: ShoppingBag, label: "My Orders", href: "/account/orders" },
         { icon: HelpCircle, label: "Help Center", href: "/account/help" },
         { icon: Headphones, label: "Contact Customer", href: "/contact" },
         { icon: Star, label: "My Reviews", href: "/account/reviews" },

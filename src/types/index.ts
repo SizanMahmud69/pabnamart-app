@@ -49,6 +49,31 @@ export interface CartItem {
   category: string;
 }
 
+export interface OrderItem {
+    id: number;
+    name: string;
+    price: number;
+    quantity: number;
+    image: string;
+    returnPolicy: number;
+}
+
+export interface Order {
+    id: string;
+    userId: string;
+    items: OrderItem[];
+    total: number;
+    shippingAddress: ShippingAddress;
+    status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
+    date: string; // ISO string
+    orderNumber: string;
+    paymentMethod: string;
+    transactionId?: string;
+    shippingFee: number;
+    voucherCode?: string;
+    voucherDiscount?: number;
+}
+
 export interface Voucher {
     id?: string;
     code: string;
