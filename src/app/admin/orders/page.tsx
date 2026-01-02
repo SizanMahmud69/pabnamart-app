@@ -85,7 +85,14 @@ export default function AdminOrderManagement() {
     };
     
     const filteredOrders = useMemo(() => {
-        if (activeTab === 'all') return orders;
+        if (activeTab === 'all') {
+            // Exclude pending online orders from 'All' tab as well
+            return orders.filter(order => !(order.status === 'pending' && order.paymentMethod !== 'cash-on-delivery'));
+        }
+        if (activeTab === 'pending') {
+            // Only show cash-on-delivery orders in pending
+            return orders.filter(order => order.status === 'pending' && order.paymentMethod === 'cash-on-delivery');
+        }
         return orders.filter(order => order.status === activeTab);
     }, [orders, activeTab]);
 
@@ -176,3 +183,4 @@ export default function AdminOrderManagement() {
         </div>
     );
 }
+
