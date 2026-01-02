@@ -106,7 +106,7 @@ export default function AccountPage() {
         { icon: Users, label: "My Affiliate", href: "/affiliate" },
     ];
     
-    const orderStatuses = [
+    const orderStatuses: { status: Order['status'], label: string }[] = [
         { status: 'pending', label: 'Pending' },
         { status: 'processing', label: 'Processing' },
         { status: 'shipped', label: 'Shipped' },
@@ -165,7 +165,7 @@ export default function AccountPage() {
                     <CardContent className="p-4 pt-0">
                        <div className="grid grid-cols-4 gap-2">
                            {orderStatuses.map(({status, label}) => (
-                               <Link key={status} href="/account/orders" className="flex flex-col items-center gap-2 text-center text-xs font-medium p-2 rounded-lg hover:bg-muted">
+                               <Link key={status} href={`/account/orders?status=${status}`} className="flex flex-col items-center gap-2 text-center text-xs font-medium p-2 rounded-lg hover:bg-muted">
                                     <div className="relative">
                                         <OrderStatusIcon status={status as Order['status']} />
                                         {getOrderStatusCount(status as Order['status']) > 0 && (
