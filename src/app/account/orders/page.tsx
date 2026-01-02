@@ -7,13 +7,14 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ShoppingBag, Star, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Star, ChevronRight, Eye, Undo2 } from 'lucide-react';
 import { withAuth, useAuth } from '@/hooks/useAuth';
 import type { Order } from '@/types';
-import { getFirestore, collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, query, where, onSnapshot, orderBy, updateDoc, doc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 
 const getStatusVariant = (status: Order['status']) => {
@@ -34,6 +35,7 @@ function MyOrdersPageContent() {
     const { user } = useAuth();
     const searchParams = useSearchParams();
     const statusQuery = searchParams.get('status');
+    const { toast } = useToast();
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
@@ -41,7 +43,8 @@ function MyOrdersPageContent() {
     useEffect(() => {
         if (!user) return;
         
-        const ordersRef = collection(getFirestore(app), 'orders');
+        const db = getFirestore(app);
+        const ordersRef = collection(db, 'orders');
         let q;
         if (statusQuery && statusTabs.includes(statusQuery as Order['status'])) {
             q = query(ordersRef, where('userId', '==', user.uid), where('status', '==', statusQuery), orderBy('date', 'desc'));
@@ -61,6 +64,24 @@ function MyOrdersPageContent() {
 
         return () => unsubscribe();
     }, [user, statusQuery]);
+
+    const handleReturnOrder = async (orderId: string) => {
+        const db = getFirestore(app);
+        const orderRef = doc(db, 'orders', orderId);
+        try {
+            await updateDoc(orderRef, { status: 'returned' });
+            toast({
+                title: "Order Return Requested",
+                description: "Your return request has been submitted.",
+            });
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to request return.",
+                variant: "destructive",
+            });
+        }
+    }
     
     if (loading) {
         return <LoadingSpinner />;
@@ -89,9 +110,12 @@ function MyOrdersPageContent() {
                                 orders.map(order => (
                                     <Card key={order.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
                                         <CardContent className="p-4 space-y-3">
-                                            <div className="flex justify-between items-center text-sm text-muted-foreground">
-                                                <span>Order #{order.orderNumber}</span>
-                                                <span>{new Date(order.date).toLocaleDateString()}</span>
+                                            <div className="flex justify-between items-start text-sm text-muted-foreground">
+                                                <div>
+                                                    <p>Order #{order.orderNumber}</p>
+                                                    <p>{new Date(order.date).toLocaleDateString()}</p>
+                                                </div>
+                                                <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
                                             </div>
                                             <Separator />
                                             <div className="space-y-4">
@@ -112,7 +136,14 @@ function MyOrdersPageContent() {
                                             </div>
                                         </CardContent>
                                         <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
-                                                <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
+                                            <div className="flex gap-2">
+                                                {order.status === 'delivered' && (
+                                                    <Button variant="outline" size="sm" onClick={() => handleReturnOrder(order.id)}>
+                                                        <Undo2 className="mr-2 h-4 w-4" />
+                                                        Return
+                                                    </Button>
+                                                )}
+                                            </div>
                                             <div className="flex gap-2">
                                                 {order.status === 'delivered' && (
                                                     <Button variant="outline" size="sm">
@@ -120,10 +151,9 @@ function MyOrdersPageContent() {
                                                         Review
                                                     </Button>
                                                 )}
-                                                <Button asChild variant="default" size="sm">
+                                                <Button asChild variant="ghost" size="icon">
                                                     <Link href={`/account/orders/${order.id}`}>
-                                                        View Details
-                                                        <ChevronRight className="ml-1 h-4 w-4" />
+                                                        <Eye className="h-5 w-5" />
                                                     </Link>
                                                 </Button>
                                             </div>
