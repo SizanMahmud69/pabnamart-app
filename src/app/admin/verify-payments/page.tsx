@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -107,7 +108,13 @@ export default function VerifyPaymentsPage() {
                             <TableBody>
                                 {orders.length > 0 ? orders.map(order => (
                                     <TableRow key={order.id}>
-                                        <TableCell className="font-medium">#{order.orderNumber}</TableCell>
+                                        <TableCell className="font-medium">
+                                            <Button variant="link" asChild className="p-0 h-auto">
+                                                <Link href={`/admin/orders/${order.id}`}>
+                                                    #{order.orderNumber}
+                                                </Link>
+                                            </Button>
+                                        </TableCell>
                                         <TableCell>{users[order.userId]?.displayName || 'Loading...'}</TableCell>
                                         <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                                         <TableCell>৳{order.total.toFixed(2)}</TableCell>
