@@ -46,6 +46,8 @@ const OrderStatusIcon = ({ status }: { status: Order['status'] }) => {
         delivered: CheckCircle,
         cancelled: XCircle,
         returned: Undo2,
+        'return-requested': Undo2,
+        'return-approved': Undo2
     };
     const Icon = iconMap[status] || Package;
     return <Icon className="h-6 w-6 text-primary" />;
@@ -106,16 +108,16 @@ export default function AccountPage() {
         { icon: Users, label: "My Affiliate", href: "/affiliate" },
     ];
     
-    const orderStatuses: { status: Order['status'], label: string }[] = [
-        { status: 'pending', label: 'Pending' },
-        { status: 'processing', label: 'Processing' },
-        { status: 'shipped', label: 'Shipped' },
-        { status: 'delivered', label: 'Delivered' },
-        { status: 'returned', label: 'Returned' },
+    const orderStatuses: { status: Order['status'][], label: string }[] = [
+        { status: ['pending'], label: 'Pending' },
+        { status: ['processing'], label: 'Processing' },
+        { status: ['shipped'], label: 'Shipped' },
+        { status: ['delivered'], label: 'Delivered' },
+        { status: ['returned', 'return-approved', 'return-requested'], label: 'Returned' },
     ];
     
-    const getOrderStatusCount = (status: Order['status']) => {
-        return orders.filter(o => o.status === status).length;
+    const getOrderStatusCount = (statuses: Order['status'][]) => {
+        return orders.filter(o => statuses.includes(o.status)).length;
     }
 
 
@@ -166,11 +168,11 @@ export default function AccountPage() {
                     <CardContent className="p-4 pt-0">
                        <div className="grid grid-cols-5 gap-2">
                            {orderStatuses.map(({status, label}) => (
-                               <Link key={status} href={`/account/orders?status=${status}`} className="flex flex-col items-center gap-2 text-center text-xs font-medium p-2 rounded-lg hover:bg-muted">
+                               <Link key={label} href={`/account/orders?status=${status[0]}`} className="flex flex-col items-center gap-2 text-center text-xs font-medium p-2 rounded-lg hover:bg-muted">
                                     <div className="relative">
-                                        <OrderStatusIcon status={status as Order['status']} />
-                                        {getOrderStatusCount(status as Order['status']) > 0 && (
-                                            <Badge className="absolute -top-2 -right-2 h-4 w-4 justify-center p-0">{getOrderStatusCount(status as Order['status'])}</Badge>
+                                        <OrderStatusIcon status={status[0] as Order['status']} />
+                                        {getOrderStatusCount(status) > 0 && (
+                                            <Badge className="absolute -top-2 -right-2 h-4 w-4 justify-center p-0">{getOrderStatusCount(status)}</Badge>
                                         )}
                                     </div>
                                     <span>{label}</span>

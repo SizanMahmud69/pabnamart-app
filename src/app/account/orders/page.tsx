@@ -85,7 +85,7 @@ function MyOrdersPageContent() {
                     <CardHeader>
                         <CardTitle>My Orders</CardTitle>
                         <CardDescription>
-                            {statusQuery ? `Showing your ${statusQuery} orders.` : 'View all your order history and status.'}
+                            {statusQuery ? `Showing your ${statusQuery.replace('-', ' ')} orders.` : 'View all your order history and status.'}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
