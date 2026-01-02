@@ -6,15 +6,14 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ChevronRight, MoreHorizontal, Eye } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { ArrowLeft, MoreHorizontal, Eye } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order, User } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
 
 const db = getFirestore(app);
@@ -135,8 +134,7 @@ export default function AdminOrderManagement() {
                                                         <CardDescription>{new Date(order.date).toLocaleString()} by {users[order.userId]?.displayName || '...'}</CardDescription>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
-                                                        <DropdownMenu>
+                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
                                                                 <Button variant="ghost" className="h-8 w-8 p-0">
                                                                     <span className="sr-only">Open menu</span>
@@ -179,8 +177,9 @@ export default function AdminOrderManagement() {
                                                         </div>
                                                     ))}
                                                 </CardContent>
-                                                 <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
-                                                    <div className="text-left">
+                                                <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
+                                                    <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
+                                                    <div className="text-right">
                                                         <p className="text-sm text-muted-foreground">Total Amount</p>
                                                         <p className="text-xl font-bold">৳{order.total.toFixed(2)}</p>
                                                     </div>
