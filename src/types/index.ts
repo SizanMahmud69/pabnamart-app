@@ -175,3 +175,13 @@ export interface Category {
   image: string;
   createdAt: string;
 }
+
+export interface OrderPayload {
+  userId: string;
+  items: CartItem[];
+  shippingAddress: ShippingAddress;
+  shippingFee: number;
+  voucherCode?: string;
+  paymentMethod: string;
+  transactionId?: string;
+}

@@ -42,12 +42,12 @@ export const useDeliveryCharge = () => {
   }, []);
 
   return { 
-    chargeInsidePabnaSmall: settings?.insidePabnaSmall ?? defaultSettings.insidePabnaSmall, 
-    chargeInsidePabnaLarge: settings?.insidePabnaLarge ?? defaultSettings.insidePabnaLarge,
-    chargeOutsidePabnaSmall: settings?.outsidePabnaSmall ?? defaultSettings.outsidePabnaSmall,
-    chargeOutsidePabnaLarge: settings?.outsidePabnaLarge ?? defaultSettings.outsidePabnaLarge,
-    deliveryTimeInside: settings?.deliveryTimeInside ?? defaultSettings.deliveryTimeInside,
-    deliveryTimeOutside: settings?.deliveryTimeOutside ?? defaultSettings.deliveryTimeOutside,
+    chargeInsidePabnaSmall: Number(settings?.insidePabnaSmall ?? defaultSettings.insidePabnaSmall), 
+    chargeInsidePabnaLarge: Number(settings?.insidePabnaLarge ?? defaultSettings.insidePabnaLarge),
+    chargeOutsidePabnaSmall: Number(settings?.outsidePabnaSmall ?? defaultSettings.outsidePabnaSmall),
+    chargeOutsidePabnaLarge: Number(settings?.outsidePabnaLarge ?? defaultSettings.outsidePabnaLarge),
+    deliveryTimeInside: Number(settings?.deliveryTimeInside ?? defaultSettings.deliveryTimeInside),
+    deliveryTimeOutside: Number(settings?.deliveryTimeOutside ?? defaultSettings.deliveryTimeOutside),
     returnAddress: settings?.returnAddress ?? '',
   };
 };

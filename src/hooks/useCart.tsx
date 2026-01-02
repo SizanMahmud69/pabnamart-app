@@ -28,6 +28,7 @@ interface CartContextType {
   selectedCartCount: number;
   selectedCartTotal: number;
   selectedShippingAddress: ShippingAddress | null;
+  setSelectedShippingAddress: (address: ShippingAddress | null) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -292,7 +293,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         selectedCartItems,
         selectedCartCount,
         selectedCartTotal,
-        selectedShippingAddress
+        selectedShippingAddress,
+        setSelectedShippingAddress
       }}
     >
       {children}
