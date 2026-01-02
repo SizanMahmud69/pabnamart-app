@@ -188,5 +188,3 @@ export interface OrderPayload {
   transactionId?: string;
   paymentAccountNumber?: string;
 }
-
-    

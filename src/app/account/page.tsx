@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Ticket, Settings, HelpCircle, Headphones, Star, Users, PackageSearch, ShoppingBag, ChevronRight, Package, Truck, CheckCircle, XCircle } from "lucide-react";
+import { Heart, Ticket, Settings, HelpCircle, Headphones, Star, Users, PackageSearch, ShoppingBag, ChevronRight, Package, Truck, CheckCircle, XCircle, Undo2 } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from 'lucide-react';
 import { useVouchers } from "@/hooks/useVouchers";
@@ -45,7 +45,7 @@ const OrderStatusIcon = ({ status }: { status: Order['status'] }) => {
         shipped: Truck,
         delivered: CheckCircle,
         cancelled: XCircle,
-        returned: XCircle,
+        returned: Undo2,
     };
     const Icon = iconMap[status] || Package;
     return <Icon className="h-6 w-6 text-primary" />;
@@ -71,7 +71,7 @@ export default function AccountPage() {
         if (!user) return;
         
         const ordersRef = collection(db, 'orders');
-        const q = query(ordersRef, where('userId', '==', user.uid), orderBy('date', 'desc'), limit(4));
+        const q = query(ordersRef, where('userId', '==', user.uid), orderBy('date', 'desc'));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const userOrders = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Order));
@@ -111,6 +111,7 @@ export default function AccountPage() {
         { status: 'processing', label: 'Processing' },
         { status: 'shipped', label: 'Shipped' },
         { status: 'delivered', label: 'Delivered' },
+        { status: 'returned', label: 'Returned' },
     ];
     
     const getOrderStatusCount = (status: Order['status']) => {
@@ -163,7 +164,7 @@ export default function AccountPage() {
                         </div>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                       <div className="grid grid-cols-4 gap-2">
+                       <div className="grid grid-cols-5 gap-2">
                            {orderStatuses.map(({status, label}) => (
                                <Link key={status} href={`/account/orders?status=${status}`} className="flex flex-col items-center gap-2 text-center text-xs font-medium p-2 rounded-lg hover:bg-muted">
                                     <div className="relative">

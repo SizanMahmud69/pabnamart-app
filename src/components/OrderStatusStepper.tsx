@@ -3,7 +3,7 @@
 
 import { cn } from "@/lib/utils";
 import type { Order } from "@/types";
-import { Package, Truck, CheckCircle } from "lucide-react";
+import { Package, Truck, CheckCircle, Undo2 } from "lucide-react";
 
 interface OrderStatusStepperProps {
   currentStatus: Order['status'];
@@ -23,7 +23,7 @@ const getStepIndex = (status: Order['status']) => {
         case 'shipped': return 2;
         case 'delivered': return 3;
         case 'cancelled': return -1;
-        case 'returned': return -1;
+        case 'returned': return -2;
         default: return 0;
     }
 }
@@ -35,6 +35,15 @@ export default function OrderStatusStepper({ currentStatus }: OrderStatusStepper
       return (
           <div className="flex justify-center items-center p-4 bg-destructive/10 rounded-lg">
               <h3 className="text-destructive font-semibold text-lg capitalize">{currentStatus}</h3>
+          </div>
+      )
+  }
+  
+   if (currentStepIndex === -2) {
+      return (
+          <div className="flex justify-center items-center p-4 bg-yellow-500/10 rounded-lg gap-2">
+              <Undo2 className="h-6 w-6 text-yellow-600" />
+              <h3 className="text-yellow-700 font-semibold text-lg capitalize">{currentStatus}</h3>
           </div>
       )
   }
