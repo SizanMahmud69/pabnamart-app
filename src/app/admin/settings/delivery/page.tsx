@@ -215,5 +215,4 @@ export default function DeliverySettingsPage() {
         </div>
     );
 }
-
     

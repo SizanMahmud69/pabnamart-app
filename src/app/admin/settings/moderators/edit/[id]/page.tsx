@@ -27,6 +27,7 @@ const permissionOptions: { id: keyof ModeratorPermissions, label: string }[] = [
     { id: 'canManageReturns', label: 'Manage Returns' },
     { id: 'canManageOffers', label: 'Manage Offers' },
     { id: 'canManageVouchers', label: 'Manage Vouchers' },
+    { id: 'canManageReviews', label: 'Manage Reviews' },
 ];
 
 const settingsPermissionOptions: { id: keyof ModeratorPermissions, label: string }[] = [
@@ -54,6 +55,7 @@ export default function EditModeratorPage() {
         canManagePaymentSettings: false,
         canManageCategorySettings: false,
         canManageModeratorSettings: false,
+        canManageReviews: false,
     });
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
