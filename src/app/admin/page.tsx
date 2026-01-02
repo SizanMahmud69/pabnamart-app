@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
 
@@ -22,6 +21,13 @@ const allMenuItems = [
         icon: ShoppingCart,
         href: "/admin/orders",
         permissionKey: 'canManageOrders'
+    },
+    {
+        title: "Verify Payments",
+        description: "Verify online payments for orders.",
+        icon: CreditCard,
+        href: "/admin/verify-payments",
+        permissionKey: 'canVerifyPayments'
     },
     {
         title: "User Management",
