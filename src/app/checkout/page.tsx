@@ -23,7 +23,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { Badge } from "@/components/ui/badge";
 
 export interface OrderPayload {
-    items: { id: number; quantity: number }[];
+    items: { id: number; quantity: number, price: number }[];
     shippingAddressId: string;
     paymentMethod: string;
     voucherCode?: string;
@@ -139,7 +139,7 @@ function CheckoutPage() {
     setIsPlacingOrder(true);
     
     const payload: OrderPayload = {
-      items: selectedCartItems.map(item => ({ id: item.id, quantity: item.quantity })),
+      items: selectedCartItems.map(item => ({ id: item.id, quantity: item.quantity, price: item.price })),
       shippingAddressId: selectedShippingAddress.id,
       paymentMethod: selectedPaymentMethod,
       voucherCode: selectedVoucherCode,

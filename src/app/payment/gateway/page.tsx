@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { getFirestore, doc, onSnapshot, getDoc, collection } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from "@/components/LoadingSpinner";
-import type { Product, Voucher } from '@/types';
+import type { Product, Voucher, DeliverySettings } from '@/types';
 
 const db = getFirestore(app);
 
@@ -37,8 +37,7 @@ async function calculateServerTotal(payload: OrderPayload): Promise<number> {
         const productDoc = productDocs[i];
         const item = payload.items[i];
         if (productDoc.exists()) {
-            const productData = productDoc.data() as any;
-            subtotal += productData.price * item.quantity;
+            subtotal += item.price * item.quantity;
         }
     }
 
@@ -62,8 +61,19 @@ async function calculateServerTotal(payload: OrderPayload): Promise<number> {
     const deliverySettingsDoc = await getDoc(doc(db, 'settings', 'delivery'));
     let shippingFee = 0;
     if (deliverySettingsDoc.exists()) {
-        const settings = deliverySettingsDoc.data() as any;
-        shippingFee = settings.outsidePabnaSmall || 120;
+        const settings = deliverySettingsDoc.data() as DeliverySettings;
+        const userDoc = await getDoc(doc(db, 'users', (await getAuth(app)).currentUser!.uid));
+        const shippingAddress = (userDoc.data()?.shippingAddresses || []).find((a: any) => a.id === payload.shippingAddressId);
+        
+        if (shippingAddress) {
+            const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
+            const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
+            if (isInsidePabna) {
+                shippingFee = itemCount <= 5 ? settings.insidePabnaSmall : settings.insidePabnaLarge;
+            } else {
+                shippingFee = itemCount <= 5 ? settings.outsidePabnaSmall : settings.outsidePabnaLarge;
+            }
+        }
     }
 
     return Math.round(subtotalAfterDiscount + shippingFee);

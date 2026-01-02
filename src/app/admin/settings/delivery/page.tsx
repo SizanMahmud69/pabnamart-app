@@ -51,7 +51,9 @@ export default function DeliverySettingsPage() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setSettings(prev => ({ ...prev, [name]: name.startsWith('deliveryTime') || name.endsWith('Charge') ? Number(value) : value }));
+        // For number inputs, convert to number type
+        const isNumeric = ['insidePabnaSmall', 'insidePabnaLarge', 'outsidePabnaSmall', 'outsidePabnaLarge', 'deliveryTimeInside', 'deliveryTimeOutside'].includes(name);
+        setSettings(prev => ({ ...prev, [name]: isNumeric ? Number(value) : value }));
     };
 
 
@@ -213,3 +215,5 @@ export default function DeliverySettingsPage() {
         </div>
     );
 }
+
+    

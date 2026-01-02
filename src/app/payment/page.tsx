@@ -11,8 +11,9 @@ import type { OrderPayload } from "@/app/checkout/page";
 import { withAuth } from "@/hooks/useAuth";
 import { getFirestore, collection, doc, getDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Product, Voucher, ShippingAddress } from '@/types';
+import type { Product, Voucher, ShippingAddress, DeliverySettings } from '@/types';
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { getAuth } from "firebase/auth";
 
 const db = getFirestore(app);
 
@@ -26,8 +27,7 @@ async function calculateServerTotal(payload: OrderPayload): Promise<number> {
         const productDoc = productDocs[i];
         const item = payload.items[i];
         if (productDoc.exists()) {
-            const productData = productDoc.data() as Product;
-            subtotal += productData.price * item.quantity;
+            subtotal += item.price * item.quantity;
         }
     }
 
@@ -48,14 +48,27 @@ async function calculateServerTotal(payload: OrderPayload): Promise<number> {
     
     const subtotalAfterDiscount = subtotal - voucherDiscount;
 
-    // Shipping fee calculation (simplified for display)
     const deliverySettingsDoc = await getDoc(doc(db, 'settings', 'delivery'));
     let shippingFee = 0;
     if (deliverySettingsDoc.exists()) {
-        const settings = deliverySettingsDoc.data() as any;
-        // This is a simplified estimation. The server will do the real check.
-        shippingFee = settings.outsidePabnaSmall || 120; // Default estimate
+        const settings = deliverySettingsDoc.data() as DeliverySettings;
+        const user = getAuth(app).currentUser;
+        if (user) {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            const shippingAddress = (userDoc.data()?.shippingAddresses || []).find((a: any) => a.id === payload.shippingAddressId);
+            
+            if (shippingAddress) {
+                const isInsidePabna = shippingAddress.city.toLowerCase().trim() === 'pabna';
+                const itemCount = payload.items.reduce((acc, item) => acc + item.quantity, 0);
+                if (isInsidePabna) {
+                    shippingFee = itemCount <= 5 ? settings.insidePabnaSmall : settings.insidePabnaLarge;
+                } else {
+                    shippingFee = itemCount <= 5 ? settings.outsidePabnaSmall : settings.outsidePabnaLarge;
+                }
+            }
+        }
     }
+
 
     return Math.round(subtotalAfterDiscount + shippingFee);
 }

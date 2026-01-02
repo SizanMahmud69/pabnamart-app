@@ -213,7 +213,7 @@ export async function placeOrder(payload: OrderPayload) {
             itemsForOrder.push({
                 id: detail.productData.id,
                 name: detail.productData.name,
-                price: detail.productData.price,
+                price: detail.price,
                 quantity: detail.quantity,
                 image: detail.productData.images[0],
                 returnPolicy: detail.productData.returnPolicy ?? 0,
