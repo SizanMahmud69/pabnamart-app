@@ -2,22 +2,18 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth, withAuth } from '@/hooks/useAuth';
 import { useCart } from "@/hooks/useCart";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { placeOrder } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
-import type { CartItem, ShippingAddress, PaymentSettings } from "@/types";
-import { Loader2, ArrowLeft } from "lucide-react";
+import type { CartItem, ShippingAddress } from "@/types";
+import { Loader2, ArrowLeft, CreditCard, Truck } from "lucide-react";
 import Link from "next/link";
-import { getFirestore, doc, onSnapshot } from "firebase/firestore";
-import app from "@/lib/firebase";
+import { cn } from "@/lib/utils";
 
 interface CheckoutData {
     items: CartItem[];
@@ -30,16 +26,13 @@ interface CheckoutData {
 
 function PaymentPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const { user } = useAuth();
     const { clearCart } = useCart();
     const { toast } = useToast();
     
     const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
     const [paymentMethod, setPaymentMethod] = useState('');
-    const [transactionId, setTransactionId] = useState('');
     const [isPlacingOrder, startOrderPlacement] = useTransition();
-    const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
 
     useEffect(() => {
         const data = sessionStorage.getItem('checkoutData');
@@ -49,28 +42,9 @@ function PaymentPage() {
             router.replace('/cart');
         }
     }, [router]);
-    
-    useEffect(() => {
-        const db = getFirestore(app);
-        const settingsDocRef = doc(db, 'settings', 'payment');
-        const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
-            if (docSnap.exists()) {
-                setPaymentSettings(docSnap.data() as PaymentSettings);
-            }
-        });
-        return () => unsubscribe();
-    }, []);
 
     const handlePlaceOrder = () => {
-        if (!checkoutData || !user) return;
-        if (!paymentMethod) {
-            toast({ title: "Payment Method", description: "Please select a payment method.", variant: "destructive" });
-            return;
-        }
-        if (paymentMethod !== 'cash-on-delivery' && !transactionId) {
-            toast({ title: "Transaction ID", description: "Please enter the transaction ID.", variant: "destructive" });
-            return;
-        }
+        if (!checkoutData || !user || paymentMethod !== 'cash-on-delivery') return;
 
         startOrderPlacement(async () => {
             const result = await placeOrder({
@@ -79,8 +53,8 @@ function PaymentPage() {
                 shippingAddress: checkoutData.shippingAddress,
                 shippingFee: checkoutData.shippingFee,
                 voucherCode: checkoutData.voucherCode,
-                paymentMethod,
-                transactionId,
+                paymentMethod: 'cash-on-delivery',
+                transactionId: '',
             });
 
             if (result.success && result.orderId) {
@@ -93,13 +67,16 @@ function PaymentPage() {
             }
         });
     };
+    
+    const handleOnlinePayment = () => {
+        router.push('/payment/online');
+    }
 
-    if (!checkoutData || !paymentSettings) {
+    if (!checkoutData) {
         return <LoadingSpinner />;
     }
 
-    const { total, subtotal, shippingFee, voucherCode } = checkoutData;
-    const voucherDiscount = subtotal + shippingFee - total;
+    const { total } = checkoutData;
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -112,56 +89,54 @@ function PaymentPage() {
                 </Button>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Confirm Payment</CardTitle>
+                        <CardTitle>Select Payment Method</CardTitle>
                         <CardDescription>Your final order total is ৳{total}.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                            <h3 className="font-semibold mb-2">Select Payment Method</h3>
-                            
-                            <Label htmlFor="bkash" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer has-[:checked]:border-primary">
-                                <RadioGroupItem value="bKash" id="bkash" />
-                                {paymentSettings.bkashLogo && <img src={paymentSettings.bkashLogo} alt="bKash" className="h-8 object-contain" />}
-                                <span className="flex-grow">bKash</span>
-                            </Label>
-
-                            <Label htmlFor="nagad" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer has-[:checked]:border-primary">
-                                <RadioGroupItem value="Nagad" id="nagad" />
-                                {paymentSettings.nagadLogo && <img src={paymentSettings.nagadLogo} alt="Nagad" className="h-8 object-contain" />}
-                                <span className="flex-grow">Nagad</span>
-                            </Label>
-                            
-                            <Label htmlFor="rocket" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer has-[:checked]:border-primary">
-                                <RadioGroupItem value="Rocket" id="rocket" />
-                                {paymentSettings.rocketLogo && <img src={paymentSettings.rocketLogo} alt="Rocket" className="h-8 object-contain" />}
-                                <span className="flex-grow">Rocket</span>
-                            </Label>
-                            
-                            <Label htmlFor="cod" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer has-[:checked]:border-primary">
-                                <RadioGroupItem value="cash-on-delivery" id="cod" />
-                                <span className="flex-grow font-semibold">Cash on Delivery</span>
-                            </Label>
-                        </RadioGroup>
-
-                        {paymentMethod && paymentMethod !== 'cash-on-delivery' && (
-                            <div className="space-y-2 pt-4">
-                                <p>Please send <strong>৳{total}</strong> to our {paymentMethod} merchant number:</p>
-                                <p className="font-mono text-lg font-bold text-center bg-muted p-2 rounded-md">
-                                    {paymentMethod === 'bKash' && paymentSettings.bkashMerchantNumber}
-                                    {paymentMethod === 'Nagad' && paymentSettings.nagadMerchantNumber}
-                                    {paymentMethod === 'Rocket' && paymentSettings.rocketMerchantNumber}
-                                </p>
-                                <p>Then, enter the transaction ID below.</p>
-                                <Label htmlFor="trxId">Transaction ID</Label>
-                                <Input id="trxId" placeholder="Enter your transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} required />
-                            </div>
-                        )}
+                    <CardContent className="space-y-4">
+                        <Card 
+                            className={cn(
+                                "cursor-pointer transition-all",
+                                paymentMethod === 'cash-on-delivery' ? "border-primary ring-2 ring-primary" : "hover:border-gray-400"
+                            )}
+                            onClick={() => setPaymentMethod('cash-on-delivery')}
+                        >
+                            <CardContent className="p-6 flex items-center gap-4">
+                                <Truck className="h-8 w-8 text-primary" />
+                                <div>
+                                    <h3 className="font-bold text-lg">Cash on Delivery</h3>
+                                    <p className="text-sm text-muted-foreground">Pay with cash when your order is delivered.</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        
+                         <Card 
+                            className={cn(
+                                "cursor-pointer transition-all",
+                                paymentMethod === 'online' ? "border-primary ring-2 ring-primary" : "hover:border-gray-400"
+                            )}
+                             onClick={() => setPaymentMethod('online')}
+                        >
+                            <CardContent className="p-6 flex items-center gap-4">
+                                <CreditCard className="h-8 w-8 text-primary" />
+                                <div>
+                                    <h3 className="font-bold text-lg">Online Payment</h3>
+                                    <p className="text-sm text-muted-foreground">Pay with bKash, Nagad, or Rocket.</p>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </CardContent>
                     <CardFooter>
-                        <Button size="lg" className="w-full" onClick={handlePlaceOrder} disabled={isPlacingOrder}>
-                            {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {isPlacingOrder ? 'Placing Order...' : `Place Order (৳${total})`}
-                        </Button>
+                       {paymentMethod === 'cash-on-delivery' && (
+                            <Button size="lg" className="w-full" onClick={handlePlaceOrder} disabled={isPlacingOrder}>
+                                {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isPlacingOrder ? 'Placing Order...' : `Place Order (৳${total})`}
+                            </Button>
+                        )}
+                        {paymentMethod === 'online' && (
+                             <Button size="lg" className="w-full" onClick={handleOnlinePayment}>
+                                Continue to Online Payment
+                            </Button>
+                        )}
                     </CardFooter>
                 </Card>
             </div>
