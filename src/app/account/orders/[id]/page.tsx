@@ -10,7 +10,7 @@ import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Truck, Calendar, Hash, CreditCard, Ticket, CheckCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Truck, Calendar, Hash, CreditCard, Ticket, CheckCircle, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -156,14 +156,27 @@ function OrderDetailsPage() {
                                     <p className="text-muted-foreground text-sm capitalize">{order.paymentMethod}</p>
                                 </div>
                             </div>
-                            {order.transactionId && (
-                                <div className="flex items-start gap-3">
-                                    <CheckCircle className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
-                                    <div>
-                                        <p className="font-semibold">Transaction ID</p>
-                                        <p className="text-muted-foreground text-sm">{order.transactionId}</p>
-                                    </div>
-                                </div>
+                             {order.paymentMethod !== 'cash-on-delivery' && (
+                                <>
+                                    {order.paymentAccountNumber && (
+                                        <div className="flex items-start gap-3">
+                                            <Smartphone className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
+                                            <div>
+                                                <p className="font-semibold">Payment From</p>
+                                                <p className="text-muted-foreground text-sm">{order.paymentAccountNumber}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {order.transactionId && (
+                                        <div className="flex items-start gap-3">
+                                            <CheckCircle className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
+                                            <div>
+                                                <p className="font-semibold">Transaction ID</p>
+                                                <p className="text-muted-foreground text-sm">{order.transactionId}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
 
