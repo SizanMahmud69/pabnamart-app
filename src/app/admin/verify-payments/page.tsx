@@ -1,17 +1,22 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle } from 'lucide-react';
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, where } from 'firebase/firestore';
+import { ArrowLeft, CheckCircle, MoreHorizontal, Eye, XCircle, Trash2, Loader2, Info } from 'lucide-react';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, where, deleteDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order, User } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+
 
 const db = getFirestore(app);
 
@@ -20,6 +25,10 @@ export default function VerifyPaymentsPage() {
     const [users, setUsers] = useState<{ [key: string]: User }>({});
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const router = useRouter();
+    const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
 
     useEffect(() => {
         const ordersQuery = query(
@@ -55,29 +64,52 @@ export default function VerifyPaymentsPage() {
         return () => ordersUnsubscribe();
     }, [users]);
 
-    const handleVerifyPayment = async (orderId: string) => {
+    const handleUpdateStatus = async (orderId: string, status: 'processing' | 'cancelled') => {
         const orderRef = doc(db, 'orders', orderId);
         try {
-            await updateDoc(orderRef, { status: 'processing' });
+            await updateDoc(orderRef, { status });
             toast({
-                title: "Payment Verified",
-                description: "Order status updated to processing."
+                title: "Order Updated",
+                description: `Order status has been updated to ${status}.`
             });
         } catch (error) {
             toast({
                 title: "Error",
-                description: "Failed to verify payment.",
+                description: `Failed to update order status.`,
                 variant: "destructive"
             });
         }
     };
+    
+    const handleDeleteOrder = async () => {
+        if (!orderToDelete) return;
+        setIsDeleting(true);
+        try {
+            await deleteDoc(doc(db, 'orders', orderToDelete.id));
+            toast({
+                title: "Order Deleted",
+                description: `Order #${orderToDelete.orderNumber} has been deleted.`
+            });
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to delete order.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsDeleting(false);
+            setOrderToDelete(null);
+        }
+    };
+
 
     if (loading) {
         return <LoadingSpinner />;
     }
 
     return (
-        <div className="container mx-auto p-4">
+        <>
+        <div className="container mx-auto p-4 max-w-4xl">
             <header className="py-4">
                 <Button asChild variant="outline">
                     <Link href="/admin">
@@ -92,55 +124,105 @@ export default function VerifyPaymentsPage() {
                         <CardTitle>Verify Online Payments</CardTitle>
                         <CardDescription>Review and verify payments for pending online orders.</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Order ID</TableHead>
-                                    <TableHead>Customer</TableHead>
-                                    <TableHead>Payment Method</TableHead>
-                                    <TableHead>Account Number</TableHead>
-                                    <TableHead>Transaction ID</TableHead>
-                                    <TableHead>Total</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {orders.length > 0 ? orders.map(order => (
-                                    <TableRow key={order.id}>
-                                        <TableCell className="font-medium">
-                                            <Button variant="link" asChild className="p-0 h-auto">
-                                                <Link href={`/admin/orders/${order.id}`}>
-                                                    #{order.orderNumber}
-                                                </Link>
+                    <CardContent className="space-y-4">
+                        {orders.length > 0 ? orders.map(order => (
+                            <Card key={order.id}>
+                                <CardHeader className="flex flex-row items-start justify-between">
+                                    <div>
+                                        <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
+                                        <CardDescription>{new Date(order.date).toLocaleString()} by {users[order.userId]?.displayName || '...'}</CardDescription>
+                                    </div>
+                                     <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                <span className="sr-only">Open menu</span>
+                                                <MoreHorizontal className="h-4 w-4" />
                                             </Button>
-                                        </TableCell>
-                                        <TableCell>{users[order.userId]?.displayName || 'Loading...'}</TableCell>
-                                        <TableCell className="capitalize">{order.paymentMethod}</TableCell>
-                                        <TableCell className="font-mono">{order.paymentAccountNumber || 'N/A'}</TableCell>
-                                        <TableCell className="font-mono">{order.transactionId || 'N/A'}</TableCell>
-                                        <TableCell>৳{order.total.toFixed(2)}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Button size="sm" onClick={() => handleVerifyPayment(order.id)}>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                            <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                <span>Details</span>
+                                            </DropdownMenuItem>
+                                             <DropdownMenuItem onSelect={() => handleUpdateStatus(order.id, 'processing')}>
                                                 <CheckCircle className="mr-2 h-4 w-4" />
-                                                Verify
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                )) : (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="text-center h-24">
-                                            No pending online payments to verify.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                                                <span>Verify</span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={() => handleUpdateStatus(order.id, 'cancelled')}>
+                                                <XCircle className="mr-2 h-4 w-4" />
+                                                <span>Cancel</span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem className="text-destructive" onSelect={() => setOrderToDelete(order)}>
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                <span>Delete</span>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                     <div className="space-y-2">
+                                        {order.items.map(item => (
+                                            <div key={item.id} className="flex items-center gap-4 py-2">
+                                                <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
+                                                <div className="flex-grow">
+                                                    <p className="font-semibold text-sm">{item.name}</p>
+                                                    <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                                                </div>
+                                                <p className="font-semibold text-sm">৳{item.price * item.quantity}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <Separator />
+                                     <div className="flex justify-between items-center bg-muted/50 p-3 rounded-md">
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-semibold uppercase">Payment Details</p>
+                                            <Badge variant="secondary" className="capitalize">{order.paymentMethod}</Badge>
+                                            <p className="text-sm font-mono">{order.paymentAccountNumber}</p>
+                                            <p className="text-xs text-muted-foreground font-mono">{order.transactionId}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs text-muted-foreground">Total Amount</p>
+                                            <p className="text-xl font-bold">৳{order.total.toFixed(2)}</p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                 <CardFooter>
+                                    <Button className="w-full" onClick={() => handleUpdateStatus(order.id, 'processing')}>
+                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                        Verify Payment
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        )) : (
+                           <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                                <Info className="mx-auto h-12 w-12 text-muted-foreground" />
+                                <h3 className="mt-4 text-xl font-semibold">All Caught Up!</h3>
+                                <p className="text-muted-foreground">There are no pending online payments to verify.</p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>
         </div>
+         <AlertDialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete order #{orderToDelete?.orderNumber}.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteOrder} disabled={isDeleting}>
+                        {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isDeleting ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+      </>
     );
 }
-
-    
