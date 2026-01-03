@@ -32,7 +32,7 @@ const getStatusVariant = (status: Order['status']) => {
     }
 };
 
-const statusTabs: Order['status'][] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'return-requested', 'return-approved'];
+const statusTabs: (Order['status'])[] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'return-requested', 'return-approved'];
 
 function MyOrdersPageContent() {
     const { user } = useAuth();
@@ -187,7 +187,9 @@ function MyOrdersPageContent() {
 export default function MyOrdersPage() {
     return (
         <Suspense fallback={<LoadingSpinner />}>
-            <MyOrdersPageContent />
+            <withAuth>
+              <MyOrdersPageContent />
+            </withAuth>
         </Suspense>
     )
 }
