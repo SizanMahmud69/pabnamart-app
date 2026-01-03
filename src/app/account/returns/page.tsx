@@ -182,12 +182,12 @@ function ReturnRequestPageContent() {
 }
 
 
-export default function ReturnRequestPage() {
+function ReturnRequestPage() {
     return (
         <Suspense fallback={<LoadingSpinner />}>
-            <withAuth>
-                <ReturnRequestPageContent />
-            </withAuth>
+            <ReturnRequestPageContent />
         </Suspense>
     )
 }
+
+export default withAuth(ReturnRequestPage);

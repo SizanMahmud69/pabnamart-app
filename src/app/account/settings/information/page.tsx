@@ -149,5 +149,4 @@ function AccountInformationPage() {
 
 
 export default withAuth(AccountInformationPage);
-
     

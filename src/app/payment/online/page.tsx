@@ -194,5 +194,3 @@ function OnlinePaymentPage() {
 }
 
 export default withAuth(OnlinePaymentPage);
-
-    

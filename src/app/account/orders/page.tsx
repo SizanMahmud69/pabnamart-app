@@ -183,13 +183,12 @@ function MyOrdersPageContent() {
     );
 }
 
-
-export default function MyOrdersPage() {
+function MyOrdersPage() {
     return (
         <Suspense fallback={<LoadingSpinner />}>
-            <withAuth>
-              <MyOrdersPageContent />
-            </withAuth>
+            <MyOrdersPageContent />
         </Suspense>
     )
 }
+
+export default withAuth(MyOrdersPage);
