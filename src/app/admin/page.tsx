@@ -4,7 +4,7 @@
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2 } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
 
@@ -36,6 +36,13 @@ const allMenuItems = [
         icon: Undo2,
         href: "/admin/returns",
         permissionKey: 'canManageReturns'
+    },
+    {
+        title: "Review Management",
+        description: "Approve or reject customer reviews.",
+        icon: Star,
+        href: "/admin/reviews",
+        permissionKey: 'canManageReviews'
     },
     {
         title: "User Management",

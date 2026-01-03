@@ -15,6 +15,7 @@ import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import ReviewModal from '@/components/ReviewModal';
 
 
 const getStatusVariant = (status: Order['status']) => {
@@ -41,6 +42,9 @@ function MyOrdersPageContent() {
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<{ productId: number; productName: string } | null>(null);
+
 
     useEffect(() => {
         if (!user) return;
@@ -66,98 +70,116 @@ function MyOrdersPageContent() {
 
         return () => unsubscribe();
     }, [user, statusQuery]);
+
+    const handleReviewClick = (productId: number, productName: string) => {
+        setSelectedProduct({ productId, productName });
+        setReviewModalOpen(true);
+    };
+
     
     if (loading) {
         return <LoadingSpinner />;
     }
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
-            <div className="container mx-auto max-w-3xl px-4 py-6">
-                <Button asChild variant="ghost" className="mb-4">
-                    <Link href="/account">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Account
-                    </Link>
-                </Button>
-                
-                <Card>
-                    <CardHeader>
-                        <CardTitle>My Orders</CardTitle>
-                        <CardDescription>
-                            {statusQuery ? `Showing your ${statusQuery.replace('-', ' ')} orders.` : 'View all your order history and status.'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                         <div className="space-y-4">
-                            {orders.length > 0 ? (
-                                orders.map(order => (
-                                    <Card key={order.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
-                                        <CardHeader className="p-4 flex flex-row justify-between items-start">
-                                            <div>
-                                                <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
-                                                <CardDescription>{new Date(order.date).toLocaleDateString()}</CardDescription>
-                                            </div>
-                                            <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace('-', ' ')}</Badge>
-                                        </CardHeader>
-                                        <CardContent className="p-4 space-y-3">
-                                            
-                                            <div className="space-y-4">
-                                                {order.items.map(item => (
-                                                    <div key={item.id} className="flex items-center gap-4">
-                                                        <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
-                                                        <div className="flex-grow">
-                                                            <p className="font-semibold">{item.name}</p>
-                                                            <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+        <>
+            <div className="bg-purple-50/30 min-h-screen">
+                <div className="container mx-auto max-w-3xl px-4 py-6">
+                    <Button asChild variant="ghost" className="mb-4">
+                        <Link href="/account">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Account
+                        </Link>
+                    </Button>
+                    
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>My Orders</CardTitle>
+                            <CardDescription>
+                                {statusQuery ? `Showing your ${statusQuery.replace('-', ' ')} orders.` : 'View all your order history and status.'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {orders.length > 0 ? (
+                                    orders.map(order => (
+                                        <Card key={order.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
+                                            <CardHeader className="p-4 flex flex-row justify-between items-start">
+                                                <div>
+                                                    <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
+                                                    <CardDescription>{new Date(order.date).toLocaleDateString()}</CardDescription>
+                                                </div>
+                                                <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace('-', ' ')}</Badge>
+                                            </CardHeader>
+                                            <CardContent className="p-4 space-y-3">
+                                                
+                                                <div className="space-y-4">
+                                                    {order.items.map(item => (
+                                                        <div key={item.id} className="flex items-center gap-4">
+                                                            <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
+                                                            <div className="flex-grow">
+                                                                <p className="font-semibold">{item.name}</p>
+                                                                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                                            </div>
+                                                             <div className="text-right">
+                                                                <p className="font-semibold">৳{item.price * item.quantity}</p>
+                                                                {order.status === 'delivered' && (
+                                                                    <Button variant="outline" size="sm" className="mt-1" onClick={() => handleReviewClick(item.id, item.name)}>
+                                                                        <Star className="mr-2 h-3 w-3" /> Review
+                                                                    </Button>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <p className="font-semibold">৳{item.price * item.quantity}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <Separator />
-                                            <div className="flex justify-end font-bold text-lg">
-                                                Total: ৳{order.total}
-                                            </div>
-                                        </CardContent>
-                                        <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
-                                            <div className="flex gap-2">
-                                                {order.status === 'delivered' && (
-                                                    <Button asChild variant="outline" size="sm">
-                                                        <Link href={`/account/returns?orderId=${order.id}`}>
-                                                            <Undo2 className="mr-2 h-4 w-4" />
-                                                            Return
+                                                    ))}
+                                                </div>
+                                                <Separator />
+                                                <div className="flex justify-end font-bold text-lg">
+                                                    Total: ৳{order.total}
+                                                </div>
+                                            </CardContent>
+                                            <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
+                                                <div className="flex gap-2">
+                                                    {order.status === 'delivered' && (
+                                                        <Button asChild variant="outline" size="sm">
+                                                            <Link href={`/account/returns?orderId=${order.id}`}>
+                                                                <Undo2 className="mr-2 h-4 w-4" />
+                                                                Return
+                                                            </Link>
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Button asChild variant="ghost" size="icon">
+                                                        <Link href={`/account/orders/${order.id}`}>
+                                                            <Eye className="h-5 w-5" />
                                                         </Link>
                                                     </Button>
-                                                )}
-                                            </div>
-                                            <div className="flex gap-2">
-                                                {order.status === 'delivered' && (
-                                                    <Button variant="outline" size="sm">
-                                                        <Star className="mr-2 h-4 w-4" />
-                                                        Review
-                                                    </Button>
-                                                )}
-                                                <Button asChild variant="ghost" size="icon">
-                                                    <Link href={`/account/orders/${order.id}`}>
-                                                        <Eye className="h-5 w-5" />
-                                                    </Link>
-                                                </Button>
-                                            </div>
-                                        </CardFooter>
-                                    </Card>
-                                ))
-                            ) : (
-                                    <div className="text-center py-16">
-                                    <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
-                                    <h2 className="mt-4 text-xl font-semibold">No Orders in this Category</h2>
-                                    <p className="text-muted-foreground">You don't have any orders with this status yet.</p>
-                                </div>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+                                                </div>
+                                            </CardFooter>
+                                        </Card>
+                                    ))
+                                ) : (
+                                        <div className="text-center py-16">
+                                        <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
+                                        <h2 className="mt-4 text-xl font-semibold">No Orders in this Category</h2>
+                                        <p className="text-muted-foreground">You don't have any orders with this status yet.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
-        </div>
+            {selectedProduct && user && (
+                <ReviewModal
+                    isOpen={reviewModalOpen}
+                    onClose={() => setReviewModalOpen(false)}
+                    productId={selectedProduct.productId}
+                    productName={selectedProduct.productName}
+                    user={user}
+                />
+            )}
+        </>
     );
 }
 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
@@ -7,7 +8,7 @@ import StarRating from '@/components/StarRating';
 import AddToCartButton from './AddToCartButton';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState, useMemo, Suspense } from 'react';
-import type { Product, ShippingAddress } from '@/types';
+import type { Product, ShippingAddress, Review } from '@/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, CheckCircle2, Truck, Package } from 'lucide-react';
@@ -16,6 +17,8 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
 import { useAuth } from '@/hooks/useAuth';
+import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
+import app from '@/lib/firebase';
 
 function ProductDetailPageContent() {
   const params = useParams();
@@ -24,6 +27,7 @@ function ProductDetailPageContent() {
   const [product, setProduct] = useState<Product | undefined | null>(null);
   const { appUser } = useAuth();
   const { deliveryTimeInside, deliveryTimeOutside } = useDeliveryCharge();
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   const isFlashSaleContext = searchParams.get('flash') === 'true';
 
@@ -41,7 +45,7 @@ function ProductDetailPageContent() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [params.id]);
-
+  
   useEffect(() => {
     const productId = params.id as string;
     if (products.length > 0 && productId) {
@@ -49,10 +53,9 @@ function ProductDetailPageContent() {
         if (foundProduct) {
           if (isFlashSaleContext) {
             const flashPrice = getFlashSalePrice(foundProduct);
-            // Create a temporary product view with flash sale price
             setProduct({
               ...foundProduct,
-              originalPrice: foundProduct.originalPrice || foundProduct.price, // Use the real original price or the current price
+              originalPrice: foundProduct.originalPrice || foundProduct.price,
               price: flashPrice,
             });
           } else {
@@ -63,6 +66,20 @@ function ProductDetailPageContent() {
         }
     }
   }, [products, params.id, isFlashSaleContext, getFlashSalePrice]);
+
+
+  useEffect(() => {
+    if (product) {
+      const db = getFirestore(app);
+      const reviewsRef = collection(db, `products/${product.id}/reviews`);
+      const q = query(reviewsRef, where("status", "==", "approved"));
+      const unsubscribe = onSnapshot(q, snapshot => {
+        const approvedReviews = snapshot.docs.map(doc => doc.data() as Review);
+        setReviews(approvedReviews);
+      });
+      return () => unsubscribe();
+    }
+  }, [product]);
 
   if (product === null) {
     return <LoadingSpinner />;
@@ -80,7 +97,6 @@ function ProductDetailPageContent() {
   }
   
   const hasDiscount = (product.originalPrice && product.originalPrice > product.price);
-  const approvedReviews = product.reviews?.filter(r => r.status === 'approved') || [];
 
   return (
     <div className="bg-background min-h-screen">
@@ -118,7 +134,7 @@ function ProductDetailPageContent() {
                         <h1 className="text-2xl font-bold">{product.name}</h1>
                         <div className="flex items-center gap-2">
                             <StarRating rating={product.rating} />
-                            <span className="text-muted-foreground text-sm">({approvedReviews.length} reviews)</span>
+                            <span className="text-muted-foreground text-sm">({reviews.length} reviews)</span>
                         </div>
                         <p className="text-base text-muted-foreground leading-relaxed">{product.description}</p>
                         
@@ -190,8 +206,8 @@ function ProductDetailPageContent() {
                         <div>
                             <h2 className="text-xl font-bold mb-4">Customer Reviews</h2>
                             <div className="space-y-6">
-                                {approvedReviews.length > 0 ? (
-                                    approvedReviews.map((review) => (
+                                {reviews.length > 0 ? (
+                                    reviews.map((review) => (
                                         <div key={review.id} className="flex items-start gap-4">
                                             <Avatar>
                                                 <AvatarFallback>{review.user.displayName.charAt(0)}</AvatarFallback>
