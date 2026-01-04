@@ -209,9 +209,7 @@ const roundPrice = (price: number): number => {
 };
 
 const getOriginalPrice = (item: CartItem | Product): number => {
-    return item.originalPrice && item.originalPrice > item.price
-      ? item.originalPrice
-      : item.price;
+    return item.originalPrice ?? item.price;
 };
 
 export async function placeOrder(
@@ -356,3 +354,5 @@ export async function placeOrder(
     };
   }
 }
+
+    
