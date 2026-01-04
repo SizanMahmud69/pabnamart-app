@@ -69,7 +69,7 @@ export default function AdminOrderDetailsPage() {
         );
     }
     
-    const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const subtotal = order.items.reduce((acc, item) => acc + item.originalPrice * item.quantity, 0);
 
     return (
         <div className="bg-slate-50 min-h-screen">
@@ -160,7 +160,7 @@ export default function AdminOrderDetailsPage() {
                                 <CreditCard className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
                                 <div>
                                     <p className="font-semibold">Payment Method</p>
-                                    <p className="text-muted-foreground text-sm capitalize">{order.paymentMethod}</p>
+                                    <p className="text-muted-foreground text-sm capitalize">{order.paymentMethod.replace('-', ' ')}</p>
                                 </div>
                             </div>
                             {order.paymentMethod !== 'cash-on-delivery' && (

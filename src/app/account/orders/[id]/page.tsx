@@ -155,7 +155,7 @@ function OrderDetailsPage() {
                                 <CreditCard className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
                                 <div>
                                     <p className="font-semibold">Payment Method</p>
-                                    <p className="text-muted-foreground text-sm capitalize">{order.paymentMethod}</p>
+                                    <p className="text-muted-foreground text-sm capitalize">{order.paymentMethod.replace('-', ' ')}</p>
                                 </div>
                             </div>
                              {order.paymentMethod !== 'cash-on-delivery' && (
