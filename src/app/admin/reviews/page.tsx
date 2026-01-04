@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import StarRating from '@/components/StarRating';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import Image from 'next/image';
 
 const db = getFirestore(app);
 
@@ -171,6 +172,15 @@ export default function AdminReviewManagement() {
                                                         </div>
                                                     </div>
                                                     <p className="text-muted-foreground mt-2">{review.comment}</p>
+                                                    {review.images && review.images.length > 0 && (
+                                                        <div className="mt-4 flex gap-2 flex-wrap">
+                                                            {review.images.map((img, index) => (
+                                                                <div key={index} className="relative h-20 w-20 rounded-md overflow-hidden">
+                                                                    <Image src={img} alt={`Review image ${index + 1}`} fill sizes="80px" className="object-cover" />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </Card>
                                             ))}
                                         </div>
@@ -206,3 +216,5 @@ export default function AdminReviewManagement() {
         </>
     );
 }
+
+    

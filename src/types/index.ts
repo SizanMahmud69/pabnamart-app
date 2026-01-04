@@ -13,6 +13,7 @@ export interface Review {
   comment: string;
   date: string;
   status: 'pending' | 'approved' | 'rejected';
+  images?: string[];
 }
 
 export interface Product {
@@ -188,3 +189,5 @@ export interface OrderPayload {
   transactionId?: string;
   paymentAccountNumber?: string;
 }
+
+    

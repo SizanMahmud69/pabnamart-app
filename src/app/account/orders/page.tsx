@@ -7,10 +7,10 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ShoppingBag, Star, ChevronRight, Eye, Undo2 } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Star, ChevronRight, Eye, Undo2, CheckCircle } from 'lucide-react';
 import { withAuth, useAuth } from '@/hooks/useAuth';
-import type { Order } from '@/types';
-import { getFirestore, collection, query, where, onSnapshot, orderBy, updateDoc, doc } from 'firebase/firestore';
+import type { Order, Review } from '@/types';
+import { getFirestore, collection, query, where, onSnapshot, orderBy, updateDoc, doc, collectionGroup } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Separator } from '@/components/ui/separator';
@@ -41,10 +41,8 @@ function MyOrdersPageContent() {
     const { toast } = useToast();
 
     const [orders, setOrders] = useState<Order[]>([]);
+    const [userReviews, setUserReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
-    const [reviewModalOpen, setReviewModalOpen] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<{ productId: number; productName: string } | null>(null);
-
 
     useEffect(() => {
         if (!user) return;
@@ -59,7 +57,7 @@ function MyOrdersPageContent() {
         }
 
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const unsubscribeOrders = onSnapshot(q, (snapshot) => {
             const userOrders = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Order));
             setOrders(userOrders);
             setLoading(false);
@@ -68,120 +66,123 @@ function MyOrdersPageContent() {
             setLoading(false);
         });
 
-        return () => unsubscribe();
+        const reviewsRef = collectionGroup(db, 'reviews');
+        const reviewsQuery = query(reviewsRef, where('user.uid', '==', user.uid));
+        const unsubscribeReviews = onSnapshot(reviewsQuery, (snapshot) => {
+            const reviews = snapshot.docs.map(doc => doc.data() as Review);
+            setUserReviews(reviews);
+        });
+
+        return () => {
+            unsubscribeOrders();
+            unsubscribeReviews();
+        };
     }, [user, statusQuery]);
 
-    const handleReviewClick = (productId: number, productName: string) => {
-        setSelectedProduct({ productId, productName });
-        setReviewModalOpen(true);
+    const hasReviewed = (productId: number) => {
+        return userReviews.some(review => review.productId === productId);
     };
 
-    
     if (loading) {
         return <LoadingSpinner />;
     }
 
     return (
-        <>
-            <div className="bg-purple-50/30 min-h-screen">
-                <div className="container mx-auto max-w-3xl px-4 py-6">
-                    <Button asChild variant="ghost" className="mb-4">
-                        <Link href="/account">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Account
-                        </Link>
-                    </Button>
-                    
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>My Orders</CardTitle>
-                            <CardDescription>
-                                {statusQuery ? `Showing your ${statusQuery.replace('-', ' ')} orders.` : 'View all your order history and status.'}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {orders.length > 0 ? (
-                                    orders.map(order => (
-                                        <Card key={order.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
-                                            <CardHeader className="p-4 flex flex-row justify-between items-start">
-                                                <div>
-                                                    <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
-                                                    <CardDescription>{new Date(order.date).toLocaleDateString()}</CardDescription>
-                                                </div>
-                                                <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace('-', ' ')}</Badge>
-                                            </CardHeader>
-                                            <CardContent className="p-4 space-y-3">
-                                                
-                                                <div className="space-y-4">
-                                                    {order.items.map(item => (
-                                                        <div key={item.id} className="flex items-center gap-4">
-                                                            <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
-                                                            <div className="flex-grow">
-                                                                <p className="font-semibold">{item.name}</p>
-                                                                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                                                            </div>
-                                                             <div className="text-right">
-                                                                <p className="font-semibold">৳{item.price * item.quantity}</p>
-                                                            </div>
+        <div className="bg-purple-50/30 min-h-screen">
+            <div className="container mx-auto max-w-3xl px-4 py-6">
+                <Button asChild variant="ghost" className="mb-4">
+                    <Link href="/account">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Account
+                    </Link>
+                </Button>
+                
+                <Card>
+                    <CardHeader>
+                        <CardTitle>My Orders</CardTitle>
+                        <CardDescription>
+                            {statusQuery ? `Showing your ${statusQuery.replace('-', ' ')} orders.` : 'View all your order history and status.'}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {orders.length > 0 ? (
+                                orders.map(order => (
+                                    <Card key={order.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
+                                        <CardHeader className="p-4 flex flex-row justify-between items-start">
+                                            <div>
+                                                <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
+                                                <CardDescription>{new Date(order.date).toLocaleDateString()}</CardDescription>
+                                            </div>
+                                            <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace('-', ' ')}</Badge>
+                                        </CardHeader>
+                                        <CardContent className="p-4 space-y-3">
+                                            
+                                            <div className="space-y-4">
+                                                {order.items.map(item => (
+                                                    <div key={item.id} className="flex items-center gap-4">
+                                                        <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
+                                                        <div className="flex-grow">
+                                                            <p className="font-semibold">{item.name}</p>
+                                                            <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                                         </div>
-                                                    ))}
-                                                </div>
-                                                <Separator />
-                                                <div className="flex justify-end font-bold text-lg">
-                                                    Total: ৳{order.total}
-                                                </div>
-                                            </CardContent>
-                                            <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
-                                                <div className="flex gap-2">
-                                                    {order.status === 'delivered' && (
-                                                        <>
-                                                            <Button asChild variant="outline" size="sm">
-                                                                <Link href={`/account/returns?orderId=${order.id}`}>
-                                                                    <Undo2 className="mr-2 h-4 w-4" />
-                                                                    Return
-                                                                </Link>
-                                                            </Button>
-                                                            {order.items.map(item => (
-                                                                <Button key={item.id} variant="outline" size="sm" className="mt-1" onClick={() => handleReviewClick(item.id, item.name)}>
-                                                                    <Star className="mr-2 h-3 w-3" /> Review
-                                                                </Button>
-                                                            ))}
-                                                        </>
-                                                    )}
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <Button asChild variant="ghost" size="icon">
-                                                        <Link href={`/account/orders/${order.id}`}>
-                                                            <Eye className="h-5 w-5" />
+                                                         <div className="text-right">
+                                                            <p className="font-semibold">৳{item.price * item.quantity}</p>
+                                                            {order.status === 'delivered' && (
+                                                                 hasReviewed(item.id) ? (
+                                                                     <Button variant="ghost" size="sm" className="mt-1 text-green-600" disabled>
+                                                                        <CheckCircle className="mr-2 h-3 w-3" /> Reviewed
+                                                                    </Button>
+                                                                 ) : (
+                                                                    <Button asChild variant="outline" size="sm" className="mt-1">
+                                                                        <Link href={`/account/reviews/new?productId=${item.id}&productName=${encodeURIComponent(item.name)}`}>
+                                                                            <Star className="mr-2 h-3 w-3" /> Review
+                                                                        </Link>
+                                                                    </Button>
+                                                                 )
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <Separator />
+                                            <div className="flex justify-end font-bold text-lg">
+                                                Total: ৳{order.total}
+                                            </div>
+                                        </CardContent>
+                                        <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
+                                            <div className="flex gap-2">
+                                                {order.status === 'delivered' && (
+                                                    <Button asChild variant="outline" size="sm">
+                                                        <Link href={`/account/returns?orderId=${order.id}`}>
+                                                            <Undo2 className="mr-2 h-4 w-4" />
+                                                            Return
                                                         </Link>
                                                     </Button>
-                                                </div>
-                                            </CardFooter>
-                                        </Card>
-                                    ))
-                                ) : (
-                                        <div className="text-center py-16">
-                                        <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
-                                        <h2 className="mt-4 text-xl font-semibold">No Orders in this Category</h2>
-                                        <p className="text-muted-foreground">You don't have any orders with this status yet.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button asChild variant="ghost" size="icon">
+                                                    <Link href={`/account/orders/${order.id}`}>
+                                                        <Eye className="h-5 w-5" />
+                                                    </Link>
+                                                </Button>
+                                            </div>
+                                        </CardFooter>
+                                    </Card>
+                                ))
+                            ) : (
+                                    <div className="text-center py-16">
+                                    <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
+                                    <h2 className="mt-4 text-xl font-semibold">No Orders in this Category</h2>
+                                    <p className="text-muted-foreground">You don't have any orders with this status yet.</p>
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-            {selectedProduct && user && (
-                <ReviewModal
-                    isOpen={reviewModalOpen}
-                    onClose={() => setReviewModalOpen(false)}
-                    productId={selectedProduct.productId}
-                    productName={selectedProduct.productName}
-                    user={user}
-                />
-            )}
-        </>
+        </div>
     );
 }
 
@@ -194,3 +195,5 @@ function MyOrdersPage() {
 }
 
 export default withAuth(MyOrdersPage);
+
+    

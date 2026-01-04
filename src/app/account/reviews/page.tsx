@@ -11,6 +11,7 @@ import type { Review } from "@/types";
 import { getFirestore, collectionGroup, query, where, onSnapshot } from "firebase/firestore";
 import app from "@/lib/firebase";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import Image from 'next/image';
 
 const db = getFirestore(app);
 
@@ -63,6 +64,15 @@ export default function ReviewsPage() {
                                             </div>
                                         </div>
                                         <p className="text-muted-foreground mt-2">{review.comment}</p>
+                                        {review.images && review.images.length > 0 && (
+                                            <div className="mt-4 flex gap-2 flex-wrap">
+                                                {review.images.map((img, index) => (
+                                                    <div key={index} className="relative h-20 w-20 rounded-md overflow-hidden">
+                                                        <Image src={img} alt={`Review image ${index + 1}`} fill sizes="80px" className="object-cover" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                         <Separator className="mt-6" />
                                     </div>
                                 ))}
@@ -80,3 +90,5 @@ export default function ReviewsPage() {
         </div>
     );
 }
+
+    
