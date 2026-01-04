@@ -219,55 +219,16 @@ export async function placeOrder(
   const db = getFirestore(adminApp);
 
   try {
-    let voucherDiscount = 0;
-    let shippingFeeWithDiscount = payload.shippingFee;
-    let usedVoucher: Voucher | null = null;
-    let newUsageCount = 0;
-
-    // Calculate subtotal from original prices
-    const subtotal = payload.items.reduce(
-        (acc, item) => acc + getOriginalPrice(item) * item.quantity,
-        0
-      );
-
-    if (payload.voucherCode) {
-      const voucherDocSnap = await db
-        .collection('vouchers')
-        .doc(payload.voucherCode)
-        .get();
-      if (voucherDocSnap.exists) {
-        const voucher = voucherDocSnap.data() as Voucher;
-        const userDoc = await db.collection('users').doc(payload.userId).get();
-        const userData = userDoc.data() as User;
-
-        const currentUsage = userData.usedVouchers?.[voucher.code] || 0;
-
-        if (!voucher.usageLimit || currentUsage < voucher.usageLimit) {
-            if (!voucher.minSpend || subtotal >= voucher.minSpend) {
-                usedVoucher = voucher;
-                newUsageCount = currentUsage + 1;
-                if (voucher.discountType === 'shipping') {
-                    shippingFeeWithDiscount = 0;
-                } else {
-                    if (voucher.type === 'fixed') {
-                        voucherDiscount = voucher.discount;
-                    } else { // percentage
-                        voucherDiscount = (subtotal * voucher.discount) / 100;
-                    }
-                }
-            }
-        }
-      }
-    }
-
     const transactionResult = await db.runTransaction(async (transaction) => {
       const productRefs = payload.items.map((item) =>
         db.collection('products').doc(item.id.toString())
       );
       const productDocs = await transaction.getAll(...productRefs);
       const userDocRef = db.collection('users').doc(payload.userId);
+      let userDoc = await transaction.get(userDocRef);
 
       const itemsForOrder: OrderItem[] = [];
+      let subtotal = 0;
 
       for (let i = 0; i < productDocs.length; i++) {
         const productDoc = productDocs[i];
@@ -287,20 +248,48 @@ export async function placeOrder(
           stock: FieldValue.increment(-cartItem.quantity),
           sold: FieldValue.increment(cartItem.quantity),
         });
+        
+        const originalPrice = getOriginalPrice(productData);
+        subtotal += originalPrice * cartItem.quantity;
 
         itemsForOrder.push({
           id: productData.id,
           name: productData.name,
-          price: cartItem.price,
-          originalPrice: getOriginalPrice(productData),
+          price: cartItem.price, // Discounted price from cart
+          originalPrice: originalPrice,
           quantity: cartItem.quantity,
           image: productData.images[0] || '',
           returnPolicy: productData.returnPolicy || 0,
         });
       }
 
-      const subtotalAfterDiscount = Math.max(0, subtotal - voucherDiscount);
-      const total = roundPrice(subtotalAfterDiscount + shippingFeeWithDiscount);
+      let voucherDiscount = 0;
+      let usedVoucher: Voucher | null = null;
+      let newUsageCount = 0;
+
+      if (payload.voucherCode) {
+        const voucherDocSnap = await db.collection('vouchers').doc(payload.voucherCode).get();
+        if (voucherDocSnap.exists) {
+            const voucher = voucherDocSnap.data() as Voucher;
+            const userData = userDoc.data() as User;
+            const currentUsage = userData.usedVouchers?.[voucher.code] || 0;
+
+            if ((!voucher.usageLimit || currentUsage < voucher.usageLimit) && (!voucher.minSpend || subtotal >= voucher.minSpend)) {
+                usedVoucher = voucher;
+                newUsageCount = currentUsage + 1;
+
+                if (voucher.discountType !== 'shipping') {
+                    if (voucher.type === 'fixed') {
+                        voucherDiscount = voucher.discount;
+                    } else { // percentage
+                        voucherDiscount = (subtotal * voucher.discount) / 100;
+                    }
+                }
+            }
+        }
+      }
+      
+      const total = roundPrice((subtotal - voucherDiscount) + payload.shippingFee);
 
       const orderRef = db.collection('orders').doc();
       const newOrder: Omit<Order, 'id'> = {
@@ -314,7 +303,7 @@ export async function placeOrder(
         paymentMethod: payload.paymentMethod,
         transactionId: payload.transactionId || '',
         paymentAccountNumber: payload.paymentAccountNumber || '',
-        shippingFee: shippingFeeWithDiscount,
+        shippingFee: payload.shippingFee,
         voucherCode: usedVoucher?.code || '',
         voucherDiscount: voucherDiscount,
       };
@@ -327,16 +316,13 @@ export async function placeOrder(
         });
       }
 
-      return { orderId: orderRef.id, total, itemsForOrder };
+      return { orderId: orderRef.id, total };
     });
 
     await createAndSendNotification(payload.userId, {
       icon: 'PackageCheck',
       title: 'Order Placed Successfully!',
-      description: `Your order #${transactionResult.orderId.slice(
-        0,
-        6
-      )} for ৳${transactionResult.total} has been placed.`,
+      description: `Your order #${generateOrderNumber().slice(0, 6)} for ৳${transactionResult.total} has been placed.`,
       href: `/account/orders/${transactionResult.orderId}`,
     });
 
@@ -354,5 +340,3 @@ export async function placeOrder(
     };
   }
 }
-
-    
