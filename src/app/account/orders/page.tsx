@@ -123,11 +123,6 @@ function MyOrdersPageContent() {
                                                             </div>
                                                              <div className="text-right">
                                                                 <p className="font-semibold">৳{item.price * item.quantity}</p>
-                                                                {order.status === 'delivered' && (
-                                                                    <Button variant="outline" size="sm" className="mt-1" onClick={() => handleReviewClick(item.id, item.name)}>
-                                                                        <Star className="mr-2 h-3 w-3" /> Review
-                                                                    </Button>
-                                                                )}
                                                             </div>
                                                         </div>
                                                     ))}
@@ -140,12 +135,19 @@ function MyOrdersPageContent() {
                                             <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
                                                 <div className="flex gap-2">
                                                     {order.status === 'delivered' && (
-                                                        <Button asChild variant="outline" size="sm">
-                                                            <Link href={`/account/returns?orderId=${order.id}`}>
-                                                                <Undo2 className="mr-2 h-4 w-4" />
-                                                                Return
-                                                            </Link>
-                                                        </Button>
+                                                        <>
+                                                            <Button asChild variant="outline" size="sm">
+                                                                <Link href={`/account/returns?orderId=${order.id}`}>
+                                                                    <Undo2 className="mr-2 h-4 w-4" />
+                                                                    Return
+                                                                </Link>
+                                                            </Button>
+                                                            {order.items.map(item => (
+                                                                <Button key={item.id} variant="outline" size="sm" className="mt-1" onClick={() => handleReviewClick(item.id, item.name)}>
+                                                                    <Star className="mr-2 h-3 w-3" /> Review
+                                                                </Button>
+                                                            ))}
+                                                        </>
                                                     )}
                                                 </div>
                                                 <div className="flex gap-2">
