@@ -190,3 +190,4 @@ function OrderDetailsPage() {
 }
 
 export default withAuth(OrderDetailsPage);
+
