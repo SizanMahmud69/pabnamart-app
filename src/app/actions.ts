@@ -19,6 +19,7 @@ import type {
   DeliverySettings,
   OrderItem,
   Order,
+  CartItem,
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 
@@ -207,6 +208,12 @@ const roundPrice = (price: number): number => {
   return Math.round(price);
 };
 
+const getOriginalPrice = (item: CartItem | Product): number => {
+    return item.originalPrice && item.originalPrice > item.price
+      ? item.originalPrice
+      : item.price;
+};
+
 export async function placeOrder(
   payload: OrderPayload
 ): Promise<{ success: boolean; orderId?: string; message?: string }> {
@@ -218,6 +225,12 @@ export async function placeOrder(
     let shippingFeeWithDiscount = payload.shippingFee;
     let usedVoucher: Voucher | null = null;
     let newUsageCount = 0;
+
+    // Calculate subtotal from original prices
+    const subtotal = payload.items.reduce(
+        (acc, item) => acc + getOriginalPrice(item) * item.quantity,
+        0
+      );
 
     if (payload.voucherCode) {
       const voucherDocSnap = await db
@@ -232,11 +245,7 @@ export async function placeOrder(
         const currentUsage = userData.usedVouchers?.[voucher.code] || 0;
 
         if (!voucher.usageLimit || currentUsage < voucher.usageLimit) {
-            let preSubtotal = 0;
-            for (const item of payload.items) {
-                preSubtotal += item.price * item.quantity;
-            }
-            if (!voucher.minSpend || preSubtotal >= voucher.minSpend) {
+            if (!voucher.minSpend || subtotal >= voucher.minSpend) {
                 usedVoucher = voucher;
                 newUsageCount = currentUsage + 1;
                 if (voucher.discountType === 'shipping') {
@@ -244,8 +253,8 @@ export async function placeOrder(
                 } else {
                     if (voucher.type === 'fixed') {
                         voucherDiscount = voucher.discount;
-                    } else {
-                        voucherDiscount = (preSubtotal * voucher.discount) / 100;
+                    } else { // percentage
+                        voucherDiscount = (subtotal * voucher.discount) / 100;
                     }
                 }
             }
@@ -261,34 +270,32 @@ export async function placeOrder(
       const userDocRef = db.collection('users').doc(payload.userId);
 
       const itemsForOrder: OrderItem[] = [];
-      let subtotal = 0;
 
       for (let i = 0; i < productDocs.length; i++) {
         const productDoc = productDocs[i];
-        const item = payload.items[i];
+        const cartItem = payload.items[i];
 
         if (!productDoc.exists) {
-          throw new Error(`Product ${item.name} not found.`);
+          throw new Error(`Product ${cartItem.name} not found.`);
         }
 
         const productData = productDoc.data() as Product;
 
-        if (productData.stock < item.quantity) {
+        if (productData.stock < cartItem.quantity) {
           throw new Error(`Not enough stock for ${productData.name}.`);
         }
-
-        subtotal += item.price * item.quantity;
-
+        
         transaction.update(productDoc.ref, {
-          stock: FieldValue.increment(-item.quantity),
-          sold: FieldValue.increment(item.quantity),
+          stock: FieldValue.increment(-cartItem.quantity),
+          sold: FieldValue.increment(cartItem.quantity),
         });
 
         itemsForOrder.push({
           id: productData.id,
           name: productData.name,
-          price: item.price, // Use client-side rounded price for consistency
-          quantity: item.quantity,
+          price: cartItem.price,
+          originalPrice: getOriginalPrice(productData),
+          quantity: cartItem.quantity,
           image: productData.images[0] || '',
           returnPolicy: productData.returnPolicy || 0,
         });
@@ -349,5 +356,3 @@ export async function placeOrder(
     };
   }
 }
-
-    

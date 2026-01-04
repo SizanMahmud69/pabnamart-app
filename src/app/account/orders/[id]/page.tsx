@@ -74,7 +74,7 @@ function OrderDetailsPage() {
         );
     }
     
-    const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const subtotal = order.items.reduce((acc, item) => acc + item.originalPrice * item.quantity, 0);
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -190,4 +190,3 @@ function OrderDetailsPage() {
 }
 
 export default withAuth(OrderDetailsPage);
-

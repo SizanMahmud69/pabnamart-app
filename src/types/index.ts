@@ -54,6 +54,7 @@ export interface OrderItem {
     id: number;
     name: string;
     price: number;
+    originalPrice: number;
     quantity: number;
     image: string;
     returnPolicy: number;
