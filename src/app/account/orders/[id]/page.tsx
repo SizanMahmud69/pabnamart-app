@@ -74,7 +74,8 @@ function OrderDetailsPage() {
         );
     }
     
-    const subtotal = order.items.reduce((acc, item) => acc + item.originalPrice * item.quantity, 0);
+    const subtotal = order.items.reduce((acc, item) => acc + (item.originalPrice || item.price) * item.quantity, 0);
+    const voucherDiscount = order.voucherDiscount || 0;
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -121,10 +122,10 @@ function OrderDetailsPage() {
                                 <span className="text-muted-foreground">Subtotal</span>
                                 <span>৳{subtotal.toFixed(2)}</span>
                             </div>
-                            {order.voucherDiscount > 0 && (
+                            {voucherDiscount > 0 && (
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Voucher Discount</span>
-                                    <span className="text-green-600">- ৳{order.voucherDiscount.toFixed(2)}</span>
+                                    <span className="text-green-600">- ৳{voucherDiscount.toFixed(2)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between">

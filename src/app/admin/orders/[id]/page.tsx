@@ -23,6 +23,8 @@ const getStatusVariant = (status: Order['status']) => {
         case 'delivered': return 'default';
         case 'cancelled': return 'destructive';
         case 'returned': return 'destructive';
+        case 'return-requested': return 'secondary';
+        case 'return-approved': return 'default';
         default: return 'outline';
     }
 };
@@ -69,7 +71,8 @@ export default function AdminOrderDetailsPage() {
         );
     }
     
-    const subtotal = order.items.reduce((acc, item) => acc + item.originalPrice * item.quantity, 0);
+    const subtotal = order.items.reduce((acc, item) => acc + (item.originalPrice || item.price) * item.quantity, 0);
+    const voucherDiscount = order.voucherDiscount || 0;
 
     return (
         <div className="bg-slate-50 min-h-screen">
@@ -126,10 +129,10 @@ export default function AdminOrderDetailsPage() {
                                 <span className="text-muted-foreground">Subtotal</span>
                                 <span>৳{subtotal.toFixed(2)}</span>
                             </div>
-                            {order.voucherDiscount > 0 && (
+                            {voucherDiscount > 0 && (
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Voucher Discount</span>
-                                    <span className="text-green-600">- ৳{order.voucherDiscount.toFixed(2)}</span>
+                                    <span className="text-green-600">- ৳{voucherDiscount.toFixed(2)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between">
