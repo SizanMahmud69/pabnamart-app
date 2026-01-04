@@ -25,7 +25,7 @@ export default function EditProductPage() {
     const router = useRouter();
     const params = useParams();
     const productId = Number(params.id);
-    const { toast } } from useToast();
+    const { toast } = useToast();
     const { products, updateProduct } = useProducts();
     const [product, setProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(false);
