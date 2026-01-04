@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import type { Product, Offer, Notification, Review } from '@/types';
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, writeBatch, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, writeBatch, getDocs, query, where, orderBy, collectionGroup } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { useOffers } from './useOffers';
 import { createAndSendNotification } from '@/app/actions';
@@ -289,3 +289,5 @@ export const useProducts = () => {
   }
   return context;
 };
+
+    

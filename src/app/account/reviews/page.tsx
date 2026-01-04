@@ -27,9 +27,9 @@ export default function ReviewsPage() {
 
         const reviewsRef = collectionGroup(db, 'reviews');
         
-        const unsubscribe = onSnapshot(reviewsRef, (snapshot) => {
-            const allReviews = snapshot.docs.map(doc => doc.data() as Review);
-            const userReviews = allReviews.filter(review => review.user.uid === user.uid);
+        const q = query(reviewsRef, where('user.uid', '==', user.uid));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const userReviews = snapshot.docs.map(doc => doc.data() as Review);
             setReviews(userReviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
             setLoading(false);
         });
@@ -89,3 +89,5 @@ export default function ReviewsPage() {
         </div>
     );
 }
+
+    
