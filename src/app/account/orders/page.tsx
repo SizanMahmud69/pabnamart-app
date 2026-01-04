@@ -16,6 +16,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import ReviewModal from '@/components/ReviewModal';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 
 const getStatusVariant = (status: Order['status']) => {
@@ -32,7 +33,7 @@ const getStatusVariant = (status: Order['status']) => {
     }
 };
 
-const statusTabs: (Order['status'])[] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'return-requested', 'return-approved'];
+const statusTabs: (Order['status'] | 'all')[] = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'return-requested', 'return-approved'];
 
 function MyOrdersPageContent() {
     const { user } = useAuth();
@@ -128,19 +129,6 @@ function MyOrdersPageContent() {
                                                         </div>
                                                          <div className="text-right">
                                                             <p className="font-semibold">৳{item.price * item.quantity}</p>
-                                                            {order.status === 'delivered' && (
-                                                                 hasReviewed(item.id) ? (
-                                                                     <Button variant="ghost" size="sm" className="mt-1 text-green-600" disabled>
-                                                                        <CheckCircle className="mr-2 h-3 w-3" /> Reviewed
-                                                                    </Button>
-                                                                 ) : (
-                                                                    <Button asChild variant="outline" size="sm" className="mt-1">
-                                                                        <Link href={`/account/reviews/new?productId=${item.id}&productName=${encodeURIComponent(item.name)}`}>
-                                                                            <Star className="mr-2 h-3 w-3" /> Review
-                                                                        </Link>
-                                                                    </Button>
-                                                                 )
-                                                            )}
                                                         </div>
                                                     </div>
                                                 ))}
@@ -152,6 +140,32 @@ function MyOrdersPageContent() {
                                         </CardContent>
                                         <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
                                             <div className="flex gap-2">
+                                                 {order.status === 'delivered' && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="outline" size="sm">
+                                                                <Star className="mr-2 h-4 w-4" />
+                                                                Review
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent>
+                                                            {order.items.map(item => (
+                                                                <DropdownMenuItem key={item.id} asChild disabled={hasReviewed(item.id)}>
+                                                                    <Link href={`/account/reviews/new?productId=${item.id}&productName=${encodeURIComponent(item.name)}`}>
+                                                                        {hasReviewed(item.id) ? (
+                                                                            <>
+                                                                                <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                                                                                <span className="truncate">{item.name} (Reviewed)</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <span className="truncate">{item.name}</span>
+                                                                        )}
+                                                                    </Link>
+                                                                </DropdownMenuItem>
+                                                            ))}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
                                                 {order.status === 'delivered' && (
                                                     <Button asChild variant="outline" size="sm">
                                                         <Link href={`/account/returns?orderId=${order.id}`}>
@@ -195,5 +209,3 @@ function MyOrdersPage() {
 }
 
 export default withAuth(MyOrdersPage);
-
-    
