@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -43,7 +44,6 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   const defaultImage = "https://i.ibb.co/gV28rC7/default-image.jpg";
   let imageUrl = product.images?.[0] || defaultImage;
 
-  // Basic check for a valid URL to prevent errors if the src is invalid
   try {
     if (imageUrl) new URL(imageUrl);
   } catch (e) {

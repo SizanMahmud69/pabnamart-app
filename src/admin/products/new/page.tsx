@@ -17,7 +17,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import Image from 'next/image';
 import type { PutBlobResult } from '@vercel/blob';
 
 const db = getFirestore(app);
@@ -168,7 +167,7 @@ export default function NewProductPage() {
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                                     {imageFiles.map((file, index) => (
                                         <div key={index} className="relative group aspect-square">
-                                            <Image src={URL.createObjectURL(file)} alt={file.name} fill sizes="128px" className="object-cover rounded-md" />
+                                            <img src={URL.createObjectURL(file)} alt={file.name} className="object-cover w-full h-full rounded-md" />
                                             <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100" onClick={() => removeImage(index)}>
                                                 <X className="h-4 w-4" />
                                             </Button>

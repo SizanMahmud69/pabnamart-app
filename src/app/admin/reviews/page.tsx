@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, XCircle, Trash2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { getFirestore, collectionGroup, onSnapshot, doc, updateDoc, deleteDoc, runTransaction } from 'firebase/firestore';
+import { getFirestore, collectionGroup, onSnapshot, doc, updateDoc, deleteDoc, runTransaction, getDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Review, Product } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import StarRating from '@/components/StarRating';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import Image from 'next/image';
 
 const db = getFirestore(app);
 
@@ -45,9 +44,12 @@ export default function AdminReviewManagement() {
                     throw "Product not found!";
                 }
                 const productData = productDoc.data() as Product;
-                const currentReviews = productData.reviews || [];
-                const reviewCount = currentReviews.filter(r => r.status === 'approved').length;
                 
+                const reviewsRef = collection(db, `products/${productId}/reviews`);
+                const q = query(reviewsRef, where("status", "==", "approved"));
+                const reviewsSnapshot = await getDocs(q);
+                const reviewCount = reviewsSnapshot.size;
+
                 const totalRating = (productData.rating * reviewCount) - (oldRating || 0) + newRating;
                 const newReviewCount = reviewCount + reviewCountChange;
                 const newAverageRating = newReviewCount > 0 ? totalRating / newReviewCount : 0;
@@ -66,7 +68,8 @@ export default function AdminReviewManagement() {
         const reviewRef = doc(db, `products/${review.productId}/reviews`, review.id);
         try {
             await updateDoc(reviewRef, { status: 'approved' });
-            await updateProductRating(review.productId, null, review.rating, 1);
+            // This is now handled by the global rating calculation in useProducts
+            // await updateProductRating(review.productId, null, review.rating, 1);
             toast({ title: "Review Approved", description: "The review is now public." });
         } catch (error) {
             toast({ title: "Error", description: "Failed to approve review.", variant: "destructive" });
@@ -83,9 +86,10 @@ export default function AdminReviewManagement() {
         try {
             const wasApproved = review.status === 'approved';
             await updateDoc(reviewRef, { status: 'rejected' });
-            if (wasApproved) {
-                await updateProductRating(review.productId, review.rating, 0, -1);
-            }
+            // This is now handled by the global rating calculation in useProducts
+            // if (wasApproved) {
+            //     await updateProductRating(review.productId, review.rating, 0, -1);
+            // }
             toast({ title: "Review Rejected", description: "The review has been rejected." });
         } catch (error) {
             toast({ title: "Error", description: "Failed to reject review.", variant: "destructive" });
@@ -99,9 +103,10 @@ export default function AdminReviewManagement() {
         setIsProcessing(true);
         const reviewRef = doc(db, `products/${review.productId}/reviews`, review.id);
         try {
-            if (review.status === 'approved') {
-                await updateProductRating(review.productId, review.rating, 0, -1);
-            }
+            // This is now handled by the global rating calculation in useProducts
+            // if (review.status === 'approved') {
+            //     await updateProductRating(review.productId, review.rating, 0, -1);
+            // }
             await deleteDoc(reviewRef);
             toast({ title: "Review Deleted", description: "The review has been permanently deleted." });
         } catch (error) {
@@ -176,7 +181,7 @@ export default function AdminReviewManagement() {
                                                         <div className="mt-4 flex gap-2 flex-wrap">
                                                             {review.images.map((img, index) => (
                                                                 <div key={index} className="relative h-20 w-20 rounded-md overflow-hidden">
-                                                                    <Image src={img} alt={`Review image ${index + 1}`} fill sizes="80px" className="object-cover" />
+                                                                    <img src={img} alt={`Review image ${index + 1}`} className="object-cover w-full h-full" />
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -216,5 +221,3 @@ export default function AdminReviewManagement() {
         </>
     );
 }
-
-    

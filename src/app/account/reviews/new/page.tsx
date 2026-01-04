@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import StarRatingInput from "@/components/StarRatingInput";
 import { useToast } from "@/hooks/use-toast";
-import { getFirestore, doc, collection, addDoc } from 'firebase/firestore';
+import { getFirestore, doc, collection, addDoc, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import type { User as FirebaseUser } from 'firebase/auth';
@@ -17,7 +17,6 @@ import { ArrowLeft, Loader2, Upload, X } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import type { Review } from "@/types";
 import { Input } from "@/components/ui/input";
-import Image from "next/image";
 import type { PutBlobResult } from '@vercel/blob';
 
 const db = getFirestore(app);
@@ -77,8 +76,12 @@ function NewReviewPageContent() {
                 }
             }
 
-            const reviewsRef = collection(db, `products/${productId}/reviews`);
-            const newReviewData: Omit<Review, 'id'> = {
+            const productRef = doc(db, 'products', productId);
+            const reviewsRef = collection(productRef, 'reviews');
+            
+            const reviewDocRef = doc(reviewsRef);
+            const newReviewData: Review = {
+                id: reviewDocRef.id,
                 productId: Number(productId),
                 productName: productName || 'Unknown Product',
                 user: {
@@ -92,8 +95,9 @@ function NewReviewPageContent() {
                 status: 'pending',
             };
             
-            const reviewDocRef = doc(reviewsRef);
-            await addDoc(reviewsRef, { ...newReviewData, id: reviewDocRef.id });
+            await addDoc(reviewsRef, newReviewData);
+            
+            await updateDoc(doc(db, `users/${user.uid}/reviewedProducts`, productId), { reviewed: true });
 
             toast({
                 title: "Review Submitted",
@@ -152,7 +156,7 @@ function NewReviewPageContent() {
                              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                                 {imageFiles.map((file, index) => (
                                     <div key={index} className="relative group aspect-square">
-                                        <Image src={URL.createObjectURL(file)} alt={file.name} fill sizes="128px" className="object-cover rounded-md" />
+                                        <img src={URL.createObjectURL(file)} alt={file.name} className="object-cover w-full h-full rounded-md" />
                                         <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100" onClick={() => removeImage(index)}>
                                             <X className="h-4 w-4" />
                                         </Button>
@@ -193,5 +197,3 @@ function NewReviewPage() {
 }
 
 export default withAuth(NewReviewPage);
-
-    

@@ -2,11 +2,10 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
-import type { Product, Offer, Notification } from '@/types';
+import type { Product, Offer, Notification, Review } from '@/types';
 import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, writeBatch, getDocs, query, where, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { useOffers } from './useOffers';
-import { PackageCheck } from 'lucide-react';
 import { createAndSendNotification } from '@/app/actions';
 import { useAuth } from './useAuth';
 
@@ -32,7 +31,6 @@ const roundPrice = (price: number): number => {
     return Math.round(price);
 };
 
-// Helper function to convert undefined to null recursively
 const convertUndefinedToNull = (obj: any) => {
     if (obj === null || obj === undefined) {
         return null;
@@ -53,13 +51,13 @@ const convertUndefinedToNull = (obj: any) => {
     return obj;
 };
 
-
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [baseProducts, setBaseProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [flashSalePopupProduct, setFlashSalePopupProduct] = useState<Product | null>(null);
   const { activeOffers } = useOffers();
   const { user } = useAuth();
+  const [reviewsByProduct, setReviewsByProduct] = useState<Record<number, Review[]>>({});
 
   useEffect(() => {
     if (!app) {
@@ -70,22 +68,48 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     const productsCollectionRef = collection(db, 'products');
     const q = query(productsCollectionRef, orderBy('createdAt', 'desc'));
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribeProducts = onSnapshot(q, (snapshot) => {
       const productsData = snapshot.docs.map(doc => doc.data() as Product);
       setBaseProducts(productsData);
-      
       setLoading(false);
     }, (error) => {
       console.error("Error fetching products:", error);
-      setBaseProducts([]); // Fallback to empty array on error
+      setBaseProducts([]);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    const reviewsQuery = query(collectionGroup(db, 'reviews'), where("status", "==", "approved"));
+    const unsubscribeReviews = onSnapshot(reviewsQuery, (snapshot) => {
+      const allReviews = snapshot.docs.map(doc => doc.data() as Review);
+      const reviewsMap: Record<number, Review[]> = {};
+      allReviews.forEach(review => {
+        if (!reviewsMap[review.productId]) {
+          reviewsMap[review.productId] = [];
+        }
+        reviewsMap[review.productId].push(review);
+      });
+      setReviewsByProduct(reviewsMap);
+    });
+
+    return () => {
+      unsubscribeProducts();
+      unsubscribeReviews();
+    };
   }, []);
+  
+  const productsWithCalculatedRatings = useMemo(() => {
+    return baseProducts.map(p => {
+      const productReviews = reviewsByProduct[p.id] || [];
+      const rating = productReviews.length > 0 
+        ? productReviews.reduce((acc, r) => acc + r.rating, 0) / productReviews.length
+        : 0;
+      return { ...p, rating, reviews: productReviews };
+    });
+  }, [baseProducts, reviewsByProduct]);
+
 
   const productsWithOffers = useMemo(() => {
-    return baseProducts.map(product => {
+    return productsWithCalculatedRatings.map(product => {
       const applicableOffer = activeOffers.find(offer => offer.name === product.category);
       if (applicableOffer) {
         const basePriceForOffer = product.originalPrice || product.price;
@@ -98,11 +122,11 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       }
       return { ...product, price: roundPrice(product.price), originalPrice: product.originalPrice ? roundPrice(product.originalPrice) : undefined };
     });
-  }, [baseProducts, activeOffers]);
+  }, [productsWithCalculatedRatings, activeOffers]);
   
   const getFlashSalePrice = useCallback((product: Product): number => {
     const now = new Date();
-    const baseProduct = baseProducts.find(p => p.id === product.id);
+    const baseProduct = productsWithCalculatedRatings.find(p => p.id === product.id);
 
     if (
         baseProduct &&
@@ -116,10 +140,9 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         return roundPrice(originalPriceForFlashSale - discountAmount);
     }
     
-    // If not a flash sale, return the price with category offer or the regular price
     const productWithCategoryOffer = productsWithOffers.find(p => p.id === product.id);
     return productWithCategoryOffer ? productWithCategoryOffer.price : roundPrice(product.price);
-  }, [baseProducts, productsWithOffers]);
+  }, [productsWithCalculatedRatings, productsWithOffers]);
 
   const getFlashSaleProducts = useCallback(() => {
     const now = new Date();
@@ -127,7 +150,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       .filter(p => p.isFlashSale && p.flashSaleEndDate && new Date(p.flashSaleEndDate) > now)
       .map(p => {
         const flashPrice = getFlashSalePrice(p);
-        const baseProduct = baseProducts.find(bp => bp.id === p.id);
+        const baseProduct = productsWithCalculatedRatings.find(bp => bp.id === p.id);
         
         const originalPrice = baseProduct ? (baseProduct.originalPrice || baseProduct.price) : (p.originalPrice || p.price);
         
@@ -149,9 +172,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return { products: saleProducts, closestExpiry };
-  }, [productsWithOffers, getFlashSalePrice, baseProducts]);
+  }, [productsWithOffers, getFlashSalePrice, productsWithCalculatedRatings]);
 
-    // Logic for new flash sale popup
     useEffect(() => {
         const { products: saleProducts } = getFlashSaleProducts();
         if (user && saleProducts.length > 0) {

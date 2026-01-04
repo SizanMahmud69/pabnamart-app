@@ -27,8 +27,7 @@ function ProductDetailPageContent() {
   const [product, setProduct] = useState<Product | undefined | null>(null);
   const { appUser } = useAuth();
   const { deliveryTimeInside, deliveryTimeOutside } = useDeliveryCharge();
-  const [reviews, setReviews] = useState<Review[]>([]);
-
+  
   const isFlashSaleContext = searchParams.get('flash') === 'true';
 
   const defaultAddress = useMemo(() => {
@@ -68,19 +67,6 @@ function ProductDetailPageContent() {
   }, [products, params.id, isFlashSaleContext, getFlashSalePrice]);
 
 
-  useEffect(() => {
-    if (product) {
-      const db = getFirestore(app);
-      const reviewsRef = collection(db, `products/${product.id}/reviews`);
-      const q = query(reviewsRef, where("status", "==", "approved"));
-      const unsubscribe = onSnapshot(q, snapshot => {
-        const approvedReviews = snapshot.docs.map(doc => doc.data() as Review);
-        setReviews(approvedReviews);
-      });
-      return () => unsubscribe();
-    }
-  }, [product]);
-
   if (product === null) {
     return <LoadingSpinner />;
   }
@@ -97,6 +83,7 @@ function ProductDetailPageContent() {
   }
   
   const hasDiscount = (product.originalPrice && product.originalPrice > product.price);
+  const reviews = product.reviews || [];
 
   return (
     <div className="bg-background min-h-screen">
@@ -218,6 +205,15 @@ function ProductDetailPageContent() {
                                                     <StarRating rating={review.rating} />
                                                 </div>
                                                 <p className="text-muted-foreground mt-1">{review.comment}</p>
+                                                {review.images && review.images.length > 0 && (
+                                                    <div className="mt-2 flex gap-2 flex-wrap">
+                                                        {review.images.map((img, index) => (
+                                                            <div key={index} className="relative h-16 w-16 rounded-md overflow-hidden border">
+                                                                <img src={img} alt={`Review image ${index + 1}`} className="object-cover w-full h-full" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))
