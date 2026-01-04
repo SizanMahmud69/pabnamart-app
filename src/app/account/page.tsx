@@ -113,7 +113,7 @@ export default function AccountPage() {
         { status: ['processing'], label: 'Processing' },
         { status: ['shipped'], label: 'Shipped' },
         { status: ['delivered'], label: 'Delivered' },
-        { status: ['returned', 'return-approved', 'return-requested'], label: 'Returned' },
+        { status: ['return-requested'], label: 'Returned' },
     ];
     
     const getOrderStatusCount = (statuses: Order['status'][]) => {
