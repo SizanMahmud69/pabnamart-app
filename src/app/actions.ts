@@ -249,13 +249,13 @@ export async function placeOrder(
           sold: FieldValue.increment(cartItem.quantity),
         });
         
-        const originalPrice = getOriginalPrice(productData);
+        const originalPrice = getOriginalPrice(cartItem);
         subtotal += originalPrice * cartItem.quantity;
 
         itemsForOrder.push({
           id: productData.id,
           name: productData.name,
-          price: cartItem.price, // Discounted price from cart
+          price: cartItem.price,
           originalPrice: originalPrice,
           quantity: cartItem.quantity,
           image: productData.images[0] || '',

@@ -74,7 +74,7 @@ function OrderDetailsPage() {
         );
     }
     
-    const subtotal = order.items.reduce((acc, item) => acc + (item.originalPrice || item.price) * item.quantity, 0);
+    const subtotal = order.items.reduce((acc, item) => acc + item.originalPrice * item.quantity, 0);
     const voucherDiscount = order.voucherDiscount || 0;
 
     return (
