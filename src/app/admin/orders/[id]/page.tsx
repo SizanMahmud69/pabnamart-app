@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -6,7 +7,7 @@ import type { Order } from '@/types';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin, CreditCard, CheckCircle, Printer, Smartphone } from 'lucide-react';
 import Link from 'next/link';
@@ -24,6 +25,8 @@ const getStatusVariant = (status: Order['status']) => {
         case 'returned': return 'destructive';
         case 'return-requested': return 'secondary';
         case 'return-approved': return 'default';
+        case 'return-shipped': return 'default';
+        case 'return-denied': return 'destructive';
         default: return 'outline';
     }
 };
@@ -97,7 +100,7 @@ export default function AdminOrderDetailsPage() {
                             <CardDescription>Placed on {new Date(order.date).toLocaleDateString()}</CardDescription>
                         </div>
                         <Badge variant={getStatusVariant(order.status)} className="capitalize text-lg print:border-2">
-                            {order.status}
+                            {order.status.replace('-', ' ')}
                         </Badge>
                     </div>
                 </CardHeader>

@@ -1,20 +1,20 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle, Undo2, Loader2 } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle, Undo2, Loader2, PackageCheck } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, where, writeBatch, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, where, writeBatch } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order, User, Voucher } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { createAndSendNotification } from '@/app/actions';
 
 const db = getFirestore(app);
@@ -29,11 +29,13 @@ const getStatusVariant = (status: Order['status']) => {
         case 'returned': return 'destructive';
         case 'return-requested': return 'secondary';
         case 'return-approved': return 'default';
+        case 'return-shipped': return 'default';
+        case 'return-denied': return 'destructive';
         default: return 'outline';
     }
 };
 
-const statusTabs: (Order['status'])[] = ['return-requested', 'return-approved', 'returned'];
+const statusTabs: (Order['status'])[] = ['return-requested', 'return-approved', 'return-shipped', 'returned', 'return-denied'];
 
 export default function AdminReturnManagement() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -46,7 +48,7 @@ export default function AdminReturnManagement() {
     useEffect(() => {
         const ordersQuery = query(
             collection(db, 'orders'), 
-            where('status', 'in', ['return-requested', 'return-approved', 'returned']), 
+            where('status', 'in', statusTabs), 
             orderBy('date', 'desc')
         );
         const ordersUnsubscribe = onSnapshot(ordersQuery, (snapshot) => {
@@ -74,13 +76,47 @@ export default function AdminReturnManagement() {
         return () => ordersUnsubscribe();
     }, [users]);
     
-    const handleApproveReturn = async (order: Order) => {
+    const handleApproveRequest = async (order: Order) => {
         const orderRef = doc(db, 'orders', order.id);
+        try {
+            await updateDoc(orderRef, { status: 'return-approved' });
+            await createAndSendNotification(order.userId, {
+                icon: 'CheckCircle',
+                title: 'Return Request Approved',
+                description: `Your return for order #${order.orderNumber} is approved. Please ship the item back.`,
+                href: `/account/returns?orderId=${order.id}`
+            });
+            toast({ title: "Return Approved", description: "User has been notified to ship the item." });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to approve return request.", variant: "destructive" });
+        }
+    };
+    
+    const handleDeclineRequest = async (order: Order, isFinalDecline: boolean) => {
+        const orderRef = doc(db, 'orders', order.id);
+        try {
+            await updateDoc(orderRef, { status: 'return-denied' });
+            
+            await createAndSendNotification(order.userId, {
+                icon: 'XCircle',
+                title: 'Return Request Denied',
+                description: `Your return for order #${order.orderNumber} was not approved.`,
+                href: `/account/orders/${order.id}`
+            });
+
+            toast({ title: "Return Denied", description: "The return request has been denied." });
+        } catch (error) {
+             toast({ title: "Error", description: "Failed to deny return.", variant: "destructive" });
+        }
+    }
+
+    const handleFinalizeReturn = async (order: Order) => {
         const batch = writeBatch(db);
+        const orderRef = doc(db, 'orders', order.id);
 
         try {
-            // 1. Update order status
-            batch.update(orderRef, { status: 'return-approved' });
+            // 1. Update order status to 'returned'
+            batch.update(orderRef, { status: 'returned' });
 
             // 2. Create a return voucher
             const returnVoucherCode = `RET${order.orderNumber}`;
@@ -96,56 +132,34 @@ export default function AdminReturnManagement() {
             };
             const voucherRef = doc(db, 'vouchers', returnVoucherCode);
             batch.set(voucherRef, returnVoucher);
-
-            // 3. Add voucher to user's available return vouchers
-            const availableVouchersRef = doc(db, 'availableReturnVouchers', order.userId);
-            batch.set(availableVouchersRef, {
-                vouchers: [returnVoucher]
-            }, { merge: true });
+            
+            // 3. Add voucher to user's collected vouchers
+            const userVouchersRef = doc(db, 'userVouchers', order.userId);
+            batch.update(userVouchersRef, {
+                vouchers: arrayUnion({
+                    ...returnVoucher,
+                    collectedDate: new Date().toISOString()
+                })
+            });
 
             await batch.commit();
 
             await createAndSendNotification(order.userId, {
                 icon: 'CheckCircle',
-                title: 'Return Request Approved',
-                description: `Your return request for order #${order.orderNumber} has been approved. A voucher has been issued.`,
+                title: 'Return Finalized',
+                description: `Your return for order #${order.orderNumber} is complete. A voucher has been issued.`,
                 href: '/account/vouchers'
             });
 
             toast({
-                title: "Return Approved",
-                description: `Order return approved and a voucher has been issued to the user.`
+                title: "Return Finalized",
+                description: `Order return finalized and a voucher has been issued.`
             });
         } catch (error) {
-            console.error("Error approving return:", error);
+            console.error("Error finalizing return:", error);
             toast({
                 title: "Error",
-                description: "Failed to approve return.",
-                variant: "destructive"
-            });
-        }
-    };
-    
-    const handleDeclineReturn = async (order: Order) => {
-        const orderRef = doc(db, 'orders', order.id);
-        try {
-            await updateDoc(orderRef, { status: 'delivered' });
-            
-            await createAndSendNotification(order.userId, {
-                icon: 'XCircle',
-                title: 'Return Request Declined',
-                description: `Your return request for order #${order.orderNumber} has been declined.`,
-                href: `/account/orders/${order.id}`
-            });
-
-            toast({
-                title: "Return Declined",
-                description: "The return request has been declined."
-            });
-        } catch (error) {
-             toast({
-                title: "Error",
-                description: "Failed to decline return.",
+                description: "Failed to finalize return. Ensure the user has a voucher document.",
                 variant: "destructive"
             });
         }
@@ -208,13 +222,25 @@ export default function AdminReturnManagement() {
                                                                 </DropdownMenuItem>
                                                                 {order.status === 'return-requested' && (
                                                                     <>
-                                                                        <DropdownMenuItem onSelect={() => handleApproveReturn(order)}>
+                                                                        <DropdownMenuItem onSelect={() => handleApproveRequest(order)}>
                                                                             <CheckCircle className="mr-2 h-4 w-4" />
-                                                                            <span>Approve Return</span>
+                                                                            <span>Approve Request</span>
                                                                         </DropdownMenuItem>
-                                                                         <DropdownMenuItem onSelect={() => handleDeclineReturn(order)} className="text-destructive">
+                                                                         <DropdownMenuItem onSelect={() => handleDeclineRequest(order, false)} className="text-destructive">
                                                                             <XCircle className="mr-2 h-4 w-4" />
-                                                                            <span>Decline Return</span>
+                                                                            <span>Decline Request</span>
+                                                                        </DropdownMenuItem>
+                                                                    </>
+                                                                )}
+                                                                {order.status === 'return-shipped' && (
+                                                                    <>
+                                                                         <DropdownMenuItem onSelect={() => handleFinalizeReturn(order)}>
+                                                                            <PackageCheck className="mr-2 h-4 w-4" />
+                                                                            <span>Finalize Return</span>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem onSelect={() => handleDeclineRequest(order, true)} className="text-destructive">
+                                                                            <XCircle className="mr-2 h-4 w-4" />
+                                                                            <span>Reject Item</span>
                                                                         </DropdownMenuItem>
                                                                     </>
                                                                 )}

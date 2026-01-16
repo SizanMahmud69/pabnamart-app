@@ -26,6 +26,8 @@ const getStatusVariant = (status: Order['status']) => {
         case 'returned': return 'destructive';
         case 'return-requested': return 'secondary';
         case 'return-approved': return 'default';
+        case 'return-shipped': return 'default';
+        case 'return-denied': return 'destructive';
         default: return 'outline';
     }
 };

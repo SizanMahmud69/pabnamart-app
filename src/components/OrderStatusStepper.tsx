@@ -3,7 +3,7 @@
 
 import { cn } from "@/lib/utils";
 import type { Order } from "@/types";
-import { Package, Truck, CheckCircle, Undo2, ShoppingBag } from "lucide-react";
+import { Package, Truck, CheckCircle, Undo2, ShoppingBag, XCircle, PackageCheck } from "lucide-react";
 
 interface OrderStatusStepperProps {
   currentStatus: Order['status'];
@@ -17,10 +17,10 @@ const steps = [
 ];
 
 const returnSteps = [
-    { status: 'delivered', label: 'Delivered', icon: CheckCircle },
     { status: 'return-requested', label: 'Return Requested', icon: Undo2 },
     { status: 'return-approved', label: 'Return Approved', icon: CheckCircle },
-    { status: 'returned', label: 'Returned', icon: ShoppingBag },
+    { status: 'return-shipped', label: 'Item Shipped', icon: Truck },
+    { status: 'returned', label: 'Return Finalized', icon: PackageCheck },
 ]
 
 const getStepIndex = (status: Order['status']) => {
@@ -30,22 +30,25 @@ const getStepIndex = (status: Order['status']) => {
         case 'shipped': return 2;
         case 'delivered': return 3;
         case 'cancelled': return -1;
-        case 'return-requested': return 1;
-        case 'return-approved': return 2;
+        case 'return-denied': return -1;
+        case 'return-requested': return 0;
+        case 'return-approved': return 1;
+        case 'return-shipped': return 2;
         case 'returned': return 3;
         default: return 0;
     }
 }
 
 export default function OrderStatusStepper({ currentStatus }: OrderStatusStepperProps) {
-  const isReturnFlow = ['return-requested', 'return-approved', 'returned'].includes(currentStatus);
+  const isReturnFlow = ['return-requested', 'return-approved', 'returned', 'return-shipped'].includes(currentStatus);
   const activeSteps = isReturnFlow ? returnSteps : steps;
   const currentStepIndex = getStepIndex(currentStatus);
   
-  if (currentStatus === 'cancelled') {
+  if (currentStatus === 'cancelled' || currentStatus === 'return-denied') {
       return (
           <div className="flex justify-center items-center p-4 bg-destructive/10 rounded-lg">
-              <h3 className="text-destructive font-semibold text-lg capitalize">{currentStatus}</h3>
+              <XCircle className="h-6 w-6 text-destructive mr-3" />
+              <h3 className="text-destructive font-semibold text-lg capitalize">{currentStatus.replace('-', ' ')}</h3>
           </div>
       )
   }
@@ -61,7 +64,7 @@ export default function OrderStatusStepper({ currentStatus }: OrderStatusStepper
           const isActive = index <= currentStepIndex;
           const Icon = step.icon;
           return (
-            <div key={step.status} className="z-10 flex flex-col items-center">
+            <div key={step.status} className="z-10 flex flex-col items-center w-20">
               <div className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-500",
                   isActive ? "bg-primary border-primary text-primary-foreground" : "bg-muted border-gray-300 text-muted-foreground"

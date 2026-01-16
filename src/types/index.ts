@@ -68,7 +68,7 @@ export interface Order {
     items: OrderItem[];
     total: number;
     shippingAddress: ShippingAddress;
-    status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned' | 'return-requested' | 'return-approved';
+    status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned' | 'return-requested' | 'return-approved' | 'return-shipped' | 'return-denied';
     date: string; // ISO string
     orderNumber: string;
     paymentMethod: string;

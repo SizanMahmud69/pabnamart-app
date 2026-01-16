@@ -27,11 +27,13 @@ const getStatusVariant = (status: Order['status']) => {
         case 'returned': return 'destructive';
         case 'return-requested': return 'secondary';
         case 'return-approved': return 'default';
+        case 'return-shipped': return 'default';
+        case 'return-denied': return 'destructive';
         default: return 'outline';
     }
 };
 
-const statusTabs: (Order['status'] | 'all')[] = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'return-requested', 'return-approved'];
+const statusTabs: (Order['status'] | 'all')[] = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
 
 function MyOrdersPageContent() {
     const { user } = useAuth();
@@ -49,7 +51,7 @@ function MyOrdersPageContent() {
         const db = getFirestore(app);
         const ordersRef = collection(db, 'orders');
         let q;
-        if (statusQuery && statusTabs.includes(statusQuery as Order['status'])) {
+        if (statusQuery && (statusTabs.includes(statusQuery as Order['status']) || statusQuery === 'return-requested' || statusQuery === 'return-approved')) {
             q = query(ordersRef, where('userId', '==', user.uid), where('status', '==', statusQuery), orderBy('date', 'desc'));
         } else {
             q = query(ordersRef, where('userId', '==', user.uid), orderBy('date', 'desc'));
