@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -16,6 +15,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { createAndSendNotification } from '@/app/actions';
 
 const db = getFirestore(app);
 
@@ -73,15 +73,68 @@ export default function AdminOrderManagement() {
         return () => ordersUnsubscribe();
     }, [users]);
 
-    const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
-        const orderRef = doc(db, 'orders', orderId);
+    const handleStatusChange = async (order: Order, newStatus: Order['status']) => {
+        const orderRef = doc(db, 'orders', order.id);
         try {
             await updateDoc(orderRef, { status: newStatus });
+
+            let notificationData;
+            switch (newStatus) {
+                case 'processing':
+                    notificationData = {
+                        icon: 'PackageCheck',
+                        title: 'Order is being processed',
+                        description: `Your order #${order.orderNumber} is now being processed.`
+                    };
+                    break;
+                case 'shipped':
+                    notificationData = {
+                        icon: 'Truck',
+                        title: 'Order Shipped',
+                        description: `Your order #${order.orderNumber} has been shipped.`
+                    };
+                    break;
+                case 'delivered':
+                    notificationData = {
+                        icon: 'CheckCircle',
+                        title: 'Order Delivered',
+                        description: `Your order #${order.orderNumber} has been delivered.`
+                    };
+                    break;
+                case 'cancelled':
+                    notificationData = {
+                        icon: 'XCircle',
+                        title: 'Order Cancelled',
+                        description: `Your order #${order.orderNumber} has been cancelled.`
+                    };
+                    break;
+                case 'returned':
+                    notificationData = {
+                        icon: 'PackageCheck',
+                        title: 'Order Returned',
+                        description: `Your order #${order.orderNumber} has been marked as returned.`
+                    };
+                    break;
+                default:
+                    notificationData = null;
+            }
+            
+            let toastDescription = `Order has been marked as ${newStatus}.`;
+
+            if (notificationData) {
+                await createAndSendNotification(order.userId, {
+                    ...notificationData,
+                    href: `/account/orders/${order.id}`
+                });
+                toastDescription += " A notification has been sent to the user.";
+            }
+
             toast({
                 title: "Order Status Updated",
-                description: `Order has been marked as ${newStatus}.`
+                description: toastDescription
             });
         } catch (error) {
+            console.error("Error updating order status:", error);
             toast({
                 title: "Error",
                 description: "Failed to update order status.",
@@ -158,7 +211,7 @@ export default function AdminOrderManagement() {
                                                                     <DropdownMenuPortal>
                                                                         <DropdownMenuSubContent>
                                                                             {statusChangeOptions.map(status => (
-                                                                                <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order.id, status)} className="capitalize">
+                                                                                <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order, status)} className="capitalize">
                                                                                     {status}
                                                                                 </DropdownMenuItem>
                                                                             ))}

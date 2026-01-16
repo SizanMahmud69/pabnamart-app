@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -16,6 +15,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { createAndSendNotification } from '@/app/actions';
 
 const db = getFirestore(app);
 
@@ -105,6 +105,13 @@ export default function AdminReturnManagement() {
 
             await batch.commit();
 
+            await createAndSendNotification(order.userId, {
+                icon: 'CheckCircle',
+                title: 'Return Request Approved',
+                description: `Your return request for order #${order.orderNumber} has been approved. A voucher has been issued.`,
+                href: '/account/vouchers'
+            });
+
             toast({
                 title: "Return Approved",
                 description: `Order return approved and a voucher has been issued to the user.`
@@ -119,10 +126,18 @@ export default function AdminReturnManagement() {
         }
     };
     
-    const handleDeclineReturn = async (orderId: string) => {
-        const orderRef = doc(db, 'orders', orderId);
+    const handleDeclineReturn = async (order: Order) => {
+        const orderRef = doc(db, 'orders', order.id);
         try {
             await updateDoc(orderRef, { status: 'delivered' });
+            
+            await createAndSendNotification(order.userId, {
+                icon: 'XCircle',
+                title: 'Return Request Declined',
+                description: `Your return request for order #${order.orderNumber} has been declined.`,
+                href: `/account/orders/${order.id}`
+            });
+
             toast({
                 title: "Return Declined",
                 description: "The return request has been declined."
@@ -197,7 +212,7 @@ export default function AdminReturnManagement() {
                                                                             <CheckCircle className="mr-2 h-4 w-4" />
                                                                             <span>Approve Return</span>
                                                                         </DropdownMenuItem>
-                                                                         <DropdownMenuItem onSelect={() => handleDeclineReturn(order.id)} className="text-destructive">
+                                                                         <DropdownMenuItem onSelect={() => handleDeclineReturn(order)} className="text-destructive">
                                                                             <XCircle className="mr-2 h-4 w-4" />
                                                                             <span>Decline Return</span>
                                                                         </DropdownMenuItem>

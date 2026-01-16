@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -15,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
+import { createAndSendNotification } from '@/app/actions';
 
 const db = getFirestore(app);
 
@@ -62,13 +62,34 @@ export default function VerifyPaymentsPage() {
         return () => ordersUnsubscribe();
     }, [users]);
 
-    const handleUpdateStatus = async (orderId: string, status: 'processing' | 'cancelled') => {
-        const orderRef = doc(db, 'orders', orderId);
+    const handleUpdateStatus = async (order: Order, status: 'processing' | 'cancelled') => {
+        const orderRef = doc(db, 'orders', order.id);
         try {
             await updateDoc(orderRef, { status });
+
+            let notificationData;
+            if (status === 'processing') {
+                notificationData = {
+                    icon: 'PackageCheck',
+                    title: 'Payment Verified',
+                    description: `Payment for your order #${order.orderNumber} has been verified.`
+                };
+            } else { // cancelled
+                notificationData = {
+                    icon: 'XCircle',
+                    title: 'Order Cancelled',
+                    description: `Your order #${order.orderNumber} has been cancelled due to a payment issue.`
+                };
+            }
+    
+            await createAndSendNotification(order.userId, {
+                ...notificationData,
+                href: `/account/orders/${order.id}`
+            });
+            
             toast({
                 title: "Order Updated",
-                description: `Order status has been updated to ${status}.`
+                description: `Order status has been updated to ${status}. A notification has been sent.`
             });
         } catch (error) {
             toast({
@@ -143,11 +164,11 @@ export default function VerifyPaymentsPage() {
                                                 <Eye className="mr-2 h-4 w-4" />
                                                 <span>Details</span>
                                             </DropdownMenuItem>
-                                             <DropdownMenuItem onSelect={() => handleUpdateStatus(order.id, 'processing')}>
+                                             <DropdownMenuItem onSelect={() => handleUpdateStatus(order, 'processing')}>
                                                 <CheckCircle className="mr-2 h-4 w-4" />
                                                 <span>Verify</span>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onSelect={() => handleUpdateStatus(order.id, 'cancelled')}>
+                                            <DropdownMenuItem onSelect={() => handleUpdateStatus(order, 'cancelled')}>
                                                 <XCircle className="mr-2 h-4 w-4" />
                                                 <span>Cancel</span>
                                             </DropdownMenuItem>
