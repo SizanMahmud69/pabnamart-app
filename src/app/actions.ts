@@ -227,7 +227,9 @@ export async function placeOrder(
       let userDoc = await transaction.get(userDocRef);
 
       const itemsForOrder: OrderItem[] = [];
-      let subtotal = 0;
+      let subtotal = 0; // This is the original price subtotal
+      let offerSubtotal = 0; // This is the price after offers/flash sales
+
 
       for (let i = 0; i < productDocs.length; i++) {
         const productDoc = productDocs[i];
@@ -250,6 +252,7 @@ export async function placeOrder(
         
         const originalPrice = getOriginalPrice(cartItem);
         subtotal += originalPrice * cartItem.quantity;
+        offerSubtotal += cartItem.price * cartItem.quantity;
 
         itemsForOrder.push({
           id: productData.id,
@@ -288,7 +291,7 @@ export async function placeOrder(
         }
       }
       
-      const total = roundPrice((subtotal - voucherDiscount) + payload.shippingFee);
+      const total = roundPrice((offerSubtotal - voucherDiscount) + payload.shippingFee);
 
       const orderRef = db.collection('orders').doc();
       const newOrder: Omit<Order, 'id'> = {
