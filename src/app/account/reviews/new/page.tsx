@@ -29,6 +29,7 @@ function NewReviewPageContent() {
 
     const productId = searchParams.get('productId');
     const productName = searchParams.get('productName');
+    const orderId = searchParams.get('orderId');
 
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState("");
@@ -37,11 +38,11 @@ function NewReviewPageContent() {
     const inputFileRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (!productId || !productName) {
+        if (!productId || !productName || !orderId) {
             toast({ title: "Error", description: "Product information is missing.", variant: "destructive" });
             router.push("/account/orders");
         }
-    }, [productId, productName, router, toast]);
+    }, [productId, productName, orderId, router, toast]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -59,7 +60,7 @@ function NewReviewPageContent() {
             toast({ title: "Please select a rating", variant: "destructive" });
             return;
         }
-        if (!user || !productId) return;
+        if (!user || !productId || !orderId) return;
         
         setIsSubmitting(true);
         let uploadedImageUrls: string[] = [];
@@ -83,6 +84,7 @@ function NewReviewPageContent() {
                 id: reviewDocRef.id,
                 productId: Number(productId),
                 productName: productName || 'Unknown Product',
+                orderId: orderId,
                 user: {
                     uid: user.uid,
                     displayName: user.displayName || 'Anonymous',
@@ -113,7 +115,7 @@ function NewReviewPageContent() {
         }
     };
 
-    if (!productId || !productName) {
+    if (!productId || !productName || !orderId) {
         return <LoadingSpinner />;
     }
 

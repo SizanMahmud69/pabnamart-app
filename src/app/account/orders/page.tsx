@@ -151,7 +151,7 @@ function MyOrdersPageContent() {
                                                         <DropdownMenuContent>
                                                             {order.items.map(item => (
                                                                 <DropdownMenuItem key={item.id} asChild disabled={hasReviewed(item.id)}>
-                                                                    <Link href={`/account/reviews/new?productId=${item.id}&productName=${encodeURIComponent(item.name)}`}>
+                                                                    <Link href={`/account/reviews/new?productId=${item.id}&productName=${encodeURIComponent(item.name)}&orderId=${order.id}`}>
                                                                         {hasReviewed(item.id) ? (
                                                                             <>
                                                                                 <CheckCircle className="mr-2 h-4 w-4 text-green-500" />

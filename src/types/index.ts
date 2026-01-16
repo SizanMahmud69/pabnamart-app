@@ -14,6 +14,7 @@ export interface Review {
   date: string;
   status: 'pending' | 'approved' | 'rejected';
   images?: string[];
+  orderId?: string;
 }
 
 export interface Product {
