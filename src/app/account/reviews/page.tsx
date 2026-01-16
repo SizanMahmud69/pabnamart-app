@@ -29,7 +29,7 @@ export default function ReviewsPage() {
         
         const q = query(reviewsRef, where('user.uid', '==', user.uid));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const userReviews = snapshot.docs.map(doc => doc.data() as Review);
+            const userReviews = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Review));
             setReviews(userReviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
             setLoading(false);
         });

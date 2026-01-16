@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import StarRatingInput from "@/components/StarRatingInput";
 import { useToast } from "@/hooks/use-toast";
-import { getFirestore, doc, collection, addDoc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, collection, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import type { User as FirebaseUser } from 'firebase/auth';
@@ -76,8 +76,7 @@ function NewReviewPageContent() {
                 }
             }
 
-            const productRef = doc(db, 'products', productId);
-            const reviewsRef = collection(productRef, 'reviews');
+            const reviewsRef = collection(db, 'products', productId, 'reviews');
             
             const reviewDocRef = doc(reviewsRef);
             const newReviewData: Review = {
@@ -95,9 +94,7 @@ function NewReviewPageContent() {
                 status: 'pending',
             };
             
-            await addDoc(reviewsRef, newReviewData);
-            
-            await updateDoc(doc(db, `users/${user.uid}/reviewedProducts`, productId), { reviewed: true });
+            await setDoc(reviewDocRef, newReviewData);
 
             toast({
                 title: "Review Submitted",

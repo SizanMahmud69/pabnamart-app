@@ -80,7 +80,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
     const reviewsQuery = query(collectionGroup(db, 'reviews'), where("status", "==", "approved"));
     const unsubscribeReviews = onSnapshot(reviewsQuery, (snapshot) => {
-      const allReviews = snapshot.docs.map(doc => doc.data() as Review);
+      const allReviews = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Review));
       const reviewsMap: Record<number, Review[]> = {};
       allReviews.forEach(review => {
         if (!reviewsMap[review.productId]) {

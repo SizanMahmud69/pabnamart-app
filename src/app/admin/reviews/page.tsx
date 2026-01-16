@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, XCircle, Trash2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { getFirestore, collectionGroup, onSnapshot, doc, updateDoc, deleteDoc, runTransaction, getDoc } from 'firebase/firestore';
+import { getFirestore, collectionGroup, onSnapshot, doc, updateDoc, deleteDoc, runTransaction, getDoc, query, where } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Review, Product } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -28,7 +28,7 @@ export default function AdminReviewManagement() {
 
     useEffect(() => {
         const unsubscribe = onSnapshot(collectionGroup(db, 'reviews'), (snapshot) => {
-            const reviewsData = snapshot.docs.map(doc => doc.data() as Review);
+            const reviewsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Review));
             setReviews(reviewsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
             setLoading(false);
         });
