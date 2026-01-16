@@ -18,7 +18,7 @@ const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678
 
 
 export default function ReviewsPage() {
-    const { user } = useAuth();
+    const { user, appUser } = useAuth();
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -57,7 +57,7 @@ export default function ReviewsPage() {
                                         <div className="flex justify-between items-start">
                                             <div className="flex items-start gap-4">
                                                 <Avatar>
-                                                    <AvatarImage src={review.user.photoURL || DEFAULT_AVATAR_URL} alt={review.user.displayName} />
+                                                    <AvatarImage src={appUser?.photoURL || review.user.photoURL || DEFAULT_AVATAR_URL} alt={review.user.displayName} />
                                                     <AvatarFallback>{review.user.displayName.charAt(0)}</AvatarFallback>
                                                 </Avatar>
                                                 <div>

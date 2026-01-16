@@ -196,30 +196,36 @@ function ProductDetailPageContent() {
                             <h2 className="text-xl font-bold mb-4">Customer Reviews</h2>
                             <div className="space-y-6">
                                 {reviews.length > 0 ? (
-                                    reviews.map((review) => (
-                                        <div key={review.id} className="flex items-start gap-4">
-                                            <Avatar>
-                                                <AvatarImage src={review.user.photoURL || DEFAULT_AVATAR_URL} alt={review.user.displayName} />
-                                                <AvatarFallback>{review.user.displayName.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-1">
-                                                <div className="flex justify-between items-center">
-                                                    <p className="font-semibold">{review.user.displayName}</p>
-                                                    <StarRating rating={review.rating} />
-                                                </div>
-                                                <p className="text-muted-foreground mt-1">{review.comment}</p>
-                                                {review.images && review.images.length > 0 && (
-                                                    <div className="mt-2 flex gap-2 flex-wrap">
-                                                        {review.images.map((img, index) => (
-                                                            <div key={index} className="relative h-16 w-16 rounded-md overflow-hidden border">
-                                                                <img src={img} alt={`Review image ${index + 1}`} className="object-cover w-full h-full" />
-                                                            </div>
-                                                        ))}
+                                    reviews.map((review) => {
+                                        const reviewerPhoto = (appUser && review.user.uid === appUser.uid) 
+                                            ? (appUser.photoURL || DEFAULT_AVATAR_URL) 
+                                            : (review.user.photoURL || DEFAULT_AVATAR_URL);
+
+                                        return (
+                                            <div key={review.id} className="flex items-start gap-4">
+                                                <Avatar>
+                                                    <AvatarImage src={reviewerPhoto} alt={review.user.displayName} />
+                                                    <AvatarFallback>{review.user.displayName.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-center">
+                                                        <p className="font-semibold">{review.user.displayName}</p>
+                                                        <StarRating rating={review.rating} />
                                                     </div>
-                                                )}
+                                                    <p className="text-muted-foreground mt-1">{review.comment}</p>
+                                                    {review.images && review.images.length > 0 && (
+                                                        <div className="mt-2 flex gap-2 flex-wrap">
+                                                            {review.images.map((img, index) => (
+                                                                <div key={index} className="relative h-16 w-16 rounded-md overflow-hidden border">
+                                                                    <img src={img} alt={`Review image ${index + 1}`} className="object-cover w-full h-full" />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
+                                        );
+                                    })
                                 ) : (
                                     <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
                                         <Avatar className="h-10 w-10">

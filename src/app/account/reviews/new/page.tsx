@@ -24,7 +24,7 @@ const db = getFirestore(app);
 function NewReviewPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user } = useAuth();
+    const { user, appUser } = useAuth();
     const { toast } = useToast();
 
     const productId = searchParams.get('productId');
@@ -60,7 +60,7 @@ function NewReviewPageContent() {
             toast({ title: "Please select a rating", variant: "destructive" });
             return;
         }
-        if (!user || !productId || !orderId) return;
+        if (!user || !appUser || !productId || !orderId) return;
         
         setIsSubmitting(true);
         let uploadedImageUrls: string[] = [];
@@ -87,8 +87,8 @@ function NewReviewPageContent() {
                 orderId: orderId,
                 user: {
                     uid: user.uid,
-                    displayName: user.displayName || 'Anonymous',
-                    photoURL: user.photoURL || undefined,
+                    displayName: appUser.displayName || 'Anonymous',
+                    photoURL: appUser.photoURL || undefined,
                 },
                 rating,
                 comment,
