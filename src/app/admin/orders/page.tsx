@@ -31,7 +31,7 @@ const getStatusVariant = (status: Order['status']) => {
     }
 };
 
-const statusTabs: Order['status'][] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
+const statusTabs: Order['status'][] = ['processing', 'shipped', 'delivered', 'cancelled', 'returned'];
 const allStatusTabs = ['all', ...statusTabs];
 const statusChangeOptions: Order['status'][] = ['cancelled', 'processing', 'shipped', 'delivered', 'returned'];
 
@@ -145,7 +145,7 @@ export default function AdminOrderManagement() {
     
     const filteredOrders = useMemo(() => {
         if (activeTab === 'all') {
-            return orders;
+            return orders.filter(order => order.status !== 'pending');
         }
         return orders.filter(order => order.status === activeTab);
     }, [orders, activeTab]);
