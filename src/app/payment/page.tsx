@@ -11,9 +11,12 @@ import { Button } from "@/components/ui/button";
 import { placeOrder } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import type { CartItem, ShippingAddress } from "@/types";
-import { Loader2, ArrowLeft, CreditCard, Truck } from "lucide-react";
+import { Loader2, ArrowLeft, CreditCard, Truck, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useDeliveryCharge } from "@/hooks/useDeliveryCharge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 
 interface CheckoutData {
     items: CartItem[];
@@ -33,6 +36,7 @@ function PaymentPage() {
     const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
     const [paymentMethod, setPaymentMethod] = useState('');
     const [isPlacingOrder, startOrderPlacement] = useTransition();
+    const { cashOnDeliveryFee } = useDeliveryCharge();
 
     useEffect(() => {
         const data = sessionStorage.getItem('checkoutData');
@@ -55,6 +59,7 @@ function PaymentPage() {
                 voucherCode: checkoutData.voucherCode,
                 paymentMethod: 'cash-on-delivery',
                 transactionId: '',
+                cashOnDeliveryFee: cashOnDeliveryFee,
             });
 
             if (result.success && result.orderId) {
@@ -76,7 +81,7 @@ function PaymentPage() {
         return <LoadingSpinner />;
     }
 
-    const { total } = checkoutData;
+    const codTotal = checkoutData.total + (paymentMethod === 'cash-on-delivery' ? cashOnDeliveryFee : 0);
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -90,7 +95,7 @@ function PaymentPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Select Payment Method</CardTitle>
-                        <CardDescription>Your final order total is ৳{total}.</CardDescription>
+                        <CardDescription>Your order total is ৳{checkoutData.total}.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <Card 
@@ -109,6 +114,16 @@ function PaymentPage() {
                             </CardContent>
                         </Card>
                         
+                        {paymentMethod === 'cash-on-delivery' && cashOnDeliveryFee > 0 && (
+                            <Alert>
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription className="flex items-center justify-between">
+                                    <span>Cash on Delivery Fee</span>
+                                    <span className="font-semibold">৳{cashOnDeliveryFee}</span>
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
                          <Card 
                             className={cn(
                                 "cursor-pointer transition-all",
@@ -129,7 +144,7 @@ function PaymentPage() {
                        {paymentMethod === 'cash-on-delivery' && (
                             <Button size="lg" className="w-full" onClick={handlePlaceOrder} disabled={isPlacingOrder}>
                                 {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {isPlacingOrder ? 'Placing Order...' : `Place Order (৳${total})`}
+                                {isPlacingOrder ? 'Placing Order...' : `Place Order (৳${codTotal})`}
                             </Button>
                         )}
                         {paymentMethod === 'online' && (

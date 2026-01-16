@@ -75,6 +75,7 @@ export interface Order {
     voucherCode?: string;
     voucherDiscount?: number;
     paymentAccountNumber?: string;
+    cashOnDeliveryFee?: number;
 }
 
 export interface Voucher {
@@ -157,6 +158,7 @@ export interface DeliverySettings {
   deliveryTimeInside: number;
   deliveryTimeOutside: number;
   returnAddress: string;
+  cashOnDeliveryFee: number;
 }
 
 export interface PaymentSettings {
@@ -189,6 +191,7 @@ export interface OrderPayload {
   paymentMethod: string;
   transactionId?: string;
   paymentAccountNumber?: string;
+  cashOnDeliveryFee?: number;
 }
 
     

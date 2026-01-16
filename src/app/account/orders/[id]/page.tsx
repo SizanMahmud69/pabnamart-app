@@ -76,6 +76,7 @@ function OrderDetailsPage() {
     
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const voucherDiscount = order.voucherDiscount || 0;
+    const offerDiscount = order.items.reduce((acc, item) => acc + (item.originalPrice - item.price) * item.quantity, 0);
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -132,6 +133,12 @@ function OrderDetailsPage() {
                                 <span className="text-muted-foreground">Shipping Fee</span>
                                 <span>৳{order.shippingFee.toFixed(2)}</span>
                             </div>
+                            {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Cash on Delivery Fee</span>
+                                    <span>৳{order.cashOnDeliveryFee.toFixed(2)}</span>
+                                </div>
+                            )}
                             <Separator />
                             <div className="flex justify-between font-bold text-xl">
                                 <span>Total</span>

@@ -1,3 +1,4 @@
+
 'use server';
 
 import 'dotenv/config';
@@ -291,7 +292,8 @@ export async function placeOrder(
         }
       }
       
-      const total = roundPrice((offerSubtotal - voucherDiscount) + payload.shippingFee);
+      const codFee = payload.paymentMethod === 'cash-on-delivery' ? payload.cashOnDeliveryFee || 0 : 0;
+      const total = roundPrice((offerSubtotal - voucherDiscount) + payload.shippingFee + codFee);
 
       const orderRef = db.collection('orders').doc();
       const newOrder: Omit<Order, 'id'> = {
@@ -308,6 +310,7 @@ export async function placeOrder(
         shippingFee: payload.shippingFee,
         voucherCode: usedVoucher?.code || '',
         voucherDiscount: voucherDiscount,
+        cashOnDeliveryFee: codFee,
       };
 
       transaction.set(orderRef, newOrder);

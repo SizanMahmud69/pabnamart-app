@@ -14,6 +14,7 @@ const defaultSettings: DeliverySettings = {
   deliveryTimeInside: 2,
   deliveryTimeOutside: 4,
   returnAddress: '',
+  cashOnDeliveryFee: 20,
 };
 
 export const useDeliveryCharge = () => {
@@ -49,5 +50,6 @@ export const useDeliveryCharge = () => {
     deliveryTimeInside: Number(settings?.deliveryTimeInside ?? defaultSettings.deliveryTimeInside),
     deliveryTimeOutside: Number(settings?.deliveryTimeOutside ?? defaultSettings.deliveryTimeOutside),
     returnAddress: settings?.returnAddress ?? '',
+    cashOnDeliveryFee: Number(settings?.cashOnDeliveryFee ?? defaultSettings.cashOnDeliveryFee),
   };
 };

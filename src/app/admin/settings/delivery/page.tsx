@@ -26,6 +26,7 @@ const initialSettings: DeliverySettings = {
     deliveryTimeInside: 0,
     deliveryTimeOutside: 0,
     returnAddress: '',
+    cashOnDeliveryFee: 0,
 };
 
 export default function DeliverySettingsPage() {
@@ -52,7 +53,7 @@ export default function DeliverySettingsPage() {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         // For number inputs, convert to number type
-        const isNumeric = ['insidePabnaSmall', 'insidePabnaLarge', 'outsidePabnaSmall', 'outsidePabnaLarge', 'deliveryTimeInside', 'deliveryTimeOutside'].includes(name);
+        const isNumeric = ['insidePabnaSmall', 'insidePabnaLarge', 'outsidePabnaSmall', 'outsidePabnaLarge', 'deliveryTimeInside', 'deliveryTimeOutside', 'cashOnDeliveryFee'].includes(name);
         setSettings(prev => ({ ...prev, [name]: isNumeric ? Number(value) : value }));
     };
 
@@ -199,6 +200,25 @@ export default function DeliverySettingsPage() {
                                         onChange={handleInputChange}
                                         placeholder="Enter the full address where customers should send returned items." 
                                     />
+                                </div>
+                            </div>
+
+                            <div className="pt-4">
+                                <h3 className="font-semibold text-lg mb-2">Surcharges</h3>
+                                <Separator className="mb-4" />
+                                <div className="space-y-2">
+                                    <Label htmlFor="cashOnDeliveryFee">Cash on Delivery Surcharge (৳)</Label>
+                                    <Input 
+                                        id="cashOnDeliveryFee" 
+                                        name="cashOnDeliveryFee"
+                                        type="number"
+                                        value={settings.cashOnDeliveryFee}
+                                        onChange={handleInputChange}
+                                        placeholder="e.g., 20" 
+                                    />
+                                     <p className="text-xs text-muted-foreground">
+                                        This extra charge will be applied to all orders using the Cash on Delivery payment method.
+                                    </p>
                                 </div>
                             </div>
 
