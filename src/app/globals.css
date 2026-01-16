@@ -71,6 +71,15 @@ body {
   }
 }
 
+@media print {
+  body {
+    background: white !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
 @layer utilities {
   .truncate-2-lines {
     display: -webkit-box;

@@ -76,8 +76,8 @@ export default function AdminOrderDetailsPage() {
 
 
     return (
-        <div className="container mx-auto max-w-2xl px-4 py-6 print:max-w-none print:p-0 print:m-0">
-            <div className="flex justify-between items-center mb-4 print:hidden">
+        <div className="container mx-auto max-w-2xl px-4 py-6">
+            <div className="flex justify-between items-center mb-4 no-print">
                 <Button asChild variant="ghost">
                     <Link href="/admin/orders">
                         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -89,7 +89,7 @@ export default function AdminOrderDetailsPage() {
                     Print Invoice
                 </Button>
             </div>
-            <Card className="print:shadow-none print:border-0">
+            <Card>
                 <CardHeader>
                     <div className="flex justify-between items-start">
                         <div>
@@ -102,7 +102,7 @@ export default function AdminOrderDetailsPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="print:hidden">
+                    <div className="no-print">
                         <OrderStatusStepper currentStatus={order.status} />
                     </div>
 

@@ -19,7 +19,7 @@ function AdminHeader() {
     };
 
     return (
-        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 print:hidden">
+        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 no-print">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
                 <Link href="/admin">
                     <span className="text-2xl font-bold text-primary whitespace-nowrap">PabnaMart</span>
@@ -76,7 +76,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
 
     return (
-        <div className="bg-slate-50 min-h-screen print:bg-white">
+        <div className="bg-slate-50 min-h-screen">
             <AdminHeader />
             {children}
         </div>
