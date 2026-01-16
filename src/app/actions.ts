@@ -1,4 +1,3 @@
-
 'use server';
 
 import 'dotenv/config';
@@ -301,7 +300,7 @@ export async function placeOrder(
         items: itemsForOrder,
         total,
         shippingAddress: payload.shippingAddress,
-        status: 'pending',
+        status: payload.paymentMethod === 'cash-on-delivery' ? 'processing' : 'pending',
         date: new Date().toISOString(),
         orderNumber: generateOrderNumber(),
         paymentMethod: payload.paymentMethod,
