@@ -8,11 +8,12 @@ export interface Review {
   user: {
     uid: string;
     displayName: string;
+    photoURL?: string;
   };
   rating: number;
   comment: string;
   date: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'approved';
   images?: string[];
   orderId?: string;
 }

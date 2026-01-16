@@ -11,8 +11,11 @@ import type { Review } from "@/types";
 import { getFirestore, collectionGroup, query, where, onSnapshot } from "firebase/firestore";
 import app from "@/lib/firebase";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const db = getFirestore(app);
+const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
+
 
 export default function ReviewsPage() {
     const { user } = useAuth();
@@ -52,19 +55,25 @@ export default function ReviewsPage() {
                                 {reviews.map((review) => (
                                     <div key={review.id}>
                                         <div className="flex justify-between items-start">
-                                            <div>
-                                                <h3 className="font-semibold">{review.productName}</h3>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <StarRating rating={review.rating} />
+                                            <div className="flex items-start gap-4">
+                                                <Avatar>
+                                                    <AvatarImage src={review.user.photoURL || DEFAULT_AVATAR_URL} alt={review.user.displayName} />
+                                                    <AvatarFallback>{review.user.displayName.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <h3 className="font-semibold">{review.productName}</h3>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <StarRating rating={review.rating} />
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                  <p className="text-sm text-muted-foreground mb-1">{new Date(review.date).toLocaleDateString()}</p>
                                             </div>
                                         </div>
-                                        <p className="text-muted-foreground mt-2">{review.comment}</p>
+                                        <p className="text-muted-foreground mt-2 ml-14">{review.comment}</p>
                                         {review.images && review.images.length > 0 && (
-                                            <div className="mt-4 flex gap-2 flex-wrap">
+                                            <div className="mt-4 ml-14 flex gap-2 flex-wrap">
                                                 {review.images.map((img, index) => (
                                                     <div key={index} className="relative h-20 w-20 rounded-md overflow-hidden">
                                                         <img src={img} alt={`Review image ${index + 1}`} className="object-cover w-full h-full" />
@@ -89,5 +98,3 @@ export default function ReviewsPage() {
         </div>
     );
 }
-
-    

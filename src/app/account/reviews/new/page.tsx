@@ -88,6 +88,7 @@ function NewReviewPageContent() {
                 user: {
                     uid: user.uid,
                     displayName: user.displayName || 'Anonymous',
+                    photoURL: user.photoURL || undefined,
                 },
                 rating,
                 comment,

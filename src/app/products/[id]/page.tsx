@@ -9,7 +9,7 @@ import AddToCartButton from './AddToCartButton';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState, useMemo, Suspense } from 'react';
 import type { Product, ShippingAddress, Review } from '@/types';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, CheckCircle2, Truck, Package } from 'lucide-react';
 import Link from 'next/link';
@@ -19,6 +19,8 @@ import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
 import { useAuth } from '@/hooks/useAuth';
 import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
+
+const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
 function ProductDetailPageContent() {
   const params = useParams();
@@ -197,6 +199,7 @@ function ProductDetailPageContent() {
                                     reviews.map((review) => (
                                         <div key={review.id} className="flex items-start gap-4">
                                             <Avatar>
+                                                <AvatarImage src={review.user.photoURL || DEFAULT_AVATAR_URL} alt={review.user.displayName} />
                                                 <AvatarFallback>{review.user.displayName.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div className="flex-1">
