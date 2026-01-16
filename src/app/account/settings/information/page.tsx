@@ -11,10 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import app from '@/lib/firebase';
+import type { PutBlobResult } from '@vercel/blob';
 
-const storage = getStorage(app);
 const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
 
@@ -60,11 +58,22 @@ function AccountInformationPage() {
         setIsPhotoLoading(true);
 
         try {
-            const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
-
+            const response = await fetch(
+                `/api/upload?filename=${file.name}`,
+                {
+                  method: 'POST',
+                  body: file,
+                },
+              );
+            
+            if (!response.ok) {
+                throw new Error('Failed to upload image.');
+            }
+            const newBlob = (await response.json()) as PutBlobResult;
+            const downloadURL = newBlob.url;
+            
             await updateUserProfilePicture(downloadURL);
+
             toast({
                 title: "Success",
                 description: "Profile picture updated successfully."
