@@ -73,15 +73,19 @@ body {
 
 @media print {
   body {
-    background: white !important;
+    background-color: white !important;
   }
   .no-print {
     display: none !important;
   }
+  .admin-layout-wrapper {
+    background-color: white !important;
+    min-height: auto !important;
+  }
   .invoice-container {
-    max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
+    max-width: 100% !important;
   }
   .invoice-card {
     box-shadow: none !important;

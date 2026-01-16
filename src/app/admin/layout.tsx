@@ -76,7 +76,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
 
     return (
-        <div className="bg-slate-50 min-h-screen">
+        <div className="bg-slate-50 min-h-screen admin-layout-wrapper">
             <AdminHeader />
             {children}
         </div>
