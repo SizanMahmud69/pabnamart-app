@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle, Undo2, Loader2, PackageCheck } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle, Undo2, Loader2, PackageCheck, Gift } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, where, writeBatch } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, where, writeBatch, arrayUnion } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order, User, Voucher } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -120,7 +120,8 @@ export default function AdminReturnManagement() {
 
             // 2. Create a return voucher
             const returnVoucherCode = `RET${order.orderNumber}`;
-            const returnVoucher: Omit<Voucher, 'id'> = {
+            const returnVoucher: Voucher = {
+                id: returnVoucherCode,
                 code: returnVoucherCode,
                 discount: order.total,
                 type: 'fixed',
@@ -130,36 +131,31 @@ export default function AdminReturnManagement() {
                 usageLimit: 1,
                 createdAt: new Date().toISOString(),
             };
-            const voucherRef = doc(db, 'vouchers', returnVoucherCode);
-            batch.set(voucherRef, returnVoucher);
             
-            // 3. Add voucher to user's collected vouchers
-            const userVouchersRef = doc(db, 'userVouchers', order.userId);
-            batch.update(userVouchersRef, {
-                vouchers: arrayUnion({
-                    ...returnVoucher,
-                    collectedDate: new Date().toISOString()
-                })
-            });
+            // 3. Make voucher available for user to collect
+            const availableVoucherRef = doc(db, 'availableReturnVouchers', order.userId);
+            batch.set(availableVoucherRef, {
+                vouchers: arrayUnion(returnVoucher)
+            }, { merge: true });
 
             await batch.commit();
 
             await createAndSendNotification(order.userId, {
-                icon: 'CheckCircle',
-                title: 'Return Finalized',
-                description: `Your return for order #${order.orderNumber} is complete. A voucher has been issued.`,
-                href: '/account/vouchers'
+                icon: 'Gift',
+                title: 'Return Complete',
+                description: `Your return for #${order.orderNumber} is complete. A voucher is available to collect.`,
+                href: '/vouchers'
             });
 
             toast({
                 title: "Return Finalized",
-                description: `Order return finalized and a voucher has been issued.`
+                description: `A return voucher has been made available to the user.`
             });
         } catch (error) {
             console.error("Error finalizing return:", error);
             toast({
                 title: "Error",
-                description: "Failed to finalize return. Ensure the user has a voucher document.",
+                description: "Failed to finalize return.",
                 variant: "destructive"
             });
         }
