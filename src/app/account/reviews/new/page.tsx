@@ -91,14 +91,14 @@ function NewReviewPageContent() {
                 comment,
                 images: uploadedImageUrls,
                 date: new Date().toISOString(),
-                status: 'pending',
+                status: 'approved',
             };
             
             await setDoc(reviewDocRef, newReviewData);
 
             toast({
                 title: "Review Submitted",
-                description: "Thank you! Your review is pending approval.",
+                description: "Thank you for your feedback!",
             });
             router.push('/account/orders');
         } catch (error) {
