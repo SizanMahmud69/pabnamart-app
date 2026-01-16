@@ -15,8 +15,6 @@ import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import ReviewModal from '@/components/ReviewModal';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 
 const getStatusVariant = (status: Order['status']) => {
@@ -140,32 +138,33 @@ function MyOrdersPageContent() {
                                         </CardContent>
                                         <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
                                             <div className="flex gap-2">
-                                                 {order.status === 'delivered' && (
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="outline" size="sm">
-                                                                <Star className="mr-2 h-4 w-4" />
-                                                                Review
+                                                 {(() => {
+                                                    if (order.status !== 'delivered') return null;
+
+                                                    const firstUnreviewedItem = order.items.find(item => !hasReviewed(item.id));
+                                                    
+                                                    if (firstUnreviewedItem) {
+                                                        return (
+                                                            <Button asChild variant="outline" size="sm">
+                                                                <Link href={`/account/reviews/new?productId=${firstUnreviewedItem.id}&productName=${encodeURIComponent(firstUnreviewedItem.name)}&orderId=${order.id}`}>
+                                                                    <Star className="mr-2 h-4 w-4" />
+                                                                    Review
+                                                                </Link>
                                                             </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent>
-                                                            {order.items.map(item => (
-                                                                <DropdownMenuItem key={item.id} asChild disabled={hasReviewed(item.id)}>
-                                                                    <Link href={`/account/reviews/new?productId=${item.id}&productName=${encodeURIComponent(item.name)}&orderId=${order.id}`}>
-                                                                        {hasReviewed(item.id) ? (
-                                                                            <>
-                                                                                <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                                                                                <span className="truncate">{item.name} (Reviewed)</span>
-                                                                            </>
-                                                                        ) : (
-                                                                            <span className="truncate">{item.name}</span>
-                                                                        )}
-                                                                    </Link>
-                                                                </DropdownMenuItem>
-                                                            ))}
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                )}
+                                                        );
+                                                    }
+                                                    
+                                                    if (order.items.length > 0) {
+                                                        return (
+                                                            <Button variant="outline" size="sm" disabled>
+                                                                <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                                                                Reviewed
+                                                            </Button>
+                                                        );
+                                                    }
+
+                                                    return null;
+                                                })()}
                                                 {order.status === 'delivered' && (
                                                     <Button asChild variant="outline" size="sm">
                                                         <Link href={`/account/returns?orderId=${order.id}`}>
