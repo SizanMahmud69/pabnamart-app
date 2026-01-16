@@ -1,19 +1,28 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Ticket, ArrowLeft, Info, CheckCircle } from "lucide-react";
+import { Ticket, ArrowLeft, Info, CheckCircle, Copy } from "lucide-react";
 import Link from "next/link";
 import { useVouchers } from "@/hooks/useVouchers";
 import { Card, CardContent } from "@/components/ui/card";
 import { withAuth, useAuth } from "@/hooks/useAuth";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 function MyVouchersPage() {
     const { collectedVouchers } = useVouchers();
     const { appUser } = useAuth();
+    const { toast } = useToast();
+
+    const handleCopyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text).then(() => {
+            toast({ title: "Copied!", description: "Voucher code copied to clipboard." });
+        }, (err) => {
+            toast({ title: "Error", description: "Failed to copy code.", variant: "destructive" });
+        });
+    };
     
     const isUsed = (code: string, limit?: number) => {
         if (!appUser || !appUser.usedVouchers) return false;
@@ -94,9 +103,22 @@ function MyVouchersPage() {
                                         </div>
                                         <Separator />
                                         <div className="p-4 bg-white/50 flex justify-between items-center">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Voucher Code</p>
-                                                <p className="font-mono font-bold">{voucher.code}</p>
+                                            <div className="flex items-center gap-2">
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground">Voucher Code</p>
+                                                    <p className="font-mono font-bold">{voucher.code}</p>
+                                                </div>
+                                                {!used && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-muted-foreground"
+                                                        onClick={() => handleCopyToClipboard(voucher.code)}
+                                                    >
+                                                        <Copy className="h-4 w-4" />
+                                                    </Button>
+                                                )}
                                             </div>
                                             <Button variant="outline" disabled>
                                                 {used ? (
