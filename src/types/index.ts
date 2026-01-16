@@ -125,6 +125,7 @@ export interface ModeratorPermissions {
   canManageCategorySettings: boolean;
   canManageModeratorSettings: boolean;
   canManageReviews: boolean;
+  canManageContactSettings: boolean;
 }
 
 export interface User {
@@ -170,6 +171,12 @@ export interface PaymentSettings {
   bkashLogo: string;
   nagadLogo: string;
   rocketLogo: string;
+}
+
+export interface ContactSettings {
+  phone: string;
+  email: string;
+  address: string;
 }
 
 export interface Wishlist {

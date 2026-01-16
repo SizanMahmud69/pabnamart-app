@@ -31,7 +31,8 @@ const permissionLabels: Record<keyof ModeratorPermissions, string> = {
     canManagePaymentSettings: 'Payment Settings',
     canManageCategorySettings: 'Category Settings',
     canManageModeratorSettings: 'Moderator Settings',
-    canManageReviews: 'Reviews'
+    canManageReviews: 'Reviews',
+    canManageContactSettings: 'Contact Settings'
 };
 
 

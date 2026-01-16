@@ -1,4 +1,6 @@
 
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Phone, Mail, MapPin } from "lucide-react";
@@ -7,8 +9,30 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useEffect, useState } from "react";
+import type { ContactSettings } from "@/types";
+import { getFirestore, doc, onSnapshot } from "firebase/firestore";
+import app from "@/lib/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const db = getFirestore(app);
 
 export default function ContactPage() {
+    const [settings, setSettings] = useState<ContactSettings | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const settingsDocRef = doc(db, 'settings', 'contact');
+        const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setSettings(docSnap.data() as ContactSettings);
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
     return (
         <div className="bg-purple-50/30 min-h-screen">
             <div className="container mx-auto px-4 py-8">
@@ -30,7 +54,7 @@ export default function ContactPage() {
                                     <Phone className="h-6 w-6 text-primary" />
                                     <div>
                                         <h3 className="font-semibold">Phone</h3>
-                                        <p className="text-muted-foreground">+880 123 456 7890</p>
+                                        {loading ? <Skeleton className="h-4 w-32" /> : <p className="text-muted-foreground">{settings?.phone || 'Not available'}</p>}
                                     </div>
                                 </div>
                                 <Separator />
@@ -38,7 +62,7 @@ export default function ContactPage() {
                                     <Mail className="h-6 w-6 text-primary" />
                                     <div>
                                         <h3 className="font-semibold">Email</h3>
-                                        <p className="text-muted-foreground">support@pabnamart.com</p>
+                                         {loading ? <Skeleton className="h-4 w-48" /> : <p className="text-muted-foreground">{settings?.email || 'Not available'}</p>}
                                     </div>
                                 </div>
                                  <Separator />
@@ -46,7 +70,13 @@ export default function ContactPage() {
                                     <MapPin className="h-6 w-6 text-primary" />
                                     <div>
                                         <h3 className="font-semibold">Address</h3>
-                                        <p className="text-muted-foreground">123 Pabna Sadar, Pabna, Bangladesh</p>
+                                         {loading ? (
+                                            <div className="space-y-1">
+                                                <Skeleton className="h-4 w-56" />
+                                            </div>
+                                         ) : (
+                                            <p className="text-muted-foreground">{settings?.address || 'Not available'}</p>
+                                         )}
                                     </div>
                                 </div>
                             </CardContent>

@@ -35,6 +35,7 @@ const settingsPermissionOptions: { id: keyof ModeratorPermissions, label: string
     { id: 'canManagePaymentSettings', label: 'Payment Settings' },
     { id: 'canManageCategorySettings', label: 'Category Settings' },
     { id: 'canManageModeratorSettings', label: 'Moderator Settings' },
+    { id: 'canManageContactSettings', label: 'Contact Settings' },
 ];
 
 export default function EditModeratorPage() {
@@ -56,6 +57,7 @@ export default function EditModeratorPage() {
         canManageCategorySettings: false,
         canManageModeratorSettings: false,
         canManageReviews: false,
+        canManageContactSettings: false,
     });
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);

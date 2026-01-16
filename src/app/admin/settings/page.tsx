@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useMemo, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Image as ImageIcon, Truck, CreditCard, Loader2, LayoutGrid, UserCog } from "lucide-react";
+import { ArrowLeft, ArrowRight, Image as ImageIcon, Truck, CreditCard, Loader2, LayoutGrid, UserCog, Phone } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
@@ -38,6 +38,13 @@ const allSettingsItems = [
         icon: UserCog,
         href: "/admin/settings/moderators",
         permissionKey: 'canManageModeratorSettings'
+    },
+    {
+        title: "Contact Page Settings",
+        description: "Update contact information.",
+        icon: Phone,
+        href: "/admin/settings/contact",
+        permissionKey: 'canManageContactSettings'
     }
 ];
 
