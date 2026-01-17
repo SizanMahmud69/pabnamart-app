@@ -71,23 +71,18 @@ body {
   }
 }
 
-.printable-area {
-    display: none;
-}
-
 @media print {
-  body {
-    background-color: white !important;
+  body * {
+    visibility: hidden;
   }
-  .no-print {
-      display: none;
+  #invoice-print-area, #invoice-print-area * {
+    visibility: visible;
   }
-  .printable-area {
-      display: block;
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
+  #invoice-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
   }
 }
 
