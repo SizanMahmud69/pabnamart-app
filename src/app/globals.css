@@ -72,27 +72,34 @@ body {
 }
 
 @media print {
-  body {
-    background-color: white !important;
-  }
   .no-print {
     display: none !important;
   }
-  .admin-layout-wrapper {
-    background-color: white !important;
-    min-height: auto !important;
+  
+  body * {
+    visibility: hidden;
   }
-  .invoice-container {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
+
+  #invoice-print-area,
+  #invoice-print-area * {
+    visibility: visible;
   }
-  .invoice-card {
+
+  #invoice-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 1rem;
+    margin: 0;
+  }
+  
+  #invoice-print-area .invoice-card {
     box-shadow: none !important;
     border: none !important;
-    border-radius: 0 !important;
   }
 }
+
 
 @layer utilities {
   .truncate-2-lines {
