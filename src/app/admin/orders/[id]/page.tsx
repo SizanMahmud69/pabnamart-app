@@ -32,13 +32,13 @@ const getStatusVariant = (status: Order['status']) => {
 };
 
 const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, subtotal: number, voucherDiscount: number }) => (
-    <div className="p-4">
-        <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold">PabnaMart</h1>
+    <div className="invoice-box">
+        <div className="header">
+            <h1>PabnaMart</h1>
             <p>Order Invoice</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+        <div className="details-grid">
             <div>
                 <p><strong>Order ID:</strong> #{order.orderNumber}</p>
                 <p><strong>Order Date:</strong> {new Date(order.date).toLocaleDateString()}</p>
@@ -52,42 +52,44 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
             </div>
         </div>
 
-        <table className="w-full text-left text-sm mb-6">
-            <thead className="bg-gray-100">
+        <table className="items-table">
+            <thead>
                 <tr>
-                    <th className="p-2">Item</th>
-                    <th className="p-2 text-center">Qty</th>
-                    <th className="p-2 text-right">Price</th>
-                    <th className="p-2 text-right">Total</th>
+                    <th>Item</th>
+                    <th className="text-center">Qty</th>
+                    <th className="text-right">Price</th>
+                    <th className="text-right">Total</th>
                 </tr>
             </thead>
             <tbody>
                 {order.items.map(item => (
-                    <tr key={item.id} className="border-b">
-                        <td className="p-2">{item.name}</td>
-                        <td className="p-2 text-center">{item.quantity}</td>
-                        <td className="p-2 text-right">৳{item.price.toFixed(2)}</td>
-                        <td className="p-2 text-right">৳{(item.price * item.quantity).toFixed(2)}</td>
+                    <tr key={item.id}>
+                        <td>{item.name}</td>
+                        <td className="text-center">{item.quantity}</td>
+                        <td className="text-right">৳{item.price.toFixed(2)}</td>
+                        <td className="text-right">৳{(item.price * item.quantity).toFixed(2)}</td>
                     </tr>
                 ))}
             </tbody>
         </table>
         
-        <div className="flex justify-end mb-6">
-            <div className="w-full max-w-xs text-sm">
-                <div className="flex justify-between py-1 border-b"><span>Subtotal:</span><span>৳{subtotal.toFixed(2)}</span></div>
-                {voucherDiscount > 0 && <div className="flex justify-between py-1 border-b"><span>Voucher Discount:</span><span>- ৳{voucherDiscount.toFixed(2)}</span></div>}
-                <div className="flex justify-between py-1 border-b"><span>Shipping Fee:</span><span>৳{order.shippingFee.toFixed(2)}</span></div>
-                {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && <div className="flex justify-between py-1 border-b"><span>COD Fee:</span><span>৳{order.cashOnDeliveryFee.toFixed(2)}</span></div>}
-                <div className="flex justify-between font-bold text-base mt-2 pt-2"><span>Grand Total:</span><span>৳{order.total}</span></div>
-            </div>
+        <div className="totals-section">
+            <table className="totals-table">
+                <tbody>
+                    <tr><td>Subtotal:</td><td className="text-right">৳{subtotal.toFixed(2)}</td></tr>
+                    {voucherDiscount > 0 && <tr><td>Voucher Discount:</td><td className="text-right">- ৳{voucherDiscount.toFixed(2)}</td></tr>}
+                    <tr><td>Shipping Fee:</td><td className="text-right">৳{order.shippingFee.toFixed(2)}</td></tr>
+                    {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && <tr><td>COD Fee:</td><td className="text-right">৳{order.cashOnDeliveryFee.toFixed(2)}</td></tr>}
+                    <tr className="grand-total"><td>Grand Total:</td><td className="text-right">৳{order.total}</td></tr>
+                </tbody>
+            </table>
         </div>
         
-        <div className="border-t pt-4 text-center">
-             <p className="font-bold text-lg">
+        <div className="footer">
+             <p className="status">
                 {order.paymentMethod === 'cash-on-delivery' ? 'Payment Method: Cash on Delivery' : 'Status: PAID'}
             </p>
-            <p className="text-xs text-gray-500 mt-2">Thank you for your business!</p>
+            <p>Thank you for your business!</p>
         </div>
     </div>
 );
@@ -126,37 +128,122 @@ export default function AdminOrderDetailsPage() {
                 printWindow.document.write('<html><head><title>Print Invoice</title>');
                 printWindow.document.write(`
                     <style>
-                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.5; }
-                        table { width: 100%; border-collapse: collapse; }
-                        th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
-                        th { background-color: #f1f5f9; }
-                        strong { font-weight: 600; }
-                        .p-4 { padding: 1.5rem; }
-                        .text-center { text-align: center; }
-                        .mb-6 { margin-bottom: 1.5rem; }
-                        .text-3xl { font-size: 1.875rem; }
-                        .font-bold { font-weight: 700; }
-                        .grid { display: grid; }
-                        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-                        .gap-4 { gap: 1rem; }
-                        .text-sm { font-size: 0.875rem; }
-                        .text-right { text-align: right; }
-                        .w-full { width: 100%; }
-                        .bg-gray-100 { background-color: #f3f4f6; }
-                        .p-2 { padding: 0.5rem; }
-                        .border-b { border-bottom-width: 1px; border-color: #e2e8f0; }
-                        .flex { display: flex; }
-                        .justify-end { justify-content: flex-end; }
-                        .max-w-xs { max-width: 20rem; }
-                        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-                        .text-base { font-size: 1rem; }
-                        .mt-2 { margin-top: 0.5rem; }
-                        .pt-4 { padding-top: 1rem; }
-                        .border-t { border-top-width: 1px; border-color: #e2e8f0; }
-                        .text-lg { font-size: 1.125rem; }
-                        .text-xs { font-size: 0.75rem; }
-                        .text-gray-500 { color: #6b7280; }
-                        .capitalize { text-transform: capitalize; }
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+                        body { 
+                            font-family: 'Inter', sans-serif;
+                            font-size: 12px;
+                            line-height: 1.6;
+                            color: #374151;
+                            margin: 0;
+                            padding: 20px;
+                            background-color: #fff;
+                        }
+                        .invoice-box {
+                            max-width: 800px;
+                            margin: auto;
+                            padding: 30px;
+                            border: 1px solid #e5e7eb;
+                            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+                            border-radius: 8px;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 40px;
+                        }
+                        .header h1 {
+                            font-size: 2em;
+                            font-weight: 700;
+                            color: #111827;
+                            margin: 0;
+                        }
+                        .header p {
+                            font-size: 1em;
+                            color: #6b7280;
+                            margin: 5px 0 0;
+                        }
+                        .details-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 20px;
+                            margin-bottom: 40px;
+                            font-size: 0.9em;
+                        }
+                        .details-grid div p {
+                            margin: 0 0 4px;
+                        }
+                        .details-grid .text-right {
+                            text-align: right;
+                        }
+                        .items-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 30px;
+                        }
+                        .items-table th, .items-table td {
+                            padding: 10px 15px;
+                            border-bottom: 1px solid #e5e7eb;
+                            text-align: left;
+                        }
+                        .items-table th {
+                            background-color: #f9fafb;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            font-size: 0.8em;
+                            letter-spacing: 0.5px;
+                            color: #4b5563;
+                        }
+                        .items-table .text-center {
+                            text-align: center;
+                        }
+                        .items-table .text-right {
+                            text-align: right;
+                        }
+                        .items-table tr:last-child td {
+                            border-bottom: none;
+                        }
+                        .totals-section {
+                            display: flex;
+                            justify-content: flex-end;
+                            margin-bottom: 30px;
+                        }
+                        .totals-table {
+                            width: 100%;
+                            max-width: 320px;
+                        }
+                        .totals-table td {
+                            padding: 6px 0;
+                        }
+                        .totals-table tr:last-child td {
+                            padding-top: 10px;
+                        }
+                        .totals-table .grand-total td {
+                            font-size: 1.15em;
+                            font-weight: 700;
+                            padding-top: 10px;
+                            border-top: 2px solid #111827;
+                            color: #111827;
+                        }
+                        .footer {
+                            border-top: 1px solid #e5e7eb;
+                            padding-top: 20px;
+                            margin-top: 40px;
+                            text-align: center;
+                            color: #6b7280;
+                            font-size: 0.9em;
+                        }
+                        .footer .status {
+                            font-weight: 600;
+                            font-size: 1.1em;
+                            margin-bottom: 8px;
+                            color: #111827;
+                        }
+                        strong {
+                            font-weight: 600;
+                            color: #1f2937;
+                        }
+                        .capitalize {
+                            text-transform: capitalize;
+                        }
                     </style>
                 `);
                 printWindow.document.write('</head><body>');
@@ -313,9 +400,12 @@ export default function AdminOrderDetailsPage() {
                 </div>
             </div>
 
-            <div ref={printableRef} style={{ display: 'none' }}>
-              {order && <PrintableInvoice order={order} subtotal={subtotal} voucherDiscount={voucherDiscount} />}
+            <div className="hidden">
+              <div ref={printableRef}>
+                {order && <PrintableInvoice order={order} subtotal={subtotal} voucherDiscount={voucherDiscount} />}
+              </div>
             </div>
         </>
     );
-}
+
+    
