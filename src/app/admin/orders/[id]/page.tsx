@@ -38,6 +38,12 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
             <p>Order Invoice</p>
         </div>
 
+        {order.paymentMethod !== 'cash-on-delivery' ? (
+            <div className="stamp paid">Paid</div>
+        ) : (
+            <div className="stamp unpaid">Unpaid</div>
+        )}
+
         <div className="details-grid">
             <div>
                 <p><strong>Order ID:</strong> #{order.orderNumber}</p>
@@ -158,6 +164,8 @@ export default function AdminOrderDetailsPage() {
                             border: 1px solid #e5e7eb;
                             box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
                             border-radius: 8px;
+                            position: relative;
+                            overflow: hidden;
                         }
                         .header {
                             text-align: center;
@@ -275,6 +283,28 @@ export default function AdminOrderDetailsPage() {
                         .capitalize {
                             text-transform: capitalize;
                         }
+                        .stamp {
+                            position: absolute;
+                            top: 140px;
+                            right: 60px;
+                            border: 4px double;
+                            padding: 8px 15px;
+                            font-size: 24px;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            transform: rotate(-15deg);
+                            opacity: 0.4;
+                            border-radius: 10px;
+                            -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><filter id="f"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="5" stitchTiles="stitch"/></filter><rect width="100" height="100" filter="url(%23f)"/></svg>');
+                        }
+                        .stamp.paid {
+                            color: #16a34a;
+                            border-color: #16a34a;
+                        }
+                        .stamp.unpaid {
+                            color: #dc2626;
+                            border-color: #dc2626;
+                        }
                     </style>
                 `);
                 printWindow.document.write('</head><body>');
@@ -283,7 +313,6 @@ export default function AdminOrderDetailsPage() {
                 printWindow.document.close();
                 printWindow.focus();
                 
-                // Use a timeout to ensure content is loaded before printing
                 setTimeout(() => {
                     printWindow.print();
                     printWindow.close();
@@ -441,5 +470,7 @@ export default function AdminOrderDetailsPage() {
 
     
 }
+
+    
 
     
