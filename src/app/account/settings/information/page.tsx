@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -78,10 +77,12 @@ function AccountInformationPage() {
                 title: "Success",
                 description: "Profile picture updated successfully."
             });
-        } catch (error: any) {
+        } catch (error) {
+            console.error("Profile picture update failed:", error);
+            const errorMessage = error instanceof Error ? error.message : "Please check your network connection or browser extensions.";
             toast({
                 title: "Update Failed",
-                description: error.message || "Failed to update profile picture.",
+                description: `Failed to update profile picture. ${errorMessage}`,
                 variant: "destructive"
             });
         } finally {

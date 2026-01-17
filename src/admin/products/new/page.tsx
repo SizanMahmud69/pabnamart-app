@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -92,9 +91,10 @@ export default function NewProductPage() {
                 }
             } catch (error) {
                  console.error("Image upload failed:", error);
+                 const errorMessage = error instanceof Error ? error.message : "Please check your network connection or browser extensions.";
                  toast({
-                    title: "Error",
-                    description: "Failed to upload images. Please check your storage configuration.",
+                    title: "Image Upload Failed",
+                    description: `Could not upload images. ${errorMessage}`,
                     variant: "destructive"
                 });
                  setIsLoading(false);

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -54,6 +53,7 @@ export default function CategorySettingsPage() {
             return;
         }
         setIsSubmitting(true);
+        let imageUrl = '';
         try {
             const response = await fetch(
                 `/api/upload?filename=${newCategoryImageFile.name}`,
@@ -68,10 +68,24 @@ export default function CategorySettingsPage() {
             }
 
             const newBlob = (await response.json()) as PutBlobResult;
+            imageUrl = newBlob.url;
 
+        } catch (error) {
+            console.error("Image upload failed:", error);
+            const errorMessage = error instanceof Error ? error.message : "Please check your network connection or browser extensions.";
+            toast({
+                title: "Image Upload Failed",
+                description: `Could not upload category image. ${errorMessage}`,
+                variant: "destructive"
+            });
+            setIsSubmitting(false);
+            return;
+        }
+
+        try {
             await addDoc(collection(db, 'categories'), {
                 name: newCategoryName,
-                image: newBlob.url,
+                image: imageUrl,
                 createdAt: new Date().toISOString(),
             });
             toast({ title: "Success", description: "New category added." });

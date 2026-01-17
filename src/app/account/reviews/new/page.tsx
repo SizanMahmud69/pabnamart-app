@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, Suspense, useRef } from "react";
@@ -64,8 +63,9 @@ function NewReviewPageContent() {
         
         setIsSubmitting(true);
         let uploadedImageUrls: string[] = [];
-        try {
-            if (imageFiles.length > 0) {
+
+        if (imageFiles.length > 0) {
+            try {
                 for (const file of imageFiles) {
                     const response = await fetch(`/api/upload?filename=${file.name}`, {
                         method: 'POST',
@@ -75,8 +75,20 @@ function NewReviewPageContent() {
                     const newBlob = (await response.json()) as PutBlobResult;
                     uploadedImageUrls.push(newBlob.url);
                 }
+            } catch (error) {
+                console.error("Image upload failed:", error);
+                const errorMessage = error instanceof Error ? error.message : "Please check your network connection or browser extensions.";
+                toast({
+                    title: "Image Upload Failed",
+                    description: `Could not upload images. ${errorMessage}`,
+                    variant: "destructive",
+                });
+                setIsSubmitting(false);
+                return;
             }
-
+        }
+        
+        try {
             const reviewsRef = collection(db, 'products', productId, 'reviews');
             
             const reviewDocRef = doc(reviewsRef);

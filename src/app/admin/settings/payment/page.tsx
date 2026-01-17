@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -107,9 +106,10 @@ export default function PaymentSettingsPage() {
                 description: "The payment settings have been updated successfully.",
             });
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Please check your network connection or browser extensions.";
              toast({
                 title: "Error",
-                description: "Failed to save settings.",
+                description: `Failed to save settings. ${errorMessage}`,
                 variant: "destructive"
             });
         } finally {
