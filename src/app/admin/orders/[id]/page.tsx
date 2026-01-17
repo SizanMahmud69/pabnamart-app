@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { Order } from '@/types';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
@@ -31,86 +31,86 @@ const getStatusVariant = (status: Order['status']) => {
     }
 };
 
-const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, subtotal: number, voucherDiscount: number }) => (
-    <div className="invoice-box">
-        <div className="header">
-            <h1>PabnaMart</h1>
-            <p>Order Invoice</p>
-        </div>
-
-        <div className="details-grid">
-            <div>
-                <p className="order-id"><strong>Order ID:</strong> #{order.orderNumber}</p>
-                <p><strong>Order Date:</strong> {new Date(order.date).toLocaleDateString()}</p>
-                <p><strong>Status:</strong> <span className="capitalize">{order.status.replace('-', ' ')}</span></p>
+const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, subtotal: number, voucherDiscount: number }) => {
+    const stampText = order.paymentMethod === 'cash-on-delivery' ? 'Unpaid' : 'Paid';
+    const stampClass = order.paymentMethod === 'cash-on-delivery' ? 'unpaid' : 'paid';
+    return (
+        <div className="invoice-box">
+            <div className="header">
+                <h1>PabnaMart</h1>
+                <p>Order Invoice</p>
             </div>
-            <div className="text-right">
-                <p><strong>Billed To:</strong></p>
-                <p>{order.shippingAddress.fullName}</p>
-                <p>{order.shippingAddress.address}, {order.shippingAddress.area}, {order.shippingAddress.city}</p>
-                <p>Phone: {order.shippingAddress.phone}</p>
+
+            <div className="details-grid">
+                <div>
+                    <p className="order-id"><strong>Order ID:</strong> #{order.orderNumber}</p>
+                    <p><strong>Order Date:</strong> {new Date(order.date).toLocaleDateString()}</p>
+                    <p><strong>Status:</strong> <span className="capitalize">{order.status.replace('-', ' ')}</span></p>
+                </div>
+                <div className="text-right">
+                    <p><strong>Billed To:</strong></p>
+                    <p>{order.shippingAddress.fullName}</p>
+                    <p>{order.shippingAddress.address}, {order.shippingAddress.area}, {order.shippingAddress.city}</p>
+                    <p>Phone: {order.shippingAddress.phone}</p>
+                </div>
             </div>
-        </div>
 
-        <div className="payment-details">
-            <h3 className="section-title">Payment Information</h3>
-            <p><strong>Payment Method:</strong> <span className="capitalize">{order.paymentMethod.replace('-', ' ')}</span></p>
-            {order.paymentMethod !== 'cash-on-delivery' && (
-                <>
-                    {order.paymentAccountNumber && <p><strong>Payment From:</strong> {order.paymentAccountNumber}</p>}
-                    {order.transactionId && <p><strong>Transaction ID:</strong> {order.transactionId}</p>}
-                </>
-            )}
-        </div>
+            <div className="payment-details">
+                <h3 className="section-title">Payment Information</h3>
+                <p><strong>Payment Method:</strong> <span className="capitalize">{order.paymentMethod.replace('-', ' ')}</span></p>
+                {order.paymentMethod !== 'cash-on-delivery' && (
+                    <>
+                        {order.paymentAccountNumber && <p><strong>Payment From:</strong> {order.paymentAccountNumber}</p>}
+                        {order.transactionId && <p><strong>Transaction ID:</strong> {order.transactionId}</p>}
+                    </>
+                )}
+            </div>
 
-        <table className="items-table">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th className="text-center">Qty</th>
-                    <th className="text-right">Price</th>
-                    <th className="text-right">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {order.items.map(item => (
-                    <tr key={item.id}>
-                        <td>{item.name}</td>
-                        <td className="text-center">{item.quantity}</td>
-                        <td className="text-right">৳{item.price.toFixed(2)}</td>
-                        <td className="text-right">৳{(item.price * item.quantity).toFixed(2)}</td>
+            <table className="items-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th className="text-center">Qty</th>
+                        <th className="text-right">Price</th>
+                        <th className="text-right">Total</th>
                     </tr>
-                ))}
-            </tbody>
-        </table>
-        
-        <div className="totals-section">
-            {order.paymentMethod !== 'cash-on-delivery' ? (
-                <div className="stamp paid">Paid</div>
-            ) : (
-                <div className="stamp unpaid">Unpaid</div>
-            )}
-            <table className="totals-table">
+                </thead>
                 <tbody>
-                    <tr><td>Subtotal:</td><td className="text-right">৳{subtotal.toFixed(2)}</td></tr>
-                    {voucherDiscount > 0 && <tr><td>Voucher Discount:</td><td className="text-right">- ৳{voucherDiscount.toFixed(2)}</td></tr>}
-                    <tr><td>Shipping Fee:</td><td className="text-right">৳{order.shippingFee.toFixed(2)}</td></tr>
-                    {order.cashOnDeliveryFee ? (
-                        <tr><td>COD Fee:</td><td className="text-right">৳{order.cashOnDeliveryFee.toFixed(2)}</td></tr>
-                    ) : null}
-                    <tr className="grand-total"><td>Grand Total:</td><td className="text-right">৳{order.total}</td></tr>
+                    {order.items.map(item => (
+                        <tr key={item.id}>
+                            <td>{item.name}</td>
+                            <td className="text-center">{item.quantity}</td>
+                            <td className="text-right">৳{item.price.toFixed(2)}</td>
+                            <td className="text-right">৳{(item.price * item.quantity).toFixed(2)}</td>
+                        </tr>
+                    ))}
                 </tbody>
             </table>
+            
+            <div className="totals-section">
+                <div className={`stamp ${stampClass}`}>{stampText}</div>
+                <table className="totals-table">
+                    <tbody>
+                        <tr><td>Subtotal:</td><td className="text-right">৳{subtotal.toFixed(2)}</td></tr>
+                        {voucherDiscount > 0 && <tr><td>Voucher Discount:</td><td className="text-right">- ৳{voucherDiscount.toFixed(2)}</td></tr>}
+                        <tr><td>Shipping Fee:</td><td className="text-right">৳{order.shippingFee.toFixed(2)}</td></tr>
+                        {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                            <tr><td>COD Fee:</td><td className="text-right">৳{order.cashOnDeliveryFee.toFixed(2)}</td></tr>
+                        )}
+                        <tr className="grand-total"><td>Grand Total:</td><td className="text-right">৳{order.total}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div className="footer">
+                 <p className="status">
+                    {order.paymentMethod === 'cash-on-delivery' ? 'Payment Method: Cash on Delivery' : 'Status: PAID'}
+                </p>
+                <p>Thank you for your business!</p>
+            </div>
         </div>
-        
-        <div className="footer">
-             <p className="status">
-                {order.paymentMethod === 'cash-on-delivery' ? 'Payment Method: Cash on Delivery' : 'Status: PAID'}
-            </p>
-            <p>Thank you for your business!</p>
-        </div>
-    </div>
-);
+    )
+};
 
 
 export default function AdminOrderDetailsPage() {
@@ -119,8 +119,6 @@ export default function AdminOrderDetailsPage() {
     const orderId = params.id as string;
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
-    const printableRef = useRef<HTMLDivElement>(null);
-
 
     useEffect(() => {
         if (!orderId) return;
@@ -137,192 +135,6 @@ export default function AdminOrderDetailsPage() {
 
         return () => unsubscribe();
     }, [orderId, router]);
-    
-    const handlePrint = () => {
-        const printContent = printableRef.current;
-        if (printContent) {
-            const printWindow = window.open('', '', 'height=800,width=800');
-            if (printWindow) {
-                printWindow.document.write('<html><head><title>Print Invoice</title>');
-                printWindow.document.write(`
-                    <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-                        body { 
-                            font-family: 'Inter', sans-serif;
-                            font-size: 12px;
-                            line-height: 1.6;
-                            color: #374151;
-                            margin: 0;
-                            padding: 20px;
-                            background-color: #fff;
-                        }
-                        .invoice-box {
-                            max-width: 800px;
-                            margin: auto;
-                            padding: 30px;
-                            border: 1px solid #e5e7eb;
-                            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-                            border-radius: 8px;
-                            position: relative;
-                            overflow: hidden;
-                        }
-                        .header {
-                            text-align: center;
-                            margin-bottom: 40px;
-                        }
-                        .header h1 {
-                            font-size: 2em;
-                            font-weight: 700;
-                            color: hsl(262 84% 59%);
-                            margin: 0;
-                        }
-                        .header p {
-                            font-size: 1em;
-                            color: #6b7280;
-                            margin: 5px 0 0;
-                        }
-                        .details-grid {
-                            display: grid;
-                            grid-template-columns: 1fr 1fr;
-                            gap: 20px;
-                            margin-bottom: 20px;
-                            font-size: 0.9em;
-                        }
-                        .details-grid div p {
-                            margin: 0 0 4px;
-                        }
-                        .details-grid .text-right {
-                            text-align: right;
-                        }
-                         .order-id {
-                            font-size: 1.2em;
-                            font-weight: 600;
-                        }
-                        .payment-details {
-                           margin-bottom: 40px;
-                           padding: 15px;
-                           background-color: #f9fafb;
-                           border-radius: 8px;
-                           border: 1px solid #e5e7eb;
-                       }
-                       .payment-details .section-title {
-                           font-size: 1.1em;
-                           font-weight: 600;
-                           margin-top: 0;
-                           margin-bottom: 15px;
-                           color: #111827;
-                       }
-                       .payment-details p {
-                           margin: 0 0 4px;
-                           font-size: 0.9em;
-                       }
-                        .items-table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-bottom: 30px;
-                        }
-                        .items-table th, .items-table td {
-                            padding: 10px 15px;
-                            border-bottom: 1px solid #e5e7eb;
-                            text-align: left;
-                        }
-                        .items-table th {
-                            background-color: #f9fafb;
-                            font-weight: 600;
-                            text-transform: uppercase;
-                            font-size: 0.8em;
-                            letter-spacing: 0.5px;
-                            color: #4b5563;
-                        }
-                        .items-table .text-center {
-                            text-align: center;
-                        }
-                        .items-table .text-right {
-                            text-align: right;
-                        }
-                        .items-table tr:last-child td {
-                            border-bottom: none;
-                        }
-                        .totals-section {
-                            display: flex;
-                            justify-content: flex-end;
-                            margin-bottom: 30px;
-                            position: relative;
-                        }
-                        .totals-table {
-                            width: 100%;
-                            max-width: 320px;
-                        }
-                        .totals-table td {
-                            padding: 6px 0;
-                        }
-                        .totals-table tr:last-child td {
-                            padding-top: 10px;
-                        }
-                        .totals-table .grand-total td {
-                            font-size: 1.15em;
-                            font-weight: 700;
-                            padding-top: 10px;
-                            border-top: 2px solid #111827;
-                            color: #111827;
-                        }
-                        .footer {
-                            border-top: 1px solid #e5e7eb;
-                            padding-top: 20px;
-                            margin-top: 40px;
-                            text-align: center;
-                            color: #6b7280;
-                            font-size: 0.9em;
-                        }
-                        .footer .status {
-                            font-weight: 600;
-                            font-size: 1.1em;
-                            margin-bottom: 8px;
-                            color: #111827;
-                        }
-                        strong {
-                            font-weight: 600;
-                            color: #1f2937;
-                        }
-                        .capitalize {
-                            text-transform: capitalize;
-                        }
-                        .stamp {
-                            position: absolute;
-                            top: -20px;
-                            left: 0;
-                            border: 4px double;
-                            padding: 8px 15px;
-                            font-size: 24px;
-                            font-weight: 700;
-                            text-transform: uppercase;
-                            transform: rotate(-15deg);
-                            opacity: 0.4;
-                            border-radius: 10px;
-                        }
-                        .stamp.paid {
-                            color: #16a34a;
-                            border-color: #16a34a;
-                        }
-                        .stamp.unpaid {
-                            color: #dc2626;
-                            border-color: #dc2626;
-                        }
-                    </style>
-                `);
-                printWindow.document.write('</head><body>');
-                printWindow.document.write(printContent.innerHTML);
-                printWindow.document.write('</body></html>');
-                printWindow.document.close();
-                printWindow.focus();
-                
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                }, 250);
-            }
-        }
-    };
 
     if (loading) {
         return <LoadingSpinner />;
@@ -353,7 +165,7 @@ export default function AdminOrderDetailsPage() {
                                 Back to Orders
                             </Link>
                         </Button>
-                        <Button variant="outline" onClick={handlePrint}>
+                        <Button variant="outline" onClick={() => window.print()}>
                             <Printer className="mr-2 h-4 w-4" />
                             Print Invoice
                         </Button>
@@ -463,18 +275,9 @@ export default function AdminOrderDetailsPage() {
                 </div>
             </div>
 
-            <div className="hidden">
-              <div ref={printableRef}>
-                {order && <PrintableInvoice order={order} subtotal={subtotal} voucherDiscount={voucherDiscount} />}
-              </div>
+            <div className="print-area">
+              {order && <PrintableInvoice order={order} subtotal={subtotal} voucherDiscount={voucherDiscount} />}
             </div>
         </>
     );
-
-    
 }
-
-    
-
-    
-
