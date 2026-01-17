@@ -72,31 +72,21 @@ body {
 }
 
 @media print {
-  .no-print {
-    display: none !important;
-  }
-  
   body * {
     visibility: hidden;
   }
-
   #invoice-print-area,
   #invoice-print-area * {
     visibility: visible;
   }
-
   #invoice-print-area {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
-    padding: 1rem;
     margin: 0;
-  }
-  
-  #invoice-print-area .invoice-card {
-    box-shadow: none !important;
-    border: none !important;
+    padding: 20px;
+    font-size: 12px;
   }
 }
 
