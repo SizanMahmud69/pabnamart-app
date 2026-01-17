@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -79,7 +78,7 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
                     <tr><td>Subtotal:</td><td className="text-right">৳{subtotal.toFixed(2)}</td></tr>
                     {voucherDiscount > 0 && <tr><td>Voucher Discount:</td><td className="text-right">- ৳{voucherDiscount.toFixed(2)}</td></tr>}
                     <tr><td>Shipping Fee:</td><td className="text-right">৳{order.shippingFee.toFixed(2)}</td></tr>
-                    {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && <tr><td>COD Fee:</td><td className="text-right">৳{order.cashOnDeliveryFee.toFixed(2)}</td></tr>}
+                    {order.cashOnDeliveryFee > 0 && <tr><td>COD Fee:</td><td className="text-right">৳{order.cashOnDeliveryFee.toFixed(2)}</td></tr>}
                     <tr className="grand-total"><td>Grand Total:</td><td className="text-right">৳{order.total}</td></tr>
                 </tbody>
             </table>
@@ -354,7 +353,7 @@ export default function AdminOrderDetailsPage() {
                                 </div>
                                 <Separator />
                                 <div className="space-y-4">
-                                    <h3 className="text-lg font-semibold">Shipping & Payment</h3>
+                                    <h3 className="text-lg font-semibold">Shipping &amp; Payment</h3>
                                     <div className="flex items-start gap-3">
                                         <MapPin className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
                                         <div>
