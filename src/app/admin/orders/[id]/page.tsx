@@ -40,7 +40,7 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
 
         <div className="details-grid">
             <div>
-                <p><strong>Order ID:</strong> #{order.orderNumber}</p>
+                <p className="order-id"><strong>Order ID:</strong> #{order.orderNumber}</p>
                 <p><strong>Order Date:</strong> {new Date(order.date).toLocaleDateString()}</p>
                 <p><strong>Status:</strong> <span className="capitalize">{order.status.replace('-', ' ')}</span></p>
             </div>
@@ -173,7 +173,7 @@ export default function AdminOrderDetailsPage() {
                         .header h1 {
                             font-size: 2em;
                             font-weight: 700;
-                            color: #111827;
+                            color: hsl(262 84% 59%);
                             margin: 0;
                         }
                         .header p {
@@ -193,6 +193,10 @@ export default function AdminOrderDetailsPage() {
                         }
                         .details-grid .text-right {
                             text-align: right;
+                        }
+                         .order-id {
+                            font-size: 1.2em;
+                            font-weight: 600;
                         }
                         .payment-details {
                            margin-bottom: 40px;
@@ -286,7 +290,7 @@ export default function AdminOrderDetailsPage() {
                         .stamp {
                             position: absolute;
                             top: -20px;
-                            right: 350px;
+                            left: 0;
                             border: 4px double;
                             padding: 8px 15px;
                             font-size: 24px;
@@ -474,3 +478,4 @@ export default function AdminOrderDetailsPage() {
     
 
     
+
