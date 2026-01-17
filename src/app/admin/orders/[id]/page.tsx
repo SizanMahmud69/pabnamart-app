@@ -38,12 +38,6 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
             <p>Order Invoice</p>
         </div>
 
-        {order.paymentMethod !== 'cash-on-delivery' ? (
-            <div className="stamp paid">Paid</div>
-        ) : (
-            <div className="stamp unpaid">Unpaid</div>
-        )}
-
         <div className="details-grid">
             <div>
                 <p><strong>Order ID:</strong> #{order.orderNumber}</p>
@@ -91,12 +85,17 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
         </table>
         
         <div className="totals-section">
+            {order.paymentMethod !== 'cash-on-delivery' ? (
+                <div className="stamp paid">Paid</div>
+            ) : (
+                <div className="stamp unpaid">Unpaid</div>
+            )}
             <table className="totals-table">
                 <tbody>
                     <tr><td>Subtotal:</td><td className="text-right">৳{subtotal.toFixed(2)}</td></tr>
                     {voucherDiscount > 0 && <tr><td>Voucher Discount:</td><td className="text-right">- ৳{voucherDiscount.toFixed(2)}</td></tr>}
                     <tr><td>Shipping Fee:</td><td className="text-right">৳{order.shippingFee.toFixed(2)}</td></tr>
-                    {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 ? (
+                    {order.cashOnDeliveryFee ? (
                         <tr><td>COD Fee:</td><td className="text-right">৳{order.cashOnDeliveryFee.toFixed(2)}</td></tr>
                     ) : null }
                     <tr className="grand-total"><td>Grand Total:</td><td className="text-right">৳{order.total}</td></tr>
@@ -244,6 +243,7 @@ export default function AdminOrderDetailsPage() {
                             display: flex;
                             justify-content: flex-end;
                             margin-bottom: 30px;
+                            position: relative;
                         }
                         .totals-table {
                             width: 100%;
@@ -285,8 +285,8 @@ export default function AdminOrderDetailsPage() {
                         }
                         .stamp {
                             position: absolute;
-                            top: 140px;
-                            right: 60px;
+                            top: -20px;
+                            right: 350px;
                             border: 4px double;
                             padding: 8px 15px;
                             font-size: 24px;
