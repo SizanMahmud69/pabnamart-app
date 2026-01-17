@@ -50,7 +50,7 @@ This is the ideal case. When prompted:
 
 If `git push` gives an authentication error immediately without asking for a username or password, it means your computer has cached old, incorrect credentials.
 
-You can force Git to ask again by updating your repository's remote URL. Follow these steps:
+You can try to force Git to ask again by updating your repository's remote URL. Follow these steps:
 
 1.  **Open a terminal** in your project's root directory.
 
@@ -67,9 +67,41 @@ You can force Git to ask again by updating your repository's remote URL. Follow 
 
 4.  This time, it should ask for your **username** and **password**. Use your **Personal Access Token (PAT)** for the password.
 
-This should resolve the authentication issue and allow you to push your code successfully.
 ---
 
+### **Still Not Working? Manually Clear Your Credentials**
+
+If `git push` still fails without asking for a password, it means your Operating System's credential manager has stored the old password and is using it automatically. You need to remove it manually.
+
+#### **For Windows Users:**
+
+1.  **Open Credential Manager:** Press the **Windows key**, type "Credential Manager", and press Enter.
+2.  **Select Windows Credentials:** Click on the "Windows Credentials" button.
+3.  **Find the GitHub Credential:** Look for an entry named `git:https://github.com` in the list.
+4.  **Remove it:** Click on the credential to expand it, and then click the **"Remove"** link.
+
+![Windows Credential Manager](https://i.ibb.co/6yv9Y3p/win-cred.png)
+
+#### **For macOS Users:**
+
+1.  **Open Keychain Access:** Open "Finder", go to "Applications" -> "Utilities", and open "Keychain Access".
+2.  **Search for GitHub:** In the search bar at the top-right of the Keychain Access window, type `github.com`.
+3.  **Find the Credential:** Look for an "internet password" entry that shows `github.com`.
+4.  **Delete it:** Right-click on that entry and select **"Delete [name of entry]"**.
+
+![macOS Keychain Access](https://i.ibb.co/yBNt8xW/mac-key.png)
+
+### **Final Step: Push Again**
+
+After you have cleared the cached credentials from your system, go back to your terminal and run `git push` one more time.
+
+```bash
+git push
+```
+
+This time, it is **guaranteed** to ask for your username and password. Use your **Personal Access Token (PAT)** for the password, and your code will be pushed successfully.
+
+---
 Follow these steps to deploy your application to Vercel using GitHub.
 
 ### Step 1: Push to GitHub for the First Time
