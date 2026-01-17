@@ -16,6 +16,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { createAndSendNotification } from '@/app/actions';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const db = getFirestore(app);
 
@@ -187,11 +188,14 @@ export default function AdminReturnManagement() {
                     </CardHeader>
                     <CardContent>
                         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Order['status'])}>
-                            <TabsList className="inline-flex w-max mb-4">
-                                {statusTabs.map(tab => (
-                                    <TabsTrigger key={tab} value={tab} className="capitalize">{tab.replace('-', ' ')}</TabsTrigger>
-                                ))}
-                            </TabsList>
+                            <ScrollArea className="w-full whitespace-nowrap rounded-md">
+                                <TabsList className="inline-flex w-max mb-4">
+                                    {statusTabs.map(tab => (
+                                        <TabsTrigger key={tab} value={tab} className="capitalize">{tab.replace('-', ' ')}</TabsTrigger>
+                                    ))}
+                                </TabsList>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
                             <TabsContent value={activeTab} className="mt-4">
                                {filteredOrders.length > 0 ? (
                                     <div className="space-y-4">
