@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
 
@@ -130,7 +129,7 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
                                         {isLoading ? (
-                                            <ArrowRight className="h-5 w-5 text-muted-foreground animate-pulse" />
+                                            <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
                                         ) : (
                                             <ArrowRight className="h-5 w-5 text-muted-foreground" />
                                         )}
