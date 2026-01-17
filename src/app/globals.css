@@ -71,22 +71,23 @@ body {
   }
 }
 
+.printable-area {
+    display: none;
+}
+
 @media print {
-  body * {
-    visibility: hidden;
+  body {
+    background-color: white !important;
   }
-  #invoice-print-area,
-  #invoice-print-area * {
-    visibility: visible;
+  .no-print {
+      display: none;
   }
-  #invoice-print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 20px;
-    font-size: 12px;
+  .printable-area {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
   }
 }
 

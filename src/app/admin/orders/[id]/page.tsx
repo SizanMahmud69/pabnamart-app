@@ -259,8 +259,10 @@ export default function AdminOrderDetailsPage() {
                 </div>
             </div>
 
-            <div id="invoice-print-area">
-                {order && <PrintableInvoice order={order} subtotal={subtotal} voucherDiscount={voucherDiscount} />}
+            <div className="printable-area">
+              <div id="invoice-print-area">
+                  {order && <PrintableInvoice order={order} subtotal={subtotal} voucherDiscount={voucherDiscount} />}
+              </div>
             </div>
         </>
     );
