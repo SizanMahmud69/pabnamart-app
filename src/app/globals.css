@@ -71,22 +71,6 @@ body {
   }
 }
 
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #invoice-print-area, #invoice-print-area * {
-    visibility: visible;
-  }
-  #invoice-print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-}
-
-
 @layer utilities {
   .truncate-2-lines {
     display: -webkit-box;
@@ -95,4 +79,19 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    .print-area {
+        display: block !important;
+    }
+}
+
+@media screen {
+    .print-area {
+        display: none !important;
+    }
 }

@@ -140,124 +140,126 @@ export default function AdminOrderDetailsPage() {
 
     return (
         <>
-            <div className="container mx-auto max-w-2xl px-4 py-6">
-                <div className="flex justify-between items-center mb-4">
-                    <Button asChild variant="ghost">
-                        <Link href="/admin/orders">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Orders
-                        </Link>
-                    </Button>
-                    <Button variant="outline" onClick={handlePrint}>
-                        <Printer className="mr-2 h-4 w-4" />
-                        Print Invoice
-                    </Button>
-                </div>
-                <div>
-                    <Card>
-                        <CardHeader>
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <CardTitle>Order #{order.orderNumber}</CardTitle>
-                                    <CardDescription>Placed on {new Date(order.date).toLocaleDateString()}</CardDescription>
-                                </div>
-                                <Badge variant={getStatusVariant(order.status)} className="capitalize text-lg">
-                                    {order.status.replace('-', ' ')}
-                                </Badge>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <OrderStatusStepper currentStatus={order.status} />
-                            <Separator />
-                            <div>
-                                <h3 className="text-lg font-semibold mb-2">Order Summary</h3>
-                                {order.items.map(item => (
-                                    <div key={item.id} className="flex items-center gap-4 py-3">
-                                        <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
-                                        <div className="flex-grow">
-                                            <p className="font-semibold">{item.name}</p>
-                                            <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                                        </div>
-                                        <p className="font-semibold">৳{item.price * item.quantity}</p>
+            <div className="no-print">
+                <div className="container mx-auto max-w-2xl px-4 py-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <Button asChild variant="ghost">
+                            <Link href="/admin/orders">
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Back to Orders
+                            </Link>
+                        </Button>
+                        <Button variant="outline" onClick={handlePrint}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            Print Invoice
+                        </Button>
+                    </div>
+                    <div>
+                        <Card>
+                            <CardHeader>
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <CardTitle>Order #{order.orderNumber}</CardTitle>
+                                        <CardDescription>Placed on {new Date(order.date).toLocaleDateString()}</CardDescription>
                                     </div>
-                                ))}
-                            </div>
-                            <Separator />
-                            <div className="space-y-4">
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Subtotal</span>
-                                    <span>৳{subtotal.toFixed(2)}</span>
+                                    <Badge variant={getStatusVariant(order.status)} className="capitalize text-lg">
+                                        {order.status.replace('-', ' ')}
+                                    </Badge>
                                 </div>
-                                {voucherDiscount > 0 && (
-                                    <div className="flex justify-between text-green-600">
-                                        <span className="text-muted-foreground">Voucher Discount</span>
-                                        <span>- ৳{voucherDiscount.toFixed(2)}</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Shipping Fee</span>
-                                    <span>৳{order.shippingFee.toFixed(2)}</span>
-                                </div>
-                                {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Cash on Delivery Fee</span>
-                                        <span>৳{order.cashOnDeliveryFee.toFixed(2)}</span>
-                                    </div>
-                                )}
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <OrderStatusStepper currentStatus={order.status} />
                                 <Separator />
-                                <div className="flex justify-between font-bold text-xl">
-                                    <span>Total</span>
-                                    <span>৳{order.total}</span>
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-2">Order Summary</h3>
+                                    {order.items.map(item => (
+                                        <div key={item.id} className="flex items-center gap-4 py-3">
+                                            <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
+                                            <div className="flex-grow">
+                                                <p className="font-semibold">{item.name}</p>
+                                                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                            </div>
+                                            <p className="font-semibold">৳{item.price * item.quantity}</p>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
-                            <Separator />
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-semibold">Shipping & Payment</h3>
-                                <div className="flex items-start gap-3">
-                                    <MapPin className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
-                                    <div>
-                                        <p className="font-semibold">Shipping Address</p>
-                                        <p className="text-muted-foreground text-sm">
-                                            {order.shippingAddress.fullName}, {order.shippingAddress.address}, {order.shippingAddress.area}, {order.shippingAddress.city}, Phone: {order.shippingAddress.phone}
-                                        </p>
+                                <Separator />
+                                <div className="space-y-4">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Subtotal</span>
+                                        <span>৳{subtotal.toFixed(2)}</span>
+                                    </div>
+                                    {voucherDiscount > 0 && (
+                                        <div className="flex justify-between text-green-600">
+                                            <span className="text-muted-foreground">Voucher Discount</span>
+                                            <span>- ৳{voucherDiscount.toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Shipping Fee</span>
+                                        <span>৳{order.shippingFee.toFixed(2)}</span>
+                                    </div>
+                                    {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Cash on Delivery Fee</span>
+                                            <span>৳{order.cashOnDeliveryFee.toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                    <Separator />
+                                    <div className="flex justify-between font-bold text-xl">
+                                        <span>Total</span>
+                                        <span>৳{order.total}</span>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-3">
-                                    <CreditCard className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
-                                    <div>
-                                        <p className="font-semibold">Payment Method</p>
-                                        <p className="text-muted-foreground text-sm capitalize">{order.paymentMethod.replace('-', ' ')}</p>
+                                <Separator />
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold">Shipping & Payment</h3>
+                                    <div className="flex items-start gap-3">
+                                        <MapPin className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
+                                        <div>
+                                            <p className="font-semibold">Shipping Address</p>
+                                            <p className="text-muted-foreground text-sm">
+                                                {order.shippingAddress.fullName}, {order.shippingAddress.address}, {order.shippingAddress.area}, {order.shippingAddress.city}, Phone: {order.shippingAddress.phone}
+                                            </p>
+                                        </div>
                                     </div>
+                                    <div className="flex items-start gap-3">
+                                        <CreditCard className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
+                                        <div>
+                                            <p className="font-semibold">Payment Method</p>
+                                            <p className="text-muted-foreground text-sm capitalize">{order.paymentMethod.replace('-', ' ')}</p>
+                                        </div>
+                                    </div>
+                                    {order.paymentMethod !== 'cash-on-delivery' && (
+                                        <>
+                                            {order.paymentAccountNumber && (
+                                                <div className="flex items-start gap-3">
+                                                    <Smartphone className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
+                                                    <div>
+                                                        <p className="font-semibold">Payment From</p>
+                                                        <p className="text-muted-foreground text-sm font-mono">{order.paymentAccountNumber}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {order.transactionId && (
+                                                <div className="flex items-start gap-3">
+                                                    <CheckCircle className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
+                                                    <div>
+                                                        <p className="font-semibold">Transaction ID</p>
+                                                        <p className="text-muted-foreground text-sm font-mono">{order.transactionId}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
-                                {order.paymentMethod !== 'cash-on-delivery' && (
-                                    <>
-                                        {order.paymentAccountNumber && (
-                                            <div className="flex items-start gap-3">
-                                                <Smartphone className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
-                                                <div>
-                                                    <p className="font-semibold">Payment From</p>
-                                                    <p className="text-muted-foreground text-sm font-mono">{order.paymentAccountNumber}</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                        {order.transactionId && (
-                                            <div className="flex items-start gap-3">
-                                                <CheckCircle className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
-                                                <div>
-                                                    <p className="font-semibold">Transaction ID</p>
-                                                    <p className="text-muted-foreground text-sm font-mono">{order.transactionId}</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </div>
 
-            <div id="invoice-print-area" className="hidden">
+            <div className="print-area">
               {order && <PrintableInvoice order={order} subtotal={subtotal} voucherDiscount={voucherDiscount} />}
             </div>
         </>
