@@ -15,6 +15,33 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Deployment Guide
 
+### Important Note on GitHub Authentication
+
+If you see an error like `fatal: Authentication failed` or `Invalid username or token` when running `git push`, it's because GitHub no longer accepts passwords for command-line Git operations. You must use a **Personal Access Token (PAT)** instead.
+
+**How to fix this:**
+
+1.  **Create a Personal Access Token:**
+    *   Go to your GitHub settings: [github.com/settings/tokens](https://github.com/settings/tokens).
+    *   Click **"Generate new token"** and select **"Generate new token (classic)"**.
+    *   Give your token a name (e.g., "PabnaMart-Dev").
+    *   Set an expiration date.
+    *   Under **"Select scopes,"** check the box next to **`repo`**. This gives the token permission to access your repositories.
+    *   Click **"Generate token"** at the bottom.
+
+2.  **Copy Your New Token:**
+    *   **This is very important:** Copy the token immediately. You won't be able to see it again. Save it in a secure place.
+
+3.  **Use the Token to Push:**
+    *   When you run `git push`, the terminal will ask for your username and password.
+    *   **Username:** Enter your GitHub username.
+    *   **Password:** Paste your new **Personal Access Token**.
+
+After you authenticate successfully, your computer should save the token for future use.
+
+---
+
+
 Follow these steps to deploy your application to Vercel using GitHub.
 
 ### Step 1: Push to GitHub for the First Time
