@@ -97,7 +97,7 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
                     <tr><td>Shipping Fee:</td><td className="text-right">৳{order.shippingFee.toFixed(2)}</td></tr>
                     {order.cashOnDeliveryFee ? (
                         <tr><td>COD Fee:</td><td className="text-right">৳{order.cashOnDeliveryFee.toFixed(2)}</td></tr>
-                    ) : null }
+                    ) : null}
                     <tr className="grand-total"><td>Grand Total:</td><td className="text-right">৳{order.total}</td></tr>
                 </tbody>
             </table>
@@ -299,7 +299,6 @@ export default function AdminOrderDetailsPage() {
                             transform: rotate(-15deg);
                             opacity: 0.4;
                             border-radius: 10px;
-                            -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><filter id="f"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="5" stitchTiles="stitch"/></filter><rect width="100" height="100" filter="url(%23f)"/></svg>');
                         }
                         .stamp.paid {
                             color: #16a34a;
