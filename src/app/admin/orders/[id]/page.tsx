@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { Order } from '@/types';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
@@ -99,6 +99,8 @@ export default function AdminOrderDetailsPage() {
     const orderId = params.id as string;
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
+    const printableRef = useRef<HTMLDivElement>(null);
+
 
     useEffect(() => {
         if (!orderId) return;
@@ -117,8 +119,60 @@ export default function AdminOrderDetailsPage() {
     }, [orderId, router]);
     
     const handlePrint = () => {
-        window.print();
-    }
+        const printContent = printableRef.current;
+        if (printContent) {
+            const printWindow = window.open('', '', 'height=800,width=800');
+            if (printWindow) {
+                printWindow.document.write('<html><head><title>Print Invoice</title>');
+                printWindow.document.write(`
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.5; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+                        th { background-color: #f1f5f9; }
+                        strong { font-weight: 600; }
+                        .p-4 { padding: 1.5rem; }
+                        .text-center { text-align: center; }
+                        .mb-6 { margin-bottom: 1.5rem; }
+                        .text-3xl { font-size: 1.875rem; }
+                        .font-bold { font-weight: 700; }
+                        .grid { display: grid; }
+                        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                        .gap-4 { gap: 1rem; }
+                        .text-sm { font-size: 0.875rem; }
+                        .text-right { text-align: right; }
+                        .w-full { width: 100%; }
+                        .bg-gray-100 { background-color: #f3f4f6; }
+                        .p-2 { padding: 0.5rem; }
+                        .border-b { border-bottom-width: 1px; border-color: #e2e8f0; }
+                        .flex { display: flex; }
+                        .justify-end { justify-content: flex-end; }
+                        .max-w-xs { max-width: 20rem; }
+                        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+                        .text-base { font-size: 1rem; }
+                        .mt-2 { margin-top: 0.5rem; }
+                        .pt-4 { padding-top: 1rem; }
+                        .border-t { border-top-width: 1px; border-color: #e2e8f0; }
+                        .text-lg { font-size: 1.125rem; }
+                        .text-xs { font-size: 0.75rem; }
+                        .text-gray-500 { color: #6b7280; }
+                        .capitalize { text-transform: capitalize; }
+                    </style>
+                `);
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(printContent.innerHTML);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.focus();
+                
+                // Use a timeout to ensure content is loaded before printing
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 250);
+            }
+        }
+    };
 
     if (loading) {
         return <LoadingSpinner />;
@@ -259,7 +313,7 @@ export default function AdminOrderDetailsPage() {
                 </div>
             </div>
 
-            <div className="print-area">
+            <div ref={printableRef} style={{ display: 'none' }}>
               {order && <PrintableInvoice order={order} subtotal={subtotal} voucherDiscount={voucherDiscount} />}
             </div>
         </>
