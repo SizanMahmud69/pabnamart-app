@@ -37,7 +37,7 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
     return (
         <div className="invoice-box">
             <div className="header">
-                <h1>PabnaMart</h1>
+                <h1 className="site-title">PabnaMart</h1>
                 <p>Order Invoice</p>
             </div>
 
@@ -136,6 +136,66 @@ export default function AdminOrderDetailsPage() {
         return () => unsubscribe();
     }, [orderId, router]);
 
+    const handlePrint = () => {
+        const printContent = document.getElementById('printable-invoice');
+        if (printContent) {
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>Print Invoice</title>
+                            <link rel="preconnect" href="https://fonts.googleapis.com">
+                            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+                            <style>
+                                body { font-family: 'Inter', sans-serif; font-size: 12px; line-height: 1.6; color: #374151; margin: 0; padding: 20px; background-color: #fff; }
+                                .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #e5e7eb; box-shadow: 0 0 10px rgba(0, 0, 0, 0.05); border-radius: 8px; position: relative; overflow: hidden; }
+                                .header { text-align: center; margin-bottom: 40px; }
+                                .header .site-title { font-size: 2em; font-weight: 700; color: hsl(262 84% 59%); margin: 0; }
+                                .header p { font-size: 1em; color: #6b7280; margin: 5px 0 0; }
+                                .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; font-size: 0.9em; }
+                                .details-grid div p { margin: 0 0 4px; }
+                                .details-grid .text-right { text-align: right; }
+                                .order-id strong { font-size: 1.2em; font-weight: 700; }
+                                .payment-details { margin-bottom: 40px; padding: 15px; background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; }
+                                .payment-details .section-title { font-size: 1.1em; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #111827; }
+                                .payment-details p { margin: 0 0 4px; font-size: 0.9em; }
+                                .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                                .items-table th, .items-table td { padding: 10px 15px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+                                .items-table th { background-color: #f9fafb; font-weight: 600; text-transform: uppercase; font-size: 0.8em; letter-spacing: 0.5px; color: #4b5563; }
+                                .items-table .text-center { text-align: center; }
+                                .items-table .text-right { text-align: right; }
+                                .items-table tr:last-child td { border-bottom: none; }
+                                .totals-section { position: relative; margin-top: 20px; margin-bottom: 30px; }
+                                .totals-table { width: 100%; max-width: 320px; margin-left: auto; }
+                                .totals-table td { padding: 6px 0; }
+                                .totals-table tr:last-child td { padding-top: 10px; }
+                                .totals-table .grand-total td { font-size: 1.15em; font-weight: 700; padding-top: 10px; border-top: 2px solid #111827; color: #111827; }
+                                .footer { border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 40px; text-align: center; color: #6b7280; font-size: 0.9em; }
+                                .footer .status { font-weight: 600; font-size: 1.1em; margin-bottom: 8px; color: #111827; }
+                                strong { font-weight: 600; color: #1f2937; }
+                                .capitalize { text-transform: capitalize; }
+                                .stamp { position: absolute; top: 0; left: 20px; border: 4px double; padding: 8px 15px; font-size: 24px; font-weight: 700; text-transform: uppercase; transform: rotate(-15deg); opacity: 0.4; border-radius: 10px; }
+                                .stamp.paid { color: #16a34a; border-color: #16a34a; }
+                                .stamp.unpaid { color: #dc2626; border-color: #dc2626; }
+                            </style>
+                        </head>
+                        <body>
+                            ${printContent.innerHTML}
+                        </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 250);
+            }
+        }
+    };
+
     if (loading) {
         return <LoadingSpinner />;
     }
@@ -156,126 +216,124 @@ export default function AdminOrderDetailsPage() {
 
     return (
         <>
-            <div className="no-print">
-                <div className="container mx-auto max-w-2xl px-4 py-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <Button asChild variant="ghost">
-                            <Link href="/admin/orders">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Orders
-                            </Link>
-                        </Button>
-                        <Button variant="outline" onClick={() => window.print()}>
-                            <Printer className="mr-2 h-4 w-4" />
-                            Print Invoice
-                        </Button>
-                    </div>
-                    <div>
-                        <Card>
-                            <CardHeader>
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <CardTitle>Order #{order.orderNumber}</CardTitle>
-                                        <CardDescription>Placed on {new Date(order.date).toLocaleDateString()}</CardDescription>
-                                    </div>
-                                    <Badge variant={getStatusVariant(order.status)} className="capitalize text-lg">
-                                        {order.status.replace('-', ' ')}
-                                    </Badge>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <OrderStatusStepper currentStatus={order.status} />
-                                <Separator />
+            <div className="container mx-auto max-w-2xl px-4 py-6">
+                <div className="flex justify-between items-center mb-4">
+                    <Button asChild variant="ghost">
+                        <Link href="/admin/orders">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Orders
+                        </Link>
+                    </Button>
+                    <Button variant="outline" onClick={handlePrint}>
+                        <Printer className="mr-2 h-4 w-4" />
+                        Print Invoice
+                    </Button>
+                </div>
+                <div>
+                    <Card>
+                        <CardHeader>
+                            <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="text-lg font-semibold mb-2">Order Summary</h3>
-                                    {order.items.map(item => (
-                                        <div key={item.id} className="flex items-center gap-4 py-3">
-                                            <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
-                                            <div className="flex-grow">
-                                                <p className="font-semibold">{item.name}</p>
-                                                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                    <CardTitle>Order #{order.orderNumber}</CardTitle>
+                                    <CardDescription>Placed on {new Date(order.date).toLocaleDateString()}</CardDescription>
+                                </div>
+                                <Badge variant={getStatusVariant(order.status)} className="capitalize text-lg">
+                                    {order.status.replace('-', ' ')}
+                                </Badge>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <OrderStatusStepper currentStatus={order.status} />
+                            <Separator />
+                            <div>
+                                <h3 className="text-lg font-semibold mb-2">Order Summary</h3>
+                                {order.items.map(item => (
+                                    <div key={item.id} className="flex items-center gap-4 py-3">
+                                        <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
+                                        <div className="flex-grow">
+                                            <p className="font-semibold">{item.name}</p>
+                                            <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                        </div>
+                                        <p className="font-semibold">৳{item.price * item.quantity}</p>
+                                    </div>
+                                ))}
+                            </div>
+                            <Separator />
+                            <div className="space-y-4">
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Subtotal</span>
+                                    <span>৳{subtotal.toFixed(2)}</span>
+                                </div>
+                                {voucherDiscount > 0 && (
+                                    <div className="flex justify-between text-green-600">
+                                        <span className="text-muted-foreground">Voucher Discount</span>
+                                        <span>- ৳{voucherDiscount.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Shipping Fee</span>
+                                    <span>৳{order.shippingFee.toFixed(2)}</span>
+                                </div>
+                                {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Cash on Delivery Fee</span>
+                                        <span>৳{order.cashOnDeliveryFee.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <Separator />
+                                <div className="flex justify-between font-bold text-xl">
+                                    <span>Total</span>
+                                    <span>৳{order.total}</span>
+                                </div>
+                            </div>
+                            <Separator />
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold">Shipping &amp; Payment</h3>
+                                <div className="flex items-start gap-3">
+                                    <MapPin className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
+                                    <div>
+                                        <p className="font-semibold">Shipping Address</p>
+                                        <p className="text-muted-foreground text-sm">
+                                            {order.shippingAddress.fullName}, {order.shippingAddress.address}, {order.shippingAddress.area}, {order.shippingAddress.city}, Phone: {order.shippingAddress.phone}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <CreditCard className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
+                                    <div>
+                                        <p className="font-semibold">Payment Method</p>
+                                        <p className="text-muted-foreground text-sm capitalize">{order.paymentMethod.replace('-', ' ')}</p>
+                                    </div>
+                                </div>
+                                {order.paymentMethod !== 'cash-on-delivery' && (
+                                    <>
+                                        {order.paymentAccountNumber && (
+                                            <div className="flex items-start gap-3">
+                                                <Smartphone className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
+                                                <div>
+                                                    <p className="font-semibold">Payment From</p>
+                                                    <p className="text-muted-foreground text-sm font-mono">{order.paymentAccountNumber}</p>
+                                                </div>
                                             </div>
-                                            <p className="font-semibold">৳{item.price * item.quantity}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                                <Separator />
-                                <div className="space-y-4">
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Subtotal</span>
-                                        <span>৳{subtotal.toFixed(2)}</span>
-                                    </div>
-                                    {voucherDiscount > 0 && (
-                                        <div className="flex justify-between text-green-600">
-                                            <span className="text-muted-foreground">Voucher Discount</span>
-                                            <span>- ৳{voucherDiscount.toFixed(2)}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Shipping Fee</span>
-                                        <span>৳{order.shippingFee.toFixed(2)}</span>
-                                    </div>
-                                    {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Cash on Delivery Fee</span>
-                                            <span>৳{order.cashOnDeliveryFee.toFixed(2)}</span>
-                                        </div>
-                                    )}
-                                    <Separator />
-                                    <div className="flex justify-between font-bold text-xl">
-                                        <span>Total</span>
-                                        <span>৳{order.total}</span>
-                                    </div>
-                                </div>
-                                <Separator />
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-semibold">Shipping &amp; Payment</h3>
-                                    <div className="flex items-start gap-3">
-                                        <MapPin className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
-                                        <div>
-                                            <p className="font-semibold">Shipping Address</p>
-                                            <p className="text-muted-foreground text-sm">
-                                                {order.shippingAddress.fullName}, {order.shippingAddress.address}, {order.shippingAddress.area}, {order.shippingAddress.city}, Phone: {order.shippingAddress.phone}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                        <CreditCard className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
-                                        <div>
-                                            <p className="font-semibold">Payment Method</p>
-                                            <p className="text-muted-foreground text-sm capitalize">{order.paymentMethod.replace('-', ' ')}</p>
-                                        </div>
-                                    </div>
-                                    {order.paymentMethod !== 'cash-on-delivery' && (
-                                        <>
-                                            {order.paymentAccountNumber && (
-                                                <div className="flex items-start gap-3">
-                                                    <Smartphone className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
-                                                    <div>
-                                                        <p className="font-semibold">Payment From</p>
-                                                        <p className="text-muted-foreground text-sm font-mono">{order.paymentAccountNumber}</p>
-                                                    </div>
+                                        )}
+                                        {order.transactionId && (
+                                            <div className="flex items-start gap-3">
+                                                <CheckCircle className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
+                                                <div>
+                                                    <p className="font-semibold">Transaction ID</p>
+                                                    <p className="text-muted-foreground text-sm font-mono">{order.transactionId}</p>
                                                 </div>
-                                            )}
-                                            {order.transactionId && (
-                                                <div className="flex items-start gap-3">
-                                                    <CheckCircle className="h-5 w-5 mt-1 text-muted-foreground flex-shrink-0" />
-                                                    <div>
-                                                        <p className="font-semibold">Transaction ID</p>
-                                                        <p className="text-muted-foreground text-sm font-mono">{order.transactionId}</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
 
-            <div className="print-area">
+            <div id="printable-invoice" className="hidden">
               {order && <PrintableInvoice order={order} subtotal={subtotal} voucherDiscount={voucherDiscount} />}
             </div>
         </>
