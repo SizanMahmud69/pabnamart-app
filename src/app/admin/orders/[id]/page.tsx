@@ -51,6 +51,17 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
             </div>
         </div>
 
+        <div className="payment-details">
+            <h3 className="section-title">Payment Information</h3>
+            <p><strong>Payment Method:</strong> <span className="capitalize">{order.paymentMethod.replace('-', ' ')}</span></p>
+            {order.paymentMethod !== 'cash-on-delivery' && (
+                <>
+                    {order.paymentAccountNumber && <p><strong>Payment From:</strong> {order.paymentAccountNumber}</p>}
+                    {order.transactionId && <p><strong>Transaction ID:</strong> {order.transactionId}</p>}
+                </>
+            )}
+        </div>
+
         <table className="items-table">
             <thead>
                 <tr>
@@ -78,7 +89,9 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
                     <tr><td>Subtotal:</td><td className="text-right">৳{subtotal.toFixed(2)}</td></tr>
                     {voucherDiscount > 0 && <tr><td>Voucher Discount:</td><td className="text-right">- ৳{voucherDiscount.toFixed(2)}</td></tr>}
                     <tr><td>Shipping Fee:</td><td className="text-right">৳{order.shippingFee.toFixed(2)}</td></tr>
-                    {order.cashOnDeliveryFee > 0 && <tr><td>COD Fee:</td><td className="text-right">৳{order.cashOnDeliveryFee.toFixed(2)}</td></tr>}
+                    {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 ? (
+                        <tr><td>COD Fee:</td><td className="text-right">৳{order.cashOnDeliveryFee.toFixed(2)}</td></tr>
+                    ) : null }
                     <tr className="grand-total"><td>Grand Total:</td><td className="text-right">৳{order.total}</td></tr>
                 </tbody>
             </table>
@@ -164,7 +177,7 @@ export default function AdminOrderDetailsPage() {
                             display: grid;
                             grid-template-columns: 1fr 1fr;
                             gap: 20px;
-                            margin-bottom: 40px;
+                            margin-bottom: 20px;
                             font-size: 0.9em;
                         }
                         .details-grid div p {
@@ -173,6 +186,24 @@ export default function AdminOrderDetailsPage() {
                         .details-grid .text-right {
                             text-align: right;
                         }
+                        .payment-details {
+                           margin-bottom: 40px;
+                           padding: 15px;
+                           background-color: #f9fafb;
+                           border-radius: 8px;
+                           border: 1px solid #e5e7eb;
+                       }
+                       .payment-details .section-title {
+                           font-size: 1.1em;
+                           font-weight: 600;
+                           margin-top: 0;
+                           margin-bottom: 15px;
+                           color: #111827;
+                       }
+                       .payment-details p {
+                           margin: 0 0 4px;
+                           font-size: 0.9em;
+                       }
                         .items-table {
                             width: 100%;
                             border-collapse: collapse;
@@ -408,3 +439,4 @@ export default function AdminOrderDetailsPage() {
     );
 
     
+}
