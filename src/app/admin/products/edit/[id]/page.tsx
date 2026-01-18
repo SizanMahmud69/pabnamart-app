@@ -38,7 +38,8 @@ export default function EditProductPage() {
     const [flashSaleDiscount, setFlashSaleDiscount] = useState<number | undefined>(undefined);
     const [categories, setCategories] = useState<Category[]>([]);
     const inputFileRef = useRef<HTMLInputElement>(null);
-
+    const [colors, setColors] = useState('');
+    const [sizes, setSizes] = useState('');
 
     useEffect(() => {
         const categoriesRef = collection(db, 'categories');
@@ -69,6 +70,8 @@ export default function EditProductPage() {
             setIsFlashSale(productToEdit.isFlashSale || false);
             setFlashSaleEndDate(productToEdit.flashSaleEndDate || '');
             setFlashSaleDiscount(productToEdit.flashSaleDiscount);
+            setColors(productToEdit.colors?.join(', ') || '');
+            setSizes(productToEdit.sizes?.join(', ') || '');
         }
     }, [products, productId]);
 
@@ -114,9 +117,10 @@ export default function EditProductPage() {
                 }
             } catch (error) {
                 console.error("Image upload failed:", error);
+                const errorMessage = error instanceof Error ? error.message : "Please check your network connection or browser extensions.";
                 toast({
-                   title: "Error",
-                   description: "Failed to upload images. Please check your storage configuration.",
+                   title: "Image Upload Failed",
+                   description: `Could not upload images. ${errorMessage}`,
                    variant: "destructive"
                });
                 setIsLoading(false);
@@ -147,6 +151,9 @@ export default function EditProductPage() {
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
             flashSaleDiscount: isFlashSale ? (flashSaleDiscount || undefined) : undefined,
             returnPolicy: returnPolicyValue ? parseInt(returnPolicyValue, 10) : undefined,
+            colors: colors ? colors.split(',').map(c => c.trim()).filter(Boolean) : [],
+            sizes: sizes ? sizes.split(',').map(s => s.trim()).filter(Boolean) : [],
+            createdAt: product.createdAt,
         };
 
         try {
@@ -258,6 +265,19 @@ export default function EditProductPage() {
                                         ))}
                                     </SelectContent>
                                 </Select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 border-t pt-4 mt-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="colors">Colors</Label>
+                                    <Input id="colors" value={colors} onChange={(e) => setColors(e.target.value)} placeholder="e.g., Red, Blue, Green" disabled={isLoading} />
+                                    <p className="text-xs text-muted-foreground">Comma-separated values.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="sizes">Sizes</Label>
+                                    <Input id="sizes" value={sizes} onChange={(e) => setSizes(e.target.value)} placeholder="e.g., S, M, L, XL" disabled={isLoading} />
+                                    <p className="text-xs text-muted-foreground">Comma-separated values.</p>
+                                </div>
                             </div>
                             
                             <div className="space-y-4 border-t pt-4">
