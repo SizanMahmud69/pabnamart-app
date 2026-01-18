@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, Suspense, useMemo, useTransition } from 'react';
@@ -80,11 +81,14 @@ function HomePageContent() {
     };
     
     const banners = activeOffers.map(offer => {
+      const productForBanner = allProducts.find(p => p.category === offer.name);
       const categoryInfo = categoryImageMap[offer.name] || categoryImageMap.default;
+      const bannerImage = productForBanner?.images?.[0] || categoryInfo.image;
+
       return {
         title: `${offer.discount}% Off on ${offer.name}`,
         description: `Get the best deals on our ${offer.name} collection.`,
-        image: categoryInfo.image,
+        image: bannerImage,
         link: `/category/${encodeURIComponent(offer.name)}`,
         aiHint: categoryInfo.aiHint,
         Icon: Percent,
@@ -93,10 +97,13 @@ function HomePageContent() {
     });
 
     if (flashSaleProducts.length > 0) {
+      const flashProductForBanner = flashSaleProducts[0];
+      const bannerImage = flashProductForBanner?.images?.[0] || categoryImageMap["Flash Sale"].image;
+      
       const flashSaleBanner = {
         title: "Flash Sale Live Now!",
         description: "Limited time offers. Grab them before they're gone!",
-        image: categoryImageMap["Flash Sale"].image,
+        image: bannerImage,
         link: "/flash-sale",
         aiHint: categoryImageMap["Flash Sale"].aiHint,
         Icon: Zap,
@@ -106,11 +113,16 @@ function HomePageContent() {
     }
 
     if (banners.length === 0) {
-      return [defaultBanner];
+      const firstProduct = allProducts[0];
+      const defaultBannerImage = firstProduct?.images?.[0] || defaultBanner.image;
+      return [{
+        ...defaultBanner,
+        image: defaultBannerImage,
+      }];
     }
 
     return banners;
-  }, [activeOffers, flashSaleProducts]);
+  }, [activeOffers, flashSaleProducts, allProducts]);
   
   const showRecommendations = searchQuery.trim().length > 0;
   
