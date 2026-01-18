@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -52,30 +51,42 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   }
   
   useEffect(() => {
+    setCardStyle({}); // Reset style for new product/image
     const img = new window.Image();
     img.crossOrigin = "Anonymous";
     img.src = imageUrl;
-    img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
 
-        canvas.width = 1;
-        canvas.height = 1;
-        ctx.drawImage(img, 0, 0, 1, 1);
-        
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      canvas.width = 1;
+      canvas.height = 1;
+
+      // Draw the center of the image onto the 1x1 canvas to get an average color
+      const sourceSize = Math.min(img.width, img.height);
+      const sourceX = (img.width - sourceSize) / 2;
+      const sourceY = (img.height - sourceSize) / 2;
+      ctx.drawImage(img, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 1, 1);
+      
+      try {
         const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
         const [h, s, l] = rgbToHsl(r, g, b);
 
-        if (s > 10 && l > 20 && l < 80) { 
-            setCardStyle({
-                backgroundColor: `hsl(${h}, ${s}%, 95%)`,
-            });
+        // Check if the color is not too gray/white/black to avoid bland backgrounds
+        if (s > 10 && l < 95 && l > 5) { 
+          setCardStyle({
+            backgroundColor: `hsl(${h}, 50%, 96%)`,
+          });
         }
+      } catch (e) {
+        console.error(`CORS error getting image data for ${imageUrl}. Cannot extract color.`, e);
+      }
     };
     img.onerror = () => {
-        // Could not load image, do nothing
-    }
+      // Failed to load image, do nothing, card will have default background
+    };
   }, [imageUrl]);
 
 
