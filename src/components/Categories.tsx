@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -61,10 +60,10 @@ export default function Categories() {
             <h2 className="text-2xl font-bold mb-4">Categories</h2>
             <div className="relative">
                 <Carousel setApi={setApi} opts={{ align: "start", dragFree: true }} className="w-full">
-                    <CarouselContent className="-ml-2">
+                    <CarouselContent className="-ml-4">
                         {loading ? (
                             Array.from({ length: 8 }).map((_, i) => (
-                                <CarouselItem key={i} className="pl-2 basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8">
+                                <CarouselItem key={i} className="pl-4 basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8">
                                     <div className="flex flex-col items-center gap-2 p-2 w-24">
                                         <Skeleton className="w-16 h-16 rounded-full" />
                                         <Skeleton className="h-4 w-20" />
@@ -73,7 +72,7 @@ export default function Categories() {
                             ))
                         ) : (
                             categories.map((category) => (
-                                <CarouselItem key={category.id} className="pl-2 basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8">
+                                <CarouselItem key={category.id} className="pl-4 basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8">
                                     <Link href={`/category/${encodeURIComponent(category.name)}`} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-purple-100/50 transition-colors w-24 text-center">
                                         <div className="relative w-16 h-16 rounded-full flex items-center justify-center overflow-hidden border">
                                             {category.image ? (
