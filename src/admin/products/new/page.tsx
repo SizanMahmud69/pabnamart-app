@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Loader2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
-import type { Product, Category } from '@/types';
+import type { Product, Category, ProductVariant } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
@@ -20,6 +20,39 @@ import app from '@/lib/firebase';
 import type { PutBlobResult } from '@vercel/blob';
 
 const db = getFirestore(app);
+
+const parseVariantString = (str: string): ProductVariant[] => {
+    if (!str.trim()) return [];
+    const variantsMap = new Map<string, number>();
+
+    str.split(',').forEach(part => {
+        const trimmedPart = part.trim();
+        if (!trimmedPart) return;
+
+        const lastSpaceIndex = trimmedPart.lastIndexOf(' ');
+        
+        let name: string;
+        let stock: number;
+
+        if (lastSpaceIndex === -1 || isNaN(Number(trimmedPart.substring(lastSpaceIndex + 1)))) {
+            name = trimmedPart;
+            stock = 0;
+        } else {
+            name = trimmedPart.substring(0, lastSpaceIndex).trim();
+            stock = parseInt(trimmedPart.substring(lastSpaceIndex + 1), 10);
+        }
+        
+        if (name) {
+            // Use case-insensitive matching for aggregation
+            const existingKey = Array.from(variantsMap.keys()).find(k => k.toLowerCase() === name.toLowerCase());
+            const keyToUse = existingKey || name;
+            variantsMap.set(keyToUse, (variantsMap.get(keyToUse) || 0) + stock);
+        }
+    });
+
+    return Array.from(variantsMap.entries()).map(([name, stock]) => ({ name, stock }));
+};
+
 
 export default function NewProductPage() {
     const router = useRouter();
@@ -110,6 +143,12 @@ export default function NewProductPage() {
 
         const originalPriceValue = form.get('originalPrice') as string;
         const returnPolicyValue = form.get('returnPolicy') as string;
+        const colorsInput = form.get('colors') as string;
+        const sizesInput = form.get('sizes') as string;
+
+        const parsedColors = parseVariantString(colorsInput);
+        const parsedSizes = parseVariantString(sizesInput);
+
 
         const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
             name: form.get('name') as string,
@@ -125,8 +164,8 @@ export default function NewProductPage() {
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
             flashSaleDiscount: isFlashSale ? (flashSaleDiscount || undefined) : undefined,
             returnPolicy: returnPolicyValue ? parseInt(returnPolicyValue, 10) : undefined,
-            colors: colors ? colors.split(',').map(c => c.trim()).filter(Boolean) : [],
-            sizes: sizes ? sizes.split(',').map(s => s.trim()).filter(Boolean) : [],
+            colors: parsedColors,
+            sizes: parsedSizes,
             createdAt: new Date().toISOString(),
         };
 
@@ -209,7 +248,7 @@ export default function NewProductPage() {
                                     <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 99" disabled={isLoading} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="stock">Product Stock</Label>
+                                    <Label htmlFor="stock">Total Stock</Label>
                                     <Input id="stock" name="stock" type="number" placeholder="e.g., 50" required disabled={isLoading} />
                                 </div>
                             </div>
@@ -232,13 +271,13 @@ export default function NewProductPage() {
                             <div className="grid grid-cols-2 gap-4 border-t pt-4 mt-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="colors">Colors</Label>
-                                    <Input id="colors" value={colors} onChange={(e) => setColors(e.target.value)} placeholder="e.g., Red, Blue, Green" disabled={isLoading} />
-                                    <p className="text-xs text-muted-foreground">Comma-separated values.</p>
+                                    <Input id="colors" name="colors" value={colors} onChange={(e) => setColors(e.target.value)} placeholder="e.g., Red 10, Blue 20" disabled={isLoading} />
+                                    <p className="text-xs text-muted-foreground">Comma-separated `Name Quantity` format.</p>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="sizes">Sizes</Label>
-                                    <Input id="sizes" value={sizes} onChange={(e) => setSizes(e.target.value)} placeholder="e.g., S, M, L, XL" disabled={isLoading} />
-                                    <p className="text-xs text-muted-foreground">Comma-separated values.</p>
+                                    <Input id="sizes" name="sizes" value={sizes} onChange={(e) => setSizes(e.target.value)} placeholder="e.g., S 15, M 25, L 10" disabled={isLoading} />
+                                    <p className="text-xs text-muted-foreground">Comma-separated `Name Quantity` format.</p>
                                 </div>
                             </div>
                             
@@ -312,5 +351,3 @@ export default function NewProductPage() {
         </div>
     );
 }
-
-    
