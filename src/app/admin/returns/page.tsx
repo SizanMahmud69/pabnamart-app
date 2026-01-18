@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle, Undo2, Loader2, PackageCheck, Gift } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, where, writeBatch, arrayUnion } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order, User, Voucher } from '@/types';
@@ -15,7 +14,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { createAndSendNotification } from '@/app/actions';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 const db = getFirestore(app);
 
@@ -186,80 +185,89 @@ export default function AdminReturnManagement() {
                         <CardDescription>Manage customer return requests and approvals.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Order['status'])}>
-                            <ScrollArea className="w-full whitespace-nowrap rounded-md">
-                                <TabsList className="inline-flex w-max mb-4">
-                                    {statusTabs.map(tab => (
-                                        <TabsTrigger key={tab} value={tab} className="capitalize">{tab.replace('-', ' ')}</TabsTrigger>
+                        <Carousel opts={{ align: "start", dragFree: true }} className="w-full mb-4">
+                            <CarouselContent className="-ml-2">
+                                {statusTabs.map(tab => (
+                                    <CarouselItem key={tab} className="pl-2 basis-auto">
+                                        <Button
+                                            variant={activeTab === tab ? "default" : "outline"}
+                                            onClick={() => setActiveTab(tab)}
+                                            size="sm"
+                                            className="capitalize"
+                                        >
+                                            {tab.replace('-', ' ')}
+                                        </Button>
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8" />
+                            <CarouselNext className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8" />
+                        </Carousel>
+
+                        <div className="mt-4">
+                           {filteredOrders.length > 0 ? (
+                                <div className="space-y-4">
+                                    {filteredOrders.map(order => (
+                                         <Card key={order.id} className="shadow-md">
+                                            <CardHeader className="flex flex-row items-start justify-between">
+                                                <div>
+                                                    <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
+                                                    <CardDescription>{new Date(order.date).toLocaleString()} by {users[order.userId]?.displayName || '...'}</CardDescription>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace('-', ' ')}</Badge>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                            <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
+                                                                <Eye className="mr-2 h-4 w-4" />
+                                                                <span>View Details</span>
+                                                            </DropdownMenuItem>
+                                                            {order.status === 'return-requested' && (
+                                                                <>
+                                                                    <DropdownMenuItem onSelect={() => handleApproveRequest(order)}>
+                                                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                                                        <span>Approve Request</span>
+                                                                    </DropdownMenuItem>
+                                                                     <DropdownMenuItem onSelect={() => handleDeclineRequest(order, false)} className="text-destructive">
+                                                                        <XCircle className="mr-2 h-4 w-4" />
+                                                                        <span>Decline Request</span>
+                                                                    </DropdownMenuItem>
+                                                                </>
+                                                            )}
+                                                            {order.status === 'return-shipped' && (
+                                                                <>
+                                                                     <DropdownMenuItem onSelect={() => handleFinalizeReturn(order)}>
+                                                                        <PackageCheck className="mr-2 h-4 w-4" />
+                                                                        <span>Finalize Return</span>
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onSelect={() => handleDeclineRequest(order, true)} className="text-destructive">
+                                                                        <XCircle className="mr-2 h-4 w-4" />
+                                                                        <span>Reject Item</span>
+                                                                    </DropdownMenuItem>
+                                                                </>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm font-semibold">Total Amount: <span className="font-bold text-lg">৳{order.total.toFixed(2)}</span></p>
+                                            </CardContent>
+                                        </Card>
                                     ))}
-                                </TabsList>
-                                <ScrollBar orientation="horizontal" />
-                            </ScrollArea>
-                            <TabsContent value={activeTab} className="mt-4">
-                               {filteredOrders.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {filteredOrders.map(order => (
-                                             <Card key={order.id} className="shadow-md">
-                                                <CardHeader className="flex flex-row items-start justify-between">
-                                                    <div>
-                                                        <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
-                                                        <CardDescription>{new Date(order.date).toLocaleString()} by {users[order.userId]?.displayName || '...'}</CardDescription>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace('-', ' ')}</Badge>
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                                <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
-                                                                    <Eye className="mr-2 h-4 w-4" />
-                                                                    <span>View Details</span>
-                                                                </DropdownMenuItem>
-                                                                {order.status === 'return-requested' && (
-                                                                    <>
-                                                                        <DropdownMenuItem onSelect={() => handleApproveRequest(order)}>
-                                                                            <CheckCircle className="mr-2 h-4 w-4" />
-                                                                            <span>Approve Request</span>
-                                                                        </DropdownMenuItem>
-                                                                         <DropdownMenuItem onSelect={() => handleDeclineRequest(order, false)} className="text-destructive">
-                                                                            <XCircle className="mr-2 h-4 w-4" />
-                                                                            <span>Decline Request</span>
-                                                                        </DropdownMenuItem>
-                                                                    </>
-                                                                )}
-                                                                {order.status === 'return-shipped' && (
-                                                                    <>
-                                                                         <DropdownMenuItem onSelect={() => handleFinalizeReturn(order)}>
-                                                                            <PackageCheck className="mr-2 h-4 w-4" />
-                                                                            <span>Finalize Return</span>
-                                                                        </DropdownMenuItem>
-                                                                        <DropdownMenuItem onSelect={() => handleDeclineRequest(order, true)} className="text-destructive">
-                                                                            <XCircle className="mr-2 h-4 w-4" />
-                                                                            <span>Reject Item</span>
-                                                                        </DropdownMenuItem>
-                                                                    </>
-                                                                )}
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent>
-                                                    <p className="text-sm font-semibold">Total Amount: <span className="font-bold text-lg">৳{order.total.toFixed(2)}</span></p>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                    </div>
-                               ) : (
-                                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                                        <p className="text-muted-foreground">No orders found for this status.</p>
-                                    </div>
-                               )}
-                            </TabsContent>
-                        </Tabs>
+                                </div>
+                           ) : (
+                                <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                                    <p className="text-muted-foreground">No orders found for this status.</p>
+                                </div>
+                           )}
+                        </div>
                     </CardContent>
                 </Card>
             </main>

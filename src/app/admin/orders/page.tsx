@@ -7,15 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order, User } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { createAndSendNotification } from '@/app/actions';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 const db = getFirestore(app);
 
@@ -171,86 +170,95 @@ export default function AdminOrderManagement() {
                         <CardDescription>View, manage, and process all customer orders.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Tabs value={activeTab} onValueChange={setActiveTab}>
-                            <ScrollArea className="w-full whitespace-nowrap rounded-md">
-                                <TabsList className="inline-flex w-max mb-4">
-                                    {allStatusTabs.map(tab => (
-                                        <TabsTrigger key={tab} value={tab} className="capitalize">{tab}</TabsTrigger>
-                                    ))}
-                                </TabsList>
-                                <ScrollBar orientation="horizontal" />
-                            </ScrollArea>
-                            <TabsContent value={activeTab} className="mt-4">
-                               {filteredOrders.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {filteredOrders.map(order => (
-                                             <Card key={order.id} className="shadow-md">
-                                                <CardHeader className="flex flex-row items-start justify-between">
-                                                    <div>
-                                                        <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
-                                                        <CardDescription>{new Date(order.date).toLocaleString()} by {users[order.userId]?.displayName || '...'}</CardDescription>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                         <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                                    <span className="sr-only">Open menu</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                                <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
-                                                                    <Eye className="mr-2 h-4 w-4" />
-                                                                    <span>View Details</span>
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSub>
-                                                                    <DropdownMenuSubTrigger>
-                                                                        <span>Change Status</span>
-                                                                    </DropdownMenuSubTrigger>
-                                                                    <DropdownMenuPortal>
-                                                                        <DropdownMenuSubContent>
-                                                                            {statusChangeOptions.map(status => (
-                                                                                <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order, status)} className="capitalize">
-                                                                                    {status}
-                                                                                </DropdownMenuItem>
-                                                                            ))}
-                                                                        </DropdownMenuSubContent>
-                                                                    </DropdownMenuPortal>
-                                                                </DropdownMenuSub>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="space-y-2">
-                                                    {order.items.map(item => (
-                                                        <div key={item.id} className="flex items-center gap-4 py-2">
-                                                            <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
-                                                            <div className="flex-grow">
-                                                                <p className="font-semibold text-sm">{item.name}</p>
-                                                                <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                                                            </div>
-                                                            <p className="font-semibold text-sm">৳{item.price * item.quantity}</p>
+                        <Carousel opts={{ align: "start", dragFree: true }} className="w-full mb-4">
+                            <CarouselContent className="-ml-2">
+                                {allStatusTabs.map(tab => (
+                                    <CarouselItem key={tab} className="pl-2 basis-auto">
+                                        <Button
+                                            variant={activeTab === tab ? "default" : "outline"}
+                                            onClick={() => setActiveTab(tab)}
+                                            size="sm"
+                                            className="capitalize"
+                                        >
+                                            {tab}
+                                        </Button>
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8" />
+                            <CarouselNext className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8" />
+                        </Carousel>
+
+                        <div className="mt-4">
+                           {filteredOrders.length > 0 ? (
+                                <div className="space-y-4">
+                                    {filteredOrders.map(order => (
+                                         <Card key={order.id} className="shadow-md">
+                                            <CardHeader className="flex flex-row items-start justify-between">
+                                                <div>
+                                                    <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
+                                                    <CardDescription>{new Date(order.date).toLocaleString()} by {users[order.userId]?.displayName || '...'}</CardDescription>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                     <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                            <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
+                                                                <Eye className="mr-2 h-4 w-4" />
+                                                                <span>View Details</span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSub>
+                                                                <DropdownMenuSubTrigger>
+                                                                    <span>Change Status</span>
+                                                                </DropdownMenuSubTrigger>
+                                                                <DropdownMenuPortal>
+                                                                    <DropdownMenuSubContent>
+                                                                        {statusChangeOptions.map(status => (
+                                                                            <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order, status)} className="capitalize">
+                                                                                {status}
+                                                                            </DropdownMenuItem>
+                                                                        ))}
+                                                                    </DropdownMenuSubContent>
+                                                                </DropdownMenuPortal>
+                                                            </DropdownMenuSub>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="space-y-2">
+                                                {order.items.map(item => (
+                                                    <div key={item.id} className="flex items-center gap-4 py-2">
+                                                        <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
+                                                        <div className="flex-grow">
+                                                            <p className="font-semibold text-sm">{item.name}</p>
+                                                            <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                                                         </div>
-                                                    ))}
-                                                </CardContent>
-                                                <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
-                                                    <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
-                                                    <div className="text-right">
-                                                        <p className="text-sm text-muted-foreground">Total Amount</p>
-                                                        <p className="text-xl font-bold">৳{order.total.toFixed(2)}</p>
+                                                        <p className="font-semibold text-sm">৳{item.price * item.quantity}</p>
                                                     </div>
-                                                </CardFooter>
-                                            </Card>
-                                        ))}
-                                    </div>
-                               ) : (
-                                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                                        <p className="text-muted-foreground">No orders found for this status.</p>
-                                    </div>
-                               )}
-                            </TabsContent>
-                        </Tabs>
+                                                ))}
+                                            </CardContent>
+                                            <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
+                                                <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
+                                                <div className="text-right">
+                                                    <p className="text-sm text-muted-foreground">Total Amount</p>
+                                                    <p className="text-xl font-bold">৳{order.total.toFixed(2)}</p>
+                                                </div>
+                                            </CardFooter>
+                                        </Card>
+                                    ))}
+                                </div>
+                           ) : (
+                                <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                                    <p className="text-muted-foreground">No orders found for this status.</p>
+                                </div>
+                           )}
+                        </div>
                     </CardContent>
                 </Card>
             </main>
