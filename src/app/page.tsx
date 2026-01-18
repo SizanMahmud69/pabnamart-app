@@ -20,27 +20,27 @@ import { cn } from '@/lib/utils';
 import ProductCardSkeleton from '@/components/ProductCardSkeleton';
 
 const categoryImageMap: { [key: string]: { image: string; aiHint: string } } = {
-  "Flash Sale": { image: "https://picsum.photos/seed/flashsale/1200/400", aiHint: "flash sale" },
-  "Electronics": { image: "https://picsum.photos/seed/electronics/1200/400", aiHint: "electronics gadgets" },
-  "Groceries": { image: "https://picsum.photos/seed/groceries/1200/400", aiHint: "fresh food" },
-  "Women's Fashion": { image: "https://picsum.photos/seed/fashion/1200/400", aiHint: "stylish clothes" },
-  "Men's Fashion": { image: "https://picsum.photos/seed/menfashion/1200/400", aiHint: "men clothes" },
-  "Cosmetics": { image: "https://picsum.photos/seed/cosmetics/1200/400", aiHint: "makeup beauty" },
-  "Mobile & Computers": { image: "https://picsum.photos/seed/computers/1200/400", aiHint: "laptops mobile" },
-  "default": { image: "https://picsum.photos/seed/sale/1200/400", aiHint: "general sale" }
+  "Flash Sale": { image: "https://picsum.photos/seed/flashsale/800/600", aiHint: "flash sale" },
+  "Electronics": { image: "https://picsum.photos/seed/electronics/800/600", aiHint: "electronics gadgets" },
+  "Groceries": { image: "https://picsum.photos/seed/groceries/800/600", aiHint: "fresh food" },
+  "Women's Fashion": { image: "https://picsum.photos/seed/fashion/800/600", aiHint: "stylish clothes" },
+  "Men's Fashion": { image: "https://picsum.photos/seed/menfashion/800/600", aiHint: "men clothes" },
+  "Cosmetics": { image: "https://picsum.photos/seed/cosmetics/800/600", aiHint: "makeup beauty" },
+  "Mobile & Computers": { image: "https://picsum.photos/seed/computers/800/600", aiHint: "laptops mobile" },
+  "default": { image: "https://picsum.photos/seed/sale/800/600", aiHint: "general sale" }
 };
 
 const defaultBanner = {
   title: "Welcome to PabnaMart",
   description: "Your one-stop shop for all your needs. Quality products, great prices.",
-  image: "https://picsum.photos/seed/welcome/1200/400",
+  backgroundImage: "https://picsum.photos/seed/welcome/800/600",
   link: "/products",
   aiHint: "shopping store",
   Icon: ShoppingBag,
   alignment: 'center'
 };
 
-const bannerLayouts = ['left', 'right', 'center'];
+const bannerLayouts = ['left', 'right'];
 
 function HomePageContent() {
   const router = useRouter();
@@ -58,15 +58,12 @@ function HomePageContent() {
 
   useEffect(() => {
     if (allProducts.length > 0) {
-      // New arrivals: sort by ID descending (assuming higher ID is newer)
       const sortedNew = [...allProducts].sort((a, b) => b.id - a.id);
       setNewArrivals(sortedNew.slice(0, 6));
 
-      // Top rated: sort by rating descending
       const sortedRated = [...allProducts].sort((a, b) => b.rating - a.rating);
       setTopRated(sortedRated.slice(0, 6));
-
-      // Flash sale products
+      
       const { products: saleProducts } = getFlashSaleProducts();
       setFlashSaleProducts(saleProducts);
     }
@@ -81,29 +78,33 @@ function HomePageContent() {
     };
     
     const banners = activeOffers.map(offer => {
-      const productForBanner = allProducts.find(p => p.category === offer.name);
-      const categoryInfo = categoryImageMap[offer.name] || categoryImageMap.default;
-      const bannerImage = productForBanner?.images?.[0] || categoryInfo.image;
+        const productsInCategory = allProducts.filter(p => p.category === offer.name);
+        let randomProduct = null;
+        if (productsInCategory.length > 0) {
+            randomProduct = productsInCategory[Math.floor(Math.random() * productsInCategory.length)];
+        }
+        const categoryInfo = categoryImageMap[offer.name] || categoryImageMap.default;
 
-      return {
-        title: `${offer.discount}% Off on ${offer.name}`,
-        description: `Get the best deals on our ${offer.name} collection.`,
-        image: bannerImage,
-        link: `/category/${encodeURIComponent(offer.name)}`,
-        aiHint: categoryInfo.aiHint,
-        Icon: Percent,
-        alignment: getNextLayout(),
-      };
+        return {
+            title: `${offer.discount}% Off on ${offer.name}`,
+            description: `Get the best deals on our ${offer.name} collection.`,
+            productImage: randomProduct?.images?.[0],
+            backgroundImage: categoryInfo.image,
+            link: `/category/${encodeURIComponent(offer.name)}`,
+            aiHint: categoryInfo.aiHint,
+            Icon: Percent,
+            alignment: getNextLayout(),
+        };
     });
 
     if (flashSaleProducts.length > 0) {
-      const flashProductForBanner = flashSaleProducts[0];
-      const bannerImage = flashProductForBanner?.images?.[0] || categoryImageMap["Flash Sale"].image;
+      const flashProductForBanner = flashSaleProducts[Math.floor(Math.random() * flashSaleProducts.length)];
       
       const flashSaleBanner = {
         title: "Flash Sale Live Now!",
         description: "Limited time offers. Grab them before they're gone!",
-        image: bannerImage,
+        productImage: flashProductForBanner?.images?.[0],
+        backgroundImage: categoryImageMap["Flash Sale"].image,
         link: "/flash-sale",
         aiHint: categoryImageMap["Flash Sale"].aiHint,
         Icon: Zap,
@@ -114,10 +115,10 @@ function HomePageContent() {
 
     if (banners.length === 0) {
       const firstProduct = allProducts[0];
-      const defaultBannerImage = firstProduct?.images?.[0] || defaultBanner.image;
       return [{
         ...defaultBanner,
-        image: defaultBannerImage,
+        productImage: firstProduct?.images?.[0],
+        alignment: getNextLayout(),
       }];
     }
 
@@ -153,33 +154,54 @@ function HomePageContent() {
           <CarouselContent>
             {heroBanners.map((banner, index) => {
                 const Icon = banner.Icon;
-                const alignmentClasses = {
-                    left: 'items-start text-left',
-                    right: 'items-end text-right',
-                    center: 'items-center text-center'
-                };
+                
+                const ImageSide = (
+                    <div className="w-1/2 md:w-2/5 relative flex items-center justify-center p-2 bg-white">
+                        {banner.productImage ? (
+                            <img 
+                                src={banner.productImage} 
+                                alt={banner.title} 
+                                className="max-h-full max-w-full object-contain"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-muted flex items-center justify-center">
+                                <ShoppingBag className="w-12 h-12 text-gray-300"/>
+                            </div>
+                        )}
+                    </div>
+                );
+
+                const TextSide = (
+                    <div className="w-1/2 md:w-3/5 relative flex flex-col justify-center p-4 md:p-8 text-white">
+                        <img 
+                            src={banner.backgroundImage} 
+                            alt=""
+                            className="absolute inset-0 w-full h-full object-cover" 
+                            aria-hidden="true"
+                            data-ai-hint={banner.aiHint}
+                        />
+                        <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
+                        <div className="relative">
+                            <h1 className="text-xl md:text-3xl font-bold mb-2">{banner.title}</h1>
+                            <p className="text-sm md:text-base mb-4 hidden md:block">{banner.description}</p>
+                            <Button asChild size="sm" className="w-fit bg-primary hover:bg-primary/90 h-8 md:h-10 md:px-6">
+                                <Link href={banner.link}>
+                                    <Icon className="mr-2 h-4 w-4" />
+                                    Shop Now
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                );
+
                 return (
                   <CarouselItem key={index}>
-                     <div className="relative text-white rounded-lg overflow-hidden h-48 md:h-64">
-                        <img
-                          src={banner.image}
-                          alt={banner.title}
-                          className="object-cover w-full h-full"
-                          data-ai-hint={banner.aiHint}
-                        />
-                        <div className={cn(
-                            "absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6",
-                            alignmentClasses[banner.alignment as keyof typeof alignmentClasses]
-                        )}>
-                          <h1 className="text-3xl md:text-4xl font-bold mb-2">{banner.title}</h1>
-                          <p className="text-lg md:text-xl mb-4 max-w-lg">{banner.description}</p>
-                          <Button asChild className="w-fit bg-primary hover:bg-primary/90">
-                            <Link href={banner.link}>
-                              <Icon className="mr-2 h-5 w-5" />
-                              Shop Now
-                            </Link>
-                          </Button>
-                        </div>
+                     <div className={cn(
+                         "relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-stretch",
+                         banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
+                     )}>
+                        {ImageSide}
+                        {TextSide}
                       </div>
                   </CarouselItem>
                 )
