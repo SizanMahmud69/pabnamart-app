@@ -1,9 +1,8 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useCart } from "@/hooks/useCart";
-import type { Product } from "@/types";
+import type { Product, ProductVariant } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, CreditCard, Heart, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -11,6 +10,23 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
+
+// Helper function to aggregate variants
+const aggregateVariants = (variants: ProductVariant[] | undefined): ProductVariant[] => {
+    if (!variants) return [];
+    const variantsMap = new Map<string, number>();
+
+    variants.forEach(variant => {
+        if (variant.name) {
+            const existingKey = Array.from(variantsMap.keys()).find(k => k.toLowerCase() === variant.name.toLowerCase());
+            const keyToUse = existingKey || variant.name;
+            variantsMap.set(keyToUse, (variantsMap.get(keyToUse) || 0) + variant.stock);
+        }
+    });
+
+    return Array.from(variantsMap.entries()).map(([name, stock]) => ({ name, stock }));
+};
+
 
 export default function ProductActions({ product, isFlashSaleContext = false }: { product: Product, isFlashSaleContext?: boolean }) {
   const { addToCart } = useCart();
@@ -20,13 +36,16 @@ export default function ProductActions({ product, isFlashSaleContext = false }: 
   
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
+  
+  const uniqueColors = useMemo(() => aggregateVariants(product.colors), [product.colors]);
+  const uniqueSizes = useMemo(() => aggregateVariants(product.sizes), [product.sizes]);
 
   const isSoldOut = product.stock === 0;
-  const hasVariations = (product.colors && product.colors.length > 0) || (product.sizes && product.sizes.length > 0);
+  const hasVariations = (uniqueColors.length > 0) || (uniqueSizes.length > 0);
   
   const variationsSelected = 
-    (!product.colors || product.colors.length === 0 || selectedColor) &&
-    (!product.sizes || product.sizes.length === 0 || selectedSize);
+    (uniqueColors.length === 0 || selectedColor) &&
+    (uniqueSizes.length === 0 || selectedSize);
     
   const canAddToCart = !isSoldOut && (!hasVariations || variationsSelected);
 
@@ -57,11 +76,11 @@ export default function ProductActions({ product, isFlashSaleContext = false }: 
 
   return (
     <div className="space-y-4">
-      {product.colors && product.colors.length > 0 && (
+      {uniqueColors.length > 0 && (
         <div className="space-y-2">
             <Label className="font-semibold">Color</Label>
             <RadioGroup value={selectedColor} onValueChange={setSelectedColor} className="flex flex-wrap gap-2">
-                {product.colors.map(color => {
+                {uniqueColors.map(color => {
                     const isOutOfStock = color.stock <= 0;
                     return (
                         <Label key={color.name} htmlFor={`color-${color.name}`}
@@ -86,11 +105,11 @@ export default function ProductActions({ product, isFlashSaleContext = false }: 
         </div>
       )}
 
-      {product.sizes && product.sizes.length > 0 && (
+      {uniqueSizes.length > 0 && (
         <div className="space-y-2">
             <Label className="font-semibold">Size</Label>
             <RadioGroup value={selectedSize} onValueChange={setSelectedSize} className="flex flex-wrap gap-2">
-                {product.sizes.map(size => {
+                {uniqueSizes.map(size => {
                     const isOutOfStock = size.stock <= 0;
                     return (
                         <Label key={size.name} htmlFor={`size-${size.name}`}
