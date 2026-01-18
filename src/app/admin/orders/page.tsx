@@ -14,7 +14,7 @@ import type { Order, User } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { createAndSendNotification } from '@/app/actions';
+import { updateOrderStatus } from '@/app/actions';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 
@@ -75,70 +75,21 @@ export default function AdminOrderManagement() {
     }, [users]);
 
     const handleStatusChange = async (order: Order, newStatus: Order['status']) => {
-        const orderRef = doc(db, 'orders', order.id);
-        try {
-            await updateDoc(orderRef, { status: newStatus });
-
-            let notificationData;
-            switch (newStatus) {
-                case 'processing':
-                    notificationData = {
-                        icon: 'PackageCheck',
-                        title: 'Order is being processed',
-                        description: `Your order #${order.orderNumber} is now being processed.`
-                    };
-                    break;
-                case 'shipped':
-                    notificationData = {
-                        icon: 'Truck',
-                        title: 'Order Shipped',
-                        description: `Your order #${order.orderNumber} has been shipped.`
-                    };
-                    break;
-                case 'delivered':
-                    notificationData = {
-                        icon: 'CheckCircle',
-                        title: 'Order Delivered',
-                        description: `Your order #${order.orderNumber} has been delivered.`
-                    };
-                    break;
-                case 'cancelled':
-                    notificationData = {
-                        icon: 'XCircle',
-                        title: 'Order Cancelled',
-                        description: `Your order #${order.orderNumber} has been cancelled.`
-                    };
-                    break;
-                case 'returned':
-                    notificationData = {
-                        icon: 'PackageCheck',
-                        title: 'Order Returned',
-                        description: `Your order #${order.orderNumber} has been marked as returned.`
-                    };
-                    break;
-                default:
-                    notificationData = null;
-            }
-            
+        const result = await updateOrderStatus(order.id, newStatus);
+        
+        if (result.success) {
             let toastDescription = `Order has been marked as ${newStatus}.`;
-
-            if (notificationData) {
-                await createAndSendNotification(order.userId, {
-                    ...notificationData,
-                    href: `/account/orders/${order.id}`
-                });
+            if (newStatus !== order.status) {
                 toastDescription += " A notification has been sent to the user.";
             }
-
             toast({
                 title: "Order Status Updated",
                 description: toastDescription
             });
-        } catch (error) {
-            console.error("Error updating order status:", error);
+        } else {
             toast({
                 title: "Error",
-                description: "Failed to update order status.",
+                description: result.message || "Failed to update order status.",
                 variant: "destructive"
             });
         }

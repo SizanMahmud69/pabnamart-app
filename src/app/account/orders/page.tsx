@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -15,7 +16,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { createAndSendNotification } from '@/app/actions';
+import { cancelOrderByUser } from '@/app/actions';
 
 
 const db = getFirestore(app);
@@ -83,29 +84,18 @@ function MyOrdersPageContent() {
     }, [user, statusQuery]);
 
     const handleCancelOrder = async (orderId: string) => {
-        const orderRef = doc(db, 'orders', orderId);
-        try {
-            await updateDoc(orderRef, { status: 'cancelled' });
-            
-            const order = orders.find(o => o.id === orderId);
-            if (order) {
-                 await createAndSendNotification(order.userId, {
-                    icon: 'XCircle',
-                    title: 'Order Cancelled by You',
-                    description: `Your order #${order.orderNumber} has been successfully cancelled.`,
-                    href: `/account/orders/${order.id}`
-                });
-            }
-
+        if (!user) return;
+        const result = await cancelOrderByUser(orderId, user.uid);
+        
+        if (result.success) {
             toast({
                 title: "Order Cancelled",
-                description: "Your order has been successfully cancelled.",
+                description: result.message,
             });
-        } catch (error) {
-            console.error("Error cancelling order: ", error);
+        } else {
             toast({
                 title: "Error",
-                description: "Failed to cancel the order.",
+                description: result.message,
                 variant: "destructive"
             });
         }
