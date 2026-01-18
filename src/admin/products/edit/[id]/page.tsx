@@ -180,8 +180,6 @@ export default function EditProductPage() {
         return <LoadingSpinner />;
     }
 
-    const showVariationFields = category === "Men's Fashion" || category === "Women's Fashion";
-
     return (
         <div className="container mx-auto p-4">
             <header className="py-4">
@@ -270,20 +268,18 @@ export default function EditProductPage() {
                                 </Select>
                             </div>
 
-                            {showVariationFields && (
-                                <div className="grid grid-cols-2 gap-4 border-t pt-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="colors">Colors</Label>
-                                        <Input id="colors" value={colors} onChange={(e) => setColors(e.target.value)} placeholder="e.g., Red, Blue, Green" disabled={isLoading} />
-                                        <p className="text-xs text-muted-foreground">Comma-separated values.</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="sizes">Sizes</Label>
-                                        <Input id="sizes" value={sizes} onChange={(e) => setSizes(e.target.value)} placeholder="e.g., S, M, L, XL" disabled={isLoading} />
-                                        <p className="text-xs text-muted-foreground">Comma-separated values.</p>
-                                    </div>
+                            <div className="grid grid-cols-2 gap-4 border-t pt-4 mt-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="colors">Colors</Label>
+                                    <Input id="colors" value={colors} onChange={(e) => setColors(e.target.value)} placeholder="e.g., Red, Blue, Green" disabled={isLoading} />
+                                    <p className="text-xs text-muted-foreground">Comma-separated values.</p>
                                 </div>
-                            )}
+                                <div className="space-y-2">
+                                    <Label htmlFor="sizes">Sizes</Label>
+                                    <Input id="sizes" value={sizes} onChange={(e) => setSizes(e.target.value)} placeholder="e.g., S, M, L, XL" disabled={isLoading} />
+                                    <p className="text-xs text-muted-foreground">Comma-separated values.</p>
+                                </div>
+                            </div>
                             
                             <div className="space-y-4 border-t pt-4">
                                 <Label className="text-base font-semibold">Settings</Label>
@@ -355,3 +351,5 @@ export default function EditProductPage() {
         </div>
     );
 }
+
+    

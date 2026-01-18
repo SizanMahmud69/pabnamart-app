@@ -38,8 +38,8 @@ export interface Product {
   flashSaleDiscount?: number;
   hasOffer?: boolean;
   createdAt: string;
-  colors?: string[];
-  sizes?: string[];
+  colors: string[];
+  sizes: string[];
 }
 
 export interface CartItem {
@@ -209,3 +209,5 @@ export interface OrderPayload {
   paymentAccountNumber?: string;
   cashOnDeliveryFee?: number;
 }
+
+    
