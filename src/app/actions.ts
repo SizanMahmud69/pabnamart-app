@@ -245,10 +245,35 @@ export async function placeOrder(
         if (productData.stock < cartItem.quantity) {
           throw new Error(`Not enough stock for ${productData.name}.`);
         }
+
+        let newColors = [...(productData.colors || [])];
+        let newSizes = [...(productData.sizes || [])];
+
+        if (cartItem.color) {
+            const colorIndex = newColors.findIndex(c => c.name === cartItem.color);
+            if (colorIndex !== -1) {
+                if (newColors[colorIndex].stock < cartItem.quantity) {
+                    throw new Error(`Not enough stock for color ${cartItem.color} of ${productData.name}.`);
+                }
+                newColors[colorIndex].stock -= cartItem.quantity;
+            }
+        }
+
+        if (cartItem.size) {
+            const sizeIndex = newSizes.findIndex(s => s.name === cartItem.size);
+            if (sizeIndex !== -1) {
+                if (newSizes[sizeIndex].stock < cartItem.quantity) {
+                    throw new Error(`Not enough stock for size ${cartItem.size} of ${productData.name}.`);
+                }
+                newSizes[sizeIndex].stock -= cartItem.quantity;
+            }
+        }
         
         transaction.update(productDoc.ref, {
           stock: FieldValue.increment(-cartItem.quantity),
           sold: FieldValue.increment(cartItem.quantity),
+          colors: newColors,
+          sizes: newSizes,
         });
         
         const originalPrice = getOriginalPrice(cartItem);

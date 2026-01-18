@@ -18,6 +18,11 @@ export interface Review {
   orderId?: string;
 }
 
+export interface ProductVariant {
+  name: string;
+  stock: number;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -38,8 +43,8 @@ export interface Product {
   flashSaleDiscount?: number;
   hasOffer?: boolean;
   createdAt: string;
-  colors: string[];
-  sizes: string[];
+  colors: ProductVariant[];
+  sizes: ProductVariant[];
 }
 
 export interface CartItem {

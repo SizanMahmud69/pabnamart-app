@@ -61,17 +61,27 @@ export default function ProductActions({ product, isFlashSaleContext = false }: 
         <div className="space-y-2">
             <Label className="font-semibold">Color</Label>
             <RadioGroup value={selectedColor} onValueChange={setSelectedColor} className="flex flex-wrap gap-2">
-                {product.colors.map(color => (
-                    <Label key={color} htmlFor={`color-${color}`}
-                        className={cn(
-                            "flex items-center justify-center rounded-md border-2 px-3 py-2 text-sm font-medium hover:bg-accent cursor-pointer",
-                            selectedColor === color ? "border-primary ring-2 ring-primary" : "border-muted"
-                        )}
-                    >
-                        <RadioGroupItem value={color} id={`color-${color}`} className="sr-only" />
-                        {color}
-                    </Label>
-                ))}
+                {product.colors.map(color => {
+                    const isOutOfStock = color.stock <= 0;
+                    return (
+                        <Label key={color.name} htmlFor={`color-${color.name}`}
+                            className={cn(
+                                "flex items-center justify-center rounded-md border-2 px-3 py-2 text-sm font-medium",
+                                isOutOfStock 
+                                    ? "cursor-not-allowed bg-muted/50 text-muted-foreground"
+                                    : "hover:bg-accent cursor-pointer",
+                                selectedColor === color.name && !isOutOfStock && "border-primary ring-2 ring-primary"
+                            )}
+                        >
+                            <RadioGroupItem value={color.name} id={`color-${color.name}`} className="sr-only" disabled={isOutOfStock} />
+                            <span className={cn(isOutOfStock && "line-through")}>{color.name}</span>
+                            {isOutOfStock ? 
+                                <span className="text-xs text-destructive ml-2">(Out of Stock)</span> :
+                                <span className="text-xs text-muted-foreground ml-2">({color.stock})</span>
+                            }
+                        </Label>
+                    )
+                })}
             </RadioGroup>
         </div>
       )}
@@ -80,17 +90,27 @@ export default function ProductActions({ product, isFlashSaleContext = false }: 
         <div className="space-y-2">
             <Label className="font-semibold">Size</Label>
             <RadioGroup value={selectedSize} onValueChange={setSelectedSize} className="flex flex-wrap gap-2">
-                {product.sizes.map(size => (
-                    <Label key={size} htmlFor={`size-${size}`}
-                        className={cn(
-                            "flex items-center justify-center rounded-md border-2 px-3 py-2 text-sm font-medium hover:bg-accent cursor-pointer",
-                            selectedSize === size ? "border-primary ring-2 ring-primary" : "border-muted"
-                        )}
-                    >
-                        <RadioGroupItem value={size} id={`size-${size}`} className="sr-only" />
-                        {size}
-                    </Label>
-                ))}
+                {product.sizes.map(size => {
+                    const isOutOfStock = size.stock <= 0;
+                    return (
+                        <Label key={size.name} htmlFor={`size-${size.name}`}
+                           className={cn(
+                                "flex items-center justify-center rounded-md border-2 px-3 py-2 text-sm font-medium",
+                                isOutOfStock 
+                                    ? "cursor-not-allowed bg-muted/50 text-muted-foreground"
+                                    : "hover:bg-accent cursor-pointer",
+                                selectedSize === size.name && !isOutOfStock && "border-primary ring-2 ring-primary"
+                            )}
+                        >
+                            <RadioGroupItem value={size.name} id={`size-${size.name}`} className="sr-only" disabled={isOutOfStock} />
+                            <span className={cn(isOutOfStock && "line-through")}>{size.name}</span>
+                             {isOutOfStock ? 
+                                <span className="text-xs text-destructive ml-2">(Out of Stock)</span> :
+                                <span className="text-xs text-muted-foreground ml-2">({size.stock})</span>
+                            }
+                        </Label>
+                    )
+                })}
             </RadioGroup>
         </div>
       )}
