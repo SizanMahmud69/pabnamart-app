@@ -155,24 +155,10 @@ function HomePageContent() {
             {heroBanners.map((banner, index) => {
                 const Icon = banner.Icon;
                 
-                const ImageSide = (
-                    <div className="w-1/2 md:w-2/5 relative flex items-center justify-center p-2 bg-white">
-                        {banner.productImage ? (
-                            <img 
-                                src={banner.productImage} 
-                                alt={banner.title} 
-                                className="max-h-full max-w-full object-contain"
-                            />
-                        ) : (
-                            <div className="w-full h-full bg-muted flex items-center justify-center">
-                                <ShoppingBag className="w-12 h-12 text-gray-300"/>
-                            </div>
-                        )}
-                    </div>
-                );
-
-                const TextSide = (
-                    <div className="w-1/2 md:w-3/5 relative flex flex-col justify-center p-4 md:p-8 text-white">
+                return (
+                  <CarouselItem key={index}>
+                    <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
+                        {/* Background Image */}
                         <img 
                             src={banner.backgroundImage} 
                             alt=""
@@ -180,29 +166,42 @@ function HomePageContent() {
                             aria-hidden="true"
                             data-ai-hint={banner.aiHint}
                         />
-                        <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
-                        <div className="relative">
-                            <h1 className="text-xl md:text-3xl font-bold mb-2">{banner.title}</h1>
-                            <p className="text-sm md:text-base mb-4 hidden md:block">{banner.description}</p>
-                            <Button asChild size="sm" className="w-fit bg-primary hover:bg-primary/90 h-8 md:h-10 md:px-6">
-                                <Link href={banner.link}>
-                                    <Icon className="mr-2 h-4 w-4" />
-                                    Shop Now
-                                </Link>
-                            </Button>
+                        {/* Overlay */}
+                        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
+
+                        {/* Content Container */}
+                        <div className={cn(
+                            "relative w-full h-full flex items-center p-4 md:p-8",
+                            banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
+                        )}>
+                            {/* Product Image */}
+                            <div className="w-1/3 md:w-2/5 h-full flex items-center justify-center">
+                                {banner.productImage ? (
+                                    <img 
+                                        src={banner.productImage} 
+                                        alt={banner.title} 
+                                        className="max-h-full max-w-full object-contain drop-shadow-lg"
+                                    />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                      <ShoppingBag className="w-12 h-12 text-gray-300/50"/>
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Text Content */}
+                            <div className="w-2/3 md:w-3/5 flex flex-col justify-center text-white px-4">
+                                <h1 className="text-xl md:text-3xl font-bold mb-2">{banner.title}</h1>
+                                <p className="text-sm md:text-base mb-4 hidden md:block">{banner.description}</p>
+                                <Button asChild size="sm" className="w-fit bg-primary hover:bg-primary/90 h-8 md:h-10 md:px-6">
+                                    <Link href={banner.link}>
+                                        <Icon className="mr-2 h-4 w-4" />
+                                        Shop Now
+                                    </Link>
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                );
-
-                return (
-                  <CarouselItem key={index}>
-                     <div className={cn(
-                         "relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-stretch",
-                         banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
-                     )}>
-                        {ImageSide}
-                        {TextSide}
-                      </div>
                   </CarouselItem>
                 )
             })}
@@ -418,3 +417,5 @@ export default function Home() {
     </Suspense>
   );
 }
+
+    
