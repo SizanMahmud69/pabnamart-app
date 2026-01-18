@@ -56,6 +56,7 @@ export default function Footer() {
                         )
                     )}
                     <p className="text-xs text-muted-foreground mt-6">&copy; {new Date().getFullYear()} PabnaMart. All Rights Reserved.</p>
+                    <p className="text-xs text-muted-foreground mt-2">Developer: Sizan Mahmud & Designer: Black Dimond</p>
                 </div>
             </div>
         </footer>
