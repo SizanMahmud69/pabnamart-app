@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
@@ -13,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const CATEGORY_ORDER = [
     "Men's Fashion",
@@ -90,23 +91,21 @@ export default function AdminProductManagement() {
                       <CardDescription>View, edit, or delete your store products.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Carousel opts={{ align: "start", dragFree: true }} className="w-full mb-4">
-                        <CarouselContent className="-ml-2">
+                    <ScrollArea className="w-full whitespace-nowrap rounded-md border">
+                        <div className="flex w-max space-x-2 p-2">
                             {categories.map(category => (
-                                <CarouselItem key={category} className="pl-2 basis-auto">
-                                    <Button
-                                        variant={selectedCategory === category ? "default" : "outline"}
-                                        onClick={() => setSelectedCategory(category)}
-                                        size="sm"
-                                    >
-                                        {category}
-                                    </Button>
-                                </CarouselItem>
+                                <Button
+                                    key={category}
+                                    variant={selectedCategory === category ? "default" : "outline"}
+                                    onClick={() => setSelectedCategory(category)}
+                                    size="sm"
+                                >
+                                    {category}
+                                </Button>
                             ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8" />
-                        <CarouselNext className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8" />
-                    </Carousel>
+                        </div>
+                        <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
                       <Table>
                           <TableHeader>
                               <TableRow>

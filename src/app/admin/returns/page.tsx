@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -14,7 +15,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { createAndSendNotification } from '@/app/actions';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const db = getFirestore(app);
 
@@ -185,24 +186,22 @@ export default function AdminReturnManagement() {
                         <CardDescription>Manage customer return requests and approvals.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Carousel opts={{ align: "start", dragFree: true }} className="w-full mb-4">
-                            <CarouselContent className="-ml-2">
+                        <ScrollArea className="w-full whitespace-nowrap rounded-md border">
+                            <div className="flex w-max space-x-2 p-2">
                                 {statusTabs.map(tab => (
-                                    <CarouselItem key={tab} className="pl-2 basis-auto">
-                                        <Button
-                                            variant={activeTab === tab ? "default" : "outline"}
-                                            onClick={() => setActiveTab(tab)}
-                                            size="sm"
-                                            className="capitalize"
-                                        >
-                                            {tab.replace('-', ' ')}
-                                        </Button>
-                                    </CarouselItem>
+                                    <Button
+                                        key={tab}
+                                        variant={activeTab === tab ? "default" : "outline"}
+                                        onClick={() => setActiveTab(tab)}
+                                        size="sm"
+                                        className="capitalize"
+                                    >
+                                        {tab.replace('-', ' ')}
+                                    </Button>
                                 ))}
-                            </CarouselContent>
-                            <CarouselPrevious className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8" />
-                            <CarouselNext className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8" />
-                        </Carousel>
+                            </div>
+                            <ScrollBar orientation="horizontal" />
+                        </ScrollArea>
 
                         <div className="mt-4">
                            {filteredOrders.length > 0 ? (
