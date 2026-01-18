@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -19,16 +18,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 
-const GoogleIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-1.5c-.83 0-1.5.67-1.5 1.5V12h3l-.5 3h-2.5v6.8c4.56-.93 8-4.96 8-9.8z" fill="#4285F4" stroke="none"/>
-      <path d="M21.99 12.21c0-.45-.04-.89-.11-1.32H12v2.45h5.51c-.24 1.58-1.4 2.76-3.01 3.64v2.03h2.6c1.52-1.4 2.4-3.51 2.4-5.8z" fill="#4285F4" stroke="none" />
-      <path d="M12 22c2.7 0 4.96-1.13 6.62-3.02l-2.6-2.03c-.88.6-2.01.96-3.22.96-2.58 0-4.78-1.72-5.56-4.02H3.81v2.1C5.46 19.51 8.43 22 12 22z" fill="#34A853" stroke="none" />
-      <path d="M6.44 14.16a6.03 6.03 0 0 1 0-4.32V7.74H3.81c-.66 1.3-1.04 2.76-1.04 4.26s.38 2.96 1.04 4.26l2.63-2.1z" fill="#FBBC05" stroke="none" />
-      <path d="M12 5.25c1.44 0 2.7.5 3.69 1.44L18.17 4.2C16.5 2.65 14.37 2 12 2 8.43 2 5.46 4.49 3.81 7.74l2.63 2.1c.78-2.3 2.98-4.02 5.56-4.02z" fill="#EA4335" stroke="none" />
-    </svg>
-  );
-
 export default function SignUpPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -38,8 +27,7 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const { signup, signInWithGoogle } = useAuth();
+  const { signup } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -62,23 +50,6 @@ export default function SignUpPage() {
       setError(error.message || "Failed to sign up.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    setError(null);
-    try {
-      await signInWithGoogle();
-      toast({
-        title: "Account Created",
-        description: "Welcome!",
-      });
-      router.push("/");
-    } catch (error: any) {
-      setError(error.message || "Failed to sign up with Google.");
-    } finally {
-      setIsGoogleLoading(false);
     }
   };
 
@@ -109,7 +80,7 @@ export default function SignUpPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                disabled={isLoading || isGoogleLoading}
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
@@ -121,7 +92,7 @@ export default function SignUpPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading || isGoogleLoading}
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2 relative">
@@ -132,7 +103,7 @@ export default function SignUpPage() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading || isGoogleLoading}
+                disabled={isLoading}
                 placeholder="••••••••"
               />
                <Button
@@ -153,7 +124,7 @@ export default function SignUpPage() {
                 required 
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading || isGoogleLoading}
+                disabled={isLoading}
                 placeholder="••••••••"
               />
                <Button
@@ -166,7 +137,7 @@ export default function SignUpPage() {
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -175,26 +146,6 @@ export default function SignUpPage() {
               ) : "Sign Up"}
             </Button>
           </form>
-
-            <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                    </span>
-                </div>
-            </div>
-
-            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading || isGoogleLoading}>
-                {isGoogleLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <GoogleIcon />
-                )}
-                Sign up with Google
-            </Button>
 
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
