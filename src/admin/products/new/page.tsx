@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -33,6 +34,8 @@ export default function NewProductPage() {
     const [flashSaleDiscount, setFlashSaleDiscount] = useState<number | undefined>(undefined);
     const [categories, setCategories] = useState<Category[]>([]);
     const inputFileRef = useRef<HTMLInputElement>(null);
+    const [colors, setColors] = useState('');
+    const [sizes, setSizes] = useState('');
 
     useEffect(() => {
         const categoriesRef = collection(db, 'categories');
@@ -91,10 +94,9 @@ export default function NewProductPage() {
                 }
             } catch (error) {
                  console.error("Image upload failed:", error);
-                 const errorMessage = error instanceof Error ? error.message : "Please check your network connection or browser extensions.";
                  toast({
-                    title: "Image Upload Failed",
-                    description: `Could not upload images. ${errorMessage}`,
+                    title: "Error",
+                    description: "Failed to upload images. Please check your storage configuration.",
                     variant: "destructive"
                 });
                  setIsLoading(false);
@@ -123,6 +125,9 @@ export default function NewProductPage() {
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
             flashSaleDiscount: isFlashSale ? (flashSaleDiscount || undefined) : undefined,
             returnPolicy: returnPolicyValue ? parseInt(returnPolicyValue, 10) : undefined,
+            colors: colors ? colors.split(',').map(c => c.trim()) : [],
+            sizes: sizes ? sizes.split(',').map(s => s.trim()) : [],
+            createdAt: new Date().toISOString(),
         };
 
         try {
@@ -143,6 +148,8 @@ export default function NewProductPage() {
             setIsLoading(false);
         }
     };
+    
+    const showVariationFields = category === "Men's Fashion" || category === "Women's Fashion";
 
     return (
         <div className="container mx-auto p-4">
@@ -223,6 +230,21 @@ export default function NewProductPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
+
+                            {showVariationFields && (
+                                <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="colors">Colors</Label>
+                                        <Input id="colors" value={colors} onChange={(e) => setColors(e.target.value)} placeholder="e.g., Red, Blue, Green" disabled={isLoading} />
+                                        <p className="text-xs text-muted-foreground">Comma-separated values.</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sizes">Sizes</Label>
+                                        <Input id="sizes" value={sizes} onChange={(e) => setSizes(e.target.value)} placeholder="e.g., S, M, L, XL" disabled={isLoading} />
+                                        <p className="text-xs text-muted-foreground">Comma-separated values.</p>
+                                    </div>
+                                </div>
+                            )}
                             
                             <div className="space-y-4 border-t pt-4">
                                 <Label className="text-base font-semibold">Settings</Label>

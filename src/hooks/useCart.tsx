@@ -13,15 +13,15 @@ import { useRouter, usePathname } from 'next/navigation';
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product, isFlashSaleContext?: boolean) => void;
-  removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  addToCart: (product: Product, variations: { color?: string; size?: string }, isFlashSaleContext?: boolean) => void;
+  removeFromCart: (cartItemId: string) => void;
+  updateQuantity: (cartItemId: string, quantity: number) => void;
   clearCart: () => void;
   cartCount: number;
   cartTotal: number;
   shippingFee: number;
-  selectedItemIds: number[];
-  toggleSelectItem: (productId: number) => void;
+  selectedItemIds: string[];
+  toggleSelectItem: (cartItemId: string) => void;
   toggleSelectAll: () => void;
   isAllSelected: boolean;
   selectedCartItems: CartItem[];
@@ -44,7 +44,7 @@ const roundPrice = (price: number): number => {
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [db, setDb] = useState<Firestore | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const isInitialLoad = useRef(true);
   const { user, appUser } = useAuth();
   const { toast } = useToast();
@@ -60,7 +60,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const updateFirestoreCart = useCallback(async (uid: string, items: CartItem[], selectedIds: number[]) => {
+  const updateFirestoreCart = useCallback(async (uid: string, items: CartItem[], selectedIds: string[]) => {
       if (!db) return;
       const cartRef = doc(db, 'carts', uid);
       try {
@@ -119,83 +119,91 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [selectedItemIds, cartItems, user, updateFirestoreCart]);
 
-    const addToCart = useCallback((product: Product, isFlashSaleContext = false) => {
-        if (!user) {
-            toast({
-                title: "Please log in",
-                description: "You need to be logged in to add items to your cart.",
-                variant: "destructive"
-            });
-            router.push('/login');
-            return;
-        }
-
-        const price = isFlashSaleContext ? getFlashSalePrice(product) : product.price;
-
-        setCartItems(prevCartItems => {
-            const existingItem = prevCartItems.find(item => item.id === product.id);
-            
-            if (existingItem) {
-              return prevCartItems.map(item => 
-                item.id === product.id 
-                  ? { ...item, quantity: item.quantity + 1 }
-                  : item
-              );
-            }
-            
-            const productForCart: CartItem = {
-                id: product.id,
-                name: product.name,
-                price: roundPrice(price),
-                originalPrice: product.originalPrice ? roundPrice(product.originalPrice) : undefined,
-                images: product.images,
-                stock: product.stock,
-                freeShipping: product.freeShipping,
-                category: product.category,
-                quantity: 1,
-            };
-
-            return [...prevCartItems, productForCart];
+  const addToCart = useCallback((product: Product, variations: { color?: string, size?: string }, isFlashSaleContext = false) => {
+    if (!user) {
+        toast({
+            title: "Please log in",
+            description: "You need to be logged in to add items to your cart.",
+            variant: "destructive"
         });
+        router.push('/login');
+        return;
+    }
+
+    const price = isFlashSaleContext ? getFlashSalePrice(product) : product.price;
+
+    setCartItems(prevCartItems => {
+        const existingItem = prevCartItems.find(item => 
+            item.id === product.id && 
+            item.color === variations.color && 
+            item.size === variations.size
+        );
+        
+        if (existingItem) {
+          return prevCartItems.map(item => 
+            item.cartItemId === existingItem.cartItemId
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          );
+        }
+        
+        const newCartItemId = `${product.id}-${variations.color || ''}-${variations.size || ''}-${Date.now()}`;
+        const productForCart: CartItem = {
+            cartItemId: newCartItemId,
+            id: product.id,
+            name: product.name,
+            price: roundPrice(price),
+            originalPrice: product.originalPrice ? roundPrice(product.originalPrice) : undefined,
+            images: product.images,
+            stock: product.stock,
+            freeShipping: product.freeShipping,
+            category: product.category,
+            quantity: 1,
+            color: variations.color,
+            size: variations.size,
+        };
 
         setSelectedItemIds(prevSelectedIds => {
-            if (!prevSelectedIds.includes(product.id)) {
-                return [...prevSelectedIds, product.id];
+            if (!prevSelectedIds.includes(newCartItemId)) {
+                return [...prevSelectedIds, newCartItemId];
             }
             return prevSelectedIds;
         });
 
-        toast({
-          title: "Added to cart",
-          description: `${product.name} has been added to your cart.`,
-        });
-    }, [user, toast, router, getFlashSalePrice]);
+        return [...prevCartItems, productForCart];
+    });
 
-  const removeFromCart = useCallback((productId: number) => {
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart.`,
+    });
+}, [user, toast, router, getFlashSalePrice]);
+
+  const removeFromCart = useCallback((cartItemId: string) => {
     if (!user) return;
-    setCartItems(prev => prev.filter(item => item.id !== productId));
-    setSelectedItemIds(prev => prev.filter(id => id !== productId));
+    setCartItems(prev => prev.filter(item => item.cartItemId !== cartItemId));
+    setSelectedItemIds(prev => prev.filter(id => id !== cartItemId));
     toast({
       title: "Removed from cart",
       description: `The item has been removed from your cart.`,
     });
   }, [user, toast]);
 
-  const updateQuantity = useCallback((productId: number, quantity: number) => {
+  const updateQuantity = useCallback((cartItemId: string, quantity: number) => {
     if (!user) return;
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(cartItemId);
       return;
     }
     setCartItems(prev => prev.map(item =>
-        item.id === productId ? { ...item, quantity } : item
+        item.cartItemId === cartItemId ? { ...item, quantity } : item
     ));
   }, [removeFromCart, user]);
 
   const clearCart = useCallback(async () => {
     if (!user || !db) return;
     
-    const newCartItems = cartItems.filter(item => !selectedItemIds.includes(item.id));
+    const newCartItems = cartItems.filter(item => !selectedItemIds.includes(item.cartItemId));
 
     setCartItems(newCartItems);
     setSelectedItemIds([]);
@@ -208,11 +216,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   }, [user, cartItems, selectedItemIds, db]);
 
-  const toggleSelectItem = (productId: number) => {
+  const toggleSelectItem = (cartItemId: string) => {
       setSelectedItemIds(prev => 
-          prev.includes(productId) 
-              ? prev.filter(id => id !== productId) 
-              : [...prev, productId]
+          prev.includes(cartItemId) 
+              ? prev.filter(id => id !== cartItemId) 
+              : [...prev, cartItemId]
       );
   };
   
@@ -222,11 +230,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (isAllSelected) {
           setSelectedItemIds([]);
       } else {
-          setSelectedItemIds(cartItems.map(item => item.id));
+          setSelectedItemIds(cartItems.map(item => item.cartItemId));
       }
   };
 
-  const selectedCartItems = useMemo(() => cartItems.filter(item => selectedItemIds.includes(item.id)), [cartItems, selectedItemIds]);
+  const selectedCartItems = useMemo(() => cartItems.filter(item => selectedItemIds.includes(item.cartItemId)), [cartItems, selectedItemIds]);
   
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cartItems.reduce(

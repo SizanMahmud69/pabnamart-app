@@ -1,3 +1,4 @@
+
 'use server';
 
 import 'dotenv/config';
@@ -262,6 +263,8 @@ export async function placeOrder(
           quantity: cartItem.quantity,
           image: productData.images[0] || '',
           returnPolicy: productData.returnPolicy || 0,
+          color: cartItem.color,
+          size: cartItem.size,
         });
       }
 

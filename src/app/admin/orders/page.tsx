@@ -232,11 +232,16 @@ export default function AdminOrderManagement() {
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="space-y-2">
-                                                {order.items.map(item => (
-                                                    <div key={item.id} className="flex items-center gap-4 py-2">
+                                                {order.items.map((item, index) => (
+                                                    <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-2">
                                                         <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
                                                         <div className="flex-grow">
                                                             <p className="font-semibold text-sm">{item.name}</p>
+                                                            {(item.color || item.size) && (
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    {item.color}{item.color && item.size ? ', ' : ''}{item.size}
+                                                                </p>
+                                                            )}
                                                             <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                                                         </div>
                                                         <p className="font-semibold text-sm">৳{item.price * item.quantity}</p>

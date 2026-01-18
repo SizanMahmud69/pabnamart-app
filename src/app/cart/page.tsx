@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -25,7 +26,6 @@ export default function CartPage() {
     toggleSelectItem,
     toggleSelectAll,
     isAllSelected,
-    selectedCartItems
   } = useCart();
   const { user } = useAuth();
   const router = useRouter();
@@ -72,11 +72,11 @@ export default function CartPage() {
                     <CardContent className="p-0">
                         <div className="divide-y">
                         {cartItems.map((item) => (
-                            <div key={item.id} className="flex items-start gap-4 p-4">
+                            <div key={item.cartItemId} className="flex items-start gap-4 p-4">
                                 <Checkbox 
                                     className="mt-8 flex-shrink-0"
-                                    checked={selectedItemIds.includes(item.id)}
-                                    onCheckedChange={() => toggleSelectItem(item.id)}
+                                    checked={selectedItemIds.includes(item.cartItemId)}
+                                    onCheckedChange={() => toggleSelectItem(item.cartItemId)}
                                 />
                                 <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border">
                                     <img
@@ -88,13 +88,15 @@ export default function CartPage() {
                                 </div>
                                 <div className="flex-grow min-w-0">
                                     <h3 className="font-semibold truncate">{item.name}</h3>
+                                    {item.color && <p className="text-sm text-muted-foreground">Color: {item.color}</p>}
+                                    {item.size && <p className="text-sm text-muted-foreground">Size: {item.size}</p>}
                                     <p className="text-sm text-muted-foreground">
                                     Price: ৳{item.price}
                                     </p>
                                     <div className="mt-2 flex items-center gap-2">
                                         <Button 
                                             variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
-                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                            onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
                                             disabled={item.quantity <= 1}
                                         >
                                             <Minus className="h-4 w-4" />
@@ -102,13 +104,13 @@ export default function CartPage() {
                                         <Input
                                             type="number"
                                             value={item.quantity}
-                                            onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                                            onChange={(e) => updateQuantity(item.cartItemId, parseInt(e.target.value))}
                                             className="h-8 w-14 text-center px-1"
                                             aria-label={`Quantity for ${item.name}`}
                                         />
                                         <Button 
                                             variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
-                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                            onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
                                         >
                                             <Plus className="h-4 w-4" />
                                         </Button>
@@ -122,7 +124,7 @@ export default function CartPage() {
                                         variant="ghost"
                                         size="icon"
                                         className="mt-2 h-8 w-8 text-muted-foreground hover:text-destructive"
-                                        onClick={() => removeFromCart(item.id)}
+                                        onClick={() => removeFromCart(item.cartItemId)}
                                         aria-label={`Remove ${item.name}`}
                                     >
                                         <Trash2 className="h-4 w-4" />

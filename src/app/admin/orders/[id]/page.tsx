@@ -78,7 +78,14 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
                 <tbody>
                     {order.items.map(item => (
                         <tr key={item.id}>
-                            <td>{item.name}</td>
+                            <td>
+                                {item.name}
+                                {(item.color || item.size) && (
+                                    <div className="text-xs text-gray-500">
+                                        {item.color}{item.color && item.size ? ', ' : ''}{item.size}
+                                    </div>
+                                )}
+                            </td>
                             <td className="text-center">{item.quantity}</td>
                             <td className="text-right">৳{item.price.toFixed(2)}</td>
                             <td className="text-right">৳{(item.price * item.quantity).toFixed(2)}</td>
@@ -252,6 +259,11 @@ export default function AdminOrderDetailsPage() {
                                         <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                         <div className="flex-grow">
                                             <p className="font-semibold">{item.name}</p>
+                                            {(item.color || item.size) && (
+                                                <p className="text-sm text-muted-foreground">
+                                                    {item.color}{item.color && item.size ? ', ' : ''}{item.size}
+                                                </p>
+                                            )}
                                             <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                         </div>
                                         <p className="font-semibold">৳{item.price * item.quantity}</p>

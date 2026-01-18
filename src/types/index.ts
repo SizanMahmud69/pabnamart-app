@@ -38,9 +38,12 @@ export interface Product {
   flashSaleDiscount?: number;
   hasOffer?: boolean;
   createdAt: string;
+  colors?: string[];
+  sizes?: string[];
 }
 
 export interface CartItem {
+  cartItemId: string; // Unique ID for this specific cart entry
   id: number;
   name: string;
   price: number;
@@ -50,6 +53,8 @@ export interface CartItem {
   quantity: number;
   freeShipping?: boolean;
   category: string;
+  color?: string;
+  size?: string;
 }
 
 export interface OrderItem {
@@ -60,6 +65,8 @@ export interface OrderItem {
     quantity: number;
     image: string;
     returnPolicy: number;
+    color?: string;
+    size?: string;
 }
 
 export interface Order {
@@ -202,5 +209,3 @@ export interface OrderPayload {
   paymentAccountNumber?: string;
   cashOnDeliveryFee?: number;
 }
-
-    

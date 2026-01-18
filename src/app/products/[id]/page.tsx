@@ -5,7 +5,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import StarRating from '@/components/StarRating';
-import AddToCartButton from './AddToCartButton';
+import ProductActions from './ProductActions';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState, useMemo, Suspense } from 'react';
 import type { Product, ShippingAddress, Review } from '@/types';
@@ -136,7 +136,7 @@ function ProductDetailPageContent() {
                             )}
                         </div>
                         
-                        <AddToCartButton product={product} isFlashSaleContext={isFlashSaleContext} />
+                        <ProductActions product={product} isFlashSaleContext={isFlashSaleContext} />
 
                         <div className="flex items-center gap-2">
                             {product.stock > 0 ? (
