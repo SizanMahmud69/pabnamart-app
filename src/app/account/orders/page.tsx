@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -7,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ShoppingBag, Star, ChevronRight, Eye, Undo2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Star, ChevronRight, Eye, Undo2, CheckCircle, XCircle } from 'lucide-react';
 import { withAuth, useAuth } from '@/hooks/useAuth';
 import type { Order, Review } from '@/types';
 import { getFirestore, collection, query, where, onSnapshot, orderBy, updateDoc, doc, collectionGroup } from 'firebase/firestore';
@@ -15,7 +14,11 @@ import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { createAndSendNotification } from '@/app/actions';
 
+
+const db = getFirestore(app);
 
 const getStatusVariant = (status: Order['status']) => {
     switch (status) {
@@ -48,7 +51,6 @@ function MyOrdersPageContent() {
     useEffect(() => {
         if (!user) return;
         
-        const db = getFirestore(app);
         const ordersRef = collection(db, 'orders');
         let q;
         if (statusQuery && (statusTabs.includes(statusQuery as Order['status']) || statusQuery === 'return-requested' || statusQuery === 'return-approved')) {
@@ -79,6 +81,35 @@ function MyOrdersPageContent() {
             unsubscribeReviews();
         };
     }, [user, statusQuery]);
+
+    const handleCancelOrder = async (orderId: string) => {
+        const orderRef = doc(db, 'orders', orderId);
+        try {
+            await updateDoc(orderRef, { status: 'cancelled' });
+            
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                 await createAndSendNotification(order.userId, {
+                    icon: 'XCircle',
+                    title: 'Order Cancelled by You',
+                    description: `Your order #${order.orderNumber} has been successfully cancelled.`,
+                    href: `/account/orders/${order.id}`
+                });
+            }
+
+            toast({
+                title: "Order Cancelled",
+                description: "Your order has been successfully cancelled.",
+            });
+        } catch (error) {
+            console.error("Error cancelling order: ", error);
+            toast({
+                title: "Error",
+                description: "Failed to cancel the order.",
+                variant: "destructive"
+            });
+        }
+    };
 
     const hasReviewed = (productId: number) => {
         return userReviews.some(review => review.productId === productId);
@@ -176,7 +207,27 @@ function MyOrdersPageContent() {
                                                     </Button>
                                                 )}
                                             </div>
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 items-center">
+                                                {order.paymentMethod === 'cash-on-delivery' && order.status === 'processing' && (
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="destructive" size="sm">
+                                                                <XCircle className="mr-2 h-4 w-4" />
+                                                                Cancel
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                <AlertDialogDescription>This action will cancel your order. This cannot be undone.</AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleCancelOrder(order.id)}>Cancel Order</AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                )}
                                                 <Button asChild variant="ghost" size="icon">
                                                     <Link href={`/account/orders/${order.id}`}>
                                                         <Eye className="h-5 w-5" />
