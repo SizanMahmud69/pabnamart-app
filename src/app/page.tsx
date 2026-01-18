@@ -175,7 +175,7 @@ function HomePageContent() {
                             banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
                         )}>
                             {/* Product Image */}
-                            <div className="w-1/3 md:w-2/5 h-full flex items-center justify-center">
+                            <div className="w-1/2 md:w-2/5 h-full flex items-center justify-center">
                                 {banner.productImage ? (
                                     <img 
                                         src={banner.productImage} 
@@ -190,7 +190,7 @@ function HomePageContent() {
                             </div>
 
                             {/* Text Content */}
-                            <div className="w-2/3 md:w-3/5 flex flex-col justify-center text-white px-4">
+                            <div className="w-1/2 md:w-3/5 flex flex-col justify-center text-white px-4">
                                 <h1 className="text-xl md:text-3xl font-bold mb-2">{banner.title}</h1>
                                 <p className="text-sm md:text-base mb-4 hidden md:block">{banner.description}</p>
                                 <Button asChild size="sm" className="w-fit bg-primary hover:bg-primary/90 h-8 md:h-10 md:px-6">
