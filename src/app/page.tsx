@@ -18,6 +18,7 @@ import Categories from '@/components/Categories';
 import { useOffers } from '@/hooks/useOffers';
 import { cn } from '@/lib/utils';
 import ProductCardSkeleton from '@/components/ProductCardSkeleton';
+import Footer from '@/components/Footer';
 
 const categoryImageMap: { [key: string]: { image: string; aiHint: string } } = {
   "Flash Sale": { image: "https://picsum.photos/seed/flashsale/800/600", aiHint: "flash sale" },
@@ -371,6 +372,8 @@ function SearchPageContent({ searchQuery }: { searchQuery: string }) {
     }, 500);
   }, [searchQuery, allProducts]);
 
+  const showRecommendations = searchQuery.trim().length > 0;
+
   return (
      <div className="bg-purple-50/30 min-h-screen">
       <div className="container mx-auto px-4 py-6 space-y-8">
@@ -412,10 +415,11 @@ function SearchPageContent({ searchQuery }: { searchQuery: string }) {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <HomePageContent />
-    </Suspense>
+    <>
+      <Suspense fallback={<div>Loading...</div>}>
+        <HomePageContent />
+      </Suspense>
+      <Footer />
+    </>
   );
 }
-
-    

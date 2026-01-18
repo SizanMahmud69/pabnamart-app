@@ -19,7 +19,6 @@ import VoucherPopup from '@/components/VoucherPopup';
 import FlashSalePopup from '@/components/FlashSalePopup';
 import { useState, Suspense } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import Footer from '@/components/Footer';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -57,7 +56,6 @@ function RootLayoutContent({
                            </Suspense>
                         )}
                         <main className={isAdminPage ? '' : "pb-16 md:pb-0"}>{children}</main>
-                        {!isAdminPage && <Footer />}
                         <Toaster />
                         {!isAdminPage && <BottomNav />}
                         {!isAdminPage && <VoucherPopup isFlashSalePopupOpen={isFlashSalePopupOpen} />}
