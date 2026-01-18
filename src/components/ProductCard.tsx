@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
 import { ShoppingCart, Star, Truck, Heart } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, rgbToHsl } from '@/lib/utils';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useState, useEffect } from 'react';
 
@@ -20,7 +20,8 @@ interface ProductCardProps {
 export default function ProductCard({ product, isFlashSaleContext = false, size = 'default' }: ProductCardProps) {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
-  
+  const [cardStyle, setCardStyle] = useState<React.CSSProperties>({});
+
   const price = product.price;
   const originalPrice = product.originalPrice;
   const hasDiscount = originalPrice && originalPrice > price;
@@ -49,10 +50,39 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   } catch (e) {
     imageUrl = defaultImage;
   }
+  
+  useEffect(() => {
+    const img = new window.Image();
+    img.crossOrigin = "Anonymous";
+    img.src = imageUrl;
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        canvas.width = 1;
+        canvas.height = 1;
+        ctx.drawImage(img, 0, 0, 1, 1);
+        
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        const [h, s, l] = rgbToHsl(r, g, b);
+
+        if (s > 10 && l > 20 && l < 80) { 
+            setCardStyle({
+                backgroundColor: `hsl(${h}, ${s}%, 95%)`,
+            });
+        }
+    };
+    img.onerror = () => {
+        // Could not load image, do nothing
+    }
+  }, [imageUrl]);
+
 
   return (
     <Card 
       className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-all duration-300 hover:shadow-lg group"
+      style={cardStyle}
     >
        <Link href={productLink} className="block">
         <div className="relative w-full overflow-hidden bg-muted aspect-square">
