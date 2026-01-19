@@ -29,7 +29,12 @@ const getFirebaseAdmin = () => {
   try {
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     if (!serviceAccountJson) {
-        throw new Error('Firebase service account JSON is not set. Ensure FIREBASE_SERVICE_ACCOUNT_JSON is configured in your environment variables.');
+        let errorMessage = 'Firebase service account JSON is not set. Ensure FIREBASE_SERVICE_ACCOUNT_JSON is configured in your environment variables.';
+        // Provide a more specific hint if running on Vercel
+        if (process.env.VERCEL_ENV) {
+          errorMessage += ' Go to your Vercel project -> Settings -> Environment Variables and ensure it is set for the Production, Preview, and Development environments.'
+        }
+        throw new Error(errorMessage);
     }
     
     const serviceAccount = JSON.parse(serviceAccountJson);
@@ -328,6 +333,7 @@ export async function placeOrder(
         voucherCode: usedVoucher?.code || '',
         voucherDiscount: voucherDiscount,
         cashOnDeliveryFee: codFee,
+        deliveredAt: undefined,
       };
 
       transaction.set(orderRef, newOrder);

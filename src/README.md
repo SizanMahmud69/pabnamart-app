@@ -164,11 +164,12 @@ Follow these steps to deploy your application to Vercel using GitHub.
     1.  In your Firebase project, go to **Project Settings** (click the gear icon) > **Service accounts**.
     2.  Click **"Generate new private key"**. A JSON file will be downloaded to your computer.
     3.  Open this JSON file with a text editor and **copy its entire content**.
-    4.  Now, go to your Vercel project's **Settings** > **Environment Variables**.
+    4.  Go to your Vercel project's **Settings** tab, then click on **Environment Variables** from the left-side menu.
     5.  Add a new environment variable:
         -   **Name:** `FIREBASE_SERVICE_ACCOUNT_JSON`
         -   **Value:** Paste the entire JSON content you copied in step 3.
-    6.  Click **Save**. Make sure to redeploy your project for the changes to take effect.
+    6.  **IMPORTANT:** Under "Environments," make sure **all three boxes (Production, Preview, and Development) are checked**. This ensures your app works everywhere.
+    7.  Click **Save**. Vercel will likely prompt you to redeploy. If not, go to the "Deployments" tab and trigger a new deployment for the latest commit to apply the changes.
 
 
     **Vercel Blob Storage (for image uploads - VERY IMPORTANT):**
@@ -210,3 +211,4 @@ After making any changes to your app, you need to push them to GitHub to update 
     ```
 
 That's it! Vercel will automatically detect the push and redeploy your website with the latest changes.
+
