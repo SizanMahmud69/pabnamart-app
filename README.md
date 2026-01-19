@@ -157,13 +157,18 @@ Follow these steps to deploy your application to Vercel using GitHub.
     *   `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`: `600614180848`
     *   `NEXT_PUBLIC_FIREBASE_APP_ID`: `1:600614180848:web:6f4e21fb4f5b6cd42a6f35`
     
-    **Firebase Admin SDK Variables (for server actions):**
-    
-    To get the values for the next variables, go to your **Firebase Project Settings > Service accounts**, and generate a new private key. This will download a JSON file.
-    
-    *   `FIREBASE_PROJECT_ID`: Your Firebase `project_id` from the downloaded file.
-    *   `FIREBASE_CLIENT_EMAIL`: Your Firebase service account's `client_email` from the downloaded file.
-    *   `FIREBASE_PRIVATE_KEY`: Your Firebase service account's `private_key` from the downloaded file.
+    **Firebase Admin SDK Variable (for server actions):**
+
+    To get the value for the next variable, you'll need to generate a service account key from Firebase.
+
+    1.  In your Firebase project, go to **Project Settings** (click the gear icon) > **Service accounts**.
+    2.  Click **"Generate new private key"**. A JSON file will be downloaded to your computer.
+    3.  Open this JSON file with a text editor and **copy its entire content**.
+    4.  Now, go to your Vercel project's **Settings** > **Environment Variables**.
+    5.  Add a new environment variable:
+        -   **Name:** `FIREBASE_SERVICE_ACCOUNT_JSON`
+        -   **Value:** Paste the entire JSON content you copied in step 3.
+    6.  Click **Save**. Make sure to redeploy your project for the changes to take effect.
 
     **Vercel Blob Storage (for image uploads - VERY IMPORTANT):**
 

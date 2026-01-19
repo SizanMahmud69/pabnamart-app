@@ -21,38 +21,27 @@ import type {
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 
-let adminApp: admin.app.App;
-
 const getFirebaseAdmin = () => {
   if (admin.apps.length > 0) {
     return admin.apps[0]!;
   }
 
   try {
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-    if (!projectId) {
-      throw new Error('Firebase project ID is not set. Ensure FIREBASE_PROJECT_ID is configured.');
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+    if (!serviceAccountJson) {
+        throw new Error('Firebase service account JSON is not set. Ensure FIREBASE_SERVICE_ACCOUNT_JSON is configured in your environment variables.');
     }
-    if (!clientEmail) {
-      throw new Error('Firebase client email is not set. Ensure FIREBASE_CLIENT_EMAIL is configured.');
-    }
-    if (!privateKey) {
-      throw new Error('Firebase private key is not set. Ensure FIREBASE_PRIVATE_KEY is configured.');
-    }
-
-    adminApp = admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
+    
+    const serviceAccount = JSON.parse(serviceAccountJson);
+    
+    return admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
     });
-    return adminApp;
   } catch (error) {
-    console.error('Firebase admin initialization error', error);
+    console.error('Firebase admin initialization error:', error);
+    if (error instanceof SyntaxError) {
+        throw new Error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Ensure it is a valid JSON string.');
+    }
     throw error;
   }
 };
