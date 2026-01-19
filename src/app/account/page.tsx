@@ -14,8 +14,8 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { useMemo, useEffect, useState } from "react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { Separator } from "@/components/ui/separator";
-import type { Order } from "@/types";
-import { collection, getFirestore, limit, onSnapshot, query, where, orderBy } from "firebase/firestore";
+import type { Order, Review } from "@/types";
+import { collection, getFirestore, limit, onSnapshot, query, where, orderBy, collectionGroup } from "firebase/firestore";
 import app from "@/lib/firebase";
 
 
@@ -58,6 +58,7 @@ export default function AccountPage() {
     const { user, loading: authLoading, appUser } = useAuth();
     const { wishlistItems } = useWishlist();
     const [orders, setOrders] = useState<Order[]>([]);
+    const [userReviews, setUserReviews] = useState<Review[]>([]);
 
     const unusedVoucherCount = useMemo(() => {
         if (!appUser) return 0;
@@ -75,12 +76,22 @@ export default function AccountPage() {
         const ordersRef = collection(db, 'orders');
         const q = query(ordersRef, where('userId', '==', user.uid), orderBy('date', 'desc'));
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const unsubscribeOrders = onSnapshot(q, (snapshot) => {
             const userOrders = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Order));
             setOrders(userOrders);
         });
 
-        return () => unsubscribe();
+        const reviewsRef = collectionGroup(db, 'reviews');
+        const reviewsQuery = query(reviewsRef, where('user.uid', '==', user.uid));
+        const unsubscribeReviews = onSnapshot(reviewsQuery, (snapshot) => {
+            const reviews = snapshot.docs.map(doc => doc.data() as Review);
+            setUserReviews(reviews);
+        });
+
+        return () => {
+            unsubscribeOrders();
+            unsubscribeReviews();
+        };
     }, [user]);
 
     if (authLoading) {
@@ -117,6 +128,16 @@ export default function AccountPage() {
     ];
     
     const getOrderStatusCount = (statuses: Order['status'][]) => {
+        // Special handling for 'delivered' to count only unreviewed orders
+        if (statuses.length === 1 && statuses[0] === 'delivered') {
+            const deliveredOrders = orders.filter(o => o.status === 'delivered');
+            const unreviewedDeliveredOrders = deliveredOrders.filter(order => 
+                order.items.some(item => 
+                    !userReviews.some(review => review.productId === item.id)
+                )
+            );
+            return unreviewedDeliveredOrders.length;
+        }
         return orders.filter(o => statuses.includes(o.status)).length;
     }
 
