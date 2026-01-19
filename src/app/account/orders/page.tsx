@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -141,8 +140,8 @@ function MyOrdersPageContent() {
                                         <CardContent className="p-4 space-y-3">
                                             
                                             <div className="space-y-4">
-                                                {order.items.map(item => (
-                                                    <div key={item.id} className="flex items-center gap-4">
+                                                {order.items.map((item, index) => (
+                                                    <div key={`${item.id}-${index}`} className="flex items-center gap-4">
                                                         <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                                         <div className="flex-grow">
                                                             <p className="font-semibold">{item.name}</p>

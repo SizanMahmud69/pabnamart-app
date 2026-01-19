@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import type { Order } from '@/types';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin, Truck, Calendar, Hash, CreditCard, Ticket, CheckCircle, Smartphone } from 'lucide-react';
 import Link from 'next/link';
@@ -106,8 +105,8 @@ function OrderDetailsPage() {
                         
                         <div>
                             <h3 className="text-lg font-semibold mb-2">Order Summary</h3>
-                            {order.items.map(item => (
-                                <div key={item.id} className="flex items-center gap-4 py-3">
+                            {order.items.map((item, index) => (
+                                <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-3">
                                     <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                     <div className="flex-grow">
                                         <p className="font-semibold">{item.name}</p>
