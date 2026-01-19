@@ -1,4 +1,3 @@
-
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
@@ -41,6 +40,26 @@ const roundPrice = (price: number): number => {
     return Math.round(price);
 };
 
+const convertUndefinedToNull = (obj: any): any => {
+    if (obj === null || obj === undefined) {
+        return null;
+    }
+    if (Array.isArray(obj)) {
+        return obj.map(v => convertUndefinedToNull(v));
+    }
+    if (typeof obj === 'object' && !(obj instanceof Date)) {
+        const newObj: { [key: string]: any } = {};
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                const value = obj[key];
+                newObj[key] = value === undefined ? null : convertUndefinedToNull(value);
+            }
+        }
+        return newObj;
+    }
+    return obj;
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [db, setDb] = useState<Firestore | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -64,7 +83,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (!db) return;
       const cartRef = doc(db, 'carts', uid);
       try {
-        await setDoc(cartRef, { items, selectedItemIds: selectedIds }, { merge: true });
+        const sanitizedItems = convertUndefinedToNull(items);
+        await setDoc(cartRef, { items: sanitizedItems, selectedItemIds: selectedIds }, { merge: true });
       } catch (error) {
         console.error("Failed to update cart in Firestore:", error);
       }
