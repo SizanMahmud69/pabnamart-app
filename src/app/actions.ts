@@ -45,7 +45,7 @@ const getFirebaseAdmin = () => {
   } catch (error) {
     console.error('Firebase admin initialization error:', error);
     if (error instanceof SyntaxError) {
-        throw new Error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Ensure it is a valid JSON string.');
+        throw new Error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Ensure the entire JSON content was copied correctly, including the curly braces `{` and `}`.');
     }
     throw error;
   }
