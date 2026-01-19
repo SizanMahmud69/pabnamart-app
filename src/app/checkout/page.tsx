@@ -32,11 +32,12 @@ function CheckoutPage() {
         selectedCartItems: cartItems, 
         selectedCartTotal, 
         shippingFee,
+        selectedShippingAddress,
+        setSelectedShippingAddress,
     } = useCart();
     const { collectedVouchers } = useVouchers();
 
     const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
-    const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
     const [voucherCode, setVoucherCode] = useState('');
     const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
@@ -51,19 +52,16 @@ function CheckoutPage() {
                     const userData = docSnap.data();
                     const userAddresses = userData.shippingAddresses || [];
                     setAddresses(userAddresses);
-                    if (!selectedAddressId) {
-                        const defaultAddress = userAddresses.find((a: ShippingAddress) => a.default);
-                        if (defaultAddress) {
-                            setSelectedAddressId(defaultAddress.id);
-                        } else if (userAddresses.length > 0) {
-                            setSelectedAddressId(userAddresses[0].id);
-                        }
+                    
+                    if (!selectedShippingAddress && userAddresses.length > 0) {
+                        const defaultAddress = userAddresses.find((a: ShippingAddress) => a.default) || userAddresses[0];
+                        setSelectedShippingAddress(defaultAddress);
                     }
                 }
             });
             return () => unsubscribe();
         }
-    }, [user, selectedAddressId]);
+    }, [user, selectedShippingAddress, setSelectedShippingAddress]);
     
     useEffect(() => {
         if (cartItems.length === 0) {
@@ -87,7 +85,7 @@ function CheckoutPage() {
         });
         
         toast({ title: "Address Added", description: "Your new address has been saved." });
-        setSelectedAddressId(newAddress.id);
+        setSelectedShippingAddress(newAddress);
         setIsAddressModalOpen(false);
     };
 
@@ -140,18 +138,23 @@ function CheckoutPage() {
     }, [shippingFee, appliedVoucher]);
 
     const finalTotal = Math.round(subtotalWithDiscount + shippingFeeWithDiscount);
-
-    const selectedAddress = addresses.find(a => a.id === selectedAddressId);
     
+    const handleAddressChange = (addressId: string) => {
+        const address = addresses.find(a => a.id === addressId);
+        if (address) {
+            setSelectedShippingAddress(address);
+        }
+    };
+
     const handleProceedToPayment = () => {
-        if (!selectedAddress) {
+        if (!selectedShippingAddress) {
             toast({ title: "No Address Selected", description: "Please select a shipping address.", variant: "destructive" });
             return;
         }
         
         sessionStorage.setItem('checkoutData', JSON.stringify({
             items: cartItems,
-            shippingAddress: selectedAddress,
+            shippingAddress: selectedShippingAddress,
             shippingFee: shippingFeeWithDiscount,
             total: finalTotal,
             subtotal: selectedCartTotal,
@@ -183,9 +186,9 @@ function CheckoutPage() {
                                 </CardHeader>
                                 <CardContent>
                                     {addresses.length > 0 ? (
-                                        <RadioGroup value={selectedAddressId || ''} onValueChange={setSelectedAddressId} className="space-y-4">
+                                        <RadioGroup value={selectedShippingAddress?.id || ''} onValueChange={handleAddressChange} className="space-y-4">
                                             {addresses.map(address => (
-                                                <div key={address.id} className={cn("p-4 rounded-lg border", selectedAddressId === address.id && "border-primary ring-1 ring-primary")}>
+                                                <div key={address.id} className={cn("p-4 rounded-lg border", selectedShippingAddress?.id === address.id && "border-primary ring-1 ring-primary")}>
                                                     <div className="flex items-start gap-4">
                                                         <RadioGroupItem value={address.id} id={`addr-${address.id}`} className="mt-1" />
                                                         <Label htmlFor={`addr-${address.id}`} className="flex-1 cursor-pointer">
@@ -288,7 +291,7 @@ function CheckoutPage() {
                                     <div className="flex justify-between font-bold text-lg"><span>Total</span><span>৳{finalTotal}</span></div>
                                 </CardContent>
                                 <CardFooter>
-                                    <Button size="lg" className="w-full" onClick={handleProceedToPayment} disabled={!selectedAddress}>
+                                    <Button size="lg" className="w-full" onClick={handleProceedToPayment} disabled={!selectedShippingAddress}>
                                         Proceed to Payment
                                     </Button>
                                 </CardFooter>
