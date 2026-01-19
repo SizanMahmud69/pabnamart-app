@@ -42,6 +42,7 @@ function CheckoutPage() {
     const [voucherCode, setVoucherCode] = useState('');
     const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
     const [voucherError, setVoucherError] = useState<string | null>(null);
+    const [isProceeding, startProceeding] = useTransition();
     
     useEffect(() => {
         if (user) {
@@ -152,15 +153,17 @@ function CheckoutPage() {
             return;
         }
         
-        sessionStorage.setItem('checkoutData', JSON.stringify({
-            items: cartItems,
-            shippingAddress: selectedShippingAddress,
-            shippingFee: shippingFeeWithDiscount,
-            total: finalTotal,
-            subtotal: selectedCartTotal,
-            voucherCode: appliedVoucher?.code,
-        }));
-        router.push('/payment');
+        startProceeding(() => {
+            sessionStorage.setItem('checkoutData', JSON.stringify({
+                items: cartItems,
+                shippingAddress: selectedShippingAddress,
+                shippingFee: shippingFeeWithDiscount,
+                total: finalTotal,
+                subtotal: selectedCartTotal,
+                voucherCode: appliedVoucher?.code,
+            }));
+            router.push('/payment');
+        });
     };
 
     if (cartItems.length === 0) {
@@ -291,8 +294,9 @@ function CheckoutPage() {
                                     <div className="flex justify-between font-bold text-lg"><span>Total</span><span>৳{finalTotal}</span></div>
                                 </CardContent>
                                 <CardFooter>
-                                    <Button size="lg" className="w-full" onClick={handleProceedToPayment} disabled={!selectedShippingAddress}>
-                                        Proceed to Payment
+                                    <Button size="lg" className="w-full" onClick={handleProceedToPayment} disabled={!selectedShippingAddress || isProceeding}>
+                                        {isProceeding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        {isProceeding ? "Processing..." : "Proceed to Payment"}
                                     </Button>
                                 </CardFooter>
                             </Card>

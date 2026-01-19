@@ -36,6 +36,7 @@ function PaymentPage() {
     const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
     const [paymentMethod, setPaymentMethod] = useState('');
     const [isPlacingOrder, startOrderPlacement] = useTransition();
+    const [isNavigating, startNavigation] = useTransition();
     const { cashOnDeliveryFee } = useDeliveryCharge();
 
     useEffect(() => {
@@ -74,7 +75,9 @@ function PaymentPage() {
     };
     
     const handleOnlinePayment = () => {
-        router.push('/payment/online');
+        startNavigation(() => {
+            router.push('/payment/online');
+        });
     }
 
     if (!checkoutData) {
@@ -148,8 +151,9 @@ function PaymentPage() {
                             </Button>
                         )}
                         {paymentMethod === 'online' && (
-                             <Button size="lg" className="w-full" onClick={handleOnlinePayment}>
-                                Continue to Online Payment
+                             <Button size="lg" className="w-full" onClick={handleOnlinePayment} disabled={isNavigating}>
+                                {isNavigating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isNavigating ? 'Proceeding...' : 'Continue to Online Payment'}
                             </Button>
                         )}
                     </CardFooter>
