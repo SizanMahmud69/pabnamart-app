@@ -260,9 +260,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const isInsidePabna = !!selectedShippingAddress && selectedShippingAddress.city.toLowerCase().trim() === 'pabna';
 
     if (isInsidePabna) {
-        return itemCount >= 1 && itemCount <= 5 ? chargeInsidePabnaSmall : chargeInsidePabnaLarge;
+      return itemCount <= 5 ? chargeInsidePabnaSmall : chargeInsidePabnaLarge;
     } else {
-        return itemCount >= 1 && itemCount <= 5 ? chargeOutsidePabnaSmall : chargeOutsidePabnaLarge;
+      return itemCount <= 5 ? chargeOutsidePabnaSmall : chargeOutsidePabnaLarge;
     }
 
   }, [selectedCartItems, selectedCartCount, selectedShippingAddress, chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge]);
