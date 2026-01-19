@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getProductRecommendations as getProductRecommendationsFlow } from '@/ai/flows/product-recommendations';
@@ -30,12 +29,12 @@ const getFirebaseAdmin = () => {
   }
 
   try {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const projectId = process.env.FIREBASE_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
     const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
     if (!projectId) {
-      throw new Error('Firebase project ID is not set. Ensure NEXT_PUBLIC_FIREBASE_PROJECT_ID is configured.');
+      throw new Error('Firebase project ID is not set. Ensure FIREBASE_PROJECT_ID is configured.');
     }
     if (!clientEmail) {
       throw new Error('Firebase client email is not set. Ensure FIREBASE_CLIENT_EMAIL is configured.');

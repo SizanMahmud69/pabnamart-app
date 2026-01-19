@@ -159,8 +159,9 @@ Follow these steps to deploy your application to Vercel using GitHub.
     
     **Firebase Admin SDK Variables (for server actions):**
     
-    To get the values for the next two variables, go to your **Firebase Project Settings > Service accounts**, and generate a new private key. This will download a JSON file.
+    To get the values for the next variables, go to your **Firebase Project Settings > Service accounts**, and generate a new private key. This will download a JSON file.
     
+    *   `FIREBASE_PROJECT_ID`: Your Firebase `project_id` from the downloaded file.
     *   `FIREBASE_CLIENT_EMAIL`: Your Firebase service account's `client_email` from the downloaded file.
     *   `FIREBASE_PRIVATE_KEY`: Your Firebase service account's `private_key` from the downloaded file.
 
