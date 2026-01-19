@@ -188,14 +188,35 @@ function MyOrdersPageContent() {
 
                                                     return null;
                                                 })()}
-                                                {order.status === 'delivered' && (
-                                                    <Button asChild variant="outline" size="sm">
-                                                        <Link href={`/account/returns?orderId=${order.id}`}>
-                                                            <Undo2 className="mr-2 h-4 w-4" />
-                                                            Return
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                                                {order.status === 'delivered' && (() => {
+                                                    const maxReturnDays = Math.max(0, ...order.items.map(item => item.returnPolicy || 0));
+                                                    let isReturnWindowOpen = false;
+
+                                                    if (order.deliveredAt && maxReturnDays > 0) {
+                                                        const deliveryDate = new Date(order.deliveredAt);
+                                                        const deadline = new Date(deliveryDate);
+                                                        deadline.setDate(deliveryDate.getDate() + maxReturnDays);
+                                                        isReturnWindowOpen = new Date() <= deadline;
+                                                    }
+
+                                                    if (isReturnWindowOpen) {
+                                                        return (
+                                                            <Button asChild variant="outline" size="sm">
+                                                                <Link href={`/account/returns?orderId=${order.id}`}>
+                                                                    <Undo2 className="mr-2 h-4 w-4" />
+                                                                    Return
+                                                                </Link>
+                                                            </Button>
+                                                        );
+                                                    } else {
+                                                        return (
+                                                            <Button variant="outline" size="sm" disabled>
+                                                                <Undo2 className="mr-2 h-4 w-4" />
+                                                                Return
+                                                            </Button>
+                                                        );
+                                                    }
+                                                })()}
                                             </div>
                                             <div className="flex gap-2 items-center">
                                                 {order.paymentMethod === 'cash-on-delivery' && order.status === 'processing' && (

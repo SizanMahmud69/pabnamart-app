@@ -476,13 +476,19 @@ export async function updateOrderStatus(
 
       if (oldStatus === newStatus) return;
 
+      const updatePayload: { [key: string]: any } = { status: newStatus };
+
+      if (newStatus === 'delivered' && oldStatus !== 'delivered') {
+        updatePayload.deliveredAt = new Date().toISOString();
+      }
+
       if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
         await _adjustProductStock(db, transaction, currentOrderData, 'increment');
       } else if (oldStatus === 'cancelled' && newStatus !== 'cancelled') {
         await _adjustProductStock(db, transaction, currentOrderData, 'decrement');
       }
 
-      transaction.update(orderRef, { status: newStatus });
+      transaction.update(orderRef, updatePayload);
     });
 
     if (orderData) {

@@ -90,6 +90,7 @@ export interface Order {
     voucherDiscount?: number;
     paymentAccountNumber?: string;
     cashOnDeliveryFee?: number;
+    deliveredAt?: string;
 }
 
 export interface Voucher {
