@@ -33,10 +33,10 @@ const getFirebaseAdmin = (): admin.App | null => {
         let errorMessage = 'Firebase service account JSON is not set. Ensure FIREBASE_SERVICE_ACCOUNT_JSON is configured in your environment variables.';
         // Provide a more specific hint if running on Vercel
         if (process.env.VERCEL_ENV) {
-          errorMessage += ' Go to your Vercel project -> Settings -> Environment Variables and ensure it is set for the Production, Preview, and Development environments.'
+          errorMessage += ' Go to your Vercel project -> Settings -> Environment Variables. After saving the variable, you MUST redeploy your project for the changes to take effect.'
         }
         // In a dev environment, this is expected if not set up. Don't throw, just log.
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
             console.error(errorMessage);
             return null;
         }
@@ -45,23 +45,33 @@ const getFirebaseAdmin = (): admin.App | null => {
     
     try {
         const serviceAccount = JSON.parse(serviceAccountJson);
+        
+        // Vercel UI can sometimes escape newlines in the private key. We need to un-escape them.
+        if (serviceAccount.private_key) {
+            serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+        }
+
         return admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
     } catch (e) {
-        throw new Error("Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Ensure the entire JSON file content is copied correctly and set as the environment variable.");
+        let hint = "This usually means the JSON value is not formatted correctly. Please re-copy the entire content of the service account file."
+        if (process.env.VERCEL_ENV) {
+            hint += " Also, remember to redeploy your project from the 'Deployments' tab after updating the variable."
+        }
+        console.error('Firebase admin initialization error:', e);
+        throw new Error(`Failed to parse or initialize Firebase Admin SDK. ${hint}`);
     }
     
   } catch (error) {
     console.error('Firebase admin initialization error:', error);
-    if (error instanceof SyntaxError) {
-        console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Ensure the entire JSON content was copied correctly, including the curly braces `{` and `}`.');
+    // In a dev environment, this is expected if not set up. Don't throw, just log.
+    if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+      return null;
     }
-    return null;
+    throw error; // Re-throw the error to be caught by Next.js
   }
 };
-
-const serverActionNotAvailableMessage = 'Action failed: Firebase Admin credentials are not configured for this environment. Please set the FIREBASE_SERVICE_ACCOUNT_JSON environment variable in your hosting provider settings (e.g., Vercel).';
 
 
 export async function getProductRecommendations(
