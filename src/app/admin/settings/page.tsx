@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useMemo, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Image as ImageIcon, Truck, CreditCard, Loader2, LayoutGrid, UserCog, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight, Users, Truck, CreditCard, Loader2, LayoutGrid, UserCog, Phone } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
@@ -31,6 +31,13 @@ const allSettingsItems = [
         icon: LayoutGrid,
         href: "/admin/settings/categories",
         permissionKey: 'canManageCategorySettings'
+    },
+    {
+        title: "User Management",
+        description: "View and manage user accounts.",
+        icon: Users,
+        href: "/admin/users",
+        permissionKey: 'canManageUsers'
     },
     {
         title: "Moderator Settings",

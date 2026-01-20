@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useTransition, useEffect, useMemo } from 'react';
@@ -42,13 +43,6 @@ const allMenuItems = [
         icon: Star,
         href: "/admin/reviews",
         permissionKey: 'canManageReviews'
-    },
-    {
-        title: "User Management",
-        description: "View and manage user accounts.",
-        icon: Users,
-        href: "/admin/users",
-        permissionKey: 'canManageUsers'
     },
     {
         title: "Offer Management",
