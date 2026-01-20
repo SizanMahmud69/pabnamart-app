@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getProductRecommendations as getProductRecommendationsFlow } from '@/ai/flows/product-recommendations';
@@ -35,15 +36,22 @@ const getFirebaseAdmin = (): admin.App | null => {
           errorMessage += ' Go to your Vercel project -> Settings -> Environment Variables and ensure it is set for the Production, Preview, and Development environments.'
         }
         // In a dev environment, this is expected if not set up. Don't throw, just log.
-        console.error(errorMessage);
-        return null;
+        if (process.env.NODE_ENV !== 'production') {
+            console.error(errorMessage);
+            return null;
+        }
+        throw new Error(errorMessage);
     }
     
-    const serviceAccount = JSON.parse(serviceAccountJson);
+    try {
+        const serviceAccount = JSON.parse(serviceAccountJson);
+        return admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+    } catch (e) {
+        throw new Error("Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Ensure the entire JSON file content is copied correctly and set as the environment variable.");
+    }
     
-    return admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
   } catch (error) {
     console.error('Firebase admin initialization error:', error);
     if (error instanceof SyntaxError) {
@@ -53,7 +61,7 @@ const getFirebaseAdmin = (): admin.App | null => {
   }
 };
 
-const serverActionNotAvailableMessage = 'This server action is not available in the current environment. Please try on the deployed application.';
+const serverActionNotAvailableMessage = 'Action failed: Firebase Admin credentials are not configured for this environment. Please set the FIREBASE_SERVICE_ACCOUNT_JSON environment variable in your hosting provider settings (e.g., Vercel).';
 
 
 export async function getProductRecommendations(
