@@ -53,7 +53,19 @@ const productRecommendationsFlow = ai.defineFlow(
     outputSchema: ProductRecommendationsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      // If the model fails to return a valid output, it will be undefined.
+      // In that case, we'll return an empty list of recommendations.
+      if (!output) {
+        return { recommendations: [] };
+      }
+      return output;
+    } catch (error) {
+      console.error("Error in productRecommendationsFlow:", error);
+      // In case of an unexpected error, also return empty recommendations
+      // to prevent the app from crashing.
+      return { recommendations: [] };
+    }
   }
 );
