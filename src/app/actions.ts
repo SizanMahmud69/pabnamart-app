@@ -594,18 +594,8 @@ export async function saveContactMessage(formData: Omit<ContactMessage, 'id' | '
     } catch (error: any) {
         console.error('Error saving contact message:', error);
         
-        let errorMessage = error.message || 'Failed to send your message. An unknown error occurred.';
+        const errorMessage = error?.message || 'An unknown error occurred. Please check server logs for details.';
         
-        if (error.message && error.message.includes('Cloud Firestore API has not been used')) {
-            errorMessage = "Action failed: Firestore is not enabled for this project. Please go to your Firebase Console, open the 'Firestore Database' section, and click 'Create database' to enable it.";
-        } else if (error.message && error.message.includes('permission-denied')) {
-            errorMessage = "Action failed: Permission denied. Please check your Firestore security rules or service account permissions in the Google Cloud Console.";
-        } else if (error.message && error.message.includes('Failed to parse or initialize Firebase Admin SDK')) {
-             errorMessage = `Failed to initialize Firebase services. This is often due to an incorrectly configured FIREBASE_SERVICE_ACCOUNT_JSON environment variable. Please re-copy the entire content of the service account file from Firebase and ensure it's correctly set in Vercel for all environments (Production, Preview, Development). Remember to redeploy after updating.`;
-        } else if (error.message && (error.message.includes('service account') || error.message.includes('credential'))) {
-            errorMessage = `There's an issue with the Firebase service account configuration. ${error.message}`;
-        }
-
         return { success: false, message: errorMessage };
     }
 }
