@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2, MessageSquare } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
 
@@ -43,13 +42,6 @@ const allMenuItems = [
         icon: Star,
         href: "/admin/reviews",
         permissionKey: 'canManageReviews'
-    },
-    {
-        title: "Message Management",
-        description: "View and reply to customer messages.",
-        icon: MessageSquare,
-        href: "/admin/messages",
-        permissionKey: 'canManageMessages'
     },
     {
         title: "Offer Management",

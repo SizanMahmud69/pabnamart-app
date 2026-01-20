@@ -1,4 +1,3 @@
-
 import type { LucideIcon } from "react";
 
 export interface Review {
@@ -125,18 +124,6 @@ export interface Notification {
     href?: string;
 }
 
-export interface ContactMessage {
-  id: string;
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-  createdAt: string;
-  status: 'unread' | 'read' | 'replied';
-  reply?: string;
-  repliedAt?: string;
-}
-
 export interface ModeratorPermissions {
   canManageProducts: boolean;
   canManageUsers: boolean;
@@ -151,7 +138,6 @@ export interface ModeratorPermissions {
   canManageModeratorSettings: boolean;
   canManageReviews: boolean;
   canManageContactSettings: boolean;
-  canManageMessages: boolean;
 }
 
 export interface User {

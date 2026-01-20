@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useTransition } from 'react';
@@ -33,7 +32,6 @@ const permissionLabels: Record<keyof ModeratorPermissions, string> = {
     canManageModeratorSettings: 'Moderator Settings',
     canManageReviews: 'Reviews',
     canManageContactSettings: 'Contact Settings',
-    canManageMessages: 'Messages',
 };
 
 

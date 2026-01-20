@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getProductRecommendations as getProductRecommendationsFlow } from '@/ai/flows/product-recommendations';
@@ -18,10 +17,11 @@ import type {
   DeliverySettings,
   OrderItem,
   Order,
-  CartItem,
-  ContactMessage
+  CartItem
 } from '@/types';
 import { revalidatePath } from 'next/cache';
+
+const serverActionNotAvailableMessage = 'This server action is disabled in the local development or preview environment because it requires Firebase Admin credentials. It is only available on the live, deployed website.';
 
 const getFirebaseAdmin = (): admin.App | null => {
   if (admin.apps.length > 0) {
@@ -34,7 +34,7 @@ const getFirebaseAdmin = (): admin.App | null => {
         let errorMessage = 'Firebase service account JSON is not set. Ensure FIREBASE_SERVICE_ACCOUNT_JSON is configured in your environment variables.';
         // Provide a more specific hint if running on Vercel
         if (process.env.VERCEL_ENV) {
-          errorMessage += ' Go to your Vercel project -> Settings -> Environment Variables. After saving the variable, you MUST redeploy your project for the changes to take effect.'
+          errorMessage += " A new Deployment is required for your changes to take effect. Go to your Vercel project -> Deployments, find the latest deployment, and click 'Redeploy'."
         }
         // In a dev environment, this is expected if not set up. Don't throw, just log.
         if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
@@ -55,13 +55,13 @@ const getFirebaseAdmin = (): admin.App | null => {
         return admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
-    } catch (e) {
+    } catch (e: any) {
         let hint = "This usually means the JSON value is not formatted correctly. Please re-copy the entire content of the service account file."
         if (process.env.VERCEL_ENV) {
             hint += " Also, remember to redeploy your project from the 'Deployments' tab after updating the variable."
         }
         console.error('Firebase admin initialization error:', e);
-        throw new Error(`Failed to parse or initialize Firebase Admin SDK. ${hint}`);
+        throw new Error(`Failed to parse or initialize Firebase Admin SDK. ${hint} Original error: ${e.message}`);
     }
     
   } catch (error) {
@@ -73,9 +73,6 @@ const getFirebaseAdmin = (): admin.App | null => {
     throw error; // Re-throw the error to be caught by Next.js
   }
 };
-
-const serverActionNotAvailableMessage = 'This server action is disabled in the local development or preview environment because it requires Firebase Admin credentials. It is only available on the live, deployed website.';
-
 
 export async function getProductRecommendations(
   input: ProductRecommendationsInput
@@ -251,7 +248,7 @@ export async function placeOrder(
 ): Promise<{ success: boolean; orderId?: string; message?: string }> {
   const adminApp = getFirebaseAdmin();
   if (!adminApp) {
-    return { success: false, message: serverActionNotAvailableMessage };
+    return { success: false, message: "This feature is only available on the live, deployed website, not in the preview link." };
   }
   const db = getFirestore(adminApp);
 
@@ -360,7 +357,7 @@ export async function placeOrder(
       const total = roundPrice((offerSubtotal - voucherDiscount) + payload.shippingFee + codFee);
 
       const orderRef = db.collection('orders').doc();
-      const newOrder: Omit<Order, 'id' | 'deliveredAt'> = {
+      const newOrder: Omit<Order, 'id'| 'deliveredAt'> = {
         userId: payload.userId,
         items: itemsForOrder,
         total,
@@ -405,7 +402,9 @@ export async function placeOrder(
     revalidatePath('/payment');
 
     let errorMessage = error.message || 'An unexpected error occurred while placing the order.';
-    if (error.message && error.message.includes('Cloud Firestore API has not been used')) {
+    if (error.message && error.message.includes("Cannot use 'undefined' as a Firestore value")) {
+        errorMessage = `Order failed: Firestore received an invalid value. This can be caused by an incomplete or incorrect Firebase Admin configuration in your Vercel environment variables. Please double-check your 'FIREBASE_SERVICE_ACCOUNT_JSON' and redeploy. Original error: ${error.message}`;
+    } else if (error.message && error.message.includes('Cloud Firestore API has not been used')) {
         errorMessage = "Order failed: Firestore is not enabled for this project. Please go to your Firebase Console, open the 'Firestore Database' section, and click 'Create database' to enable it.";
     } else if (error.message && error.message.includes('permission-denied')) {
         errorMessage = "Order failed: Permission denied. Please check your Firestore security rules or service account permissions.";
@@ -574,64 +573,4 @@ export async function updateOrderStatus(
   } catch (error: any) {
     return { success: false, message: error.message || 'Failed to update order status.' };
   }
-}
-
-export async function saveContactMessage(formData: Omit<ContactMessage, 'id' | 'createdAt' | 'status'>) {
-    try {
-        const adminApp = getFirebaseAdmin();
-        if (!adminApp) {
-            return { success: false, message: serverActionNotAvailableMessage };
-        }
-        const db = getFirestore(adminApp);
-        
-        const messageData = {
-            ...formData,
-            createdAt: new Date().toISOString(),
-            status: 'unread' as const
-        };
-        await addDoc(collection(db, 'contactMessages'), messageData);
-        return { success: true, message: 'Your message has been sent successfully!' };
-    } catch (error: any) {
-        console.error('Error saving contact message:', error);
-        
-        const errorMessage = error?.message || 'An unknown error occurred. Please check server logs for details.';
-        
-        return { success: false, message: errorMessage };
-    }
-}
-
-export async function markMessageAsRead(messageId: string) {
-    const adminApp = getFirebaseAdmin();
-    if (!adminApp) return;
-    const db = getFirestore(adminApp);
-    const messageRef = doc(db, 'contactMessages', messageId);
-    
-    const messageSnap = await messageRef.get();
-    if (messageSnap.exists() && messageSnap.data().status === 'unread') {
-        await updateDoc(messageRef, { status: 'read' });
-    }
-}
-
-export async function replyToContactMessage(messageId: string, replyText: string) {
-    const adminApp = getFirebaseAdmin();
-    if (!adminApp) {
-      return { success: false, message: serverActionNotAvailableMessage };
-    }
-    const db = getFirestore(adminApp);
-    
-    try {
-        const messageRef = doc(db, 'contactMessages', messageId);
-        await updateDoc(messageRef, {
-            reply: replyText,
-            repliedAt: new Date().toISOString(),
-            status: 'replied'
-        });
-        
-        // TODO: Implement actual email sending logic here
-        
-        return { success: true, message: 'Reply has been saved.' };
-    } catch (error: any) {
-        console.error('Error replying to message:', error);
-        return { success: false, message: 'Failed to save reply.' };
-    }
 }

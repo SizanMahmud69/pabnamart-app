@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ReactNode } from 'react';
@@ -6,26 +5,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Button } from "@/components/ui/button";
-import { LogOut, Settings, MessageSquare } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
-import app from '@/lib/firebase';
-import { Badge } from '@/components/ui/badge';
-
-const db = getFirestore(app);
 
 function AdminHeader() {
     const router = useRouter();
-    const [unreadMessages, setUnreadMessages] = useState(0);
-
-    useEffect(() => {
-        const q = query(collection(db, 'contactMessages'), where('status', '==', 'unread'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setUnreadMessages(snapshot.size);
-        });
-        return () => unsubscribe();
-    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('isAdmin');
@@ -41,14 +26,6 @@ function AdminHeader() {
                     <span className="text-2xl font-bold text-primary whitespace-nowrap">PabnaMart</span>
                 </Link>
                 <div className="flex items-center gap-2">
-                    <Button asChild variant="ghost" size="icon" className="relative">
-                        <Link href="/admin/messages">
-                            <MessageSquare className="h-6 w-6" />
-                            {unreadMessages > 0 && (
-                                <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 justify-center p-0">{unreadMessages}</Badge>
-                            )}
-                        </Link>
-                    </Button>
                     <Button asChild variant="ghost" size="icon">
                         <Link href="/admin/settings">
                             <Settings className="h-6 w-6" />
