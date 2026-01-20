@@ -22,7 +22,7 @@ import type {
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 
-const serverActionNotAvailableMessage = 'This server action is not available in the current environment. Please ensure Firebase Admin SDK is configured correctly on your hosting provider.';
+const serverActionNotAvailableMessage = 'Order processing is disabled in the preview environment. This feature is only available on the live, deployed website.';
 
 const getFirebaseAdmin = (): admin.App | null => {
   if (admin.apps.length > 0) {
