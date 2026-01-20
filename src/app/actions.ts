@@ -22,8 +22,6 @@ import type {
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 
-const serverActionNotAvailableMessage = 'Order processing is disabled in the preview environment. This feature is only available on the live, deployed website.';
-
 const getFirebaseAdmin = (): admin.App | null => {
   if (admin.apps.length > 0) {
     return admin.apps[0]!;
@@ -39,7 +37,7 @@ const getFirebaseAdmin = (): admin.App | null => {
         }
         // In a dev environment, this is expected if not set up. Don't throw, just log.
         if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-            console.error(errorMessage);
+            console.error('Order processing is disabled in the preview environment. This feature is only available on the live, deployed website. ' + errorMessage);
             return null;
         }
         throw new Error(errorMessage);
@@ -74,6 +72,8 @@ const getFirebaseAdmin = (): admin.App | null => {
     throw error; // Re-throw the error to be caught by Next.js
   }
 };
+
+const serverActionNotAvailableMessage = 'Order processing is disabled in the preview environment. This feature is only available on the live, deployed website.';
 
 
 export async function getProductRecommendations(
@@ -373,7 +373,6 @@ export async function placeOrder(
         voucherCode: usedVoucher?.code || '',
         voucherDiscount: voucherDiscount,
         cashOnDeliveryFee: codFee,
-        deliveredAt: undefined,
       };
 
       transaction.set(orderRef, newOrder);
