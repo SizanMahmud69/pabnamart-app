@@ -56,9 +56,8 @@ function AdminHeader() {
                     </Button>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="outline">
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Log Out
+                            <Button variant="ghost" size="icon">
+                                <LogOut className="h-6 w-6" />
                             </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
