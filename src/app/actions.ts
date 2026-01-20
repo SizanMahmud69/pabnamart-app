@@ -7,7 +7,7 @@ import type {
   ProductRecommendationsOutput,
 } from '@/ai/flows/product-recommendations';
 import admin from 'firebase-admin';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue, collection, addDoc, updateDoc, doc } from 'firebase-admin/firestore';
 import type {
   Notification,
   User,
@@ -19,6 +19,7 @@ import type {
   OrderItem,
   Order,
   CartItem,
+  ContactMessage
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 
@@ -73,7 +74,7 @@ const getFirebaseAdmin = (): admin.App | null => {
   }
 };
 
-const serverActionNotAvailableMessage = 'Order processing is disabled in the preview environment. This feature is only available on the live, deployed website.';
+const serverActionNotAvailableMessage = 'This server action is disabled in the local development or preview environment because it requires Firebase Admin credentials. It is only available on the live, deployed website.';
 
 
 export async function getProductRecommendations(
@@ -84,7 +85,8 @@ export async function getProductRecommendations(
     return recommendations;
   } catch (error) {
     console.error('Error in getProductRecommendations server action:', error);
-    throw new Error('Failed to fetch product recommendations.');
+    // Return empty recommendations instead of throwing an error
+    return { recommendations: [] };
   }
 }
 
@@ -358,7 +360,7 @@ export async function placeOrder(
       const total = roundPrice((offerSubtotal - voucherDiscount) + payload.shippingFee + codFee);
 
       const orderRef = db.collection('orders').doc();
-      const newOrder: Omit<Order, 'id'> = {
+      const newOrder: Omit<Order, 'id' | 'deliveredAt'> = {
         userId: payload.userId,
         items: itemsForOrder,
         total,
@@ -564,4 +566,61 @@ export async function updateOrderStatus(
   } catch (error: any) {
     return { success: false, message: error.message || 'Failed to update order status.' };
   }
+}
+
+export async function saveContactMessage(formData: Omit<ContactMessage, 'id' | 'createdAt' | 'status'>) {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) {
+        return { success: false, message: serverActionNotAvailableMessage };
+    }
+    const db = getFirestore(adminApp);
+    
+    try {
+        const messageData = {
+            ...formData,
+            createdAt: new Date().toISOString(),
+            status: 'unread' as const
+        };
+        await addDoc(collection(db, 'contactMessages'), messageData);
+        return { success: true, message: 'Your message has been sent successfully!' };
+    } catch (error: any) {
+        console.error('Error saving contact message:', error);
+        return { success: false, message: 'Failed to send your message.' };
+    }
+}
+
+export async function markMessageAsRead(messageId: string) {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) return;
+    const db = getFirestore(adminApp);
+    const messageRef = doc(db, 'contactMessages', messageId);
+    
+    const messageSnap = await messageRef.get();
+    if (messageSnap.exists() && messageSnap.data().status === 'unread') {
+        await updateDoc(messageRef, { status: 'read' });
+    }
+}
+
+export async function replyToContactMessage(messageId: string, replyText: string) {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) {
+      return { success: false, message: serverActionNotAvailableMessage };
+    }
+    const db = getFirestore(adminApp);
+    
+    try {
+        const messageRef = doc(db, 'contactMessages', messageId);
+        await updateDoc(messageRef, {
+            reply: replyText,
+            repliedAt: new Date().toISOString(),
+            status: 'replied'
+        });
+        
+        // TODO: Implement actual email sending logic here
+        
+        return { success: true, message: 'Reply has been saved.' };
+    } catch (error: any) {
+        console.error('Error replying to message:', error);
+        return { success: false, message: 'Failed to save reply.' };
+    }
 }

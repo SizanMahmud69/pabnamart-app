@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone, Mail, MapPin } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -14,12 +14,24 @@ import type { ContactSettings } from "@/types";
 import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 import app from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import { useToast } from "@/hooks/use-toast";
+import { saveContactMessage } from "@/app/actions";
+
+type FormInputs = {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+};
 
 const db = getFirestore(app);
 
 export default function ContactPage() {
     const [settings, setSettings] = useState<ContactSettings | null>(null);
     const [loading, setLoading] = useState(true);
+    const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<FormInputs>();
+    const { toast } = useToast();
 
     useEffect(() => {
         const settingsDocRef = doc(db, 'settings', 'contact');
@@ -32,6 +44,24 @@ export default function ContactPage() {
 
         return () => unsubscribe();
     }, []);
+
+    const onSubmit: SubmitHandler<FormInputs> = async (data) => {
+        const result = await saveContactMessage(data);
+        if (result.success) {
+            toast({
+                title: "Message Sent!",
+                description: "We'll get back to you as soon as possible.",
+            });
+            reset();
+        } else {
+            toast({
+                title: "Error",
+                description: result.message,
+                variant: "destructive",
+            });
+        }
+    };
+
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -90,26 +120,29 @@ export default function ContactPage() {
                                 <CardDescription>We'll get back to you as soon as possible.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <form className="space-y-4">
+                                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="name">Name</Label>
-                                            <Input id="name" placeholder="Your Name" />
+                                            <Input id="name" placeholder="Your Name" {...register("name", { required: true })} />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="email">Email</Label>
-                                            <Input id="email" type="email" placeholder="Your Email" />
+                                            <Input id="email" type="email" placeholder="Your Email" {...register("email", { required: true })} />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="subject">Subject</Label>
-                                        <Input id="subject" placeholder="Message Subject" />
+                                        <Input id="subject" placeholder="Message Subject" {...register("subject", { required: true })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="message">Message</Label>
-                                        <Textarea id="message" placeholder="Your Message" rows={5} />
+                                        <Textarea id="message" placeholder="Your Message" rows={5} {...register("message", { required: true })} />
                                     </div>
-                                    <Button type="submit" className="w-full">Send Message</Button>
+                                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Send Message
+                                    </Button>
                                 </form>
                             </CardContent>
                         </Card>
