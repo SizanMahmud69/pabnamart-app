@@ -22,6 +22,8 @@ import type {
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 
+const serverActionNotAvailableMessage = 'This server action is not available in the current environment. Please ensure Firebase Admin SDK is configured correctly on your hosting provider.';
+
 const getFirebaseAdmin = (): admin.App | null => {
   if (admin.apps.length > 0) {
     return admin.apps[0]!;
