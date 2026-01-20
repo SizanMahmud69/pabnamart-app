@@ -38,7 +38,7 @@ const getFirebaseAdmin = (): admin.App | null => {
         }
         // In a dev environment, this is expected if not set up. Don't throw, just log.
         if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-            console.error('Order processing is disabled in the preview environment. This feature is only available on the live, deployed website. ' + errorMessage);
+            console.error('This server action is disabled in the local development or preview environment because it requires Firebase Admin credentials. It is only available on the live, deployed website. ' + errorMessage);
             return null;
         }
         throw new Error(errorMessage);
@@ -577,13 +577,13 @@ export async function updateOrderStatus(
 }
 
 export async function saveContactMessage(formData: Omit<ContactMessage, 'id' | 'createdAt' | 'status'>) {
-    const adminApp = getFirebaseAdmin();
-    if (!adminApp) {
-        return { success: false, message: serverActionNotAvailableMessage };
-    }
-    const db = getFirestore(adminApp);
-    
     try {
+        const adminApp = getFirebaseAdmin();
+        if (!adminApp) {
+            return { success: false, message: serverActionNotAvailableMessage };
+        }
+        const db = getFirestore(adminApp);
+        
         const messageData = {
             ...formData,
             createdAt: new Date().toISOString(),
@@ -593,13 +593,19 @@ export async function saveContactMessage(formData: Omit<ContactMessage, 'id' | '
         return { success: true, message: 'Your message has been sent successfully!' };
     } catch (error: any) {
         console.error('Error saving contact message:', error);
-        let errorMessage = 'Failed to send your message.';
-        // Check for specific Firestore error messages
+        
+        let errorMessage = error.message || 'Failed to send your message. An unknown error occurred.';
+        
         if (error.message && error.message.includes('Cloud Firestore API has not been used')) {
             errorMessage = "Action failed: Firestore is not enabled for this project. Please go to your Firebase Console, open the 'Firestore Database' section, and click 'Create database' to enable it.";
         } else if (error.message && error.message.includes('permission-denied')) {
             errorMessage = "Action failed: Permission denied. Please check your Firestore security rules or service account permissions in the Google Cloud Console.";
+        } else if (error.message && error.message.includes('Failed to parse or initialize Firebase Admin SDK')) {
+             errorMessage = `Failed to initialize Firebase services. This is often due to an incorrectly configured FIREBASE_SERVICE_ACCOUNT_JSON environment variable. Please re-copy the entire content of the service account file from Firebase and ensure it's correctly set in Vercel for all environments (Production, Preview, Development). Remember to redeploy after updating.`;
+        } else if (error.message && (error.message.includes('service account') || error.message.includes('credential'))) {
+            errorMessage = `There's an issue with the Firebase service account configuration. ${error.message}`;
         }
+
         return { success: false, message: errorMessage };
     }
 }
