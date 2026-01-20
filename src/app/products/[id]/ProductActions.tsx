@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -75,7 +76,7 @@ export default function ProductActions({ product, isFlashSaleContext = false }: 
   }
 
   return (
-    <div className="space-y-4">
+    <div id="variations" className="space-y-4 pt-2">
       {uniqueColors.length > 0 && (
         <div className="space-y-2">
             <Label className="font-semibold">Color</Label>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -40,7 +41,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   const handleCartAction = (e: React.MouseEvent) => {
       e.preventDefault();
       if (hasVariants) {
-          router.push(productLink);
+          router.push(`${productLink}#variations`);
       } else {
           addToCart(product, {}, isFlashSaleContext);
       }

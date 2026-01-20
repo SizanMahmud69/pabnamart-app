@@ -68,6 +68,20 @@ function ProductDetailPageContent() {
     }
   }, [products, params.id, isFlashSaleContext, getFlashSalePrice]);
 
+  useEffect(() => {
+    // A short delay to ensure the DOM is ready after the product state update
+    const timer = setTimeout(() => {
+      if (window.location.hash === '#variations') {
+        const element = document.getElementById('variations');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [product]);
+
 
   if (product === null) {
     return <LoadingSpinner />;
