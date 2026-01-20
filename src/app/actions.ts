@@ -403,9 +403,17 @@ export async function placeOrder(
   } catch (error: any) {
     console.error('Failed to place order:', error);
     revalidatePath('/payment');
+
+    let errorMessage = error.message || 'An unexpected error occurred while placing the order.';
+    if (error.message && error.message.includes('Cloud Firestore API has not been used')) {
+        errorMessage = "Order failed: Firestore is not enabled for this project. Please go to your Firebase Console, open the 'Firestore Database' section, and click 'Create database' to enable it.";
+    } else if (error.message && error.message.includes('permission-denied')) {
+        errorMessage = "Order failed: Permission denied. Please check your Firestore security rules or service account permissions.";
+    }
+
     return {
       success: false,
-      message: error.message || 'An unexpected error occurred.',
+      message: errorMessage,
     };
   }
 }
@@ -585,7 +593,14 @@ export async function saveContactMessage(formData: Omit<ContactMessage, 'id' | '
         return { success: true, message: 'Your message has been sent successfully!' };
     } catch (error: any) {
         console.error('Error saving contact message:', error);
-        return { success: false, message: 'Failed to send your message.' };
+        let errorMessage = 'Failed to send your message.';
+        // Check for specific Firestore error messages
+        if (error.message && error.message.includes('Cloud Firestore API has not been used')) {
+            errorMessage = "Action failed: Firestore is not enabled for this project. Please go to your Firebase Console, open the 'Firestore Database' section, and click 'Create database' to enable it.";
+        } else if (error.message && error.message.includes('permission-denied')) {
+            errorMessage = "Action failed: Permission denied. Please check your Firestore security rules or service account permissions in the Google Cloud Console.";
+        }
+        return { success: false, message: errorMessage };
     }
 }
 
