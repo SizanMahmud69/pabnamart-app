@@ -21,7 +21,7 @@ import type {
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 
-const getFirebaseAdmin = () => {
+const getFirebaseAdmin = (): admin.App | null => {
   if (admin.apps.length > 0) {
     return admin.apps[0]!;
   }
@@ -34,7 +34,9 @@ const getFirebaseAdmin = () => {
         if (process.env.VERCEL_ENV) {
           errorMessage += ' Go to your Vercel project -> Settings -> Environment Variables and ensure it is set for the Production, Preview, and Development environments.'
         }
-        throw new Error(errorMessage);
+        // In a dev environment, this is expected if not set up. Don't throw, just log.
+        console.error(errorMessage);
+        return null;
     }
     
     const serviceAccount = JSON.parse(serviceAccountJson);
@@ -45,11 +47,13 @@ const getFirebaseAdmin = () => {
   } catch (error) {
     console.error('Firebase admin initialization error:', error);
     if (error instanceof SyntaxError) {
-        throw new Error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Ensure the entire JSON content was copied correctly, including the curly braces `{` and `}`.');
+        console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Ensure the entire JSON content was copied correctly, including the curly braces `{` and `}`.');
     }
-    throw error;
+    return null;
   }
 };
+
+const serverActionNotAvailableMessage = 'This server action is not available in the current environment. Please try on the deployed application.';
 
 
 export async function getProductRecommendations(
@@ -70,6 +74,9 @@ export async function createModerator(
   permissions: ModeratorPermissions
 ) {
   const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+    return { success: false, message: serverActionNotAvailableMessage };
+  }
   const db = getFirestore(adminApp);
   try {
     const userRecord = await adminApp.auth().createUser({
@@ -103,6 +110,9 @@ export async function updateModeratorPermissions(
   permissions: ModeratorPermissions
 ) {
   const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+    return { success: false, message: serverActionNotAvailableMessage };
+  }
   const db = getFirestore(adminApp);
   if (!uid) {
     return { success: false, message: 'Moderator ID is missing.' };
@@ -126,6 +136,9 @@ export async function deleteModerator(uid: string) {
 
 export async function deleteUserAccount(uid: string) {
   const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+    return { success: false, message: serverActionNotAvailableMessage };
+  }
   const db = getFirestore(adminApp);
   if (!uid) {
     return { success: false, message: 'User ID is missing.' };
@@ -148,6 +161,10 @@ export async function createAndSendNotification(
   notificationData: Omit<Notification, 'id' | 'time' | 'read'>
 ) {
   const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+      console.error('Cannot send notification: Firebase Admin not initialized.');
+      return;
+  }
   const db = getFirestore(adminApp);
   if (!userId) return;
 
@@ -211,6 +228,9 @@ export async function placeOrder(
   payload: OrderPayload
 ): Promise<{ success: boolean; orderId?: string; message?: string }> {
   const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+    return { success: false, message: serverActionNotAvailableMessage };
+  }
   const db = getFirestore(adminApp);
 
   try {
@@ -417,6 +437,9 @@ export async function cancelOrderByUser(
   userId: string
 ): Promise<{ success: boolean; message?: string }> {
   const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+    return { success: false, message: serverActionNotAvailableMessage };
+  }
   const db = getFirestore(adminApp);
 
   try {
@@ -454,6 +477,9 @@ export async function updateOrderStatus(
   newStatus: Order['status']
 ): Promise<{ success: boolean; message?: string }> {
   const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+    return { success: false, message: serverActionNotAvailableMessage };
+  }
   const db = getFirestore(adminApp);
 
   try {
