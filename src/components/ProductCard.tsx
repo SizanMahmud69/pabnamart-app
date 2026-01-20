@@ -9,6 +9,7 @@ import { ShoppingCart, Star, Truck, Heart } from 'lucide-react';
 import { cn, rgbToHsl } from '@/lib/utils';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface ProductCardProps {
   product: Product;
@@ -20,6 +21,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
   const [cardStyle, setCardStyle] = useState<React.CSSProperties>({});
+  const router = useRouter();
 
   const price = product.price;
   const originalPrice = product.originalPrice;
@@ -32,13 +34,18 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
     addToWishlist(product);
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const hasVariants = (product.colors && product.colors.length > 0) || (product.sizes && product.sizes.length > 0);
+  const productLink = isFlashSaleContext ? `/products/${product.id}?flash=true` : `/products/${product.id}`;
+
+  const handleCartAction = (e: React.MouseEvent) => {
       e.preventDefault();
-      addToCart(product, isFlashSaleContext);
+      if (hasVariants) {
+          router.push(productLink);
+      } else {
+          addToCart(product, {}, isFlashSaleContext);
+      }
   }
 
-  const productLink = isFlashSaleContext ? `/products/${product.id}?flash=true` : `/products/${product.id}`;
-  
   const isSmall = size === 'small';
 
   const defaultImage = "https://i.ibb.co/gV28rC7/default-image.jpg";
@@ -178,7 +185,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
             </Button>
           ) : (
             <Button
-                onClick={handleAddToCart}
+                onClick={handleCartAction}
                 size="icon"
                 className={cn(isSmall ? "h-7 w-7" : "h-9 w-9")}
                 aria-label="Add to Cart"
