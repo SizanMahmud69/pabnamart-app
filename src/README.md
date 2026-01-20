@@ -61,10 +61,11 @@ This is the most important step. Vercel needs access to your Firebase and other 
     This allows your server to perform actions like placing orders.
 
     - In your [Firebase project settings](https://console.firebase.google.com/u/0/project/pabnamart/settings/serviceaccounts/adminsdk), click **"Generate new private key"**. A JSON file will download.
-    - Open the file with a text editor and **copy its entire content**.
+    - Open the downloaded JSON file with a simple text editor (like Notepad on Windows or TextEdit on Mac).
+    - **CRITICAL:** Select **ALL** the text in the file (`Ctrl+A` or `Cmd+A`) and copy it (`Ctrl+C` or `Cmd+C`). The text must start with `{` and end with `}`. Do not miss anything.
     - In Vercel, add a **new** environment variable:
         - **Name:** `FIREBASE_SERVICE_ACCOUNT_JSON`
-        - **Value:** Paste the **entire JSON content** you copied.
+        - **Value:** Paste the **entire JSON content** you just copied. Ensure there are no extra spaces or line breaks before or after what you paste.
     - **IMPORTANT:** Make sure all three environment boxes (Production, Preview, Development) are checked for this variable.
 
 4.  **Add Vercel Blob Storage Token (for Image Uploads):**
