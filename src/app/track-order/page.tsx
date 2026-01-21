@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Loader2, Search, Package } from 'lucide-react';
+import { ArrowLeft, Loader2, Search, Package, ShoppingBag, Truck, CheckCircle, XCircle, Undo2, PackageCheck, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { getFirestore, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -13,6 +13,7 @@ import type { Order } from '@/types';
 import OrderStatusStepper from '@/components/OrderStatusStepper';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 const db = getFirestore(app);
 
@@ -30,6 +31,68 @@ const getStatusVariant = (status: Order['status']) => {
         case 'return-denied': return 'destructive';
         default: return 'outline';
     }
+};
+
+interface TimelineEvent {
+    status: string;
+    title: string;
+    description: string;
+    icon: LucideIcon;
+    isCurrent: boolean;
+    isCompleted: boolean;
+}
+
+const generateTimeline = (order: Order): TimelineEvent[] => {
+    const standardSteps: { status: Order['status']; title: string; icon: LucideIcon }[] = [
+        { status: 'pending', title: 'Order Placed', icon: ShoppingBag },
+        { status: 'processing', title: 'Processing', icon: Package },
+        { status: 'shipped', title: 'Shipped', icon: Truck },
+        { status: 'delivered', title: 'Delivered', icon: CheckCircle },
+    ];
+    
+    const returnSteps: { status: Order['status']; title: string; icon: LucideIcon }[] = [
+        { status: 'return-requested', title: 'Return Requested', icon: Undo2 },
+        { status: 'return-approved', title: 'Return Approved', icon: CheckCircle },
+        { status: 'return-shipped', title: 'Item Shipped Back', icon: Truck },
+        { status: 'returned', title: 'Return Finalized', icon: PackageCheck },
+    ];
+
+    if (order.status === 'cancelled') {
+        return [{
+            status: 'cancelled', title: 'Order Cancelled',
+            description: `This order was cancelled.`,
+            icon: XCircle, isCurrent: true, isCompleted: true
+        }];
+    }
+    
+    if (order.status === 'return-denied') {
+        return [{
+            status: 'return-denied', title: 'Return Denied',
+            description: `This return request was denied.`,
+            icon: XCircle, isCurrent: true, isCompleted: true
+        }];
+    }
+
+    const isReturnFlow = returnSteps.some(s => s.status === order.status) || order.status === 'returned';
+    const activeSteps = isReturnFlow ? returnSteps : standardSteps;
+    const currentStatusIndex = activeSteps.findIndex(s => s.status === order.status);
+
+    return activeSteps.map((step, index) => {
+        let description = `Your order is ${step.title.toLowerCase()}.`;
+        if (step.status === 'pending') {
+            description = `Placed on ${new Date(order.date).toLocaleString()}`;
+        }
+        if (step.status === 'delivered' && order.deliveredAt) {
+            description = `Delivered on ${new Date(order.deliveredAt).toLocaleString()}`;
+        }
+
+        return {
+            ...step,
+            description,
+            isCurrent: index === currentStatusIndex,
+            isCompleted: index < currentStatusIndex || order.status === 'delivered' || order.status === 'returned',
+        }
+    });
 };
 
 export default function TrackOrderPage() {
@@ -66,6 +129,8 @@ export default function TrackOrderPage() {
             setLoading(false);
         }
     };
+    
+    const timelineEvents = order ? generateTimeline(order) : [];
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -126,17 +191,32 @@ export default function TrackOrderPage() {
                                      <OrderStatusStepper currentStatus={order.status} />
                                      <Separator />
                                      <div>
-                                        <h3 className="text-lg font-semibold mb-2">Items</h3>
-                                        {order.items.map((item, index) => (
-                                            <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-2">
-                                                <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
-                                                <div className="flex-grow">
-                                                    <p className="font-semibold text-sm">{item.name}</p>
-                                                    <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                                        <h3 className="text-lg font-semibold mb-4">Order History</h3>
+                                        <div className="relative pl-4 space-y-8">
+                                            {timelineEvents.map((event, index) => (
+                                                <div key={index} className="flex gap-4">
+                                                    <div className="flex flex-col items-center">
+                                                        <div className={cn(
+                                                            "flex h-10 w-10 items-center justify-center rounded-full border-2",
+                                                            event.isCompleted || event.isCurrent ? "border-primary" : "border-muted-foreground/30",
+                                                            event.isCompleted ? "bg-primary text-primary-foreground" : "bg-muted"
+                                                        )}>
+                                                            <event.icon className={cn("h-5 w-5", !event.isCompleted && "text-muted-foreground")} />
+                                                        </div>
+                                                        {index < timelineEvents.length - 1 && (
+                                                            <div className={cn(
+                                                                "w-0.5 flex-1 mt-2",
+                                                                event.isCompleted ? "bg-primary" : "bg-muted-foreground/30"
+                                                            )} />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold">{event.title}</p>
+                                                        <p className="text-sm text-muted-foreground">{event.description}</p>
+                                                    </div>
                                                 </div>
-                                                <p className="font-semibold text-sm">৳{item.price * item.quantity}</p>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                      </div>
                                 </CardContent>
                                 <CardFooter>
