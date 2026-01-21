@@ -132,19 +132,21 @@ export default function TrackOrderPage() {
         }
     };
     
-    const estimatedDeliveryDate = useMemo(() => {
-        if (!order) return null;
+    const { estimatedDeliveryDate, deliveryLocation, deliveryDays } = useMemo(() => {
+        if (!order) return { estimatedDeliveryDate: null, deliveryLocation: null, deliveryDays: null };
 
         const orderDate = new Date(order.date);
         const isInsidePabna = order.shippingAddress.city.toLowerCase().trim() === 'pabna';
-        const deliveryDays = isInsidePabna ? deliveryTimeInside : deliveryTimeOutside;
+        const days = isInsidePabna ? deliveryTimeInside : deliveryTimeOutside;
+        const location = isInsidePabna ? 'Inside Pabna' : 'Outside Pabna';
 
-        if (deliveryDays > 0) {
+        if (days > 0) {
             const estimatedDate = new Date(orderDate);
-            estimatedDate.setDate(orderDate.getDate() + deliveryDays);
-            return estimatedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            estimatedDate.setDate(orderDate.getDate() + days);
+            const dateString = estimatedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            return { estimatedDeliveryDate: dateString, deliveryLocation: location, deliveryDays: days };
         }
-        return null;
+        return { estimatedDeliveryDate: null, deliveryLocation: location, deliveryDays: days };
     }, [order, deliveryTimeInside, deliveryTimeOutside]);
     
     const timelineEvents = order ? generateTimeline(order) : [];
@@ -208,10 +210,13 @@ export default function TrackOrderPage() {
                                      <OrderStatusStepper currentStatus={order.status} />
 
                                      {estimatedDeliveryDate && order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned' && (
-                                        <div className="flex items-center justify-center gap-2 pt-4 text-center text-sm text-muted-foreground">
-                                            <Truck className="h-4 w-4 text-primary" />
-                                            <span>Estimated Delivery by:</span>
-                                            <span className="font-semibold text-primary">{estimatedDeliveryDate}</span>
+                                        <div className="flex flex-col items-center justify-center gap-1 pt-4 text-center text-sm text-muted-foreground">
+                                             <div className="flex items-center gap-2">
+                                                <Truck className="h-4 w-4 text-primary" />
+                                                <span>Estimated Delivery by:</span>
+                                                <span className="font-semibold text-primary">{estimatedDeliveryDate}</span>
+                                            </div>
+                                            <p className="text-xs">({deliveryDays} days for {deliveryLocation})</p>
                                         </div>
                                     )}
 
