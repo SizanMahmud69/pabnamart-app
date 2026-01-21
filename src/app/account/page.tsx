@@ -113,6 +113,7 @@ export default function AccountPage() {
     }
     
     const services: ServiceItemProps[] = [
+        { icon: Truck, label: "Track Order", href: "/track-order" },
         { icon: Phone, label: "Contact Us", href: "/contact" },
         { icon: HelpCircle, label: "Help Center", href: "/account/help" },
         { icon: Star, label: "My Reviews", href: "/account/reviews" },
@@ -208,7 +209,7 @@ export default function AccountPage() {
                      <CardHeader>
                         <CardTitle className="text-lg">More Services</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 grid grid-cols-4 gap-4">
+                    <CardContent className="p-4 grid grid-cols-5 gap-4">
                        {services.map(service => <ServiceItem key={service.label} {...service} />)}
                     </CardContent>
                 </Card>
