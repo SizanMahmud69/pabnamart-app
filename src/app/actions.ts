@@ -1,10 +1,5 @@
 'use server';
 
-import { getProductRecommendations as getProductRecommendationsFlow } from '@/ai/flows/product-recommendations';
-import type {
-  ProductRecommendationsInput,
-  ProductRecommendationsOutput,
-} from '@/ai/flows/product-recommendations';
 import admin from 'firebase-admin';
 import { getFirestore, FieldValue, collection, addDoc, updateDoc, doc } from 'firebase-admin/firestore';
 import type {
@@ -73,19 +68,6 @@ const getFirebaseAdmin = (): admin.App | null => {
     throw error; // Re-throw the error to be caught by Next.js
   }
 };
-
-export async function getProductRecommendations(
-  input: ProductRecommendationsInput
-): Promise<ProductRecommendationsOutput> {
-  try {
-    const recommendations = await getProductRecommendationsFlow(input);
-    return recommendations;
-  } catch (error) {
-    console.error('Error in getProductRecommendations server action:', error);
-    // Return empty recommendations instead of throwing an error
-    return { recommendations: [] };
-  }
-}
 
 export async function createModerator(
   email: string,

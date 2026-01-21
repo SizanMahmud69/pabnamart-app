@@ -1,1 +1,1 @@
-import '@/ai/flows/product-recommendations.ts';
+// This file is temporarily empty to resolve deployment issues.
