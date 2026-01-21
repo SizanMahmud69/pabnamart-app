@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import OrderStatusStepper from '@/components/OrderStatusStepper';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
 
 const db = getFirestore(app);
 
@@ -101,6 +102,7 @@ export default function TrackOrderPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searched, setSearched] = useState(false);
+    const { deliveryTimeInside, deliveryTimeOutside } = useDeliveryCharge();
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -129,6 +131,21 @@ export default function TrackOrderPage() {
             setLoading(false);
         }
     };
+    
+    const estimatedDeliveryDate = useMemo(() => {
+        if (!order) return null;
+
+        const orderDate = new Date(order.date);
+        const isInsidePabna = order.shippingAddress.city.toLowerCase().trim() === 'pabna';
+        const deliveryDays = isInsidePabna ? deliveryTimeInside : deliveryTimeOutside;
+
+        if (deliveryDays > 0) {
+            const estimatedDate = new Date(orderDate);
+            estimatedDate.setDate(orderDate.getDate() + deliveryDays);
+            return estimatedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        }
+        return null;
+    }, [order, deliveryTimeInside, deliveryTimeOutside]);
     
     const timelineEvents = order ? generateTimeline(order) : [];
 
@@ -189,6 +206,15 @@ export default function TrackOrderPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                      <OrderStatusStepper currentStatus={order.status} />
+
+                                     {estimatedDeliveryDate && order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned' && (
+                                        <div className="flex items-center justify-center gap-2 pt-4 text-center text-sm text-muted-foreground">
+                                            <Truck className="h-4 w-4 text-primary" />
+                                            <span>Estimated Delivery by:</span>
+                                            <span className="font-semibold text-primary">{estimatedDeliveryDate}</span>
+                                        </div>
+                                    )}
+
                                      <Separator />
                                      <div>
                                         <h3 className="text-lg font-semibold mb-4">Order History</h3>
