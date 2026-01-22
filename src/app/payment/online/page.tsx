@@ -114,10 +114,8 @@ function OnlinePaymentPage() {
 
     const { total } = checkoutData;
     
-    const merchantNumber = 
-        paymentMethod === 'bKash' ? paymentSettings.bkashMerchantNumber :
-        paymentMethod === 'Nagad' ? paymentSettings.nagadMerchantNumber :
-        paymentMethod === 'Rocket' ? paymentSettings.rocketMerchantNumber : '';
+    const selectedMethod = paymentSettings.methods.find(m => m.name === paymentMethod);
+    const merchantNumber = selectedMethod ? selectedMethod.merchantNumber : '';
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -137,23 +135,14 @@ function OnlinePaymentPage() {
                         <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                             <h3 className="font-semibold mb-2">Select a Gateway</h3>
                             
-                            <Label htmlFor="bKash" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer has-[:checked]:border-primary">
-                                <RadioGroupItem value="bKash" id="bKash" />
-                                {paymentSettings.bkashLogo && <img src={paymentSettings.bkashLogo} alt="bKash" className="h-8 object-contain" />}
-                                <span className="flex-grow">bKash</span>
-                            </Label>
-
-                            <Label htmlFor="Nagad" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer has-[:checked]:border-primary">
-                                <RadioGroupItem value="Nagad" id="Nagad" />
-                                {paymentSettings.nagadLogo && <img src={paymentSettings.nagadLogo} alt="Nagad" className="h-8 object-contain" />}
-                                <span className="flex-grow">Nagad</span>
-                            </Label>
-                            
-                            <Label htmlFor="Rocket" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer has-[:checked]:border-primary">
-                                <RadioGroupItem value="Rocket" id="Rocket" />
-                                {paymentSettings.rocketLogo && <img src={paymentSettings.rocketLogo} alt="Rocket" className="h-8 object-contain" />}
-                                <span className="flex-grow">Rocket</span>
-                            </Label>
+                            {paymentSettings.methods.map((method) => (
+                                <Label key={method.id} htmlFor={method.id} className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer has-[:checked]:border-primary">
+                                    <RadioGroupItem value={method.name} id={method.id} />
+                                    {method.logo && <img src={method.logo} alt={method.name} className="h-8 object-contain" />}
+                                    <span className="flex-grow">{method.name}</span>
+                                </Label>
+                            ))}
+                           
                         </RadioGroup>
 
                         {paymentMethod && (

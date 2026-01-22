@@ -25,11 +25,7 @@ export default function Footer() {
         return () => unsubscribe();
     }, []);
 
-    const paymentLogos = [
-        settings?.bkashLogo,
-        settings?.nagadLogo,
-        settings?.rocketLogo,
-    ].filter(Boolean) as string[];
+    const paymentLogos = settings?.methods?.map(m => m.logo).filter(Boolean) as string[] || [];
 
     return (
         <footer className="bg-muted mt-12">

@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from "react";
 
 export interface Review {
@@ -176,13 +177,15 @@ export interface DeliverySettings {
   cashOnDeliveryFee: number;
 }
 
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  merchantNumber: string;
+  logo: string;
+}
+
 export interface PaymentSettings {
-  bkashMerchantNumber: string;
-  nagadMerchantNumber: string;
-  rocketMerchantNumber: string;
-  bkashLogo: string;
-  nagadLogo: string;
-  rocketLogo: string;
+  methods: PaymentMethod[];
 }
 
 export interface ContactSettings {
