@@ -110,10 +110,11 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                         loading="lazy"
                     />
                 </div>
-                <CardContent className="p-2 text-center flex-grow flex items-center justify-center">
-                    <h3 className="text-xs font-semibold text-gray-800 truncate-2-lines h-8 leading-tight">
+                <CardContent className="p-2 text-center flex flex-col flex-grow justify-between">
+                    <h3 className="text-xs font-semibold text-gray-800 truncate-2-lines h-8 leading-tight mb-1">
                         {product.name}
                     </h3>
+                    <p className="text-sm font-bold text-primary">৳{price}</p>
                 </CardContent>
             </Card>
         </Link>
