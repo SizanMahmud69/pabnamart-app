@@ -19,6 +19,7 @@ import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
 import { useAuth } from '@/hooks/useAuth';
 import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
+import ProductCard from '@/components/ProductCard';
 
 const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
@@ -27,6 +28,7 @@ function ProductDetailPageContent() {
   const searchParams = useSearchParams();
   const { products, getFlashSalePrice } = useProducts();
   const [product, setProduct] = useState<Product | undefined | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const { appUser } = useAuth();
   const { deliveryTimeInside, deliveryTimeOutside } = useDeliveryCharge();
   
@@ -62,6 +64,10 @@ function ProductDetailPageContent() {
           } else {
             setProduct(foundProduct);
           }
+          const related = products
+            .filter(p => p.category === foundProduct.category && p.id !== foundProduct.id)
+            .slice(0, 4);
+          setRelatedProducts(related);
         } else {
            setProduct(undefined);
         }
@@ -199,6 +205,20 @@ function ProductDetailPageContent() {
                                     <h2 className="text-xl font-bold mb-4">Product Details</h2>
                                     <div className="prose prose-sm max-w-none text-muted-foreground">
                                         <p>{product.details}</p>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {relatedProducts.length > 0 && (
+                            <>
+                                <Separator className="my-4"/>
+                                <div>
+                                    <h2 className="text-xl font-bold mb-4">Related Products</h2>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {relatedProducts.map(p => (
+                                            <ProductCard key={p.id} product={p} size="small" />
+                                        ))}
                                     </div>
                                 </div>
                             </>
