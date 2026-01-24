@@ -97,6 +97,28 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
     };
   }, [imageUrl]);
 
+  if (isSmall) {
+    return (
+        <Link href={productLink} className="block group">
+            <Card className="flex flex-col h-full overflow-hidden rounded-lg shadow-sm transition-all duration-300 hover:shadow-lg">
+                <div className="relative w-full overflow-hidden bg-muted aspect-square">
+                    <img
+                        src={imageUrl}
+                        alt={product.name}
+                        className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                        data-ai-hint="product lifestyle"
+                        loading="lazy"
+                    />
+                </div>
+                <CardContent className="p-2 text-center flex-grow flex items-center justify-center">
+                    <h3 className="text-xs font-semibold text-gray-800 truncate-2-lines h-8 leading-tight">
+                        {product.name}
+                    </h3>
+                </CardContent>
+            </Card>
+        </Link>
+    );
+  }
 
   return (
     <Card 
@@ -133,42 +155,24 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
         )}
         </div>
       </Link>
-      <CardContent className={cn("flex flex-col flex-grow space-y-2", isSmall ? "p-2" : "p-3")}>
+      <CardContent className="p-3 flex flex-col flex-grow space-y-2">
         <p className="text-xs text-muted-foreground truncate">{product.category}</p>
-        <h3 
-          className={cn(
-              "font-semibold text-gray-800 leading-snug flex-grow", 
-              isSmall ? "text-xs h-8" : "text-sm h-10"
-          )}
-        >
+        <h3 className="text-sm h-10 font-semibold text-gray-800 leading-snug flex-grow">
             <Link href={productLink} className="hover:text-primary">
                 <span className="truncate-2-lines">{product.name}</span>
             </Link>
         </h3>
-        {isSmall ? (
-             <div className="flex items-center justify-around text-xs text-muted-foreground">
-                <div className="text-center flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-accent text-accent" />
-                    <span>{product.rating.toFixed(1)}</span>
-                </div>
-                <div className="text-center">
-                    <span className="font-semibold">Sold</span>
-                    <p>{product.sold || 0}</p>
-                </div>
-            </div>
-        ) : (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Star className="w-4 h-4 fill-accent text-accent" />
-                <span>{product.rating.toFixed(1)}</span>
-                <span>|</span>
-                <span>Sold {product.sold || 0}</span>
-            </div>
-        )}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Star className="w-4 h-4 fill-accent text-accent" />
+            <span>{product.rating.toFixed(1)}</span>
+            <span>|</span>
+            <span>Sold {product.sold || 0}</span>
+        </div>
         <div className="flex justify-between items-center mt-auto">
           <div>
-            <p className={cn("font-bold text-primary", isSmall ? "text-base" : "text-lg")}>৳{price}</p>
+            <p className="text-lg font-bold text-primary">৳{price}</p>
             {hasDiscount && (
-              <p className={cn("text-muted-foreground line-through", isSmall ? "text-[10px]" : "text-xs")}>
+              <p className="text-xs text-muted-foreground line-through">
                 ৳{originalPrice}
               </p>
             )}
@@ -178,7 +182,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                 onClick={handleWishlistClick}
                 size="icon"
                 variant="outline"
-                className={cn(isSmall ? "h-7 w-7" : "h-9 w-9")}
+                className="h-9 w-9"
                 disabled={isInWishlist(product.id)}
                 aria-label={isInWishlist(product.id) ? "In Wishlist" : "Add to Wishlist"}
             >
@@ -188,10 +192,10 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
             <Button
                 onClick={handleCartAction}
                 size="icon"
-                className={cn(isSmall ? "h-7 w-7" : "h-9 w-9")}
+                className="h-9 w-9"
                 aria-label="Add to Cart"
             >
-                <ShoppingCart className={cn(isSmall ? "h-3 w-3" : "h-4 w-4")} />
+                <ShoppingCart className="h-4 w-4" />
             </Button>
           )}
         </div>

@@ -66,7 +66,7 @@ function ProductDetailPageContent() {
           }
           const related = products
             .filter(p => p.category === foundProduct.category && p.id !== foundProduct.id)
-            .slice(0, 4);
+            .slice(0, 10);
           setRelatedProducts(related);
         } else {
            setProduct(undefined);
@@ -215,11 +215,17 @@ function ProductDetailPageContent() {
                                 <Separator className="my-4"/>
                                 <div>
                                     <h2 className="text-xl font-bold mb-4">Related Products</h2>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {relatedProducts.map(p => (
-                                            <ProductCard key={p.id} product={p} size="small" />
-                                        ))}
-                                    </div>
+                                    <Carousel opts={{ align: "start", loop: false }} className="w-full">
+                                        <CarouselContent className="-ml-2">
+                                            {relatedProducts.map(p => (
+                                                <CarouselItem key={p.id} className="pl-2 basis-1/3 sm:basis-1/4">
+                                                    <ProductCard product={p} size="small" />
+                                                </CarouselItem>
+                                            ))}
+                                        </CarouselContent>
+                                        <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
+                                        <CarouselNext className="right-[-10px] sm:right-[-16px]" />
+                                    </Carousel>
                                 </div>
                             </>
                         )}
