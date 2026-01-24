@@ -114,7 +114,14 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                     <h3 className="text-xs font-semibold text-gray-800 truncate-2-lines h-8 leading-tight mb-1">
                         {product.name}
                     </h3>
-                    <p className="text-sm font-bold text-primary">৳{price}</p>
+                    <div className="flex justify-center items-baseline gap-1.5">
+                        <p className="text-sm font-bold text-primary">৳{price}</p>
+                        {hasDiscount && (
+                            <p className="text-xs text-muted-foreground line-through">
+                                ৳{originalPrice}
+                            </p>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
         </Link>
