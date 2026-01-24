@@ -99,32 +99,72 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
 
   if (isSmall) {
     return (
-        <Link href={productLink} className="block group">
-            <Card className="flex flex-col h-full overflow-hidden rounded-lg shadow-sm transition-all duration-300 hover:shadow-lg">
-                <div className="relative w-full overflow-hidden bg-muted aspect-square">
-                    <img
-                        src={imageUrl}
-                        alt={product.name}
-                        className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                        data-ai-hint="product lifestyle"
-                        loading="lazy"
-                    />
-                </div>
-                <CardContent className="p-2 text-center flex flex-col flex-grow justify-between">
-                    <h3 className="text-xs font-semibold text-gray-800 truncate-2-lines h-8 leading-tight mb-1">
-                        {product.name}
-                    </h3>
-                    <div className="flex justify-center items-baseline gap-1.5">
-                        <p className="text-sm font-bold text-primary">৳{price}</p>
-                        {hasDiscount && (
-                            <p className="text-xs text-muted-foreground line-through">
-                                ৳{originalPrice}
-                            </p>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-        </Link>
+      <Card className="flex flex-col h-full overflow-hidden rounded-lg shadow-sm transition-all duration-300 hover:shadow-lg group">
+          <Link href={productLink} className="block">
+              <div className="relative w-full overflow-hidden bg-muted aspect-square">
+                  <img
+                      src={imageUrl}
+                      alt={product.name}
+                      className={cn(
+                          "object-cover w-full h-full transition-transform duration-300 group-hover:scale-105",
+                           isSoldOut && "filter grayscale"
+                      )}
+                      data-ai-hint="product lifestyle"
+                      loading="lazy"
+                  />
+                  {isSoldOut && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                          <span className="text-white font-bold">Sold Out</span>
+                      </div>
+                  )}
+              </div>
+          </Link>
+          <CardContent className="p-2 flex flex-col flex-grow">
+              <h3 className="text-xs font-semibold text-gray-800 truncate-2-lines h-8 leading-tight mb-1">
+                  <Link href={productLink} className="hover:text-primary">
+                      {product.name}
+                  </Link>
+              </h3>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+                  <Star className="w-3.5 h-3.5 fill-accent text-accent" />
+                  <span>{product.rating.toFixed(1)}</span>
+                  <span className="mx-0.5">|</span>
+                  <span>Sold {product.sold || 0}</span>
+              </div>
+
+              <div className="flex justify-between items-center mt-auto">
+                  <div>
+                      <p className="text-sm font-bold text-primary">৳{price}</p>
+                      {hasDiscount && (
+                          <p className="text-xs text-muted-foreground line-through">
+                              ৳{originalPrice}
+                          </p>
+                      )}
+                  </div>
+                  {isSoldOut ? (
+                      <Button
+                          onClick={handleWishlistClick}
+                          size="icon"
+                          variant="outline"
+                          className="h-7 w-7"
+                          disabled={isInWishlist(product.id)}
+                          aria-label={isInWishlist(product.id) ? "In Wishlist" : "Add to Wishlist"}
+                      >
+                          <Heart className={cn("h-3.5 w-3.5", isInWishlist(product.id) && "fill-destructive text-destructive")} />
+                      </Button>
+                  ) : (
+                      <Button
+                          onClick={handleCartAction}
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label="Add to Cart"
+                      >
+                          <ShoppingCart className="h-3.5 w-3.5" />
+                      </Button>
+                  )}
+              </div>
+          </CardContent>
+      </Card>
     );
   }
 
