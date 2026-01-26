@@ -23,18 +23,34 @@ const db = getFirestore(app);
 
 const parseVariantString = (str: string): ProductVariant[] => {
     if (!str.trim()) return [];
-    return str.split(',').map(part => {
+    const variantsMap = new Map<string, number>();
+
+    str.split(',').forEach(part => {
         const trimmedPart = part.trim();
+        if (!trimmedPart) return;
+
         const lastSpaceIndex = trimmedPart.lastIndexOf(' ');
         
+        let name: string;
+        let stock: number;
+
         if (lastSpaceIndex === -1 || isNaN(Number(trimmedPart.substring(lastSpaceIndex + 1)))) {
-            return { name: trimmedPart, stock: 0 };
+            name = trimmedPart;
+            stock = 0;
+        } else {
+            name = trimmedPart.substring(0, lastSpaceIndex).trim();
+            stock = parseInt(trimmedPart.substring(lastSpaceIndex + 1), 10);
         }
         
-        const name = trimmedPart.substring(0, lastSpaceIndex).trim();
-        const stock = parseInt(trimmedPart.substring(lastSpaceIndex + 1), 10);
-        return { name, stock };
-    }).filter(v => v.name);
+        if (name) {
+            // Use case-insensitive matching for aggregation
+            const existingKey = Array.from(variantsMap.keys()).find(k => k.toLowerCase() === name.toLowerCase());
+            const keyToUse = existingKey || name;
+            variantsMap.set(keyToUse, (variantsMap.get(keyToUse) || 0) + stock);
+        }
+    });
+
+    return Array.from(variantsMap.entries()).map(([name, stock]) => ({ name, stock }));
 };
 
 
@@ -53,6 +69,8 @@ export default function NewProductPage() {
     const inputFileRef = useRef<HTMLInputElement>(null);
     const [colors, setColors] = useState('');
     const [sizes, setSizes] = useState('');
+    const [affiliateCommission, setAffiliateCommission] = useState<number | undefined>(undefined);
+
 
     useEffect(() => {
         const categoriesRef = collection(db, 'categories');
@@ -151,6 +169,7 @@ export default function NewProductPage() {
             colors: parsedColors,
             sizes: parsedSizes,
             createdAt: new Date().toISOString(),
+            affiliateCommission: affiliateCommission || undefined,
         };
 
         try {
@@ -316,9 +335,23 @@ export default function NewProductPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="return-policy">Return Policy (in days)</Label>
-                                    <Input id="return-policy" name="returnPolicy" type="number" placeholder="e.g., 30" disabled={isLoading} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="return-policy">Return Policy (in days)</Label>
+                                        <Input id="return-policy" name="returnPolicy" type="number" placeholder="e.g., 30" disabled={isLoading} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="affiliate-commission">Affiliate Commission (%)</Label>
+                                        <Input 
+                                            id="affiliate-commission" 
+                                            name="affiliateCommission" 
+                                            type="number"
+                                            value={affiliateCommission || ''}
+                                            onChange={(e) => setAffiliateCommission(e.target.value ? Number(e.target.value) : undefined)}
+                                            placeholder="e.g., 2"
+                                            disabled={isLoading}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>

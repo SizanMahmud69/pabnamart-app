@@ -101,6 +101,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     await updateProfile(firebaseUser, { displayName, photoURL: DEFAULT_AVATAR_URL });
     
+    const referrerId = localStorage.getItem('referrerId');
+
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     const newAppUser: Omit<AppUser, 'uid'> = {
         email: firebaseUser.email,
@@ -110,9 +112,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         joined: new Date().toISOString(),
         shippingAddresses: [],
         usedVouchers: {},
+        isAffiliate: false,
+        referredBy: referrerId || undefined,
     };
 
     await setDoc(userDocRef, newAppUser);
+
+    if (referrerId) {
+        localStorage.removeItem('referrerId');
+    }
 
     if (auth.currentUser) {
         await updateProfile(auth.currentUser, { displayName, photoURL: DEFAULT_AVATAR_URL });

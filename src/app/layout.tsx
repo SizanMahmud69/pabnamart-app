@@ -17,7 +17,7 @@ import { OfferProvider } from '@/hooks/useOffers';
 import { WishlistProvider } from '@/hooks/useWishlist';
 import VoucherPopup from '@/components/VoucherPopup';
 import FlashSalePopup from '@/components/FlashSalePopup';
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const inter = Inter({ subsets: ['latin'] })
@@ -39,6 +39,13 @@ function RootLayoutContent({
   const isAdminPage = pathname.startsWith('/admin');
   const [isFlashSalePopupOpen, setIsFlashSalePopupOpen] = useState(false);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+        localStorage.setItem('referrerId', ref);
+    }
+  }, []);
 
   return (
     <html lang="en">

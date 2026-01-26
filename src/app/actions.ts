@@ -1,3 +1,4 @@
+
 'use server';
 
 import admin from 'firebase-admin';
@@ -12,7 +13,8 @@ import type {
   DeliverySettings,
   OrderItem,
   Order,
-  CartItem
+  CartItem,
+  AffiliateEarning
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 
@@ -234,6 +236,8 @@ export async function placeOrder(
   }
   const db = getFirestore(adminApp);
 
+  let newOrder: Omit<Order, 'id' | 'deliveredAt'>;
+
   try {
     const transactionResult = await db.runTransaction(async (transaction) => {
       const productRefs = payload.items.map((item) =>
@@ -339,7 +343,7 @@ export async function placeOrder(
       const total = roundPrice((offerSubtotal - voucherDiscount) + payload.shippingFee + codFee);
 
       const orderRef = db.collection('orders').doc();
-      const newOrder: Omit<Order, 'id'| 'deliveredAt'> = {
+      newOrder = {
         userId: payload.userId,
         items: itemsForOrder,
         total,
@@ -364,8 +368,52 @@ export async function placeOrder(
         });
       }
 
-      return { orderId: orderRef.id, total };
+      return { orderId: orderRef.id, total, itemsForOrder };
     });
+
+    // --- Affiliate Commission Logic ---
+    const userRef = db.collection('users').doc(payload.userId);
+    const userSnap = await userRef.get();
+    if (userSnap.exists()) {
+        const userData = userSnap.data() as User;
+        if (userData.referredBy) {
+            const affiliateQuery = db.collection('users').where('affiliateId', '==', userData.referredBy).limit(1);
+            const affiliateSnap = await affiliateQuery.get();
+            
+            if (!affiliateSnap.empty) {
+                const affiliateDoc = affiliateSnap.docs[0];
+                const affiliateUid = affiliateDoc.id;
+                const commissionBatch = db.batch();
+
+                for (const item of transactionResult.itemsForOrder) {
+                    const productRef = db.collection('products').doc(item.id.toString());
+                    const productSnap = await productRef.get();
+
+                    if (productSnap.exists()) {
+                        const productData = productSnap.data() as Product;
+                        if (productData.affiliateCommission && productData.affiliateCommission > 0) {
+                            const commissionAmount = (item.price * item.quantity) * (productData.affiliateCommission / 100);
+                            
+                            const earningRef = db.collection('affiliateEarnings').doc();
+                            const newEarning: Omit<AffiliateEarning, 'id'> = {
+                                affiliateUid,
+                                orderId: transactionResult.orderId,
+                                orderNumber: newOrder.orderNumber,
+                                productId: item.id,
+                                productName: item.name,
+                                commissionAmount: roundPrice(commissionAmount),
+                                status: 'pending',
+                                createdAt: new Date().toISOString(),
+                                referredUserUid: payload.userId,
+                            };
+                            commissionBatch.set(earningRef, newEarning);
+                        }
+                    }
+                }
+                await commissionBatch.commit();
+            }
+        }
+    }
 
     await createAndSendNotification(payload.userId, {
       icon: 'PackageCheck',
@@ -554,5 +602,26 @@ export async function updateOrderStatus(
 
   } catch (error: any) {
     return { success: false, message: error.message || 'Failed to update order status.' };
+  }
+}
+
+export async function joinAffiliateProgram(userId: string): Promise<{ success: boolean; message: string }> {
+  const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+    return { success: false, message: serverActionNotAvailableMessage };
+  }
+  const db = getFirestore(adminApp);
+  try {
+    const userDocRef = db.collection('users').doc(userId);
+    const affiliateId = `AFF-${userId.substring(0, 8).toUpperCase()}`;
+
+    await userDocRef.update({
+      isAffiliate: true,
+      affiliateId: affiliateId,
+    });
+
+    return { success: true, message: 'Congratulations! You are now an affiliate.' };
+  } catch (error: any) {
+    return { success: false, message: error.message || 'Failed to join the affiliate program.' };
   }
 }

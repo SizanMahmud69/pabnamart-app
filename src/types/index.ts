@@ -45,6 +45,7 @@ export interface Product {
   createdAt: string;
   colors: ProductVariant[];
   sizes: ProductVariant[];
+  affiliateCommission?: number;
 }
 
 export interface CartItem {
@@ -153,6 +154,9 @@ export interface User {
   fcmTokens?: string[];
   role?: 'user' | 'moderator';
   permissions?: ModeratorPermissions;
+  isAffiliate?: boolean;
+  affiliateId?: string;
+  referredBy?: string;
 }
 
 export interface ShippingAddress {
@@ -218,4 +222,16 @@ export interface OrderPayload {
   cashOnDeliveryFee?: number;
 }
 
+export interface AffiliateEarning {
+  id: string;
+  affiliateUid: string;
+  orderId: string;
+  orderNumber: string;
+  productId: number;
+  productName: string;
+  commissionAmount: number;
+  status: 'pending' | 'paid' | 'cancelled';
+  createdAt: string;
+  referredUserUid: string;
+}
     
