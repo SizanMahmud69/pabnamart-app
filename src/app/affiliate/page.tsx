@@ -30,7 +30,7 @@ function AffiliatePage() {
     }, []);
 
     useEffect(() => {
-        if (!user || appUser?.affiliateStatus !== 'approved') return;
+        if (!user || !appUser || appUser.affiliateStatus !== 'approved' || !appUser.affiliateId) return;
 
         // Fetch referred users
         const usersQuery = query(collection(db, 'users'), where('referredBy', '==', appUser.affiliateId));
