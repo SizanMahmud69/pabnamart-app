@@ -6,11 +6,11 @@ import { useRouter, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, User as UserIcon, Mail, Calendar, CheckCircle, XCircle, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Mail, Calendar, CheckCircle, XCircle, ShoppingCart, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
-import { getFirestore, doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, limit } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { User as AppUser, Order } from '@/types';
+import type { User as AppUser, Order, AffiliateRequest } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,52 +20,58 @@ const db = getFirestore(app);
 export default function UserDetailsPage() {
     const [user, setUser] = useState<AppUser | null>(null);
     const [userOrders, setUserOrders] = useState<Order[]>([]);
+    const [affiliateRequest, setAffiliateRequest] = useState<AffiliateRequest | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     const params = useParams();
     const uid = params.uid as string;
 
     useEffect(() => {
-        if (!uid) return;
-
-        const fetchUserData = async () => {
-            setLoading(true);
-            try {
-                const userDocRef = doc(db, 'users', uid);
-                const userDocSnap = await getDoc(userDocRef);
-
-                if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data() as AppUser;
-                    setUser(userData);
-                } else {
-                    toast({ title: "Error", description: "User not found.", variant: "destructive" });
-                }
-            } catch (error) {
-                console.error("Error fetching user details:", error);
-                toast({ title: "Error", description: "Failed to fetch user details.", variant: "destructive" });
-            } finally {
-                setLoading(false);
-            }
-        };
-        
-        const fetchUserOrders = () => {
-             const ordersRef = collection(db, 'orders');
-             const q = query(ordersRef, where('userId', '==', uid));
-
-             const unsubscribe = onSnapshot(q, (snapshot) => {
-                 const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
-                 setUserOrders(orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-             }, (error) => {
-                 console.error("Error fetching orders:", error);
-                 toast({ title: "Error", description: "Failed to fetch user orders.", variant: "destructive" });
-             });
-             return unsubscribe;
+        if (!uid) {
+            setLoading(false);
+            return;
         }
 
-        fetchUserData();
-        const unsubscribeOrders = fetchUserOrders();
-        
-        return () => unsubscribeOrders();
+        setLoading(true);
+
+        const userDocRef = doc(db, 'users', uid);
+        const userUnsubscribe = onSnapshot(userDocRef, (userDocSnap) => {
+            if (userDocSnap.exists()) {
+                setUser(userDocSnap.data() as AppUser);
+            } else {
+                toast({ title: "Error", description: "User not found.", variant: "destructive" });
+                setUser(null);
+            }
+        });
+
+        const ordersRef = collection(db, 'orders');
+        const qOrders = query(ordersRef, where('userId', '==', uid));
+        const ordersUnsubscribe = onSnapshot(qOrders, (snapshot) => {
+            const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+            setUserOrders(orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        }, (error) => {
+            console.error("Error fetching orders:", error);
+        });
+
+        const requestsRef = collection(db, 'affiliateRequests');
+        const qRequests = query(requestsRef, where('userId', '==', uid), limit(1));
+        const affiliateUnsubscribe = onSnapshot(qRequests, (snapshot) => {
+            if (!snapshot.empty) {
+                setAffiliateRequest(snapshot.docs[0].data() as AffiliateRequest);
+            } else {
+                setAffiliateRequest(null);
+            }
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching affiliate request:", error);
+            setLoading(false);
+        });
+
+        return () => {
+            userUnsubscribe();
+            ordersUnsubscribe();
+            affiliateUnsubscribe();
+        };
 
     }, [uid, toast]);
 
@@ -140,6 +146,42 @@ export default function UserDetailsPage() {
                         </div>
                     </CardContent>
                 </Card>
+
+                {user.isAffiliate && affiliateRequest && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Affiliate Information</CardTitle>
+                            <CardDescription>Verification details for this affiliate user.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex items-center gap-3">
+                                <UserIcon className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Affiliate ID</p>
+                                    <p className="font-semibold font-mono">{user.affiliateId}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <UserIcon className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                    <p className="text-sm text-muted-foreground">NID Number</p>
+                                    <p className="font-semibold">{affiliateRequest.nidNumber}</p>
+                                </div>
+                            </div>
+                            <div className="md:col-span-2 flex items-center gap-3">
+                                <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                                 <div>
+                                    <p className="text-sm text-muted-foreground">NID Card Image</p>
+                                    <Button asChild variant="link" className="p-0 h-auto">
+                                        <a href={affiliateRequest.nidImageUrl} target="_blank" rel="noopener noreferrer">
+                                            View Image
+                                        </a>
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardHeader>
