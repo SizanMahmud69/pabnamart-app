@@ -195,6 +195,18 @@ function AffiliatePage() {
                         </div>
                     </CardContent>
                 </Card>
+
+                <Link href="/affiliate-offers" className="block">
+                    <Card className="hover:bg-muted transition-colors">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                           <div>
+                            <CardTitle>Browse Affiliate Products</CardTitle>
+                            <CardDescription>Find products to promote and see their commission rates.</CardDescription>
+                           </div>
+                           <DollarSign className="h-8 w-8 text-muted-foreground" />
+                        </CardHeader>
+                    </Card>
+                </Link>
                 
                 <div className="grid gap-4 md:grid-cols-3">
                     <Card>

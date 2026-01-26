@@ -6,7 +6,7 @@ import type { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
-import { ShoppingCart, Star, Truck, Heart } from 'lucide-react';
+import { ShoppingCart, Star, Truck, Heart, DollarSign } from 'lucide-react';
 import { cn, rgbToHsl } from '@/lib/utils';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useState, useEffect } from 'react';
@@ -16,9 +16,10 @@ interface ProductCardProps {
   product: Product;
   isFlashSaleContext?: boolean;
   size?: 'default' | 'small';
+  showCommission?: boolean;
 }
 
-export default function ProductCard({ product, isFlashSaleContext = false, size = 'default' }: ProductCardProps) {
+export default function ProductCard({ product, isFlashSaleContext = false, size = 'default', showCommission = false }: ProductCardProps) {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
   const [cardStyle, setCardStyle] = useState<React.CSSProperties>({});
@@ -117,6 +118,12 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                           <span className="text-white font-bold">Sold Out</span>
                       </div>
                   )}
+                   {showCommission && product.affiliateCommission && (
+                    <div className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm flex items-center gap-1">
+                      <DollarSign className="h-2.5 w-2.5" />
+                      <span>{product.affiliateCommission}%</span>
+                    </div>
+                  )}
               </div>
           </Link>
           <CardContent className="p-2 flex flex-col flex-grow">
@@ -188,6 +195,12 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
            {hasDiscount && !isSoldOut && discountAmount > 0 && (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
               - ৳{discountAmount.toFixed(0)}
+            </div>
+          )}
+          {showCommission && product.affiliateCommission && (
+            <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
+              <DollarSign className="h-3 w-3" />
+              <span>Earn {product.affiliateCommission}%</span>
             </div>
           )}
           {isSoldOut && (
