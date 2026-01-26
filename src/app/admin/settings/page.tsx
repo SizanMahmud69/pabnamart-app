@@ -47,6 +47,13 @@ const allSettingsItems = [
         permissionKey: 'canManageModeratorSettings'
     },
     {
+        title: "Affiliate Requests",
+        description: "Approve or deny affiliate applications.",
+        icon: Users,
+        href: "/admin/settings/affiliates",
+        permissionKey: 'canManageAffiliates'
+    },
+    {
         title: "Contact Page Settings",
         description: "Update contact information.",
         icon: Phone,

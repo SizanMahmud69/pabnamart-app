@@ -14,7 +14,8 @@ import type {
   OrderItem,
   Order,
   CartItem,
-  AffiliateEarning
+  AffiliateEarning,
+  AffiliateRequest
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 
@@ -605,23 +606,104 @@ export async function updateOrderStatus(
   }
 }
 
-export async function joinAffiliateProgram(userId: string): Promise<{ success: boolean; message: string }> {
-  const adminApp = getFirebaseAdmin();
-  if (!adminApp) {
-    return { success: false, message: serverActionNotAvailableMessage };
-  }
-  const db = getFirestore(adminApp);
-  try {
-    const userDocRef = db.collection('users').doc(userId);
-    const affiliateId = `AFF-${userId.substring(0, 8).toUpperCase()}`;
+export async function submitAffiliateRequest(
+    userId: string,
+    displayName: string,
+    email: string,
+    nidNumber: string,
+    nidImageUrl: string
+): Promise<{ success: boolean; message: string }> {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
+    const db = getFirestore(adminApp);
 
-    await userDocRef.update({
+    try {
+        const requestRef = db.collection('affiliateRequests').doc();
+        const userRef = db.collection('users').doc(userId);
+
+        const newRequest: Omit<AffiliateRequest, 'id'> = {
+            userId,
+            displayName,
+            email,
+            nidNumber,
+            nidImageUrl,
+            status: 'pending',
+            requestedAt: new Date().toISOString(),
+        };
+
+        await requestRef.set(newRequest);
+        await userRef.update({ affiliateStatus: 'pending' });
+
+        return { success: true, message: 'Your affiliate request has been submitted for review.' };
+    } catch (error: any) {
+        return { success: false, message: error.message || 'Failed to submit affiliate request.' };
+    }
+}
+
+export async function approveAffiliateRequest(requestId: string): Promise<{ success: boolean; message: string }> {
+  const adminApp = getFirebaseAdmin();
+  if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
+  const db = getFirestore(adminApp);
+  
+  const requestRef = db.collection('affiliateRequests').doc(requestId);
+  try {
+    const requestSnap = await requestRef.get();
+    if (!requestSnap.exists) throw new Error("Request not found.");
+    
+    const requestData = requestSnap.data() as AffiliateRequest;
+    const userRef = db.collection('users').doc(requestData.userId);
+    
+    const affiliateId = `AFF-${requestData.userId.substring(0, 8).toUpperCase()}`;
+
+    const batch = db.batch();
+    batch.update(requestRef, { status: 'approved', reviewedAt: new Date().toISOString() });
+    batch.update(userRef, {
+      affiliateStatus: 'approved',
       isAffiliate: true,
       affiliateId: affiliateId,
     });
+    await batch.commit();
 
-    return { success: true, message: 'Congratulations! You are now an affiliate.' };
+    await createAndSendNotification(requestData.userId, {
+        icon: 'CheckCircle',
+        title: 'Affiliate Request Approved!',
+        description: 'Congratulations! Your affiliate account is now active.',
+        href: '/affiliate',
+    });
+
+    return { success: true, message: 'Affiliate request approved.' };
   } catch (error: any) {
-    return { success: false, message: error.message || 'Failed to join the affiliate program.' };
+    return { success: false, message: error.message || 'Failed to approve request.' };
+  }
+}
+
+export async function denyAffiliateRequest(requestId: string, reason: string): Promise<{ success: boolean; message: string }> {
+  const adminApp = getFirebaseAdmin();
+  if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
+  const db = getFirestore(adminApp);
+
+  const requestRef = db.collection('affiliateRequests').doc(requestId);
+  try {
+    const requestSnap = await requestRef.get();
+    if (!requestSnap.exists) throw new Error("Request not found.");
+    
+    const requestData = requestSnap.data() as AffiliateRequest;
+    const userRef = db.collection('users').doc(requestData.userId);
+
+    const batch = db.batch();
+    batch.update(requestRef, { status: 'denied', rejectionReason: reason, reviewedAt: new Date().toISOString() });
+    batch.update(userRef, { affiliateStatus: 'denied' });
+    await batch.commit();
+
+    await createAndSendNotification(requestData.userId, {
+        icon: 'XCircle',
+        title: 'Affiliate Request Denied',
+        description: `Your affiliate request was denied. Reason: ${reason}`,
+        href: '/affiliate',
+    });
+
+    return { success: true, message: 'Affiliate request denied.' };
+  } catch (error: any) {
+    return { success: false, message: error.message || 'Failed to deny request.' };
   }
 }

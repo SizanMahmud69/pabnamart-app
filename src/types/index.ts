@@ -140,6 +140,7 @@ export interface ModeratorPermissions {
   canManageModeratorSettings: boolean;
   canManageReviews: boolean;
   canManageContactSettings: boolean;
+  canManageAffiliates: boolean;
 }
 
 export interface User {
@@ -157,6 +158,7 @@ export interface User {
   isAffiliate?: boolean;
   affiliateId?: string;
   referredBy?: string;
+  affiliateStatus?: 'none' | 'pending' | 'approved' | 'denied';
 }
 
 export interface ShippingAddress {
@@ -235,3 +237,15 @@ export interface AffiliateEarning {
   referredUserUid: string;
 }
     
+export interface AffiliateRequest {
+  id: string;
+  userId: string;
+  displayName: string;
+  email: string;
+  nidNumber: string;
+  nidImageUrl: string;
+  status: 'pending' | 'approved' | 'denied';
+  requestedAt: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+}

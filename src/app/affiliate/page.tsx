@@ -2,12 +2,12 @@
 "use client";
 
 import { useAuth, withAuth } from "@/hooks/useAuth";
-import { joinAffiliateProgram } from "@/app/actions";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Users, DollarSign, BarChart2, Copy } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, BarChart2, Copy, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getFirestore, collection, query, where, onSnapshot } from "firebase/firestore";
@@ -20,7 +20,7 @@ const db = getFirestore(app);
 function AffiliatePage() {
     const { user, appUser } = useAuth();
     const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
     const [referredUsers, setReferredUsers] = useState<AppUser[]>([]);
     const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
     const [baseUrl, setBaseUrl] = useState('');
@@ -30,7 +30,7 @@ function AffiliatePage() {
     }, []);
 
     useEffect(() => {
-        if (!user || !appUser?.isAffiliate) return;
+        if (!user || appUser?.affiliateStatus !== 'approved') return;
 
         // Fetch referred users
         const usersQuery = query(collection(db, 'users'), where('referredBy', '==', appUser.affiliateId));
@@ -50,16 +50,8 @@ function AffiliatePage() {
         }
     }, [user, appUser]);
 
-    const handleJoinProgram = async () => {
-        if (!user) return;
-        setIsLoading(true);
-        const result = await joinAffiliateProgram(user.uid);
-        if (result.success) {
-            toast({ title: "Success", description: result.message });
-        } else {
-            toast({ title: "Error", description: result.message, variant: "destructive" });
-        }
-        setIsLoading(false);
+    const handleJoinProgram = () => {
+        router.push('/affiliate/join');
     };
 
     const handleCopyToClipboard = (text: string) => {
@@ -81,7 +73,56 @@ function AffiliatePage() {
         return <LoadingSpinner />;
     }
 
-    if (!appUser.isAffiliate) {
+    if (appUser.affiliateStatus === 'pending') {
+        return (
+            <div className="bg-purple-50/30 min-h-screen">
+                <div className="container mx-auto px-4 py-8 text-center max-w-lg">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Request Pending</CardTitle>
+                            <CardDescription>Your affiliate program application is under review.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>We will notify you once the review process is complete. Thank you for your patience.</p>
+                            <Button asChild variant="ghost" className="mt-4">
+                                <Link href="/account">
+                                    <ArrowLeft className="mr-2 h-4 w-4" />
+                                    Back to Account
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        )
+    }
+
+    if (appUser.affiliateStatus === 'denied') {
+        return (
+            <div className="bg-purple-50/30 min-h-screen">
+                <div className="container mx-auto px-4 py-8 text-center max-w-lg">
+                    <Card className="border-destructive">
+                        <CardHeader className="text-center">
+                            <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+                            <CardTitle className="text-destructive mt-4">Request Denied</CardTitle>
+                            <CardDescription>We're sorry, your affiliate application was not approved.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>Please contact support if you have any questions.</p>
+                            <Button asChild variant="ghost" className="mt-4">
+                                <Link href="/account">
+                                    <ArrowLeft className="mr-2 h-4 w-4" />
+                                    Back to Account
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        )
+    }
+
+    if (appUser.affiliateStatus !== 'approved') {
         return (
             <div className="bg-purple-50/30 min-h-screen">
                 <div className="container mx-auto px-4 py-8">
@@ -119,8 +160,8 @@ function AffiliatePage() {
                                         <p className="text-sm text-muted-foreground">Our affiliate team is here to help you succeed.</p>
                                     </div>
                                 </div>
-                                <Button size="lg" onClick={handleJoinProgram} disabled={isLoading}>
-                                    {isLoading ? 'Joining...' : 'Join Now for Free'}
+                                <Button size="lg" onClick={handleJoinProgram}>
+                                    Join Now for Free
                                 </Button>
                             </CardContent>
                         </Card>
