@@ -37,6 +37,7 @@ function RootLayoutContent({
 }>) {
   const pathname = usePathname();
   const isAdminPage = pathname.startsWith('/admin');
+  const isAffiliatePage = pathname.startsWith('/affiliate');
   const [isFlashSalePopupOpen, setIsFlashSalePopupOpen] = useState(false);
 
   useEffect(() => {
@@ -62,9 +63,9 @@ function RootLayoutContent({
                              <Header />
                            </Suspense>
                         )}
-                        <main className={isAdminPage ? '' : "pb-16 md:pb-0"}>{children}</main>
+                        <main className={(isAdminPage || isAffiliatePage) ? '' : "pb-16 md:pb-0"}>{children}</main>
                         <Toaster />
-                        {!isAdminPage && <BottomNav />}
+                        {!isAdminPage && !isAffiliatePage && <BottomNav />}
                         {!isAdminPage && <VoucherPopup isFlashSalePopupOpen={isFlashSalePopupOpen} />}
                         {!isAdminPage && <FlashSalePopup onOpenChange={setIsFlashSalePopupOpen} />}
                     </NotificationProvider>

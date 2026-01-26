@@ -47,6 +47,8 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
           addToCart(product, {}, isFlashSaleContext);
       }
   }
+  
+  const commissionAmount = product.affiliateCommission && product.price ? (product.price * product.affiliateCommission) / 100 : 0;
 
   const isSmall = size === 'small';
 
@@ -170,6 +172,17 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                       </Button>
                   )}
               </div>
+              {showCommission && product.affiliateCommission && commissionAmount > 0 && (
+                <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                    <div>
+                        <span className="text-xs font-semibold border border-orange-400 text-orange-500 rounded px-1.5 py-0.5">
+                            Comm. {product.affiliateCommission}%
+                        </span>
+                        <p className="text-orange-500 font-bold text-sm mt-1">৳{commissionAmount.toFixed(2)}</p>
+                    </div>
+                    <Button size="sm" className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white h-8 px-3 text-xs">Earn</Button>
+                </div>
+              )}
           </CardContent>
       </Card>
     );
@@ -260,6 +273,17 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
             </Button>
           )}
         </div>
+        {showCommission && product.affiliateCommission && commissionAmount > 0 && (
+            <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                <div>
+                    <span className="text-xs font-semibold border border-orange-400 text-orange-500 rounded px-1.5 py-0.5">
+                        Comm. {product.affiliateCommission}%
+                    </span>
+                    <p className="text-orange-500 font-bold text-sm mt-1">৳{commissionAmount.toFixed(2)}</p>
+                </div>
+                <Button size="sm" className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white h-9 px-4">Earn</Button>
+            </div>
+        )}
       </CardContent>
     </Card>
   );

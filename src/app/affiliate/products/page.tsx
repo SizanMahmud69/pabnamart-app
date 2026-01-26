@@ -6,11 +6,10 @@ import ProductCard from '@/components/ProductCard';
 import { ArrowLeft, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import type { Product } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useMemo } from 'react';
 
-export default function AffiliateOffersPage() {
+export default function AffiliateProductsPage() {
     const { products: allProducts, loading } = useProducts();
 
     const affiliateProducts = useMemo(() => {
@@ -22,26 +21,18 @@ export default function AffiliateOffersPage() {
     }
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto px-4 py-8">
-                <div className="mb-6">
-                    <Button asChild variant="ghost" className="mb-4">
-                       <Link href="/affiliate">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Affiliate Program
-                        </Link>
-                    </Button>
-                    <div className="text-center">
-                        <h1 className="text-4xl font-bold text-center flex items-center justify-center gap-3">
-                           <DollarSign className="h-10 w-10 text-primary" />
-                            Affiliate Products
-                        </h1>
-                        <p className="text-muted-foreground mt-2">Promote these products to earn a commission on each sale.</p>
-                    </div>
+                <div className="text-center mb-6">
+                    <h1 className="text-3xl font-bold text-center flex items-center justify-center gap-3">
+                       <DollarSign className="h-8 w-8 text-primary" />
+                        Affiliate Products
+                    </h1>
+                    <p className="text-muted-foreground mt-2">Promote these products to earn a commission on each sale.</p>
                 </div>
                 
                 {affiliateProducts.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {affiliateProducts.map(product => (
                             <ProductCard key={product.id} product={product} showCommission={true} />
                         ))}
