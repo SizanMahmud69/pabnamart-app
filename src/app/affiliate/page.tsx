@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Users, DollarSign, BarChart2, Copy, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { getFirestore, collection, query, where, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import app from "@/lib/firebase";
 import type { User as AppUser, AffiliateEarning } from "@/types";
 import { Label } from "@/components/ui/label";
