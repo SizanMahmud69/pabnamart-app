@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, Suspense, useRef } from "react";
@@ -184,7 +185,7 @@ function NewReviewPageContent() {
                                     </Label>
                                 )}
                             </div>
-                            <p className="text-xs text-muted-foreground">You can upload up to 5 images.</p>
+                            <p className="text-xs text-muted-foreground">You can upload up to 5 images. Max 4.5MB each.</p>
                         </div>
                     </CardContent>
                     <CardFooter className="flex justify-end gap-2">
@@ -209,3 +210,5 @@ function NewReviewPage() {
 }
 
 export default withAuth(NewReviewPage);
+
+    

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -105,7 +106,7 @@ function AccountInformationPage() {
                         <CardDescription>View and edit your personal details.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-8">
-                        <div className="flex justify-center">
+                        <div className="flex flex-col items-center gap-2">
                            <div className="relative">
                                 <Avatar className="h-24 w-24">
                                     <AvatarImage src={user?.photoURL || DEFAULT_AVATAR_URL} alt="User Avatar" />
@@ -128,6 +129,7 @@ function AccountInformationPage() {
                                     disabled={isPhotoLoading}
                                 />
                            </div>
+                           <p className="text-xs text-muted-foreground">Max file size: 4.5MB</p>
                         </div>
                         
                         <form onSubmit={handleNameSubmit} className="space-y-4">
@@ -159,4 +161,6 @@ function AccountInformationPage() {
 
 
 export default withAuth(AccountInformationPage);
+    
+
     

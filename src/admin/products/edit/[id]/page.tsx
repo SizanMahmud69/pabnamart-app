@@ -78,6 +78,7 @@ export default function EditProductPage() {
     const inputFileRef = useRef<HTMLInputElement>(null);
     const [colors, setColors] = useState('');
     const [sizes, setSizes] = useState('');
+    const [affiliateCommission, setAffiliateCommission] = useState<number | undefined>(undefined);
 
     useEffect(() => {
         const categoriesRef = collection(db, 'categories');
@@ -110,6 +111,7 @@ export default function EditProductPage() {
             setFlashSaleDiscount(productToEdit.flashSaleDiscount);
             setColors(formatVariantArray(productToEdit.colors));
             setSizes(formatVariantArray(productToEdit.sizes));
+            setAffiliateCommission(productToEdit.affiliateCommission);
         }
     }, [products, productId]);
 
@@ -198,6 +200,7 @@ export default function EditProductPage() {
             colors: parsedColors,
             sizes: parsedSizes,
             createdAt: product.createdAt,
+            affiliateCommission: affiliateCommission || undefined,
         };
 
         try {
@@ -264,6 +267,7 @@ export default function EditProductPage() {
                                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                             <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
                                             <p className="mb-2 text-sm text-muted-foreground text-center">Click to upload</p>
+                                            <p className="text-xs text-muted-foreground">Max 4.5MB</p>
                                         </div>
                                         <Input id="image-upload" type="file" multiple className="hidden" onChange={handleFileChange} accept="image/*" ref={inputFileRef} />
                                     </Label>
@@ -375,9 +379,23 @@ export default function EditProductPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="return-policy">Return Policy (in days)</Label>
-                                    <Input id="return-policy" name="returnPolicy" type="number" defaultValue={product.returnPolicy} disabled={isLoading} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="return-policy">Return Policy (in days)</Label>
+                                        <Input id="return-policy" name="returnPolicy" type="number" defaultValue={product.returnPolicy} disabled={isLoading} />
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label htmlFor="affiliate-commission">Affiliate Commission (%)</Label>
+                                        <Input 
+                                            id="affiliate-commission" 
+                                            name="affiliateCommission" 
+                                            type="number"
+                                            value={affiliateCommission || ''}
+                                            onChange={(e) => setAffiliateCommission(e.target.value ? Number(e.target.value) : undefined)}
+                                            placeholder="e.g., 2"
+                                            disabled={isLoading}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>
@@ -394,3 +412,5 @@ export default function EditProductPage() {
         </div>
     );
 }
+
+    

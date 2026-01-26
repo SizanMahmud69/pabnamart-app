@@ -69,6 +69,8 @@ export default function NewProductPage() {
     const inputFileRef = useRef<HTMLInputElement>(null);
     const [colors, setColors] = useState('');
     const [sizes, setSizes] = useState('');
+    const [affiliateCommission, setAffiliateCommission] = useState<number | undefined>(undefined);
+
 
     useEffect(() => {
         const categoriesRef = collection(db, 'categories');
@@ -167,6 +169,7 @@ export default function NewProductPage() {
             colors: parsedColors,
             sizes: parsedSizes,
             createdAt: new Date().toISOString(),
+            affiliateCommission: affiliateCommission || undefined,
         };
 
         try {
@@ -221,6 +224,7 @@ export default function NewProductPage() {
                                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                             <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
                                             <p className="mb-2 text-sm text-muted-foreground text-center">Click to upload</p>
+                                            <p className="text-xs text-muted-foreground">Max 4.5MB</p>
                                         </div>
                                         <Input id="image-upload" type="file" multiple className="hidden" onChange={handleFileChange} accept="image/*" ref={inputFileRef} />
                                     </Label>
@@ -332,9 +336,23 @@ export default function NewProductPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="return-policy">Return Policy (in days)</Label>
-                                    <Input id="return-policy" name="returnPolicy" type="number" placeholder="e.g., 30" disabled={isLoading} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="return-policy">Return Policy (in days)</Label>
+                                        <Input id="return-policy" name="returnPolicy" type="number" placeholder="e.g., 30" disabled={isLoading} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="affiliate-commission">Affiliate Commission (%)</Label>
+                                        <Input 
+                                            id="affiliate-commission" 
+                                            name="affiliateCommission" 
+                                            type="number"
+                                            value={affiliateCommission || ''}
+                                            onChange={(e) => setAffiliateCommission(e.target.value ? Number(e.target.value) : undefined)}
+                                            placeholder="e.g., 2"
+                                            disabled={isLoading}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>
@@ -351,3 +369,5 @@ export default function NewProductPage() {
         </div>
     );
 }
+
+    

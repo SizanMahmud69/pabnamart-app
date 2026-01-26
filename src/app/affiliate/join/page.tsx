@@ -133,7 +133,8 @@ function JoinAffiliatePage() {
                                     ) : (
                                         <Label htmlFor="front-image-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted">
                                             <Upload className="w-8 h-8 text-muted-foreground" />
-                                            <p className="text-sm text-muted-foreground text-center">Upload Front</p>
+                                            <p className="text-sm text-muted-foreground text-center mb-1">Upload Front</p>
+                                            <p className="text-xs text-muted-foreground">Max 4.5MB</p>
                                             <Input id="front-image-upload" type="file" className="hidden" onChange={(e) => handleFileChange(e, 'front')} accept="image/*" />
                                         </Label>
                                     )}
@@ -150,7 +151,8 @@ function JoinAffiliatePage() {
                                     ) : (
                                         <Label htmlFor="back-image-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted">
                                             <Upload className="w-8 h-8 text-muted-foreground" />
-                                            <p className="text-sm text-muted-foreground text-center">Upload Back</p>
+                                            <p className="text-sm text-muted-foreground text-center mb-1">Upload Back</p>
+                                            <p className="text-xs text-muted-foreground">Max 4.5MB</p>
                                             <Input id="back-image-upload" type="file" className="hidden" onChange={(e) => handleFileChange(e, 'back')} accept="image/*" />
                                         </Label>
                                     )}
@@ -171,3 +173,5 @@ function JoinAffiliatePage() {
 }
 
 export default withAuth(JoinAffiliatePage);
+
+    

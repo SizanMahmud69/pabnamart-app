@@ -169,7 +169,8 @@ export default function PaymentSettingsPage() {
                                 ) : (
                                     <Label htmlFor="image-upload" className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted">
                                         <Upload className="w-8 h-8 text-muted-foreground" />
-                                        <p className="text-sm text-muted-foreground text-center">Click to upload</p>
+                                        <p className="text-sm text-muted-foreground text-center mb-1">Click to upload</p>
+                                        <p className="text-xs text-muted-foreground">Max 4.5MB</p>
                                         <Input id="image-upload" type="file" className="hidden" onChange={handleFileChange} accept="image/*" ref={inputFileRef} />
                                     </Label>
                                 )}
@@ -240,3 +241,5 @@ export default function PaymentSettingsPage() {
         </>
     );
 }
+
+    
