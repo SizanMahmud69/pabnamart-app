@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAuth, withAuth } from "@/hooks/useAuth";
@@ -6,63 +5,26 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Users, DollarSign, BarChart2, Copy, AlertCircle } from "lucide-react";
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import { getFirestore, collection, query, where, onSnapshot } from "firebase/firestore";
-import app from "@/lib/firebase";
-import type { User as AppUser, AffiliateEarning } from "@/types";
-
-const db = getFirestore(app);
+import { AlertCircle, Package, Users } from "lucide-react";
+import { useProducts } from '@/hooks/useProducts';
+import ProductCard from '@/components/ProductCard';
+import { useMemo } from 'react';
 
 function AffiliateHomePage() {
-    const { user, appUser } = useAuth();
+    const { appUser } = useAuth();
     const router = useRouter();
-    const { toast } = useToast();
-    const [referredUsers, setReferredUsers] = useState<AppUser[]>([]);
-    const [totalEarnings, setTotalEarnings] = useState(0);
-    const [baseUrl, setBaseUrl] = useState('');
+    
+    const { products: allProducts, loading: productsLoading } = useProducts();
 
-    useEffect(() => {
-        setBaseUrl(window.location.origin);
-    }, []);
-
-    useEffect(() => {
-        if (!user || !appUser || appUser.affiliateStatus !== 'approved' || !appUser.affiliateId) return;
-
-        // Fetch referred users
-        const usersQuery = query(collection(db, 'users'), where('referredBy', '==', appUser.affiliateId));
-        const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
-            setReferredUsers(snapshot.docs.map(doc => doc.data() as AppUser));
-        });
-
-        // Fetch earnings to calculate total
-        const earningsQuery = query(collection(db, 'affiliateEarnings'), where('affiliateUid', '==', user.uid));
-        const unsubscribeEarnings = onSnapshot(earningsQuery, (snapshot) => {
-            const total = snapshot.docs.reduce((acc, doc) => acc + (doc.data() as AffiliateEarning).commissionAmount, 0);
-            setTotalEarnings(total);
-        });
-
-        return () => {
-            unsubscribeUsers();
-            unsubscribeEarnings();
-        }
-    }, [user, appUser]);
+    const affiliateProducts = useMemo(() => {
+        return allProducts.filter(p => p.affiliateCommission && p.affiliateCommission > 0);
+    }, [allProducts]);
 
     const handleJoinProgram = () => {
         router.push('/affiliate/join');
     };
 
-    const handleCopyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text).then(() => {
-            toast({ title: "Copied!", description: "Referral link copied to clipboard." });
-        });
-    };
-
-    const affiliateLink = appUser?.affiliateId ? `${baseUrl}/?ref=${appUser.affiliateId}` : '';
-
-    if (!appUser) {
+    if (!appUser || productsLoading) {
         return <LoadingSpinner />;
     }
 
@@ -129,43 +91,30 @@ function AffiliateHomePage() {
         );
     }
     
-    // Affiliate Dashboard
+    // Affiliate Home: Products List
     return (
         <div className="min-h-screen">
-            <div className="container mx-auto px-4 py-8 space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Your Affiliate Dashboard</CardTitle>
-                        <CardDescription>Track your performance and earnings.</CardDescription>
-                    </CardHeader>
-                     <CardContent className="space-y-4">
-                        <div className="flex gap-2">
-                            <input id="affiliate-link" readOnly value={affiliateLink} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                            <Button onClick={() => handleCopyToClipboard(affiliateLink)}><Copy className="h-4 w-4" /></Button>
-                        </div>
-                    </CardContent>
-                </Card>
-                
-                <div className="grid gap-4 md:grid-cols-2">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">৳{totalEarnings.toFixed(2)}</div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Referrals</CardTitle>
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">+{referredUsers.length}</div>
-                        </CardContent>
-                    </Card>
+            <div className="container mx-auto px-4 py-8">
+                <div className="text-center mb-6">
+                    <h1 className="text-3xl font-bold text-center flex items-center justify-center gap-3">
+                       <Package className="h-8 w-8 text-primary" />
+                        Affiliate Products
+                    </h1>
+                    <p className="text-muted-foreground mt-2">Promote these products to earn a commission on each sale.</p>
                 </div>
+                
+                {affiliateProducts.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                        {affiliateProducts.map(product => (
+                            <ProductCard key={product.id} product={product} showCommission={true} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-20">
+                        <h2 className="text-2xl font-semibold">No Affiliate Products Found</h2>
+                        <p className="text-muted-foreground mt-2">There are currently no products in the affiliate program.</p>
+                    </div>
+                )}
             </div>
         </div>
     )
