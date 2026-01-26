@@ -243,7 +243,8 @@ export interface AffiliateRequest {
   displayName: string;
   email: string;
   nidNumber: string;
-  nidImageUrl: string;
+  nidFrontImageUrl: string;
+  nidBackImageUrl: string;
   status: 'pending' | 'approved' | 'denied';
   requestedAt: string;
   reviewedAt?: string;

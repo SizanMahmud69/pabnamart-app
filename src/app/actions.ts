@@ -611,7 +611,8 @@ export async function submitAffiliateRequest(
     displayName: string,
     email: string,
     nidNumber: string,
-    nidImageUrl: string
+    nidFrontImageUrl: string,
+    nidBackImageUrl: string
 ): Promise<{ success: boolean; message: string }> {
     const adminApp = getFirebaseAdmin();
     if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
@@ -626,7 +627,8 @@ export async function submitAffiliateRequest(
             displayName,
             email,
             nidNumber,
-            nidImageUrl,
+            nidFrontImageUrl,
+            nidBackImageUrl,
             status: 'pending',
             requestedAt: new Date().toISOString(),
         };

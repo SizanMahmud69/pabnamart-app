@@ -168,12 +168,23 @@ export default function UserDetailsPage() {
                                     <p className="font-semibold">{affiliateRequest.nidNumber}</p>
                                 </div>
                             </div>
-                            <div className="md:col-span-2 flex items-center gap-3">
+                            <div className="flex items-center gap-3">
                                 <ImageIcon className="h-5 w-5 text-muted-foreground" />
                                  <div>
-                                    <p className="text-sm text-muted-foreground">NID Card Image</p>
+                                    <p className="text-sm text-muted-foreground">NID Front Image</p>
                                     <Button asChild variant="link" className="p-0 h-auto">
-                                        <a href={affiliateRequest.nidImageUrl} target="_blank" rel="noopener noreferrer">
+                                        <a href={affiliateRequest.nidFrontImageUrl} target="_blank" rel="noopener noreferrer">
+                                            View Image
+                                        </a>
+                                    </Button>
+                                </div>
+                            </div>
+                             <div className="flex items-center gap-3">
+                                <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                                 <div>
+                                    <p className="text-sm text-muted-foreground">NID Back Image</p>
+                                    <Button asChild variant="link" className="p-0 h-auto">
+                                        <a href={affiliateRequest.nidBackImageUrl} target="_blank" rel="noopener noreferrer">
                                             View Image
                                         </a>
                                     </Button>

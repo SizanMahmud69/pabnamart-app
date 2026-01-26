@@ -121,7 +121,7 @@ export default function AffiliateRequestsPage() {
                                 <TableRow>
                                     <TableHead>User</TableHead>
                                     <TableHead>NID Number</TableHead>
-                                    <TableHead>NID Image</TableHead>
+                                    <TableHead>NID Images</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -135,11 +135,18 @@ export default function AffiliateRequestsPage() {
                                         </TableCell>
                                         <TableCell>{req.nidNumber}</TableCell>
                                         <TableCell>
-                                            <Button asChild variant="link" size="sm">
-                                                <a href={req.nidImageUrl} target="_blank" rel="noopener noreferrer">
-                                                    <Eye className="mr-2 h-4 w-4"/> View
-                                                </a>
-                                            </Button>
+                                            <div className="flex flex-col gap-1">
+                                                <Button asChild variant="link" size="sm" className="p-0 h-auto justify-start">
+                                                    <a href={req.nidFrontImageUrl} target="_blank" rel="noopener noreferrer">
+                                                        <Eye className="mr-1 h-4 w-4"/> View Front
+                                                    </a>
+                                                </Button>
+                                                <Button asChild variant="link" size="sm" className="p-0 h-auto justify-start">
+                                                    <a href={req.nidBackImageUrl} target="_blank" rel="noopener noreferrer">
+                                                        <Eye className="mr-1 h-4 w-4"/> View Back
+                                                    </a>
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant={req.status === 'approved' ? 'default' : req.status === 'denied' ? 'destructive' : 'secondary'} className="capitalize">{req.status}</Badge>
