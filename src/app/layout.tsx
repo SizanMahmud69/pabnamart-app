@@ -11,7 +11,7 @@ import { Inter } from 'next/font/google'
 import { VoucherProvider } from '@/hooks/useVouchers';
 import { AuthProvider } from '@/hooks/useAuth';
 import { NotificationProvider } from '@/hooks/useNotifications';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ProductProvider } from '@/hooks/useProducts';
 import { OfferProvider } from '@/hooks/useOffers';
 import { WishlistProvider } from '@/hooks/useWishlist';
@@ -36,6 +36,7 @@ function RootLayoutContent({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  const router = useRouter();
   const isAdminPage = pathname.startsWith('/admin');
   const isAffiliatePage = pathname.startsWith('/affiliate');
   const [isFlashSalePopupOpen, setIsFlashSalePopupOpen] = useState(false);
@@ -46,7 +47,13 @@ function RootLayoutContent({
     if (ref) {
         localStorage.setItem('referrerId', ref);
     }
-  }, []);
+    const productId = params.get('product_id');
+    if (productId) {
+      if (!pathname.startsWith(`/products/${productId}`)) {
+        router.push(`/products/${productId}`);
+      }
+    }
+  }, [pathname, router]);
 
   return (
     <html lang="en">

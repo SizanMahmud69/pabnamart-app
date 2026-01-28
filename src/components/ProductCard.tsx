@@ -10,6 +10,8 @@ import { cn, rgbToHsl } from '@/lib/utils';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductCardProps {
   product: Product;
@@ -23,6 +25,13 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   const { addToWishlist, isInWishlist } = useWishlist();
   const [cardStyle, setCardStyle] = useState<React.CSSProperties>({});
   const router = useRouter();
+  const { appUser } = useAuth();
+  const { toast } = useToast();
+  const [baseUrl, setBaseUrl] = useState('');
+
+  useEffect(() => {
+    setBaseUrl(window.location.origin);
+  }, []);
 
   const price = product.price;
   const originalPrice = product.originalPrice;
@@ -48,6 +57,18 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   }
   
   const commissionAmount = product.affiliateCommission && product.price ? (product.price * product.affiliateCommission) / 100 : 0;
+
+  const handleEarnClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!appUser?.affiliateId || !baseUrl) return;
+
+    const referralLink = `${baseUrl}/?ref=${appUser.affiliateId}&product_id=${product.id}`;
+    navigator.clipboard.writeText(referralLink).then(() => {
+        toast({ title: "Link Copied!", description: "Share this link to earn commission." });
+    }, (err) => {
+        toast({ title: "Error", description: "Could not copy link.", variant: 'destructive'});
+    });
+  };
 
   const isSmall = size === 'small';
 
@@ -173,7 +194,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                         </span>
                         <p className="text-orange-500 font-bold text-sm mt-1">৳{commissionAmount.toFixed(2)}</p>
                     </div>
-                    <Button className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white h-7 px-3 text-xs">Earn</Button>
+                    <Button onClick={handleEarnClick} className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white h-7 px-3 text-xs self-end">Earn</Button>
                 </div>
               )}
           </CardContent>
@@ -268,7 +289,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                     </span>
                     <p className="text-orange-500 font-bold text-sm mt-1">৳{commissionAmount.toFixed(2)}</p>
                 </div>
-                <Button className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white h-7 px-3 text-xs">Earn</Button>
+                <Button onClick={handleEarnClick} className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white h-7 px-3 text-xs self-end">Earn</Button>
             </div>
         )}
       </CardContent>
