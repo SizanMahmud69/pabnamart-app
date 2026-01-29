@@ -375,7 +375,7 @@ export async function placeOrder(
     // --- Affiliate Commission Logic ---
     const userRef = db.collection('users').doc(payload.userId);
     const userSnap = await userRef.get();
-    if (userSnap.exists()) {
+    if (userSnap.exists) {
         const userData = userSnap.data() as User;
         if (userData.referredBy) {
             const affiliateQuery = db.collection('users').where('affiliateId', '==', userData.referredBy).limit(1);
