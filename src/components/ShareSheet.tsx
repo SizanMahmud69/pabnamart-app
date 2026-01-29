@@ -1,9 +1,11 @@
 "use client";
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetClose } from "@/components/ui/sheet";
 import type { Product } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Link as LinkIcon, MessageSquare, MoreHorizontal } from "lucide-react";
+import { Copy, Link as LinkIcon, MessageSquare, MoreHorizontal, ChevronRight, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import Link from 'next/link';
 
 // Inline SVGs for brand icons
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -19,6 +21,7 @@ const TelegramIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg fill="currentColor" viewBox="0 0 24 24" {...props}><path d="M15 10l-4 4 6 6 6-16-18 7 4 2 2 6 3-4" /></svg>
 );
 
+
 interface ShareSheetProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
@@ -28,11 +31,11 @@ interface ShareSheetProps {
 
 export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: ShareSheetProps) {
     const { toast } = useToast();
+    const { appUser } = useAuth();
 
     const copyToClipboard = (text: string, message: string) => {
         navigator.clipboard.writeText(text).then(() => {
             toast({ title: message });
-            onOpenChange(false);
         }).catch(err => {
             toast({
                 title: "Error",
@@ -50,7 +53,6 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
                     text: `Check out this product: ${product.name}`,
                     url: shareUrl,
                 });
-                onOpenChange(false);
             } catch (error) {
                 console.error("Error sharing:", error);
             }
@@ -58,6 +60,8 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
             copyToClipboard(shareUrl, "Link Copied!");
         }
     }
+    
+    const commissionAmount = product.affiliateCommission && product.price ? (product.price * product.affiliateCommission) / 100 : 0;
 
     const shareOptions = [
         { name: 'WhatsApp', icon: WhatsAppIcon, color: '#25D366', href: `https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this product: ${product.name}\n${shareUrl}`)}` },
@@ -75,12 +79,44 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
 
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
-            <SheetContent side="bottom" className="rounded-t-lg max-h-[90vh] p-4">
-                <SheetHeader className="text-center mb-4">
-                    <SheetTitle className="text-lg font-semibold">Share this product with friends!</SheetTitle>
-                </SheetHeader>
+            <SheetContent side="bottom" className="rounded-t-lg max-h-[95vh] p-4 w-full sm:max-w-md mx-auto flex flex-col">
+                <div className="flex justify-between items-center mb-2">
+                    <span className="w-6"></span> {/* Spacer */}
+                    <h2 className="text-base font-semibold text-center">Share this product with friends!</h2>
+                    <SheetClose asChild>
+                        <button className="text-muted-foreground">
+                            <X className="h-5 w-5" />
+                        </button>
+                    </SheetClose>
+                </div>
+                
+                <div className="relative w-full aspect-square mb-4 bg-white rounded-lg p-2">
+                    <img src={product.images[0]} alt={product.name} className="object-contain w-full h-full" />
+                </div>
+                
+                <div className="mb-4">
+                    {appUser?.isAffiliate && commissionAmount > 0 ? (
+                        <div className="p-3 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg shadow-lg">
+                            <p className="font-semibold text-base">You can earn <span className="font-bold">৳{commissionAmount.toFixed(2)}</span> by sharing this!</p>
+                        </div>
+                    ) : (
+                        <Link href="/affiliate" className="block" onClick={() => onOpenChange(false)}>
+                            <div className="p-3 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg shadow-lg relative">
+                                 <div className="border-2 border-white/30 rounded-md p-2">
+                                    <p className="text-sm">Join PabnaMart Affiliate to earn by sharing!</p>
+                                    <div className="flex items-center justify-center">
+                                       <h3 className="font-bold text-lg">Join our Affiliate program now!</h3>
+                                    </div>
+                                    <p className="text-xs flex items-center justify-center">Read more <ChevronRight className="h-3 w-3 ml-0.5" /></p>
+                                </div>
+                            </div>
+                        </Link>
+                    )}
+                </div>
+
+
                 <div className="grid grid-cols-4 gap-4 mb-6">
-                    {shareOptions.map(({ name, icon: Icon, color, href }) => (
+                   {shareOptions.map(({ name, icon: Icon, color, href }) => (
                         <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center text-xs">
                             <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
                                 <Icon className="h-7 w-7 text-white" />
