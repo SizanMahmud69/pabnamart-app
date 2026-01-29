@@ -82,31 +82,44 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
                 </div>
                 
                  <div className="flex justify-center mb-2">
-                    <div className="relative w-40 h-40 bg-white rounded-lg p-2">
+                    <div className="relative w-24 h-24 bg-white rounded-lg p-2">
                         <img src={product.images[0]} alt={product.name} className="object-contain w-full h-full" />
                     </div>
                 </div>
                 
                 <div className="mb-4">
-                    {appUser?.isAffiliate && commissionAmount > 0 ? (
-                        <div className="p-3 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg shadow-lg">
-                            <p className="font-semibold text-base">You can earn <span className="font-bold">৳{commissionAmount.toFixed(2)}</span> by sharing this!</p>
-                        </div>
-                    ) : (
-                        <Link href="/affiliate" className="block" onClick={() => onOpenChange(false)}>
-                            <div className="p-3 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg shadow-lg relative">
-                                 <div className="border-2 border-white/30 rounded-md p-2">
-                                    <p className="text-sm">Join PabnaMart Affiliate to earn by sharing!</p>
-                                    <div className="flex items-center justify-center">
-                                       <h3 className="font-bold text-lg">Join our Affiliate program now!</h3>
+                    {(() => {
+                        if (appUser?.isAffiliate) {
+                            if (commissionAmount > 0) {
+                                return (
+                                    <div className="p-3 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg shadow-lg">
+                                        <p className="font-semibold text-base">You can earn <span className="font-bold">৳{commissionAmount.toFixed(2)}</span> by sharing this!</p>
                                     </div>
-                                    <p className="text-xs flex items-center justify-center">Read more <ChevronRight className="h-3 w-3 ml-0.5" /></p>
-                                </div>
-                            </div>
-                        </Link>
-                    )}
+                                );
+                            } else {
+                                return (
+                                    <div className="p-3 text-center bg-gray-500 text-white rounded-lg shadow-lg">
+                                        <p className="font-semibold text-base">This product is not eligible for commission.</p>
+                                    </div>
+                                );
+                            }
+                        } else {
+                            return (
+                                <Link href="/affiliate" className="block" onClick={() => onOpenChange(false)}>
+                                    <div className="p-3 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg shadow-lg relative">
+                                        <div className="border-2 border-white/30 rounded-md p-2">
+                                            <p className="text-sm">Join PabnaMart Affiliate to earn by sharing!</p>
+                                            <div className="flex items-center justify-center">
+                                            <h3 className="font-bold text-lg">Join our Affiliate program now!</h3>
+                                            </div>
+                                            <p className="text-xs flex items-center justify-center">Read more <ChevronRight className="h-3 w-3 ml-0.5" /></p>
+                                        </div>
+                                    </div>
+                                </Link>
+                            );
+                        }
+                    })()}
                 </div>
-
 
                  <div className="space-y-3">
                     <div className="grid grid-cols-3 gap-3">
