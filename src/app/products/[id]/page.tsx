@@ -11,7 +11,7 @@ import { useEffect, useState, useMemo, Suspense } from 'react';
 import type { Product, ShippingAddress, Review } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, CheckCircle2, Truck, Package } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Truck, Package, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import ProductCard from '@/components/ProductCard';
+import { useToast } from '@/hooks/use-toast';
 
 const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
@@ -31,6 +32,8 @@ function ProductDetailPageContent() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const { appUser } = useAuth();
   const { deliveryTimeInside, deliveryTimeOutside } = useDeliveryCharge();
+  const { toast } = useToast();
+  const [baseUrl, setBaseUrl] = useState('');
   
   const isFlashSaleContext = searchParams.get('flash') === 'true';
 
@@ -45,6 +48,10 @@ function ProductDetailPageContent() {
     return isInsidePabna ? deliveryTimeInside : deliveryTimeOutside;
   }, [defaultAddress, deliveryTimeInside, deliveryTimeOutside]);
   
+  useEffect(() => {
+    setBaseUrl(window.location.origin);
+  }, []);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [params.id]);
@@ -88,6 +95,28 @@ function ProductDetailPageContent() {
     return () => clearTimeout(timer);
   }, [product]);
 
+  const handleShare = () => {
+    if (!product) return;
+    
+    let shareUrl = `${baseUrl}/products/${product.id}`;
+    
+    if (appUser?.isAffiliate && appUser.affiliateId) {
+        shareUrl += `?ref=${appUser.affiliateId}`;
+    }
+    
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        toast({
+            title: "Link Copied",
+            description: "Product link has been copied to your clipboard.",
+        });
+    }).catch(err => {
+        toast({
+            title: "Error",
+            description: "Could not copy link.",
+            variant: "destructive",
+        });
+    });
+  };
 
   if (product === null) {
     return <LoadingSpinner />;
@@ -140,7 +169,15 @@ function ProductDetailPageContent() {
                 <Card className="rounded-t-3xl -mt-6 md:mt-0 md:rounded-t-none md:rounded-b-lg relative z-10 shadow-lg">
                     <CardContent className="p-6 space-y-4">
                         <p className="text-sm font-bold text-primary uppercase tracking-wider">{product.category}</p>
-                        <h1 className="text-2xl font-bold">{product.name}</h1>
+                        
+                        <div className="flex justify-between items-start gap-4">
+                            <h1 className="text-2xl font-bold">{product.name}</h1>
+                            <Button variant="outline" size="icon" onClick={handleShare}>
+                                <Share2 className="h-5 w-5" />
+                                <span className="sr-only">Share</span>
+                            </Button>
+                        </div>
+                        
                         <div className="flex items-center gap-2">
                             <StarRating rating={product.rating} />
                             <span className="text-muted-foreground text-sm">({reviews.length} reviews)</span>
