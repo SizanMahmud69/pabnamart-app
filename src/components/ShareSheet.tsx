@@ -3,22 +3,31 @@
 import { Sheet, SheetContent, SheetClose } from "@/components/ui/sheet";
 import type { Product } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Link as LinkIcon, MessageSquare, MoreHorizontal, ChevronRight, X } from "lucide-react";
+import { Copy, MoreHorizontal, ChevronRight, X, Link2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import Link from 'next/link';
 
 // Inline SVGs for brand icons
-const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg fill="currentColor" viewBox="0 0 24 24" {...props}><path d="M16.75 13.96c-.25.13-.5.25-.75.38-.5.25-1 .5-1.5.25-.5-.25-1-1-1.5-1.75s-.75-1.5-.5-2.25c.25-.75.75-1 .75-1.25s-.25-1-.25-1.25c-.25-.5-1-2.25-1.25-2.75s-.5-.5-.75-.5c-.25 0-.5 0-.75.01a.98.98 0 0 0-.75.38c-.25.25-.75.75-1 1.5-.25.75-.25 1.5 0 2.25.25.75.5 1.25 1 2s1 1.25 1.75 1.75c.75.5 1.5.75 2.25.75s1.25-.25 1.75-.5c.5-.25 1-1 1.25-1.5s.25-.75.25-1v-.25c-.01-.25-.01-.5-.25-.75zM12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"></path></svg>
-);
 const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg fill="currentColor" viewBox="0 0 24 24" {...props}><path d="M17.6 3.1h-3.3c-3.5 0-5.8 2.3-5.8 5.9v2.5H6.2v3.7h2.3v9.3h4.1v-9.3h3.3l.5-3.7h-3.8V9.2c0-1.1.3-1.8 1.8-1.8h2V3.1z"/></svg>
+    <svg fill="currentColor" viewBox="0 0 512 512" {...props}>
+        <path d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"/>
+    </svg>
 );
 const MessengerIcon = (props: React.SVGProps<SVGSVGElement>) => (
-     <svg fill="currentColor" viewBox="0 0 24 24" {...props}><path d="m12 2.01-8.52 5.09c-.83.49-1.48 1.6-1.48 2.61v7.29c0 1.54 1.25 2.79 2.79 2.79h14.42c1.54 0 2.79-1.25 2.79-2.79v-7.29c0-1.01-.65-2.12-1.48-2.61L12 2.01Zm-1.12 11.56 3.39-4.32-3.4-4.32H5.13l3.4 4.32-3.4 4.32h5.74Zm2.24 0h5.74l-3.4-4.32 3.4-4.32h-5.74l-3.4 4.32 3.4 4.32Z"></path></svg>
+    <svg fill="currentColor" viewBox="0 0 24 24" {...props}><path d="m12 2.01-8.52 5.09c-.83.49-1.48 1.6-1.48 2.61v7.29c0 1.54 1.25 2.79 2.79 2.79h14.42c1.54 0 2.79-1.25 2.79-2.79v-7.29c0-1.01-.65-2.12-1.48-2.61L12 2.01ZM10.88 13.57l3.39-4.32-3.4-4.32H5.13l3.4 4.32-3.4 4.32h5.74Zm2.24 0h5.74l-3.4-4.32 3.4-4.32h-5.74l-3.4 4.32 3.4 4.32Z"></path></svg>
+);
+const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 448 512" fill="currentColor" {...props}><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 .2c34.9 0 67.7 13.5 92.8 38.6 25.1 25.1 38.6 58 38.6 92.8 0 98.2-79.9 178-178 178-31.8 0-62.1-8.4-88.6-23.4l-6.2-3.7-66.5 17.5 17.9-64.8-4.1-6.5c-16.2-26.4-24.6-56.5-24.6-88.1 0-98.2 79.9-178 178-178zm93.8 141.2c-2.4-1.2-14.3-7.1-16.5-7.9-2.2-.8-3.8-.8-5.4 1.2-1.6 2.1-6.2 7.9-7.6 9.5-1.4 1.6-2.8 1.8-5.2.6-2.4-1.2-10.3-3.8-19.5-12-7.2-6.4-12-14.3-13.4-16.8-1.4-2.5-.2-3.8.9-5.1 1-1.1 2.3-2.8 3.4-4.2s1.6-2.5 2.4-4.2c.8-1.6.4-3 .2-4.2s-5.4-13-7.4-17.8c-2-4.8-4-4.1-5.4-4.1h-4.8c-1.6 0-4.2.6-6.8 3.1-2.6 2.5-10.3 10-10.3 24.3s10.5 28.2 12 30.1c1.4 1.9 20.9 31.9 50.8 44.9 7.2 3.1 12.9 4.9 17.4 6.3 7.8 2.3 14.9 1.9 20.6 1.1 6.3-.8 19-7.8 21.7-15.3s2.7-14.1 1.9-15.3c-.8-1.2-2.4-1.9-4.8-3.1z"/></svg>
+);
+const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    </svg>
 );
 const TelegramIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg fill="currentColor" viewBox="0 0 24 24" {...props}><path d="M15 10l-4 4 6 6 6-16-18 7 4 2 2 6 3-4" /></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.57c-.28 1.13-.86 1.33-1.78.82l-4.76-3.52-2.26 2.16c-.25.25-.46.46-.9.46z"/></svg>
 );
 
 
@@ -44,37 +53,18 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
             });
         });
     };
-
-    const handleWebShare = async () => {
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: product.name,
-                    text: `Check out this product: ${product.name}`,
-                    url: shareUrl,
-                });
-            } catch (error) {
-                console.error("Error sharing:", error);
-            }
-        } else {
-            copyToClipboard(shareUrl, "Link Copied!");
-        }
-    }
     
     const commissionAmount = product.affiliateCommission && product.price ? (product.price * product.affiliateCommission) / 100 : 0;
 
-    const shareOptions = [
-        { name: 'WhatsApp', icon: WhatsAppIcon, color: '#25D366', href: `https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this product: ${product.name}\n${shareUrl}`)}` },
+    const shareOptionsLine1 = [
         { name: 'Facebook', icon: FacebookIcon, color: '#1877F2', href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}` },
         { name: 'Messenger', icon: MessengerIcon, color: '#0099FF', href: `fb-messenger://share?link=${encodeURIComponent(shareUrl)}` },
-        { name: 'Telegram', icon: TelegramIcon, color: '#2AABEE', href: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Check out this product: ${product.name}`)}` },
+        { name: 'WhatsApp', icon: WhatsAppIcon, color: '#25D366', href: `https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this product: ${product.name}\n${shareUrl}`)}` },
     ];
     
-    const actionOptions = [
-        { name: 'Copy Info', icon: Copy, action: () => copyToClipboard(`${product.name}\n${shareUrl}`, "Product Info Copied!") },
-        { name: 'Copy Link', icon: LinkIcon, action: () => copyToClipboard(shareUrl, "Link Copied!") },
-        { name: 'Send SMS', icon: MessageSquare, action: () => { window.location.href = `sms:?body=${encodeURIComponent(`Check out this product: ${product.name}\n${shareUrl}`)}`; } },
-        { name: 'More', icon: MoreHorizontal, action: handleWebShare },
+    const shareOptionsLine2 = [
+        { name: 'Instagram', icon: InstagramIcon, isGradient: true, href: 'https://www.instagram.com' },
+        { name: 'Telegram', icon: TelegramIcon, color: '#2AABEE', href: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Check out this product: ${product.name}`)}` },
     ];
 
     return (
@@ -115,25 +105,33 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
                 </div>
 
 
-                <div className="grid grid-cols-4 gap-4 mb-6">
-                   {shareOptions.map(({ name, icon: Icon, color, href }) => (
-                        <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center text-xs">
-                            <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
-                                <Icon className="h-7 w-7 text-white" />
+                 <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                        {shareOptionsLine1.map(({ name, icon: Icon, color, href }) => (
+                            <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center text-xs">
+                                <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
+                                    <Icon className="h-7 w-7 text-white" />
+                                </div>
+                                <span>{name}</span>
+                            </a>
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                         {shareOptionsLine2.map(({ name, icon: Icon, color, href, isGradient }) => (
+                            <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center text-xs">
+                                <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isGradient ? 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600' : ''}`} style={!isGradient ? { backgroundColor: color } : {}}>
+                                    <Icon className="h-7 w-7 text-white" style={name === 'Instagram' ? { stroke: 'white', fill: 'none' } : {}}/>
+                                </div>
+                                <span>{name}</span>
+                            </a>
+                        ))}
+                        <button onClick={() => copyToClipboard(shareUrl, "Link Copied!")} className="flex flex-col items-center gap-2 text-center text-xs">
+                             <div className="w-14 h-14 rounded-full flex items-center justify-center bg-gray-500">
+                                <Link2 className="h-7 w-7 text-white" />
                             </div>
-                            <span>{name}</span>
-                        </a>
-                    ))}
-                </div>
-                 <div className="grid grid-cols-4 gap-4">
-                     {actionOptions.map(({ name, icon: Icon, action }) => (
-                        <button key={name} onClick={action} className="flex flex-col items-center gap-2 text-center text-xs">
-                            <div className="w-14 h-14 rounded-full flex items-center justify-center bg-muted">
-                                <Icon className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <span>{name}</span>
+                            <span>Copy Link</span>
                         </button>
-                    ))}
+                    </div>
                 </div>
             </SheetContent>
         </Sheet>
