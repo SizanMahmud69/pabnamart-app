@@ -19,7 +19,7 @@ export default function AffiliateBottomNav() {
       icon: User, 
       label: 'Account' 
     },
-    { href: '/', icon: ArrowLeft, label: 'Main App' },
+    { href: '/', icon: ArrowLeft, label: 'Main' },
   ];
 
   return (
