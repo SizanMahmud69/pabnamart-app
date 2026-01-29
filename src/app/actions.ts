@@ -390,7 +390,7 @@ export async function placeOrder(
                     const productRef = db.collection('products').doc(item.id.toString());
                     const productSnap = await productRef.get();
 
-                    if (productSnap.exists()) {
+                    if (productSnap.exists) {
                         const productData = productSnap.data() as Product;
                         if (productData.affiliateCommission && productData.affiliateCommission > 0) {
                             const commissionAmount = (item.price * item.quantity) * (productData.affiliateCommission / 100);
@@ -571,6 +571,50 @@ export async function updateOrderStatus(
 
       transaction.update(orderRef, updatePayload);
     });
+
+    if (newStatus === 'delivered' && orderData) {
+        const earningsRef = db.collection('affiliateEarnings');
+        const earningsQuery = earningsRef.where('orderId', '==', orderId).where('status', '==', 'pending');
+        const earningsSnap = await earningsQuery.get();
+
+        if (!earningsSnap.empty) {
+            const batch = db.batch();
+            let totalCommission = 0;
+            let affiliateUid = '';
+
+            earningsSnap.forEach(doc => {
+                const earning = doc.data() as AffiliateEarning;
+                batch.update(doc.ref, { status: 'paid' });
+                totalCommission += earning.commissionAmount;
+                if (!affiliateUid) {
+                    affiliateUid = earning.affiliateUid;
+                }
+            });
+            
+            await batch.commit();
+
+            if (affiliateUid && totalCommission > 0) {
+                await createAndSendNotification(affiliateUid, {
+                    icon: 'DollarSign',
+                    title: 'Commission Earned!',
+                    description: `You've earned ৳${totalCommission.toFixed(2)} from a completed order.`,
+                    href: '/affiliate/wallet'
+                });
+            }
+        }
+    } else if (newStatus === 'cancelled' && orderData) {
+        const earningsRef = db.collection('affiliateEarnings');
+        const earningsQuery = earningsRef.where('orderId', '==', orderId).where('status', '==', 'pending');
+        const earningsSnap = await earningsQuery.get();
+
+        if (!earningsSnap.empty) {
+            const batch = db.batch();
+            earningsSnap.forEach(doc => {
+                batch.update(doc.ref, { status: 'cancelled' });
+            });
+            await batch.commit();
+        }
+    }
 
     if (orderData) {
         let notificationData;

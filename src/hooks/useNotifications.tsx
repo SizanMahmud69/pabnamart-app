@@ -4,7 +4,7 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import type { Notification } from '@/types';
 import { useAuth } from './useAuth';
-import { LogIn, Truck, Gift, Tag, PackageCheck, CheckCircle, XCircle, type LucideIcon } from 'lucide-react';
+import { LogIn, Truck, Gift, Tag, PackageCheck, CheckCircle, XCircle, DollarSign, type LucideIcon } from 'lucide-react';
 import { getFirestore, onSnapshot, collection, query, writeBatch, getDocs, updateDoc, doc, orderBy, deleteDoc, arrayUnion, type Firestore } from 'firebase/firestore';
 import app, { messaging } from '@/lib/firebase';
 import { getToken, onMessage } from 'firebase/messaging';
@@ -17,6 +17,7 @@ export const iconMap: { [key: string]: LucideIcon } = {
     PackageCheck,
     CheckCircle,
     XCircle,
+    DollarSign,
 };
 
 
