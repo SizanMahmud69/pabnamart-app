@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Sheet, SheetContent, SheetClose } from "@/components/ui/sheet";
@@ -80,8 +81,10 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
                     </SheetClose>
                 </div>
                 
-                <div className="relative w-full aspect-square mb-4 bg-white rounded-lg p-2">
-                    <img src={product.images[0]} alt={product.name} className="object-contain w-full h-full" />
+                 <div className="flex justify-center mb-2">
+                    <div className="relative w-40 h-40 bg-white rounded-lg p-2">
+                        <img src={product.images[0]} alt={product.name} className="object-contain w-full h-full" />
+                    </div>
                 </div>
                 
                 <div className="mb-4">
@@ -105,29 +108,29 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
                 </div>
 
 
-                 <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
+                 <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-3">
                         {shareOptionsLine1.map(({ name, icon: Icon, color, href }) => (
-                            <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center text-xs">
-                                <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
-                                    <Icon className="h-7 w-7 text-white" />
+                            <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1.5 text-center text-xs">
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
+                                    <Icon className="h-6 w-6 text-white" />
                                 </div>
                                 <span>{name}</span>
                             </a>
                         ))}
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-3">
                          {shareOptionsLine2.map(({ name, icon: Icon, color, href, isGradient }) => (
-                            <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center text-xs">
-                                <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isGradient ? 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600' : ''}`} style={!isGradient ? { backgroundColor: color } : {}}>
-                                    <Icon className="h-7 w-7 text-white" style={name === 'Instagram' ? { stroke: 'white', fill: 'none' } : {}}/>
+                            <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1.5 text-center text-xs">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isGradient ? 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600' : ''}`} style={!isGradient ? { backgroundColor: color } : {}}>
+                                    <Icon className="h-6 w-6 text-white" style={name === 'Instagram' ? { stroke: 'white', fill: 'none' } : {}}/>
                                 </div>
                                 <span>{name}</span>
                             </a>
                         ))}
-                        <button onClick={() => copyToClipboard(shareUrl, "Link Copied!")} className="flex flex-col items-center gap-2 text-center text-xs">
-                             <div className="w-14 h-14 rounded-full flex items-center justify-center bg-gray-500">
-                                <Link2 className="h-7 w-7 text-white" />
+                        <button onClick={() => copyToClipboard(shareUrl, "Link Copied!")} className="flex flex-col items-center gap-1.5 text-center text-xs">
+                             <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-500">
+                                <Link2 className="h-6 w-6 text-white" />
                             </div>
                             <span>Copy Link</span>
                         </button>
