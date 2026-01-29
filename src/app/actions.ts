@@ -781,3 +781,73 @@ export async function denyAffiliateRequest(requestId: string, reason: string): P
     return { success: false, message: error.message || 'Failed to deny request.' };
   }
 }
+
+export async function approveWithdrawal(withdrawalId: string, transactionId: string): Promise<{ success: boolean; message: string }> {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
+    const db = getFirestore(adminApp);
+
+    try {
+        const withdrawalRef = db.collection('withdrawals').doc(withdrawalId);
+        const withdrawalSnap = await withdrawalRef.get();
+        if (!withdrawalSnap.exists) throw new Error("Withdrawal request not found.");
+        
+        const withdrawalData = withdrawalSnap.data();
+
+        await withdrawalRef.update({
+            status: 'completed',
+            processedAt: new Date().toISOString(),
+            transactionId: transactionId,
+        });
+
+        await createAndSendNotification(withdrawalData!.affiliateUid, {
+            icon: 'CheckCircle',
+            title: 'Withdrawal Completed!',
+            description: `Your withdrawal of ৳${withdrawalData!.amount} has been processed. Transaction ID: ${transactionId}`,
+            href: '/affiliate/wallet',
+        });
+
+        return { success: true, message: "Withdrawal approved and user notified." };
+    } catch (error: any) {
+        return { success: false, message: error.message || "Failed to approve withdrawal." };
+    }
+}
+
+export async function denyWithdrawal(withdrawalId: string, reason: string): Promise<{ success: boolean; message: string }> {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
+    const db = getFirestore(adminApp);
+
+    try {
+        const withdrawalRef = db.collection('withdrawals').doc(withdrawalId);
+        const withdrawalSnap = await withdrawalRef.get();
+        if (!withdrawalSnap.exists) throw new Error("Withdrawal request not found.");
+        const withdrawalData = withdrawalSnap.data();
+
+        const earningsRef = db.collection('affiliateEarnings');
+        const earningsQuery = earningsRef.where('withdrawalId', '==', withdrawalId);
+        const earningsSnap = await earningsQuery.get();
+
+        const batch = db.batch();
+        batch.update(withdrawalRef, {
+            status: 'failed',
+            processedAt: new Date().toISOString(),
+        });
+
+        earningsSnap.forEach(doc => {
+            batch.update(doc.ref, { status: 'paid', withdrawalId: FieldValue.delete() });
+        });
+        await batch.commit();
+
+        await createAndSendNotification(withdrawalData!.affiliateUid, {
+            icon: 'XCircle',
+            title: 'Withdrawal Failed',
+            description: `Your withdrawal of ৳${withdrawalData!.amount} failed. Reason: ${reason}. The amount has been returned to your earnings.`,
+            href: '/affiliate/wallet',
+        });
+
+        return { success: true, message: "Withdrawal denied and earnings restored." };
+    } catch (error: any) {
+        return { success: false, message: error.message || "Failed to deny withdrawal." };
+    }
+}

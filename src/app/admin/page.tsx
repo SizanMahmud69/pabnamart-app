@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2 } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2, DollarSign } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
 
@@ -56,7 +57,14 @@ const allMenuItems = [
         icon: Ticket,
         href: "/admin/vouchers",
         permissionKey: 'canManageVouchers'
-    }
+    },
+    {
+        title: "Withdrawal Requests",
+        description: "Manage affiliate payment requests.",
+        icon: DollarSign,
+        href: "/admin/withdrawals",
+        permissionKey: 'canManageWithdrawals'
+    },
 ];
 
 const AdminDashboard = () => {

@@ -141,6 +141,7 @@ export interface ModeratorPermissions {
   canManageReviews: boolean;
   canManageContactSettings: boolean;
   canManageAffiliates: boolean;
+  canManageWithdrawals: boolean;
 }
 
 export interface User {
@@ -159,6 +160,10 @@ export interface User {
   affiliateId?: string;
   referredBy?: string;
   affiliateStatus?: 'none' | 'pending' | 'approved' | 'denied';
+  payoutInfo?: {
+    method: string;
+    accountNumber: string;
+  }
 }
 
 export interface ShippingAddress {
@@ -232,9 +237,10 @@ export interface AffiliateEarning {
   productId: number;
   productName: string;
   commissionAmount: number;
-  status: 'pending' | 'paid' | 'cancelled';
+  status: 'pending' | 'paid' | 'cancelled' | 'withdrawn';
   createdAt: string;
   referredUserUid: string;
+  withdrawalId?: string;
 }
     
 export interface AffiliateRequest {
@@ -249,4 +255,18 @@ export interface AffiliateRequest {
   requestedAt: string;
   reviewedAt?: string;
   rejectionReason?: string;
+}
+
+export interface Withdrawal {
+    id: string;
+    affiliateUid: string;
+    amount: number;
+    status: 'pending' | 'completed' | 'failed';
+    requestedAt: string;
+    processedAt?: string;
+    payoutInfo: {
+        method: string;
+        accountNumber: string;
+    };
+    transactionId?: string;
 }

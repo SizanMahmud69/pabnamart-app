@@ -25,6 +25,7 @@ const permissionOptions: { id: keyof ModeratorPermissions, label: string }[] = [
     { id: 'canManageVouchers', label: 'Manage Vouchers' },
     { id: 'canManageReviews', label: 'Manage Reviews' },
     { id: 'canManageAffiliates', label: 'Manage Affiliates' },
+    { id: 'canManageWithdrawals', label: 'Manage Withdrawals' },
 ];
 
 const settingsPermissionOptions: { id: keyof ModeratorPermissions, label: string }[] = [
@@ -56,6 +57,7 @@ export default function NewModeratorPage() {
         canManageReviews: false,
         canManageContactSettings: false,
         canManageAffiliates: false,
+        canManageWithdrawals: false,
     });
     const [isCreating, setIsCreating] = useState(false);
 
