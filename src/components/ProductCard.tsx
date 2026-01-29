@@ -60,14 +60,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
 
   const handleEarnClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!appUser?.affiliateId || !baseUrl) return;
-
-    const referralLink = `${baseUrl}/?ref=${appUser.affiliateId}&product_id=${product.id}`;
-    navigator.clipboard.writeText(referralLink).then(() => {
-        toast({ title: "Link Copied!", description: "Share this link to earn commission." });
-    }, (err) => {
-        toast({ title: "Error", description: "Could not copy link.", variant: 'destructive'});
-    });
+    router.push(`/products/${product.id}`);
   };
 
   const isSmall = size === 'small';
