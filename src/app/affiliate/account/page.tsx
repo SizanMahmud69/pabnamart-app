@@ -1,13 +1,13 @@
-
 "use client";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { User, Copy, DollarSign } from "lucide-react";
+import { User, Copy, DollarSign, Users, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
 
 const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
@@ -15,6 +15,7 @@ const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678
 function AffiliateAccountPage() {
     const { user, appUser } = useAuth();
     const { toast } = useToast();
+    const router = useRouter();
     const [baseUrl, setBaseUrl] = useState('');
 
     useEffect(() => {
@@ -29,8 +30,75 @@ function AffiliateAccountPage() {
         });
     };
 
+    const handleJoinProgram = () => {
+        router.push('/affiliate/join');
+    };
+
     if (!appUser) {
         return <LoadingSpinner />;
+    }
+
+    if (appUser.affiliateStatus === 'pending') {
+        return (
+            <div className="bg-purple-50/30 min-h-screen">
+                <div className="container mx-auto px-4 py-8 text-center max-w-lg">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Request Pending</CardTitle>
+                            <CardDescription>Your affiliate program application is under review.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>We will notify you once the review process is complete. Thank you for your patience.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        )
+    }
+
+    if (appUser.affiliateStatus === 'denied') {
+        return (
+            <div className="bg-purple-50/30 min-h-screen">
+                <div className="container mx-auto px-4 py-8 text-center max-w-lg">
+                    <Card className="border-destructive">
+                        <CardHeader className="text-center">
+                            <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+                            <CardTitle className="text-destructive mt-4">Request Denied</CardTitle>
+                            <CardDescription>We're sorry, your affiliate application was not approved.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>Please contact support if you have any questions.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        )
+    }
+
+    if (appUser.affiliateStatus !== 'approved' || !appUser.affiliateId) {
+        return (
+            <div className="bg-purple-50/30 min-h-screen">
+                <div className="container mx-auto px-4 py-8">
+                    <div className="max-w-3xl mx-auto">
+                        <Card>
+                            <CardHeader className="text-center">
+                                <Users className="mx-auto h-12 w-12 text-primary" />
+                                <CardTitle className="text-3xl mt-2">Join Our Affiliate Program</CardTitle>
+                                <CardDescription>Earn money by promoting our products.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="text-center">
+                                <p className="text-muted-foreground mb-6">
+                                    Promote our products and earn a commission on every sale you refer. It's free to join!
+                                </p>
+                                <Button size="lg" onClick={handleJoinProgram}>
+                                    Join Now for Free
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (

@@ -5,18 +5,21 @@ import { getFirestore, collection, query, where, onSnapshot, orderBy } from "fir
 import app from "@/lib/firebase";
 import type { AffiliateEarning } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Wallet, DollarSign } from "lucide-react";
+import { Wallet, DollarSign, AlertCircle, Users } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 const db = getFirestore(app);
 
 function AffiliateWalletPage() {
-    const { user } = useAuth();
+    const { user, appUser } = useAuth();
     const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
-        if (!user) {
+        if (!user || !appUser || appUser.affiliateStatus !== 'approved') {
             setLoading(false);
             return;
         }
@@ -25,22 +28,96 @@ function AffiliateWalletPage() {
         const unsubscribeEarnings = onSnapshot(earningsQuery, (snapshot) => {
             setEarnings(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as AffiliateEarning)));
             setLoading(false);
+        }, (error) => {
+            console.error("Error fetching earnings: ", error);
+            setLoading(false);
         });
 
         return () => {
             unsubscribeEarnings();
         }
-    }, [user]);
+    }, [user, appUser]);
+
+    const handleJoinProgram = () => {
+        router.push('/affiliate/join');
+    };
+
+    if (loading) {
+        return <LoadingSpinner />;
+    }
+
+    if (!appUser) {
+        return <LoadingSpinner />;
+    }
+
+    if (appUser.affiliateStatus === 'pending') {
+        return (
+            <div className="bg-purple-50/30 min-h-screen">
+                <div className="container mx-auto px-4 py-8 text-center max-w-lg">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Request Pending</CardTitle>
+                            <CardDescription>Your affiliate program application is under review.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>We will notify you once the review process is complete. Thank you for your patience.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        )
+    }
+
+    if (appUser.affiliateStatus === 'denied') {
+        return (
+            <div className="bg-purple-50/30 min-h-screen">
+                <div className="container mx-auto px-4 py-8 text-center max-w-lg">
+                    <Card className="border-destructive">
+                        <CardHeader className="text-center">
+                            <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+                            <CardTitle className="text-destructive mt-4">Request Denied</CardTitle>
+                            <CardDescription>We're sorry, your affiliate application was not approved.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>Please contact support if you have any questions.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        )
+    }
+
+    if (appUser.affiliateStatus !== 'approved' || !appUser.affiliateId) {
+        return (
+            <div className="bg-purple-50/30 min-h-screen">
+                <div className="container mx-auto px-4 py-8">
+                    <div className="max-w-3xl mx-auto">
+                        <Card>
+                            <CardHeader className="text-center">
+                                <Users className="mx-auto h-12 w-12 text-primary" />
+                                <CardTitle className="text-3xl mt-2">Join Our Affiliate Program</CardTitle>
+                                <CardDescription>Earn money by promoting our products.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="text-center">
+                                <p className="text-muted-foreground mb-6">
+                                    Promote our products and earn a commission on every sale you refer. It's free to join!
+                                </p>
+                                <Button size="lg" onClick={handleJoinProgram}>
+                                    Join Now for Free
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const stats = {
         totalEarnings: earnings.reduce((acc, e) => acc + e.commissionAmount, 0),
         pendingEarnings: earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0),
         paidEarnings: earnings.filter(e => e.status === 'paid').reduce((acc, e) => acc + e.commissionAmount, 0),
     };
-
-    if(loading) {
-        return <LoadingSpinner />;
-    }
 
     return (
         <div className="container mx-auto px-4 py-8 space-y-6">
