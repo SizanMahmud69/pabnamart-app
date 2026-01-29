@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Sheet, SheetContent, SheetClose } from "@/components/ui/sheet";
@@ -82,27 +81,25 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
                 </div>
                 
                  <div className="flex justify-center mb-2">
-                    <div className="relative w-24 h-24 bg-white rounded-lg p-2">
+                    <div className="relative w-24 h-24 bg-white rounded-lg p-2 shadow-md">
                         <img src={product.images[0]} alt={product.name} className="object-contain w-full h-full" />
                     </div>
                 </div>
                 
-                <div className="mb-4">
+                <div className="mb-2">
                     {(() => {
                         if (appUser?.isAffiliate) {
                             if (commissionAmount > 0 && product.affiliateCommission) {
                                 return (
-                                    <div className="p-3 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg shadow-lg">
-                                        <div className="border-2 border-white/30 rounded-md p-3">
-                                            <p className="font-bold text-lg">Earn {product.affiliateCommission}% Commission!</p>
-                                            <p className="text-sm mt-1">Share this product and earn <span className="font-bold">৳{commissionAmount.toFixed(2)}</span> on each sale.</p>
-                                        </div>
+                                    <div className="p-3 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg shadow-md">
+                                        <p className="font-bold text-md">Earn {product.affiliateCommission}% Commission!</p>
+                                        <p className="text-xs mt-1">Share and earn <span className="font-bold">৳{commissionAmount.toFixed(2)}</span> on each sale.</p>
                                     </div>
                                 );
                             } else {
                                 return (
-                                    <div className="p-3 text-center bg-gray-500 text-white rounded-lg shadow-lg">
-                                        <p className="font-semibold text-base">This product is not eligible for commission.</p>
+                                    <div className="p-2 text-center bg-gray-500 text-white rounded-lg shadow-md">
+                                        <p className="font-semibold text-sm">This product is not eligible for commission.</p>
                                     </div>
                                 );
                             }
@@ -110,13 +107,8 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
                             return (
                                 <Link href="/affiliate" className="block" onClick={() => onOpenChange(false)}>
                                     <div className="p-3 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg shadow-lg relative">
-                                        <div className="border-2 border-white/30 rounded-md p-2">
-                                            <p className="text-sm">Join PabnaMart Affiliate to earn by sharing!</p>
-                                            <div className="flex items-center justify-center">
-                                            <h3 className="font-bold text-lg">Join our Affiliate program now!</h3>
-                                            </div>
-                                            <p className="text-xs flex items-center justify-center">Read more <ChevronRight className="h-3 w-3 ml-0.5" /></p>
-                                        </div>
+                                        <p className="font-bold text-base">Join our Affiliate program now!</p>
+                                        <p className="text-xs flex items-center justify-center mt-1">Read more <ChevronRight className="h-3 w-3 ml-0.5" /></p>
                                     </div>
                                 </Link>
                             );
@@ -124,12 +116,12 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
                     })()}
                 </div>
 
-                 <div className="space-y-3">
+                 <div className="space-y-3 w-full pt-2">
                     <div className="grid grid-cols-3 gap-3">
                         {shareOptionsLine1.map(({ name, icon: Icon, color, href }) => (
                             <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1.5 text-center text-xs">
-                                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
-                                    <Icon className="h-6 w-6 text-white" />
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
+                                    <Icon className="h-5 w-5 text-white" />
                                 </div>
                                 <span>{name}</span>
                             </a>
@@ -138,15 +130,15 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
                     <div className="grid grid-cols-3 gap-3">
                          {shareOptionsLine2.map(({ name, icon: Icon, color, href, isGradient }) => (
                             <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1.5 text-center text-xs">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isGradient ? 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600' : ''}`} style={!isGradient ? { backgroundColor: color } : {}}>
-                                    <Icon className="h-6 w-6 text-white" style={name === 'Instagram' ? { stroke: 'white', fill: 'none' } : {}}/>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isGradient ? 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600' : ''}`} style={!isGradient ? { backgroundColor: color } : {}}>
+                                    <Icon className="h-5 w-5 text-white" style={name === 'Instagram' ? { stroke: 'white', fill: 'none' } : {}}/>
                                 </div>
                                 <span>{name}</span>
                             </a>
                         ))}
                         <button onClick={() => copyToClipboard(shareUrl, "Link Copied!")} className="flex flex-col items-center gap-1.5 text-center text-xs">
-                             <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-500">
-                                <Link2 className="h-6 w-6 text-white" />
+                             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-500">
+                                <Link2 className="h-5 w-5 text-white" />
                             </div>
                             <span>Copy Link</span>
                         </button>
