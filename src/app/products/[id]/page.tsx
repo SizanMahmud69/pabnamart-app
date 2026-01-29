@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
@@ -147,7 +146,11 @@ function ProductDetailPageContent() {
                         </Link>
                     </Button>
                 </div>
-                <Carousel className="w-full md:rounded-lg md:overflow-hidden group">
+                <Carousel className="w-full md:rounded-lg md:overflow-hidden group relative">
+                    <Button variant="outline" size="icon" onClick={handleShare} className="absolute top-4 right-4 z-10 bg-background/70 hover:bg-background">
+                        <Share2 className="h-5 w-5" />
+                        <span className="sr-only">Share</span>
+                    </Button>
                     <CarouselContent>
                     {product.images.map((img, index) => (
                         <CarouselItem key={index}>
@@ -172,10 +175,6 @@ function ProductDetailPageContent() {
                         
                         <div className="flex justify-between items-start gap-4">
                             <h1 className="text-2xl font-bold">{product.name}</h1>
-                            <Button variant="outline" size="icon" onClick={handleShare}>
-                                <Share2 className="h-5 w-5" />
-                                <span className="sr-only">Share</span>
-                            </Button>
                         </div>
                         
                         <div className="flex items-center gap-2">
