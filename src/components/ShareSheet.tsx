@@ -90,10 +90,13 @@ export default function ShareSheet({ isOpen, onOpenChange, product, shareUrl }: 
                 <div className="mb-4">
                     {(() => {
                         if (appUser?.isAffiliate) {
-                            if (commissionAmount > 0) {
+                            if (commissionAmount > 0 && product.affiliateCommission) {
                                 return (
                                     <div className="p-3 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg shadow-lg">
-                                        <p className="font-semibold text-base">You can earn <span className="font-bold">৳{commissionAmount.toFixed(2)}</span> by sharing this!</p>
+                                        <div className="border-2 border-white/30 rounded-md p-3">
+                                            <p className="font-bold text-lg">Earn {product.affiliateCommission}% Commission!</p>
+                                            <p className="text-sm mt-1">Share this product and earn <span className="font-bold">৳{commissionAmount.toFixed(2)}</span> on each sale.</p>
+                                        </div>
                                     </div>
                                 );
                             } else {
