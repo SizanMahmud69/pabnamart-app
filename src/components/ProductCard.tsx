@@ -60,7 +60,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
 
   const handleEarnClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    router.push(`/products/${product.id}`);
+    router.push(`/affiliate/products/${product.id}`);
   };
 
   const isSmall = size === 'small';

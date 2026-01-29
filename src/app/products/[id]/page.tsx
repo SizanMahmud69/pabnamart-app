@@ -184,22 +184,6 @@ function ProductDetailPageContent() {
                               </span>
                               )}
                           </div>
-
-                            {appUser?.isAffiliate && product.affiliateCommission && product.affiliateCommission > 0 && (
-                                <Card className="mt-4 border-primary bg-primary/5">
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <DollarSign className="h-8 w-8 text-primary" />
-                                            <div>
-                                                <h3 className="font-bold text-lg text-primary">Earn as an Affiliate!</h3>
-                                                <p className="text-sm text-muted-foreground">
-                                                    Earn a <span className="font-bold">{product.affiliateCommission}%</span> commission (৳{((product.price * product.affiliateCommission) / 100).toFixed(2)}) on each sale from your referral link.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
                           
                           <ProductActions product={product} isFlashSaleContext={isFlashSaleContext} />
   
