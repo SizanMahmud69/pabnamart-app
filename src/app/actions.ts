@@ -385,6 +385,7 @@ export async function placeOrder(
                 const affiliateDoc = affiliateSnap.docs[0];
                 const affiliateUid = affiliateDoc.id;
                 const commissionBatch = db.batch();
+                let totalOrderCommission = 0;
 
                 for (const item of transactionResult.itemsForOrder) {
                     const productRef = db.collection('products').doc(item.id.toString());
@@ -394,6 +395,7 @@ export async function placeOrder(
                         const productData = productSnap.data() as Product;
                         if (productData.affiliateCommission && productData.affiliateCommission > 0) {
                             const commissionAmount = (item.price * item.quantity) * (productData.affiliateCommission / 100);
+                            totalOrderCommission += commissionAmount;
                             
                             const earningRef = db.collection('affiliateEarnings').doc();
                             const newEarning: Omit<AffiliateEarning, 'id'> = {
@@ -412,6 +414,15 @@ export async function placeOrder(
                     }
                 }
                 await commissionBatch.commit();
+                
+                if (totalOrderCommission > 0) {
+                    await createAndSendNotification(affiliateUid, {
+                        icon: 'DollarSign',
+                        title: 'New Pending Commission',
+                        description: `You have a new pending commission of ৳${roundPrice(totalOrderCommission)} from order #${newOrder.orderNumber}.`,
+                        href: '/affiliate/wallet'
+                    });
+                }
             }
         }
     }
@@ -419,7 +430,7 @@ export async function placeOrder(
     await createAndSendNotification(payload.userId, {
       icon: 'PackageCheck',
       title: 'Order Placed Successfully!',
-      description: `Your order #${generateOrderNumber().slice(0, 6)} for ৳${transactionResult.total} has been placed.`,
+      description: `Your order #${newOrder.orderNumber} for ৳${transactionResult.total} has been placed.`,
       href: `/account/orders/${transactionResult.orderId}`,
     });
 
@@ -602,17 +613,34 @@ export async function updateOrderStatus(
                 });
             }
         }
-    } else if (newStatus === 'cancelled' && orderData) {
+    } else if ((newStatus === 'cancelled' || newStatus === 'returned') && orderData) {
         const earningsRef = db.collection('affiliateEarnings');
-        const earningsQuery = earningsRef.where('orderId', '==', orderId).where('status', '==', 'pending');
+        const earningsQuery = earningsRef.where('orderId', '==', orderId).where('status', 'in', ['pending', 'paid']);
         const earningsSnap = await earningsQuery.get();
 
         if (!earningsSnap.empty) {
             const batch = db.batch();
+            let totalReversedCommission = 0;
+            let affiliateUid = '';
+
             earningsSnap.forEach(doc => {
+                const earning = doc.data() as AffiliateEarning;
                 batch.update(doc.ref, { status: 'cancelled' });
+                totalReversedCommission += earning.commissionAmount;
+                if (!affiliateUid) affiliateUid = earning.affiliateUid;
             });
+            
             await batch.commit();
+
+            if (affiliateUid && totalReversedCommission > 0) {
+                const reason = newStatus === 'returned' ? 'a return' : 'a cancellation';
+                 await createAndSendNotification(affiliateUid, {
+                    icon: 'Undo2',
+                    title: 'Commission Reversed',
+                    description: `A commission of ৳${totalReversedCommission.toFixed(2)} for order #${orderData.orderNumber} was reversed due to ${reason}.`,
+                    href: '/affiliate/wallet'
+                });
+            }
         }
     }
 

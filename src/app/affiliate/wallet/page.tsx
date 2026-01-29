@@ -1,22 +1,29 @@
+
 "use client";
 import { useAuth, withAuth } from "@/hooks/useAuth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { getFirestore, collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import app from "@/lib/firebase";
 import type { AffiliateEarning } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Wallet, DollarSign, AlertCircle, Users } from "lucide-react";
+import { Wallet, DollarSign, AlertCircle, Users, Hourglass, Undo2 } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const db = getFirestore(app);
 
-function AffiliateWalletPage() {
+function AffiliateWalletPageContent() {
     const { user, appUser } = useAuth();
     const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const statusFilter = searchParams.get('status') as AffiliateEarning['status'] | null;
+
 
     useEffect(() => {
         if (!user || !appUser || appUser.affiliateStatus !== 'approved') {
@@ -41,6 +48,13 @@ function AffiliateWalletPage() {
     const handleJoinProgram = () => {
         router.push('/affiliate/join');
     };
+
+    const filteredEarnings = useMemo(() => {
+        if (!statusFilter) {
+            return earnings;
+        }
+        return earnings.filter(e => e.status === statusFilter);
+    }, [earnings, statusFilter]);
 
     if (loading) {
         return <LoadingSpinner />;
@@ -114,9 +128,18 @@ function AffiliateWalletPage() {
     }
 
     const stats = {
-        totalEarnings: earnings.reduce((acc, e) => acc + e.commissionAmount, 0),
-        pendingEarnings: earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0),
         paidEarnings: earnings.filter(e => e.status === 'paid').reduce((acc, e) => acc + e.commissionAmount, 0),
+        pendingEarnings: earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0),
+        reversedEarnings: earnings.filter(e => e.status === 'cancelled').reduce((acc, e) => acc + e.commissionAmount, 0),
+    };
+
+    const getStatusBadgeVariant = (status: AffiliateEarning['status']) => {
+        switch (status) {
+            case 'paid': return 'default';
+            case 'pending': return 'secondary';
+            case 'cancelled': return 'destructive';
+            default: return 'outline';
+        }
     };
 
     return (
@@ -131,16 +154,7 @@ function AffiliateWalletPage() {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">৳{stats.totalEarnings.toFixed(2)}</div>
-                    </CardContent>
-                </Card>
-                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Paid Earnings</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Paid Earnings</CardTitle>
                         <DollarSign className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
@@ -150,10 +164,19 @@ function AffiliateWalletPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pending Earnings</CardTitle>
-                        <DollarSign className="h-4 w-4 text-orange-500" />
+                        <Hourglass className="h-4 w-4 text-orange-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-orange-600">৳{stats.pendingEarnings.toFixed(2)}</div>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Reversed Earnings</CardTitle>
+                        <Undo2 className="h-4 w-4 text-destructive" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-destructive">৳{stats.reversedEarnings.toFixed(2)}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -164,27 +187,43 @@ function AffiliateWalletPage() {
                     <CardDescription>A list of all your commission earnings.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     {earnings.length > 0 ? (
+                     {filteredEarnings.length > 0 ? (
                         <div className="space-y-2">
-                            {earnings.map(earning => (
+                            {filteredEarnings.map(earning => (
                                 <div key={earning.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
                                     <div>
                                         <p className="font-semibold">{earning.productName}</p>
                                         <p className="text-xs text-muted-foreground">Order: #{earning.orderNumber}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-green-600">+ ৳{earning.commissionAmount.toFixed(2)}</p>
-                                        <p className="text-xs text-muted-foreground capitalize">{earning.status}</p>
+                                        <p className={cn(
+                                            "font-bold",
+                                            earning.status === 'paid' && "text-green-600",
+                                            earning.status === 'pending' && "text-orange-600",
+                                            earning.status === 'cancelled' && "text-destructive line-through",
+                                        )}>
+                                            {earning.status === 'cancelled' ? '- ' : '+ '}৳{earning.commissionAmount.toFixed(2)}
+                                        </p>
+                                        <Badge variant={getStatusBadgeVariant(earning.status)} className="capitalize mt-1">{earning.status}</Badge>
                                     </div>
                                 </div>
                             ))}
                         </div>
                      ) : (
-                        <p className="text-muted-foreground text-center py-8">No earnings history found.</p>
+                        <p className="text-muted-foreground text-center py-8">No earnings history found for this status.</p>
                      )}
                 </CardContent>
             </Card>
         </div>
     );
 }
+
+function AffiliateWalletPage() {
+    return (
+        <Suspense fallback={<LoadingSpinner />}>
+            <AffiliateWalletPageContent />
+        </Suspense>
+    )
+}
+
 export default withAuth(AffiliateWalletPage);
