@@ -2,7 +2,7 @@
 "use client";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, AlertCircle, ArrowLeft, Settings, CalendarClock, Wallet, Undo2, Mail, FileText, AlertTriangle, ChevronRight } from "lucide-react";
+import { Users, AlertCircle, ArrowLeft, Settings, CalendarClock, Wallet, Undo2, Mail, FileText, AlertTriangle, ChevronRight, MessageSquare, BookOpen, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -95,9 +95,9 @@ function AffiliateAccountPage() {
     ];
 
     const toolsAndServicesItems = [
-        { href: '#', icon: Mail, label: 'Feedback' },
-        { href: '#', icon: FileText, label: 'Blog' },
-        { href: '#', icon: AlertTriangle, label: 'Whistleblow' },
+        { href: '#', icon: MessageSquare, label: 'Feedback' },
+        { href: '#', icon: BookOpen, label: 'Blog' },
+        { href: '#', icon: Flag, label: 'Whistleblow' },
     ];
 
     return (
@@ -122,7 +122,7 @@ function AffiliateAccountPage() {
                             </div>
                         </div>
                         <Button asChild variant="ghost" size="icon">
-                            <Link href="/account/settings">
+                            <Link href="/affiliate/settings">
                                 <Settings className="h-6 w-6" />
                             </Link>
                         </Button>

@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Home, Wallet, User, Settings } from 'lucide-react';
+import { Home, Wallet, User, ArrowLeft } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,14 +19,20 @@ export default function AffiliateBottomNav() {
       icon: User, 
       label: 'Account' 
     },
-    { href: '/affiliate/settings', icon: Settings, label: 'Settings' },
+    { href: '/', icon: ArrowLeft, label: 'Main App' },
   ];
 
   return (
     <div className="fixed bottom-0 left-0 z-50 w-full border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
       <div className="grid h-16 grid-cols-4">
         {navItems.map((item) => {
-          const isActive = (item.href === '/affiliate' && pathname === '/affiliate') || (item.href !== '/affiliate' && pathname.startsWith(item.href));
+          const isActive = (() => {
+            if (item.href === '/') return false;
+            if (item.href === '/affiliate') return pathname === '/affiliate';
+            // For other affiliate pages, check if the pathname starts with the href
+            return pathname.startsWith(item.href);
+          })();
+
           return (
             <Link
               key={item.href}
