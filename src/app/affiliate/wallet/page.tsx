@@ -16,6 +16,23 @@ import { cn } from "@/lib/utils";
 
 const db = getFirestore(app);
 
+const getUnifiedStatusBadgeVariant = (status: AffiliateEarning['status'] | Withdrawal['status']) => {
+    switch (status) {
+        case 'paid':
+        case 'completed':
+            return 'default';
+        case 'pending':
+            return 'secondary';
+        case 'cancelled':
+        case 'failed':
+            return 'destructive';
+        case 'withdrawn':
+            return 'outline';
+        default:
+            return 'outline';
+    }
+};
+
 function AffiliateWalletPageContent() {
     const { user, appUser } = useAuth();
     const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
@@ -23,8 +40,6 @@ function AffiliateWalletPageContent() {
     const [orders, setOrders] = useState<Record<string, Order>>({});
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const statusFilter = searchParams.get('status') as AffiliateEarning['status'] | null;
     const [affiliateSettings, setAffiliateSettings] = useState<AffiliateSettings | null>(null);
 
     const { affiliateBalance, pendingEarnings, estimatedNextWithdrawal } = useMemo(() => {
@@ -96,6 +111,52 @@ function AffiliateWalletPageContent() {
 
     }, [affiliateSettings]);
 
+    const transactionHistory = useMemo(() => {
+        const history: any[] = [];
+
+        earnings.forEach(earning => {
+            if (earning.status === 'withdrawn') {
+                return;
+            }
+
+            let type: 'earning' | 'reversal' = 'earning';
+            let isCredit = true;
+            let title = `Commission: ${earning.productName}`;
+
+            if (earning.status === 'cancelled') {
+                type = 'reversal';
+                isCredit = false;
+                title = `Reversal: ${earning.productName}`;
+            }
+
+            history.push({
+                id: `earn-${earning.id}`,
+                date: new Date(earning.createdAt),
+                type: type,
+                title: title,
+                description: `Order #${earning.orderNumber}`,
+                amount: earning.commissionAmount,
+                status: earning.status,
+                isCredit: isCredit,
+            });
+        });
+
+        withdrawals.forEach(withdrawal => {
+            history.push({
+                id: `wd-${withdrawal.id}`,
+                date: new Date(withdrawal.requestedAt),
+                type: 'withdrawal',
+                title: `Withdrawal to ${withdrawal.payoutInfo.method}`,
+                description: withdrawal.transactionId ? `TrxID: ${withdrawal.transactionId}` : `Acc: ${withdrawal.payoutInfo.accountNumber}`,
+                amount: withdrawal.amount,
+                status: withdrawal.status,
+                isCredit: false,
+            });
+        });
+
+        return history.sort((a, b) => b.date.getTime() - a.date.getTime());
+    }, [earnings, withdrawals]);
+
     useEffect(() => {
         if (!user || !appUser) {
             setLoading(false);
@@ -166,18 +227,11 @@ function AffiliateWalletPageContent() {
         router.push('/affiliate/join');
     };
 
-    const filteredEarnings = useMemo(() => {
-        if (!statusFilter) {
-            return earnings;
-        }
-        return earnings.filter(e => e.status === statusFilter);
-    }, [earnings, statusFilter]);
-
-    if (!appUser) {
+    if (loading) {
         return <LoadingSpinner />;
     }
 
-    if (loading) {
+    if (!appUser) {
         return <LoadingSpinner />;
     }
 
@@ -244,25 +298,6 @@ function AffiliateWalletPageContent() {
         );
     }
 
-    const getStatusBadgeVariant = (status: AffiliateEarning['status']) => {
-        switch (status) {
-            case 'paid': return 'default';
-            case 'pending': return 'secondary';
-            case 'cancelled': return 'destructive';
-            case 'withdrawn': return 'outline';
-            default: return 'outline';
-        }
-    };
-    
-    const getWithdrawalStatusBadgeVariant = (status: Withdrawal['status']) => {
-        switch (status) {
-            case 'completed': return 'default';
-            case 'pending': return 'secondary';
-            case 'failed': return 'destructive';
-            default: return 'outline';
-        }
-    };
-
     return (
         <div className="container mx-auto px-4 py-8 space-y-6">
             <div className="text-center">
@@ -305,72 +340,59 @@ function AffiliateWalletPageContent() {
                 </Card>
             </div>
             
-             <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><History className="h-5 w-5" />Withdrawal History</CardTitle>
-                </CardHeader>
-                <CardContent>
-                     {withdrawals.length > 0 ? (
-                        <div className="space-y-2">
-                            {withdrawals.map(withdrawal => (
-                                <div key={withdrawal.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
-                                    <div>
-                                        <p className="font-semibold">Withdrawal to {withdrawal.payoutInfo.method}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {new Date(withdrawal.requestedAt).toLocaleDateString()}
-                                            {withdrawal.transactionId && ` - TrxID: ${withdrawal.transactionId}`}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className={cn("font-bold", withdrawal.status === 'completed' && "text-green-600")}>
-                                            ৳{withdrawal.amount.toFixed(2)}
-                                        </p>
-                                        <Badge variant={getWithdrawalStatusBadgeVariant(withdrawal.status)} className="capitalize mt-1">{withdrawal.status}</Badge>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                     ) : (
-                        <p className="text-muted-foreground text-center py-4">No withdrawal history yet.</p>
-                     )}
-                </CardContent>
-            </Card>
-
-
             <Card>
                 <CardHeader>
-                    <CardTitle>Commission History</CardTitle>
-                    <CardDescription>A list of all your commission earnings.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><History className="h-5 w-5" />Transaction History</CardTitle>
+                    <CardDescription>A complete record of your earnings and withdrawals.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     {filteredEarnings.length > 0 ? (
+                     {transactionHistory.length > 0 ? (
                         <div className="space-y-2">
-                            {filteredEarnings.map(earning => (
-                                <div key={earning.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
-                                    <div>
-                                        <p className="font-semibold">{earning.productName}</p>
-                                        <p className="text-xs text-muted-foreground">Order: #{earning.orderNumber}</p>
+                            {transactionHistory.map(item => {
+                                let Icon = DollarSign;
+                                let iconClass = "text-green-500";
+                                if (item.type === 'withdrawal') {
+                                    Icon = Wallet;
+                                    iconClass = "text-blue-500";
+                                } else if (item.type === 'reversal') {
+                                    Icon = Undo2;
+                                    iconClass = "text-red-500";
+                                } else if (item.status === 'pending') {
+                                    Icon = Hourglass;
+                                    iconClass = "text-orange-500";
+                                }
+
+                                return (
+                                    <div key={item.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-background">
+                                                <Icon className={cn("h-5 w-5", iconClass)} />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold">{item.title}</p>
+                                                <p className="text-xs text-muted-foreground">{item.description}</p>
+                                                <p className="text-xs text-muted-foreground">{item.date.toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={cn(
+                                                "font-bold",
+                                                item.isCredit ? "text-green-600" : "text-destructive"
+                                            )}>
+                                                {item.isCredit ? '+' : '-'}৳{item.amount.toFixed(2)}
+                                            </p>
+                                            <Badge variant={getUnifiedStatusBadgeVariant(item.status)} className="capitalize mt-1">{item.status}</Badge>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className={cn(
-                                            "font-bold",
-                                            earning.status === 'paid' && "text-green-600",
-                                            earning.status === 'pending' && "text-orange-600",
-                                            earning.status === 'cancelled' && "text-destructive line-through",
-                                            earning.status === 'withdrawn' && "text-muted-foreground",
-                                        )}>
-                                            {earning.status === 'cancelled' ? '- ' : '+ '}৳{earning.commissionAmount.toFixed(2)}
-                                        </p>
-                                        <Badge variant={getStatusBadgeVariant(earning.status)} className="capitalize mt-1">{earning.status}</Badge>
-                                    </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                      ) : (
-                        <p className="text-muted-foreground text-center py-8">No earnings history found for this status.</p>
+                        <p className="text-muted-foreground text-center py-8">No transaction history yet.</p>
                      )}
                 </CardContent>
             </Card>
+
         </div>
     );
 }
