@@ -63,7 +63,7 @@ export default function AffiliateRequestsPage() {
     const [requests, setRequests] = useState<AffiliateRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
-    const [settings, setSettings] = useState<AffiliateSettings>({ withdrawalDay1: 16, withdrawalDay2: 1 });
+    const [settings, setSettings] = useState<AffiliateSettings>({ withdrawalDay1: 16, withdrawalDay2: 1, minimumWithdrawal: 100 });
     const [isSettingsLoading, setIsSettingsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -80,7 +80,7 @@ export default function AffiliateRequestsPage() {
         const settingsRef = doc(db, 'settings', 'affiliate');
         const unsubSettings = onSnapshot(settingsRef, (docSnap) => {
             if (docSnap.exists()) {
-                setSettings(docSnap.data() as AffiliateSettings);
+                setSettings(prev => ({...prev, ...docSnap.data()}));
             }
             setIsSettingsLoading(false);
         });
@@ -118,7 +118,12 @@ export default function AffiliateRequestsPage() {
         setIsSaving(true);
         try {
             const settingsRef = doc(db, 'settings', 'affiliate');
-            await setDoc(settingsRef, settings);
+            const settingsToSave: AffiliateSettings = {
+                withdrawalDay1: Number(settings.withdrawalDay1),
+                withdrawalDay2: Number(settings.withdrawalDay2),
+                minimumWithdrawal: Number(settings.minimumWithdrawal || 0),
+            };
+            await setDoc(settingsRef, settingsToSave);
             toast({ title: "Success", description: "Affiliate settings have been updated." });
         } catch (error: any) {
             toast({ title: "Error", description: error.message || "Failed to save settings.", variant: "destructive" });
@@ -148,10 +153,10 @@ export default function AffiliateRequestsPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Affiliate Withdrawal Settings</CardTitle>
-                        <CardDescription>Configure the automatic withdrawal schedule.</CardDescription>
+                        <CardDescription>Configure the automatic withdrawal schedule and minimum payout.</CardDescription>
                     </CardHeader>
                      <form onSubmit={handleSettingsSave}>
-                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="withdrawalDay1">First Withdrawal Day of Month</Label>
                                 <Input 
@@ -179,6 +184,20 @@ export default function AffiliateRequestsPage() {
                                     disabled={isSaving}
                                 />
                                 <p className="text-xs text-muted-foreground">Earnings from day 16 to end of month will be processed on this day of the next month.</p>
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="minimumWithdrawal">Minimum Withdrawal (৳)</Label>
+                                <Input 
+                                    id="minimumWithdrawal"
+                                    name="minimumWithdrawal"
+                                    type="number"
+                                    min="0"
+                                    value={settings.minimumWithdrawal || ''}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 100"
+                                    disabled={isSaving}
+                                />
+                                <p className="text-xs text-muted-foreground">The minimum amount required for a withdrawal to be processed.</p>
                             </div>
                         </CardContent>
                         <CardFooter>

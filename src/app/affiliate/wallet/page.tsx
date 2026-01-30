@@ -37,38 +37,28 @@ function AffiliateWalletPageContent() {
             return;
         }
 
-        let unsubEarnings: () => void;
-        let unsubWithdrawals: () => void;
-        let unsubSettings: () => void;
+        const settingsRef = doc(db, 'settings', 'affiliate');
+        const unsubSettings = onSnapshot(settingsRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setAffiliateSettings(docSnap.data() as AffiliateSettings);
+            } else {
+                setAffiliateSettings({ withdrawalDay1: 16, withdrawalDay2: 1, minimumWithdrawal: 100 });
+            }
+        });
 
-        const fetchData = () => {
-            // Settings
-            const settingsRef = doc(db, 'settings', 'affiliate');
-            unsubSettings = onSnapshot(settingsRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    setAffiliateSettings(docSnap.data() as AffiliateSettings);
-                } else {
-                    setAffiliateSettings({ withdrawalDay1: 16, withdrawalDay2: 1 });
-                }
-            });
+        const earningsQuery = query(collection(db, 'affiliateEarnings'), where('affiliateUid', '==', user.uid));
+        const unsubEarnings = onSnapshot(earningsQuery, (snapshot) => {
+            const earningsData = snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as AffiliateEarning));
+            earningsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            setEarnings(earningsData);
+        });
 
-            // Earnings
-            const earningsQuery = query(collection(db, 'affiliateEarnings'), where('affiliateUid', '==', user.uid));
-            unsubEarnings = onSnapshot(earningsQuery, (snapshot) => {
-                const earningsData = snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as AffiliateEarning));
-                earningsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                setEarnings(earningsData);
-            });
+        const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
+        const unsubWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
+            setWithdrawals(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as Withdrawal)));
+        });
 
-            // Withdrawals
-            const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
-            unsubWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
-                setWithdrawals(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as Withdrawal)));
-            });
-            setLoading(false);
-        };
-
-        fetchData();
+        setLoading(false);
 
         return () => {
             unsubEarnings?.();
@@ -88,23 +78,27 @@ function AffiliateWalletPageContent() {
         return earnings.filter(e => e.status === statusFilter);
     }, [earnings, statusFilter]);
 
-    const stats = useMemo(() => ({
-        paidEarnings: earnings.filter(e => e.status === 'paid').reduce((acc, e) => acc + e.commissionAmount, 0),
-        pendingEarnings: earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0),
-        withdrawnEarnings: earnings.filter(e => e.status === 'withdrawn').reduce((acc, e) => acc + e.commissionAmount, 0),
-        reversedEarnings: earnings.filter(e => e.status === 'cancelled').reduce((acc, e) => acc + e.commissionAmount, 0),
-    }), [earnings]);
+    const { paidEarnings, pendingEarnings } = useMemo(() => {
+        const paid = earnings.filter(e => e.status === 'paid').reduce((acc, e) => acc + e.commissionAmount, 0);
+        const pending = earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0);
+        
+        return {
+            paidEarnings: paid,
+            pendingEarnings: pending,
+        };
+    }, [earnings]);
     
     const withdrawalScheduleText = useMemo(() => {
         if (!affiliateSettings) return '';
 
         const today = new Date().getDate();
-        const { withdrawalDay1, withdrawalDay2 } = affiliateSettings;
+        const { withdrawalDay1, withdrawalDay2, minimumWithdrawal } = affiliateSettings;
+        const minWithdrawalText = ` A minimum of ৳${minimumWithdrawal || 100} is required.`;
 
         if (today >= withdrawalDay2 && today < withdrawalDay1) {
-            return `Your available balance will be processed for withdrawal on the ${withdrawalDay1}th of this month.`;
+            return `Current earnings will be processed for withdrawal on the ${withdrawalDay1}th of this month.` + minWithdrawalText;
         } else {
-            return `Your available balance will be processed for withdrawal on the ${withdrawalDay2}st of next month.`;
+            return `Current earnings will be processed for withdrawal on the ${withdrawalDay2}st of next month.` + minWithdrawalText;
         }
 
     }, [affiliateSettings]);
@@ -114,7 +108,7 @@ function AffiliateWalletPageContent() {
     }
 
     if (!appUser) {
-        return <LoadingSpinner />; // Or a specific "not logged in" view
+        return <LoadingSpinner />;
     }
 
     if (appUser.affiliateStatus === 'pending') {
@@ -215,7 +209,7 @@ function AffiliateWalletPageContent() {
                         <DollarSign className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">৳{stats.paidEarnings.toFixed(2)}</div>
+                        <div className="text-2xl font-bold text-green-600">৳{paidEarnings.toFixed(2)}</div>
                         <p className="text-xs text-muted-foreground">{withdrawalScheduleText}</p>
                     </CardContent>
                 </Card>
@@ -225,7 +219,7 @@ function AffiliateWalletPageContent() {
                         <Hourglass className="h-4 w-4 text-orange-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-orange-600">৳{stats.pendingEarnings.toFixed(2)}</div>
+                        <div className="text-2xl font-bold text-orange-600">৳{pendingEarnings.toFixed(2)}</div>
                          <p className="text-xs text-muted-foreground">From orders not yet delivered.</p>
                     </CardContent>
                 </Card>
