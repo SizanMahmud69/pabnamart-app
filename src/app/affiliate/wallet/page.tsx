@@ -1,3 +1,4 @@
+
 "use client";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -25,6 +26,64 @@ function AffiliateWalletPageContent() {
     const statusFilter = searchParams.get('status') as AffiliateEarning['status'] | null;
     const [affiliateSettings, setAffiliateSettings] = useState<AffiliateSettings | null>(null);
 
+    const { paidEarnings, pendingEarnings, estimatedNextWithdrawal } = useMemo(() => {
+        const paid = earnings.filter(e => e.status === 'paid').reduce((acc, e) => acc + e.commissionAmount, 0);
+        const pending = earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0);
+        
+        let estimated = 0;
+        if (affiliateSettings) {
+            const today = new Date();
+            const currentDay = today.getDate();
+            const { withdrawalDay1, withdrawalDay2 } = affiliateSettings;
+
+            if (withdrawalDay1 > 0 && (currentDay >= withdrawalDay2 && currentDay < withdrawalDay1)) {
+                estimated = paid;
+            } else if (withdrawalDay2 > 0) {
+                 estimated = paid;
+            }
+        }
+
+        return {
+            paidEarnings: paid,
+            pendingEarnings: pending,
+            estimatedNextWithdrawal: estimated,
+        };
+    }, [earnings, affiliateSettings]);
+
+    const withdrawalScheduleText = useMemo(() => {
+        if (!affiliateSettings) return '';
+
+        const { withdrawalDay1, withdrawalDay2, minimumWithdrawal } = affiliateSettings;
+        const minWithdrawalText = `A minimum of ৳${minimumWithdrawal || 100} is required for withdrawal.`;
+
+        const day1Active = withdrawalDay1 > 0;
+        const day2Active = withdrawalDay2 > 0;
+
+        if (!day1Active && !day2Active) {
+            return "Automatic withdrawals are currently disabled.";
+        }
+        
+        const today = new Date().getDate();
+
+        if (day1Active && day2Active) {
+            if (today >= withdrawalDay2 && today < withdrawalDay1) {
+                return `Earnings will be processed on the ${withdrawalDay1}th of this month. ${minWithdrawalText}`;
+            } else {
+                return `Earnings will be processed on the ${withdrawalDay2}st of next month. ${minWithdrawalText}`;
+            }
+        }
+
+        if (day1Active) {
+            return `Withdrawals are processed once a month on the ${withdrawalDay1}th. ${minWithdrawalText}`;
+        }
+
+        if (day2Active) {
+            return `Withdrawals are processed once a month on the ${withdrawalDay2}st. ${minWithdrawalText}`;
+        }
+
+        return '';
+
+    }, [affiliateSettings]);
 
     useEffect(() => {
         if (!user || !appUser) {
@@ -37,28 +96,37 @@ function AffiliateWalletPageContent() {
             return;
         }
 
-        const settingsRef = doc(db, 'settings', 'affiliate');
-        const unsubSettings = onSnapshot(settingsRef, (docSnap) => {
-            if (docSnap.exists()) {
-                setAffiliateSettings(docSnap.data() as AffiliateSettings);
-            } else {
-                setAffiliateSettings({ withdrawalDay1: 16, withdrawalDay2: 1, minimumWithdrawal: 100 });
-            }
-        });
+        let unsubSettings: () => void, unsubEarnings: () => void, unsubWithdrawals: () => void;
 
-        const earningsQuery = query(collection(db, 'affiliateEarnings'), where('affiliateUid', '==', user.uid));
-        const unsubEarnings = onSnapshot(earningsQuery, (snapshot) => {
-            const earningsData = snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as AffiliateEarning));
-            earningsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            setEarnings(earningsData);
-        });
+        const fetchData = () => {
+            // Settings
+            const settingsRef = doc(db, 'settings', 'affiliate');
+            unsubSettings = onSnapshot(settingsRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    setAffiliateSettings(docSnap.data() as AffiliateSettings);
+                } else {
+                    setAffiliateSettings({ withdrawalDay1: 16, withdrawalDay2: 1, minimumWithdrawal: 100 });
+                }
+            });
 
-        const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
-        const unsubWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
-            setWithdrawals(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as Withdrawal)));
-        });
+            // Earnings
+            const earningsQuery = query(collection(db, 'affiliateEarnings'), where('affiliateUid', '==', user.uid));
+            unsubEarnings = onSnapshot(earningsQuery, (snapshot) => {
+                const earningsData = snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as AffiliateEarning));
+                earningsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setEarnings(earningsData);
+            });
 
-        setLoading(false);
+            // Withdrawals
+            const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
+            unsubWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
+                setWithdrawals(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as Withdrawal)));
+            });
+            
+            setLoading(false);
+        };
+        
+        fetchData();
 
         return () => {
             unsubEarnings?.();
@@ -78,37 +146,12 @@ function AffiliateWalletPageContent() {
         return earnings.filter(e => e.status === statusFilter);
     }, [earnings, statusFilter]);
 
-    const { paidEarnings, pendingEarnings } = useMemo(() => {
-        const paid = earnings.filter(e => e.status === 'paid').reduce((acc, e) => acc + e.commissionAmount, 0);
-        const pending = earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0);
-        
-        return {
-            paidEarnings: paid,
-            pendingEarnings: pending,
-        };
-    }, [earnings]);
-    
-    const withdrawalScheduleText = useMemo(() => {
-        if (!affiliateSettings) return '';
-
-        const today = new Date().getDate();
-        const { withdrawalDay1, withdrawalDay2, minimumWithdrawal } = affiliateSettings;
-        const minWithdrawalText = ` A minimum of ৳${minimumWithdrawal || 100} is required.`;
-
-        if (today >= withdrawalDay2 && today < withdrawalDay1) {
-            return `Current earnings will be processed for withdrawal on the ${withdrawalDay1}th of this month.` + minWithdrawalText;
-        } else {
-            return `Current earnings will be processed for withdrawal on the ${withdrawalDay2}st of next month.` + minWithdrawalText;
-        }
-
-    }, [affiliateSettings]);
-
     if (loading) {
         return <LoadingSpinner />;
     }
 
     if (!appUser) {
-        return <LoadingSpinner />;
+        return <LoadingSpinner />; // Or a specific message
     }
 
     if (appUser.affiliateStatus === 'pending') {
@@ -202,7 +245,7 @@ function AffiliateWalletPageContent() {
                 </h1>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Available for Withdrawal</CardTitle>
@@ -221,6 +264,16 @@ function AffiliateWalletPageContent() {
                     <CardContent>
                         <div className="text-2xl font-bold text-orange-600">৳{pendingEarnings.toFixed(2)}</div>
                          <p className="text-xs text-muted-foreground">From orders not yet delivered.</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Estimated Next Withdrawal</CardTitle>
+                        <DollarSign className="h-4 w-4 text-blue-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-blue-600">৳{estimatedNextWithdrawal.toFixed(2)}</div>
+                         <p className="text-xs text-muted-foreground">Based on current available earnings.</p>
                     </CardContent>
                 </Card>
             </div>

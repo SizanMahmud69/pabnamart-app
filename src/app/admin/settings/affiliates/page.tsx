@@ -158,32 +158,32 @@ export default function AffiliateRequestsPage() {
                      <form onSubmit={handleSettingsSave}>
                         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="withdrawalDay1">First Withdrawal Day of Month</Label>
+                                <Label htmlFor="withdrawalDay1">First Withdrawal Day</Label>
                                 <Input 
                                     id="withdrawalDay1"
                                     name="withdrawalDay1"
                                     type="number"
-                                    min="1" max="31"
+                                    min="0" max="31"
                                     value={settings.withdrawalDay1}
                                     onChange={handleInputChange}
                                     placeholder="e.g., 16"
                                     disabled={isSaving}
                                 />
-                                <p className="text-xs text-muted-foreground">Earnings from day 1 to 15 will be processed on this day.</p>
+                                <p className="text-xs text-muted-foreground">Day for 1st-15th earnings. Set to 0 to disable.</p>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="withdrawalDay2">Second Withdrawal Day of Month</Label>
+                                <Label htmlFor="withdrawalDay2">Second Withdrawal Day</Label>
                                 <Input 
                                     id="withdrawalDay2"
                                     name="withdrawalDay2"
                                     type="number"
-                                    min="1" max="31"
+                                    min="0" max="31"
                                     value={settings.withdrawalDay2}
                                     onChange={handleInputChange}
                                     placeholder="e.g., 1"
                                     disabled={isSaving}
                                 />
-                                <p className="text-xs text-muted-foreground">Earnings from day 16 to end of month will be processed on this day of the next month.</p>
+                                <p className="text-xs text-muted-foreground">Day for 16th-EOM earnings. Set to 0 to disable.</p>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="minimumWithdrawal">Minimum Withdrawal (৳)</Label>
@@ -197,7 +197,7 @@ export default function AffiliateRequestsPage() {
                                     placeholder="e.g., 100"
                                     disabled={isSaving}
                                 />
-                                <p className="text-xs text-muted-foreground">The minimum amount required for a withdrawal to be processed.</p>
+                                <p className="text-xs text-muted-foreground">The minimum amount required for a withdrawal.</p>
                             </div>
                         </CardContent>
                         <CardFooter>

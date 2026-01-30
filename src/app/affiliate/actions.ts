@@ -46,15 +46,15 @@ export async function processWithdrawals() {
     let startDate: Date | null = null;
     let endDate: Date | null = null;
 
-    if (currentDay === withdrawalDay1) {
+    if (withdrawalDay1 > 0 && currentDay === withdrawalDay1) {
       startDate = new Date(today.getFullYear(), today.getMonth(), 1);
       endDate = new Date(today.getFullYear(), today.getMonth(), 16); 
-    } else if (currentDay === withdrawalDay2) {
+    } else if (withdrawalDay2 > 0 && currentDay === withdrawalDay2) {
       const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
       startDate = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 16);
       endDate = new Date(today.getFullYear(), today.getMonth(), 1);
     } else {
-      console.log("Not a withdrawal day. Skipping.");
+      console.log("Not a withdrawal day or schedule is disabled. Skipping.");
       return;
     }
 
