@@ -2,12 +2,13 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell } from 'lucide-react';
+import { Bell, CheckCheck } from 'lucide-react';
 import { withAuth } from "@/hooks/useAuth";
 import { useNotifications, iconMap } from "@/hooks/useNotifications";
 import type { Notification } from "@/types";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const NotificationItem = ({ notification, onClick }: { notification: Notification, onClick: () => void }) => {
     const Icon = iconMap[notification.icon] || Bell;
@@ -49,7 +50,7 @@ const NotificationItem = ({ notification, onClick }: { notification: Notificatio
 
 
 function NotificationsPage() {
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
@@ -57,10 +58,18 @@ function NotificationsPage() {
         <div className="max-w-2xl mx-auto">
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-3xl flex items-center gap-2">
-                        <Bell className="h-8 w-8 text-primary" />
-                        Notifications
-                    </CardTitle>
+                    <div className="flex justify-between items-start">
+                        <CardTitle className="text-3xl flex items-center gap-2">
+                            <Bell className="h-8 w-8 text-primary" />
+                            Notifications
+                        </CardTitle>
+                        {unreadCount > 0 && (
+                            <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+                                <CheckCheck className="mr-2 h-4 w-4" />
+                                Mark all as read
+                            </Button>
+                        )}
+                    </div>
                     <CardDescription>
                         You have {unreadCount} unread message{unreadCount !== 1 ? 's' : ''}.
                     </CardDescription>

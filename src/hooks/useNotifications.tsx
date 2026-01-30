@@ -25,6 +25,7 @@ interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
   markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -143,6 +144,19 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, notifications, db]);
 
+  const markAllAsRead = useCallback(async () => {
+    if (!user || !db) return;
+    const unreadNotifications = notifications.filter(n => !n.read);
+    if (unreadNotifications.length === 0) return;
+
+    const batch = writeBatch(db);
+    unreadNotifications.forEach(notification => {
+        const notificationRef = doc(db, `users/${user.uid}/notifications`, notification.id);
+        batch.update(notificationRef, { read: true });
+    });
+    await batch.commit();
+  }, [user, db, notifications]);
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
@@ -151,6 +165,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         notifications,
         unreadCount,
         markAsRead,
+        markAllAsRead,
       }}
     >
       {children}
