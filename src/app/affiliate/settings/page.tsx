@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -11,8 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { PaymentSettings } from '@/types';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
 
 const db = getFirestore(app);
 
@@ -47,7 +47,7 @@ function PayoutSettingsPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user || !payoutMethod || !accountNumber) {
-            toast({ title: 'Error', description: 'Please fill out all fields.', variant: 'destructive' });
+            toast({ title: 'Error', description: 'Please select a payment method and enter an account number.', variant: 'destructive' });
             return;
         }
         setIsLoading(true);
@@ -80,19 +80,16 @@ function PayoutSettingsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="payoutMethod">Payment Method</Label>
-                            <Select value={payoutMethod} onValueChange={setPayoutMethod} required>
-                                <SelectTrigger id="payoutMethod">
-                                    <SelectValue placeholder="Select a method" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {paymentMethods.map((method) => (
-                                        <SelectItem key={method.id} value={method.name}>
-                                            {method.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                             <Label>Payment Method</Label>
+                            <RadioGroup value={payoutMethod} onValueChange={setPayoutMethod} className="grid grid-cols-1 gap-4">
+                                {paymentMethods.map((method) => (
+                                    <Label key={method.id} htmlFor={method.id} className={cn("flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-all has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary", payoutMethod === method.name && "border-primary ring-2 ring-primary")}>
+                                        <RadioGroupItem value={method.name} id={method.id} />
+                                        {method.logo && <img src={method.logo} alt={method.name} className="h-8 object-contain" />}
+                                        <span className="flex-grow font-semibold">{method.name}</span>
+                                    </Label>
+                                ))}
+                            </RadioGroup>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="accountNumber">Account Number</Label>
