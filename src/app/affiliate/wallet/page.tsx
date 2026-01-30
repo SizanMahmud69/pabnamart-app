@@ -1,4 +1,3 @@
-
 "use client";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -29,11 +28,7 @@ function AffiliateWalletPageContent() {
 
     useEffect(() => {
         if (!user || !appUser) {
-            if (!user && !appUser) {
-                 // Still waiting for auth state
-            } else {
-                setLoading(false);
-            }
+            setLoading(false);
             return;
         }
 
@@ -92,6 +87,27 @@ function AffiliateWalletPageContent() {
         }
         return earnings.filter(e => e.status === statusFilter);
     }, [earnings, statusFilter]);
+
+    const stats = useMemo(() => ({
+        paidEarnings: earnings.filter(e => e.status === 'paid').reduce((acc, e) => acc + e.commissionAmount, 0),
+        pendingEarnings: earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0),
+        withdrawnEarnings: earnings.filter(e => e.status === 'withdrawn').reduce((acc, e) => acc + e.commissionAmount, 0),
+        reversedEarnings: earnings.filter(e => e.status === 'cancelled').reduce((acc, e) => acc + e.commissionAmount, 0),
+    }), [earnings]);
+    
+    const withdrawalScheduleText = useMemo(() => {
+        if (!affiliateSettings) return '';
+
+        const today = new Date().getDate();
+        const { withdrawalDay1, withdrawalDay2 } = affiliateSettings;
+
+        if (today >= withdrawalDay2 && today < withdrawalDay1) {
+            return `Your available balance will be processed for withdrawal on the ${withdrawalDay1}th of this month.`;
+        } else {
+            return `Your available balance will be processed for withdrawal on the ${withdrawalDay2}st of next month.`;
+        }
+
+    }, [affiliateSettings]);
 
     if (loading) {
         return <LoadingSpinner />;
@@ -163,28 +179,6 @@ function AffiliateWalletPageContent() {
             </div>
         );
     }
-
-    const stats = {
-        paidEarnings: earnings.filter(e => e.status === 'paid').reduce((acc, e) => acc + e.commissionAmount, 0),
-        pendingEarnings: earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0),
-        withdrawnEarnings: earnings.filter(e => e.status === 'withdrawn').reduce((acc, e) => acc + e.commissionAmount, 0),
-        reversedEarnings: earnings.filter(e => e.status === 'cancelled').reduce((acc, e) => acc + e.commissionAmount, 0),
-    };
-    
-    const withdrawalScheduleText = useMemo(() => {
-        if (!affiliateSettings) return '';
-
-        const today = new Date().getDate();
-        const { withdrawalDay1, withdrawalDay2 } = affiliateSettings;
-
-        if (today >= withdrawalDay2 && today < withdrawalDay1) {
-            return `Your available balance will be processed for withdrawal on the ${withdrawalDay1}th of this month.`;
-        } else {
-            return `Your available balance will be processed for withdrawal on the ${withdrawalDay2}st of next month.`;
-        }
-
-    }, [affiliateSettings]);
-
 
     const getStatusBadgeVariant = (status: AffiliateEarning['status']) => {
         switch (status) {
