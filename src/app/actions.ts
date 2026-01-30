@@ -645,31 +645,37 @@ export async function updateOrderStatus(
         }
     } else if ((newStatus === 'cancelled' || newStatus === 'returned') && orderData) {
         const earningsRef = db.collection('affiliateEarnings');
-        const earningsQuery = earningsRef.where('orderId', '==', orderId).where('status', 'in', ['pending', 'paid']);
+        const earningsQuery = earningsRef.where('orderId', '==', orderId);
         const earningsSnap = await earningsQuery.get();
 
         if (!earningsSnap.empty) {
             const batch = db.batch();
             let totalReversedCommission = 0;
             let affiliateUid = '';
+            let hasChanges = false;
 
             earningsSnap.forEach(doc => {
                 const earning = doc.data() as AffiliateEarning;
-                batch.update(doc.ref, { status: 'cancelled' });
-                totalReversedCommission += earning.commissionAmount;
-                if (!affiliateUid) affiliateUid = earning.affiliateUid;
+                if (earning.status === 'pending' || earning.status === 'paid') {
+                    batch.update(doc.ref, { status: 'cancelled' });
+                    totalReversedCommission += earning.commissionAmount;
+                    if (!affiliateUid) affiliateUid = earning.affiliateUid;
+                    hasChanges = true;
+                }
             });
             
-            await batch.commit();
+            if (hasChanges) {
+                await batch.commit();
 
-            if (affiliateUid && totalReversedCommission > 0) {
-                const reason = newStatus === 'returned' ? 'a return' : 'a cancellation';
-                 await createAndSendNotification(affiliateUid, {
-                    icon: 'Undo2',
-                    title: 'Commission Reversed',
-                    description: `A commission of ৳${totalReversedCommission.toFixed(2)} for order #${orderData.orderNumber} was reversed due to ${reason}.`,
-                    href: '/affiliate/wallet'
-                });
+                if (affiliateUid && totalReversedCommission > 0) {
+                    const reason = newStatus === 'returned' ? 'a return' : 'a cancellation';
+                    await createAndSendNotification(affiliateUid, {
+                        icon: 'Undo2',
+                        title: 'Commission Reversed',
+                        description: `A commission of ৳${totalReversedCommission.toFixed(2)} for order #${orderData.orderNumber} was reversed due to ${reason}.`,
+                        href: '/affiliate/wallet'
+                    });
+                }
             }
         }
     }
