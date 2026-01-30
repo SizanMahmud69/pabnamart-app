@@ -8,10 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { PaymentSettings } from '@/types';
 
 const db = getFirestore(app);
 
@@ -21,6 +22,20 @@ function PayoutSettingsPage() {
     const [payoutMethod, setPayoutMethod] = useState('');
     const [accountNumber, setAccountNumber] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [paymentMethods, setPaymentMethods] = useState<PaymentSettings['methods']>([]);
+
+    useEffect(() => {
+        const settingsDocRef = doc(db, 'settings', 'payment');
+        const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data() as PaymentSettings;
+                if (data.methods && Array.isArray(data.methods)) {
+                    setPaymentMethods(data.methods);
+                }
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         if (appUser?.payoutInfo) {
@@ -71,9 +86,11 @@ function PayoutSettingsPage() {
                                     <SelectValue placeholder="Select a method" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="bKash">bKash</SelectItem>
-                                    <SelectItem value="Nagad">Nagad</SelectItem>
-                                    <SelectItem value="Rocket">Rocket</SelectItem>
+                                    {paymentMethods.map((method) => (
+                                        <SelectItem key={method.id} value={method.name}>
+                                            {method.name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
