@@ -2,7 +2,7 @@
 "use client";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, AlertCircle, ArrowLeft, Settings, CalendarClock, Wallet, Undo2, Mail, FileText, AlertTriangle, ChevronRight, MessageSquare, BookOpen, Flag } from "lucide-react";
+import { Users, AlertCircle, ArrowLeft, Settings, CalendarClock, Wallet, Undo2, Mail, FileText, AlertTriangle, ChevronRight, MessageSquare, BookOpen, Flag, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -95,9 +95,9 @@ function AffiliateAccountPage() {
     ];
 
     const toolsAndServicesItems = [
-        { href: '#', icon: MessageSquare, label: 'Feedback' },
-        { href: '#', icon: BookOpen, label: 'Blog' },
-        { href: '#', icon: Flag, label: 'Whistleblow' },
+        { href: '/contact', icon: MessageSquare, label: 'Feedback' },
+        { href: '/account/help', icon: HelpCircle, label: 'Help Center' },
+        { href: '/account/settings/privacy', icon: FileText, label: 'Terms' },
     ];
 
     return (
