@@ -28,7 +28,16 @@ function AffiliateWalletPageContent() {
 
 
     useEffect(() => {
-        if (!user || !appUser || appUser.affiliateStatus !== 'approved') {
+        if (!user || !appUser) {
+            if (!user && !appUser) {
+                 // Still waiting for auth state
+            } else {
+                setLoading(false);
+            }
+            return;
+        }
+
+        if (appUser.affiliateStatus !== 'approved') {
             setLoading(false);
             return;
         }
@@ -60,8 +69,8 @@ function AffiliateWalletPageContent() {
             const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
             unsubWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
                 setWithdrawals(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as Withdrawal)));
-                setLoading(false);
             });
+            setLoading(false);
         };
 
         fetchData();
@@ -89,7 +98,7 @@ function AffiliateWalletPageContent() {
     }
 
     if (!appUser) {
-        return <LoadingSpinner />;
+        return <LoadingSpinner />; // Or a specific "not logged in" view
     }
 
     if (appUser.affiliateStatus === 'pending') {
