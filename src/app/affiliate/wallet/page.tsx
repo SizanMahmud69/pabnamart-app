@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getFirestore, collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import app from "@/lib/firebase";
-import type { AffiliateEarning, Withdrawal } from "@/types";
+import type { AffiliateEarning, Withdrawal, AffiliateSettings } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Wallet, DollarSign, AlertCircle, Users, Hourglass, Undo2, History } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -24,6 +24,7 @@ function AffiliateWalletPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const statusFilter = searchParams.get('status') as AffiliateEarning['status'] | null;
+    const [affiliateSettings, setAffiliateSettings] = useState<AffiliateSettings | null>(null);
 
 
     useEffect(() => {
@@ -32,31 +33,45 @@ function AffiliateWalletPageContent() {
             return;
         }
 
-        const earningsQuery = query(collection(db, 'affiliateEarnings'), where('affiliateUid', '==', user.uid));
-        const unsubscribeEarnings = onSnapshot(earningsQuery, (snapshot) => {
-            const earningsData = snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as AffiliateEarning));
-            earningsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            setEarnings(earningsData);
-            if(withdrawals.length > 0) setLoading(false);
-        }, (error) => {
-            console.error("Error fetching earnings: ", error);
-            setLoading(false);
-        });
-        
-        const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
-        const unsubscribeWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
-            setWithdrawals(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as Withdrawal)));
-            if(earnings.length > 0 || snapshot.docs.length === 0) setLoading(false);
-        }, (error) => {
-            console.error("Error fetching withdrawals: ", error);
-            setLoading(false);
-        });
+        let unsubEarnings: () => void;
+        let unsubWithdrawals: () => void;
+        let unsubSettings: () => void;
+
+        const fetchData = () => {
+            // Settings
+            const settingsRef = doc(db, 'settings', 'affiliate');
+            unsubSettings = onSnapshot(settingsRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    setAffiliateSettings(docSnap.data() as AffiliateSettings);
+                } else {
+                    setAffiliateSettings({ withdrawalDay1: 16, withdrawalDay2: 1 });
+                }
+            });
+
+            // Earnings
+            const earningsQuery = query(collection(db, 'affiliateEarnings'), where('affiliateUid', '==', user.uid));
+            unsubEarnings = onSnapshot(earningsQuery, (snapshot) => {
+                const earningsData = snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as AffiliateEarning));
+                earningsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setEarnings(earningsData);
+            });
+
+            // Withdrawals
+            const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
+            unsubWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
+                setWithdrawals(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as Withdrawal)));
+                setLoading(false);
+            });
+        };
+
+        fetchData();
 
         return () => {
-            unsubscribeEarnings();
-            unsubscribeWithdrawals();
+            unsubEarnings?.();
+            unsubWithdrawals?.();
+            unsubSettings?.();
         }
-    }, [user, appUser, earnings.length, withdrawals.length]);
+    }, [user, appUser]);
 
     const handleJoinProgram = () => {
         router.push('/affiliate/join');
@@ -147,8 +162,19 @@ function AffiliateWalletPageContent() {
         reversedEarnings: earnings.filter(e => e.status === 'cancelled').reduce((acc, e) => acc + e.commissionAmount, 0),
     };
     
-    const today = new Date().getDate();
-    const estimatedWithdrawal = today >= 1 && today <= 15 ? stats.paidEarnings : 0;
+    const withdrawalScheduleText = useMemo(() => {
+        if (!affiliateSettings) return '';
+
+        const today = new Date().getDate();
+        const { withdrawalDay1, withdrawalDay2 } = affiliateSettings;
+
+        if (today >= withdrawalDay2 && today < withdrawalDay1) {
+            return `Your available balance will be processed for withdrawal on the ${withdrawalDay1}th of this month.`;
+        } else {
+            return `Your available balance will be processed for withdrawal on the ${withdrawalDay2}st of next month.`;
+        }
+
+    }, [affiliateSettings]);
 
 
     const getStatusBadgeVariant = (status: AffiliateEarning['status']) => {
@@ -187,7 +213,7 @@ function AffiliateWalletPageContent() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-green-600">৳{stats.paidEarnings.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">This will be processed on the next withdrawal date.</p>
+                        <p className="text-xs text-muted-foreground">{withdrawalScheduleText}</p>
                     </CardContent>
                 </Card>
                  <Card>
@@ -281,5 +307,3 @@ function AffiliateWalletPage() {
 }
 
 export default withAuth(AffiliateWalletPage);
-
-    

@@ -3,19 +3,20 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, Check, X, Eye, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { AffiliateRequest } from '@/types';
+import type { AffiliateRequest, AffiliateSettings } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { approveAffiliateRequest, denyAffiliateRequest } from '@/app/actions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const db = getFirestore(app);
 
@@ -61,7 +62,10 @@ export default function AffiliateRequestsPage() {
     const { toast } = useToast();
     const [requests, setRequests] = useState<AffiliateRequest[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isProcessing, setIsProcessing] = useState<string | null>(null); // To track which request is being processed
+    const [isProcessing, setIsProcessing] = useState<string | null>(null);
+    const [settings, setSettings] = useState<AffiliateSettings>({ withdrawalDay1: 16, withdrawalDay2: 1 });
+    const [isSettingsLoading, setIsSettingsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         const requestsRef = collection(db, 'affiliateRequests');
@@ -72,7 +76,19 @@ export default function AffiliateRequestsPage() {
             setRequests(reqs);
             setLoading(false);
         });
-        return () => unsubscribe();
+        
+        const settingsRef = doc(db, 'settings', 'affiliate');
+        const unsubSettings = onSnapshot(settingsRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setSettings(docSnap.data() as AffiliateSettings);
+            }
+            setIsSettingsLoading(false);
+        });
+
+        return () => {
+            unsubscribe();
+            unsubSettings();
+        };
     }, []);
 
     const handleApprove = async (requestId: string) => {
@@ -97,7 +113,26 @@ export default function AffiliateRequestsPage() {
         setIsProcessing(null);
     };
 
-    if (loading) return <LoadingSpinner />;
+    const handleSettingsSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        try {
+            const settingsRef = doc(db, 'settings', 'affiliate');
+            await setDoc(settingsRef, settings);
+            toast({ title: "Success", description: "Affiliate settings have been updated." });
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message || "Failed to save settings.", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setSettings(prev => ({ ...prev, [name]: Number(value) }));
+    };
+
+    if (loading || isSettingsLoading) return <LoadingSpinner />;
 
     return (
         <div className="container mx-auto p-4 max-w-4xl">
@@ -109,7 +144,51 @@ export default function AffiliateRequestsPage() {
                     </Link>
                 </Button>
             </header>
-            <main>
+            <main className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Affiliate Withdrawal Settings</CardTitle>
+                        <CardDescription>Configure the automatic withdrawal schedule.</CardDescription>
+                    </CardHeader>
+                     <form onSubmit={handleSettingsSave}>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="withdrawalDay1">First Withdrawal Day of Month</Label>
+                                <Input 
+                                    id="withdrawalDay1"
+                                    name="withdrawalDay1"
+                                    type="number"
+                                    min="1" max="31"
+                                    value={settings.withdrawalDay1}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 16"
+                                    disabled={isSaving}
+                                />
+                                <p className="text-xs text-muted-foreground">Earnings from day 1 to 15 will be processed on this day.</p>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="withdrawalDay2">Second Withdrawal Day of Month</Label>
+                                <Input 
+                                    id="withdrawalDay2"
+                                    name="withdrawalDay2"
+                                    type="number"
+                                    min="1" max="31"
+                                    value={settings.withdrawalDay2}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 1"
+                                    disabled={isSaving}
+                                />
+                                <p className="text-xs text-muted-foreground">Earnings from day 16 to end of month will be processed on this day of the next month.</p>
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <Button type="submit" disabled={isSaving}>
+                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save Settings
+                            </Button>
+                        </CardFooter>
+                    </form>
+                </Card>
                 <Card>
                     <CardHeader>
                         <CardTitle>Affiliate Requests</CardTitle>

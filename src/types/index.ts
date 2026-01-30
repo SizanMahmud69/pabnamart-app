@@ -258,6 +258,11 @@ export interface AffiliateRequest {
   rejectionReason?: string;
 }
 
+export interface AffiliateSettings {
+  withdrawalDay1: number;
+  withdrawalDay2: number;
+}
+
 export interface Withdrawal {
     id: string;
     affiliateUid: string;
@@ -271,5 +276,3 @@ export interface Withdrawal {
     };
     transactionId?: string;
 }
-
-    
