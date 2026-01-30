@@ -5,9 +5,9 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getFirestore, collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import app from "@/lib/firebase";
-import type { AffiliateEarning } from "@/types";
+import type { AffiliateEarning, Withdrawal } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Wallet, DollarSign, AlertCircle, Users, Hourglass, Undo2 } from "lucide-react";
+import { Wallet, DollarSign, AlertCircle, Users, Hourglass, Undo2, History } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ const db = getFirestore(app);
 function AffiliateWalletPageContent() {
     const { user, appUser } = useAuth();
     const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
+    const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -31,19 +32,31 @@ function AffiliateWalletPageContent() {
             return;
         }
 
-        const earningsQuery = query(collection(db, 'affiliateEarnings'), where('affiliateUid', '==', user.uid), orderBy('createdAt', 'desc'));
+        const earningsQuery = query(collection(db, 'affiliateEarnings'), where('affiliateUid', '==', user.uid));
         const unsubscribeEarnings = onSnapshot(earningsQuery, (snapshot) => {
-            setEarnings(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as AffiliateEarning)));
-            setLoading(false);
+            const earningsData = snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as AffiliateEarning));
+            earningsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            setEarnings(earningsData);
+            if(withdrawals.length > 0) setLoading(false);
         }, (error) => {
             console.error("Error fetching earnings: ", error);
+            setLoading(false);
+        });
+        
+        const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
+        const unsubscribeWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
+            setWithdrawals(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as Withdrawal)));
+            if(earnings.length > 0 || snapshot.docs.length === 0) setLoading(false);
+        }, (error) => {
+            console.error("Error fetching withdrawals: ", error);
             setLoading(false);
         });
 
         return () => {
             unsubscribeEarnings();
+            unsubscribeWithdrawals();
         }
-    }, [user, appUser]);
+    }, [user, appUser, earnings.length, withdrawals.length]);
 
     const handleJoinProgram = () => {
         router.push('/affiliate/join');
@@ -130,14 +143,29 @@ function AffiliateWalletPageContent() {
     const stats = {
         paidEarnings: earnings.filter(e => e.status === 'paid').reduce((acc, e) => acc + e.commissionAmount, 0),
         pendingEarnings: earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0),
+        withdrawnEarnings: earnings.filter(e => e.status === 'withdrawn').reduce((acc, e) => acc + e.commissionAmount, 0),
         reversedEarnings: earnings.filter(e => e.status === 'cancelled').reduce((acc, e) => acc + e.commissionAmount, 0),
     };
+    
+    const today = new Date().getDate();
+    const estimatedWithdrawal = today >= 1 && today <= 15 ? stats.paidEarnings : 0;
+
 
     const getStatusBadgeVariant = (status: AffiliateEarning['status']) => {
         switch (status) {
             case 'paid': return 'default';
             case 'pending': return 'secondary';
             case 'cancelled': return 'destructive';
+            case 'withdrawn': return 'outline';
+            default: return 'outline';
+        }
+    };
+    
+    const getWithdrawalStatusBadgeVariant = (status: Withdrawal['status']) => {
+        switch (status) {
+            case 'completed': return 'default';
+            case 'pending': return 'secondary';
+            case 'failed': return 'destructive';
             default: return 'outline';
         }
     };
@@ -151,35 +179,60 @@ function AffiliateWalletPageContent() {
                 </h1>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Paid Earnings</CardTitle>
+                        <CardTitle className="text-sm font-medium">Available for Withdrawal</CardTitle>
                         <DollarSign className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-green-600">৳{stats.paidEarnings.toFixed(2)}</div>
+                        <p className="text-xs text-muted-foreground">This will be processed on the next withdrawal date.</p>
                     </CardContent>
                 </Card>
-                <Card>
+                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pending Earnings</CardTitle>
                         <Hourglass className="h-4 w-4 text-orange-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-orange-600">৳{stats.pendingEarnings.toFixed(2)}</div>
-                    </CardContent>
-                </Card>
-                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Reversed Earnings</CardTitle>
-                        <Undo2 className="h-4 w-4 text-destructive" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-destructive">৳{stats.reversedEarnings.toFixed(2)}</div>
+                         <p className="text-xs text-muted-foreground">From orders not yet delivered.</p>
                     </CardContent>
                 </Card>
             </div>
+            
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><History className="h-5 w-5" />Withdrawal History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                     {withdrawals.length > 0 ? (
+                        <div className="space-y-2">
+                            {withdrawals.map(withdrawal => (
+                                <div key={withdrawal.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
+                                    <div>
+                                        <p className="font-semibold">Withdrawal to {withdrawal.payoutInfo.method}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {new Date(withdrawal.requestedAt).toLocaleDateString()}
+                                            {withdrawal.transactionId && ` - TrxID: ${withdrawal.transactionId}`}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className={cn("font-bold", withdrawal.status === 'completed' && "text-green-600")}>
+                                            ৳{withdrawal.amount.toFixed(2)}
+                                        </p>
+                                        <Badge variant={getWithdrawalStatusBadgeVariant(withdrawal.status)} className="capitalize mt-1">{withdrawal.status}</Badge>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                     ) : (
+                        <p className="text-muted-foreground text-center py-4">No withdrawal history yet.</p>
+                     )}
+                </CardContent>
+            </Card>
+
 
             <Card>
                 <CardHeader>
@@ -201,6 +254,7 @@ function AffiliateWalletPageContent() {
                                             earning.status === 'paid' && "text-green-600",
                                             earning.status === 'pending' && "text-orange-600",
                                             earning.status === 'cancelled' && "text-destructive line-through",
+                                            earning.status === 'withdrawn' && "text-muted-foreground",
                                         )}>
                                             {earning.status === 'cancelled' ? '- ' : '+ '}৳{earning.commissionAmount.toFixed(2)}
                                         </p>
@@ -227,3 +281,5 @@ function AffiliateWalletPage() {
 }
 
 export default withAuth(AffiliateWalletPage);
+
+    
