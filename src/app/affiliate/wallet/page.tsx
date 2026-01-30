@@ -3,7 +3,7 @@
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { getFirestore, collection, query, where, onSnapshot, orderBy, doc, getDocs, documentId } from "firebase/firestore";
+import { getFirestore, collection, query, where, onSnapshot, doc, getDocs, documentId } from "firebase/firestore";
 import app from "@/lib/firebase";
 import type { AffiliateEarning, Withdrawal, AffiliateSettings, Order } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,9 +27,11 @@ function AffiliateWalletPageContent() {
     const statusFilter = searchParams.get('status') as AffiliateEarning['status'] | null;
     const [affiliateSettings, setAffiliateSettings] = useState<AffiliateSettings | null>(null);
 
-    const { paidEarnings, pendingEarnings, estimatedNextWithdrawal } = useMemo(() => {
+    const { affiliateBalance, pendingEarnings, estimatedNextWithdrawal } = useMemo(() => {
         const paid = earnings.filter(e => e.status === 'paid');
         const pending = earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0);
+
+        const totalAffiliateBalance = paid.reduce((acc, e) => acc + e.commissionAmount, 0);
         
         let eligibleForWithdrawal = 0;
         const now = new Date();
@@ -47,14 +49,13 @@ function AffiliateWalletPageContent() {
                         eligibleForWithdrawal += earning.commissionAmount;
                     }
                 } else {
-                    // if no return policy, it's eligible immediately after delivery
                     eligibleForWithdrawal += earning.commissionAmount;
                 }
             }
         });
 
         return {
-            paidEarnings: eligibleForWithdrawal,
+            affiliateBalance: totalAffiliateBalance,
             pendingEarnings: pending,
             estimatedNextWithdrawal: eligibleForWithdrawal,
         };
@@ -106,7 +107,6 @@ function AffiliateWalletPageContent() {
             return;
         }
 
-        setLoading(true);
         let unsubSettings: (() => void) | undefined;
         let unsubEarnings: (() => void) | undefined;
         let unsubWithdrawals: (() => void) | undefined;
@@ -143,7 +143,6 @@ function AffiliateWalletPageContent() {
                     }
                     setOrders(prevOrders => ({...prevOrders, ...fetchedOrders}));
                 }
-                setLoading(false);
             });
 
             const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
@@ -153,6 +152,8 @@ function AffiliateWalletPageContent() {
         };
         
         fetchData();
+        setLoading(false);
+
 
         return () => {
             unsubEarnings?.();
@@ -172,12 +173,12 @@ function AffiliateWalletPageContent() {
         return earnings.filter(e => e.status === statusFilter);
     }, [earnings, statusFilter]);
 
-    if (loading) {
+    if (!appUser) {
         return <LoadingSpinner />;
     }
 
-    if (!appUser) {
-        return <LoadingSpinner />; // Or a specific message
+    if (loading) {
+        return <LoadingSpinner />;
     }
 
     if (appUser.affiliateStatus === 'pending') {
@@ -274,12 +275,12 @@ function AffiliateWalletPageContent() {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Available for Withdrawal</CardTitle>
+                        <CardTitle className="text-sm font-medium">Affiliate Balance</CardTitle>
                         <DollarSign className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">৳{paidEarnings.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">{withdrawalScheduleText}</p>
+                        <div className="text-2xl font-bold text-green-600">৳{affiliateBalance.toFixed(2)}</div>
+                        <p className="text-xs text-muted-foreground">Your total earned commission from delivered orders.</p>
                     </CardContent>
                 </Card>
                  <Card>
@@ -299,7 +300,7 @@ function AffiliateWalletPageContent() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-blue-600">৳{estimatedNextWithdrawal.toFixed(2)}</div>
-                         <p className="text-xs text-muted-foreground">Based on current available earnings.</p>
+                         <p className="text-xs text-muted-foreground">{withdrawalScheduleText}</p>
                     </CardContent>
                 </Card>
             </div>
