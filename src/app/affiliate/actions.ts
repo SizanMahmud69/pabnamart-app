@@ -2,7 +2,7 @@
 "use server";
 
 import admin from 'firebase-admin';
-import type { Withdrawal, AffiliateEarning, User, AffiliateSettings } from '@/types';
+import type { Withdrawal, AffiliateEarning, User, AffiliateSettings, Order } from '@/types';
 import { createAndSendNotification } from '@/app/actions';
 
 const getFirebaseAdmin = (): admin.App | null => {
@@ -80,11 +80,48 @@ export async function processWithdrawals() {
       let totalAmount = 0;
       const earningsToUpdate: admin.firestore.DocumentReference[] = [];
 
+      const allOrderIds = [...new Set(earningsSnap.docs.map(doc => doc.data().orderId))];
+      const orders: Record<string, Order> = {};
+      if (allOrderIds.length > 0) {
+          const chunkSize = 30;
+          for (let i = 0; i < allOrderIds.length; i += chunkSize) {
+              const chunk = allOrderIds.slice(i, i + chunkSize);
+              if (chunk.length > 0) {
+                const ordersQuery = db.collection('orders').where(admin.firestore.FieldPath.documentId(), 'in', chunk);
+                const ordersSnapshot = await ordersQuery.get();
+                ordersSnapshot.forEach(orderDoc => {
+                    orders[orderDoc.id] = { id: orderDoc.id, ...orderDoc.data() } as Order;
+                });
+              }
+          }
+      }
+
       earningsSnap.forEach(doc => {
         const earning = doc.data() as AffiliateEarning;
-        totalAmount += earning.commissionAmount;
-        earningsToUpdate.push(doc.ref);
+        const order = orders[earning.orderId];
+        let isEligible = false;
+
+        if (order && order.status === 'delivered' && order.deliveredAt) {
+            const maxReturnDays = Math.max(0, ...order.items.map(item => item.returnPolicy || 0));
+            if (maxReturnDays > 0) {
+                const deliveryDate = new Date(order.deliveredAt);
+                const returnDeadline = new Date(deliveryDate);
+                returnDeadline.setDate(deliveryDate.getDate() + maxReturnDays);
+
+                if (new Date() > returnDeadline) {
+                    isEligible = true;
+                }
+            } else {
+                isEligible = true;
+            }
+        }
+        
+        if (isEligible) {
+            totalAmount += earning.commissionAmount;
+            earningsToUpdate.push(doc.ref);
+        }
       });
+
 
       if (totalAmount > 0 && totalAmount >= (minimumWithdrawal || 100)) {
         const withdrawalRef = db.collection('withdrawals').doc();

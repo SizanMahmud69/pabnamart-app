@@ -3,9 +3,9 @@
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { getFirestore, collection, query, where, onSnapshot, orderBy, doc } from "firebase/firestore";
+import { getFirestore, collection, query, where, onSnapshot, orderBy, doc, getDocs, documentId } from "firebase/firestore";
 import app from "@/lib/firebase";
-import type { AffiliateEarning, Withdrawal, AffiliateSettings } from "@/types";
+import type { AffiliateEarning, Withdrawal, AffiliateSettings, Order } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Wallet, DollarSign, AlertCircle, Users, Hourglass, Undo2, History } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -20,6 +20,7 @@ function AffiliateWalletPageContent() {
     const { user, appUser } = useAuth();
     const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+    const [orders, setOrders] = useState<Record<string, Order>>({});
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -27,28 +28,37 @@ function AffiliateWalletPageContent() {
     const [affiliateSettings, setAffiliateSettings] = useState<AffiliateSettings | null>(null);
 
     const { paidEarnings, pendingEarnings, estimatedNextWithdrawal } = useMemo(() => {
-        const paid = earnings.filter(e => e.status === 'paid').reduce((acc, e) => acc + e.commissionAmount, 0);
+        const paid = earnings.filter(e => e.status === 'paid');
         const pending = earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0);
         
-        let estimated = 0;
-        if (affiliateSettings) {
-            const today = new Date();
-            const currentDay = today.getDate();
-            const { withdrawalDay1, withdrawalDay2 } = affiliateSettings;
+        let eligibleForWithdrawal = 0;
+        const now = new Date();
 
-            if (withdrawalDay1 > 0 && (currentDay >= withdrawalDay2 && currentDay < withdrawalDay1)) {
-                estimated = paid;
-            } else if (withdrawalDay2 > 0) {
-                 estimated = paid;
+        paid.forEach(earning => {
+            const order = orders[earning.orderId];
+            if (order && order.status === 'delivered' && order.deliveredAt) {
+                const maxReturnDays = Math.max(0, ...order.items.map(item => item.returnPolicy || 0));
+                 if (maxReturnDays > 0) {
+                    const deliveryDate = new Date(order.deliveredAt);
+                    const returnDeadline = new Date(deliveryDate);
+                    returnDeadline.setDate(deliveryDate.getDate() + maxReturnDays);
+
+                    if (now > returnDeadline) {
+                        eligibleForWithdrawal += earning.commissionAmount;
+                    }
+                } else {
+                    // if no return policy, it's eligible immediately after delivery
+                    eligibleForWithdrawal += earning.commissionAmount;
+                }
             }
-        }
+        });
 
         return {
-            paidEarnings: paid,
+            paidEarnings: eligibleForWithdrawal,
             pendingEarnings: pending,
-            estimatedNextWithdrawal: estimated,
+            estimatedNextWithdrawal: eligibleForWithdrawal,
         };
-    }, [earnings, affiliateSettings]);
+    }, [earnings, orders]);
 
     const withdrawalScheduleText = useMemo(() => {
         if (!affiliateSettings) return '';
@@ -96,10 +106,12 @@ function AffiliateWalletPageContent() {
             return;
         }
 
-        let unsubSettings: () => void, unsubEarnings: () => void, unsubWithdrawals: () => void;
+        setLoading(true);
+        let unsubSettings: (() => void) | undefined;
+        let unsubEarnings: (() => void) | undefined;
+        let unsubWithdrawals: (() => void) | undefined;
 
         const fetchData = () => {
-            // Settings
             const settingsRef = doc(db, 'settings', 'affiliate');
             unsubSettings = onSnapshot(settingsRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -109,21 +121,35 @@ function AffiliateWalletPageContent() {
                 }
             });
 
-            // Earnings
             const earningsQuery = query(collection(db, 'affiliateEarnings'), where('affiliateUid', '==', user.uid));
-            unsubEarnings = onSnapshot(earningsQuery, (snapshot) => {
+            unsubEarnings = onSnapshot(earningsQuery, async (snapshot) => {
                 const earningsData = snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as AffiliateEarning));
                 earningsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 setEarnings(earningsData);
+
+                const orderIds = [...new Set(earningsData.map(e => e.orderId))];
+                if (orderIds.length > 0) {
+                    const fetchedOrders: Record<string, Order> = {};
+                    const chunkSize = 30;
+                    for (let i = 0; i < orderIds.length; i += chunkSize) {
+                        const chunk = orderIds.slice(i, i + chunkSize);
+                        if (chunk.length > 0) {
+                            const ordersQuery = query(collection(db, 'orders'), where(documentId(), 'in', chunk));
+                            const ordersSnapshot = await getDocs(ordersQuery);
+                            ordersSnapshot.forEach(orderDoc => {
+                                fetchedOrders[orderDoc.id] = { id: orderDoc.id, ...orderDoc.data() } as Order;
+                            });
+                        }
+                    }
+                    setOrders(prevOrders => ({...prevOrders, ...fetchedOrders}));
+                }
+                setLoading(false);
             });
 
-            // Withdrawals
             const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
             unsubWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
                 setWithdrawals(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as Withdrawal)));
             });
-            
-            setLoading(false);
         };
         
         fetchData();
