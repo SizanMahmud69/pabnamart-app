@@ -14,7 +14,7 @@ import type { Order, User, Voucher } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { createAndSendNotification } from '@/app/actions';
+import { createAndSendNotification, updateOrderStatus } from '@/app/actions';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const db = getFirestore(app);
@@ -111,51 +111,16 @@ export default function AdminReturnManagement() {
     }
 
     const handleFinalizeReturn = async (order: Order) => {
-        const batch = writeBatch(db);
-        const orderRef = doc(db, 'orders', order.id);
-
-        try {
-            // 1. Update order status to 'returned'
-            batch.update(orderRef, { status: 'returned' });
-
-            // 2. Create a return voucher
-            const returnVoucherCode = `RET${order.orderNumber}`;
-            const returnVoucher: Voucher = {
-                id: returnVoucherCode,
-                code: returnVoucherCode,
-                discount: order.total,
-                type: 'fixed',
-                description: `Return credit for order #${order.orderNumber}`,
-                minSpend: order.total + 1,
-                isReturnVoucher: true,
-                usageLimit: 1,
-                createdAt: new Date().toISOString(),
-            };
-            
-            // 3. Make voucher available for user to collect
-            const availableVoucherRef = doc(db, 'availableReturnVouchers', order.userId);
-            batch.set(availableVoucherRef, {
-                vouchers: arrayUnion(returnVoucher)
-            }, { merge: true });
-
-            await batch.commit();
-
-            await createAndSendNotification(order.userId, {
-                icon: 'Gift',
-                title: 'Return Complete',
-                description: `Your return for #${order.orderNumber} is complete. A voucher is available to collect.`,
-                href: '/vouchers'
-            });
-
+        const result = await updateOrderStatus(order.id, 'returned');
+        if (result.success) {
             toast({
                 title: "Return Finalized",
                 description: `A return voucher has been made available to the user.`
             });
-        } catch (error) {
-            console.error("Error finalizing return:", error);
-            toast({
+        } else {
+             toast({
                 title: "Error",
-                description: "Failed to finalize return.",
+                description: result.message || "Failed to finalize return.",
                 variant: "destructive"
             });
         }

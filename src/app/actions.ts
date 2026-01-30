@@ -594,6 +594,25 @@ export async function updateOrderStatus(
       transaction.update(orderRef, updatePayload);
     });
 
+    if (newStatus === 'returned' && orderData) {
+        const returnVoucherCode = `RET${orderData.orderNumber}`;
+        const returnVoucher: Voucher = {
+            id: returnVoucherCode,
+            code: returnVoucherCode,
+            discount: orderData.total,
+            type: 'fixed',
+            description: `Return credit for order #${orderData.orderNumber}`,
+            minSpend: orderData.total + 1,
+            isReturnVoucher: true,
+            usageLimit: 1,
+            createdAt: new Date().toISOString(),
+        };
+        const availableVoucherRef = db.collection('availableReturnVouchers').doc(orderData.userId);
+        await availableVoucherRef.set({
+            vouchers: FieldValue.arrayUnion(returnVoucher)
+        }, { merge: true });
+    }
+
     if (newStatus === 'delivered' && orderData) {
         const earningsRef = db.collection('affiliateEarnings');
         const earningsQuery = earningsRef.where('orderId', '==', orderId).where('status', '==', 'pending');
@@ -671,14 +690,15 @@ export async function updateOrderStatus(
                 notificationData = { icon: 'XCircle', title: 'Order Cancelled', description: `Your order #${orderData.orderNumber} has been cancelled.`};
                 break;
             case 'returned':
-                 notificationData = { icon: 'PackageCheck', title: 'Order Returned', description: `Your order #${orderData.orderNumber} has been marked as returned.`};
+                 notificationData = { icon: 'Gift', title: 'Return Complete', description: `Your return for #${orderData.orderNumber} is complete. A voucher is available to collect.`};
                  break;
             default:
                 notificationData = null;
         }
         
         if (notificationData) {
-            await createAndSendNotification(orderData.userId, { ...notificationData, href: `/account/orders/${orderData.id}` });
+            const href = newStatus === 'returned' ? '/vouchers' : `/account/orders/${orderData.id}`;
+            await createAndSendNotification(orderData.userId, { ...notificationData, href: href });
         }
     }
 
