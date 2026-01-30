@@ -227,6 +227,7 @@ export interface OrderPayload {
   transactionId?: string;
   paymentAccountNumber?: string;
   cashOnDeliveryFee?: number;
+  referrerId?: string;
 }
 
 export interface AffiliateEarning {

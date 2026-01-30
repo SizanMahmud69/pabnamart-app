@@ -26,6 +26,7 @@ interface CheckoutData {
     total: number;
     subtotal: number;
     voucherCode?: string;
+    referrerId?: string;
 }
 
 function OnlinePaymentPage() {
@@ -95,11 +96,13 @@ function OnlinePaymentPage() {
                 paymentMethod,
                 transactionId,
                 paymentAccountNumber,
+                referrerId: checkoutData.referrerId,
             });
 
             if (result.success && result.orderId) {
                 toast({ title: "Order Placed!", description: "Your order has been placed successfully." });
                 sessionStorage.removeItem('checkoutData');
+                localStorage.removeItem('referrerId');
                 await clearCart();
                 router.replace(`/account/orders/${result.orderId}`);
             } else {

@@ -25,6 +25,7 @@ interface CheckoutData {
     total: number;
     subtotal: number;
     voucherCode?: string;
+    referrerId?: string;
 }
 
 function PaymentPage() {
@@ -61,11 +62,13 @@ function PaymentPage() {
                 paymentMethod: 'cash-on-delivery',
                 transactionId: '',
                 cashOnDeliveryFee: cashOnDeliveryFee,
+                referrerId: checkoutData.referrerId,
             });
 
             if (result.success && result.orderId) {
                 toast({ title: "Order Placed!", description: "Your order has been placed successfully." });
                 sessionStorage.removeItem('checkoutData');
+                localStorage.removeItem('referrerId');
                 await clearCart();
                 router.replace(`/account/orders/${result.orderId}`);
             } else {

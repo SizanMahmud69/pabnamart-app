@@ -19,7 +19,7 @@ import type { ShippingAddress, Voucher } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import AddressFormModal from "@/components/AddressFormModal";
-import { getDoc, getFirestore, doc, updateDoc, arrayUnion, setDoc, onSnapshot } from "firebase/firestore";
+import { getDoc, getFirestore, doc, updateDoc, arrayUnion, setDoc, onSnapshot } from 'firebase/firestore';
 import app from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -154,6 +154,7 @@ function CheckoutPage() {
         }
         
         startProceeding(() => {
+            const referrerId = localStorage.getItem('referrerId');
             sessionStorage.setItem('checkoutData', JSON.stringify({
                 items: cartItems,
                 shippingAddress: selectedShippingAddress,
@@ -161,6 +162,7 @@ function CheckoutPage() {
                 total: finalTotal,
                 subtotal: selectedCartTotal,
                 voucherCode: appliedVoucher?.code,
+                referrerId: referrerId || undefined,
             }));
             router.push('/payment');
         });

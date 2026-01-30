@@ -322,8 +322,8 @@ export async function placeOrder(
         const voucherDocSnap = await db.collection('vouchers').doc(payload.voucherCode).get();
         if (voucherDocSnap.exists) {
             const voucher = voucherDocSnap.data() as Voucher;
-            const userData = userDoc.data() as User;
-            const currentUsage = userData.usedVouchers?.[voucher.code] || 0;
+            const userData = userDoc.exists ? userDoc.data() as User : null;
+            const currentUsage = userData?.usedVouchers?.[voucher.code] || 0;
 
             if ((!voucher.usageLimit || currentUsage < voucher.usageLimit) && (!voucher.minSpend || subtotal >= voucher.minSpend)) {
                 usedVoucher = voucher;
@@ -363,7 +363,7 @@ export async function placeOrder(
 
       transaction.set(orderRef, newOrder);
 
-      if (usedVoucher) {
+      if (usedVoucher && userDoc.exists) {
         transaction.update(userDocRef, {
             [`usedVouchers.${usedVoucher.code}`]: newUsageCount
         });
@@ -375,57 +375,68 @@ export async function placeOrder(
     // --- Affiliate Commission Logic ---
     const userRef = db.collection('users').doc(payload.userId);
     const userSnap = await userRef.get();
+    let finalReferrerId: string | undefined;
+
     if (userSnap.exists) {
         const userData = userSnap.data() as User;
         if (userData.referredBy) {
-            const affiliateQuery = db.collection('users').where('affiliateId', '==', userData.referredBy).limit(1);
-            const affiliateSnap = await affiliateQuery.get();
-            
-            if (!affiliateSnap.empty) {
-                const affiliateDoc = affiliateSnap.docs[0];
-                const affiliateUid = affiliateDoc.id;
-                const commissionBatch = db.batch();
-                let totalOrderCommission = 0;
+            finalReferrerId = userData.referredBy;
+        } else if (payload.referrerId) {
+            finalReferrerId = payload.referrerId;
+            // Persist the referrer for future orders
+            await userRef.update({ referredBy: payload.referrerId });
+        }
+    }
 
-                for (const item of transactionResult.itemsForOrder) {
-                    const productRef = db.collection('products').doc(item.id.toString());
-                    const productSnap = await productRef.get();
+    if (finalReferrerId) {
+        const affiliateQuery = db.collection('users').where('affiliateId', '==', finalReferrerId).limit(1);
+        const affiliateSnap = await affiliateQuery.get();
+        
+        if (!affiliateSnap.empty) {
+            const affiliateDoc = affiliateSnap.docs[0];
+            const affiliateUid = affiliateDoc.id;
+            const commissionBatch = db.batch();
+            let totalOrderCommission = 0;
 
-                    if (productSnap.exists) {
-                        const productData = productSnap.data() as Product;
-                        if (productData.affiliateCommission && productData.affiliateCommission > 0) {
-                            const commissionAmount = (item.price * item.quantity) * (productData.affiliateCommission / 100);
-                            totalOrderCommission += commissionAmount;
-                            
-                            const earningRef = db.collection('affiliateEarnings').doc();
-                            const newEarning: Omit<AffiliateEarning, 'id'> = {
-                                affiliateUid,
-                                orderId: transactionResult.orderId,
-                                orderNumber: newOrder.orderNumber,
-                                productId: item.id,
-                                productName: item.name,
-                                commissionAmount: roundPrice(commissionAmount),
-                                status: 'pending',
-                                createdAt: new Date().toISOString(),
-                                referredUserUid: payload.userId,
-                            };
-                            commissionBatch.set(earningRef, newEarning);
-                        }
+            for (const item of transactionResult.itemsForOrder) {
+                const productRef = db.collection('products').doc(item.id.toString());
+                const productSnap = await productRef.get();
+
+                if (productSnap.exists) {
+                    const productData = productSnap.data() as Product;
+                    if (productData.affiliateCommission && productData.affiliateCommission > 0) {
+                        const commissionAmount = (item.price * item.quantity) * (productData.affiliateCommission / 100);
+                        totalOrderCommission += commissionAmount;
+                        
+                        const earningRef = db.collection('affiliateEarnings').doc();
+                        const newEarning: Omit<AffiliateEarning, 'id'> = {
+                            affiliateUid,
+                            orderId: transactionResult.orderId,
+                            orderNumber: newOrder.orderNumber,
+                            productId: item.id,
+                            productName: item.name,
+                            commissionAmount: roundPrice(commissionAmount),
+                            status: 'pending',
+                            createdAt: new Date().toISOString(),
+                            referredUserUid: payload.userId,
+                        };
+                        commissionBatch.set(earningRef, newEarning);
                     }
                 }
-                await commissionBatch.commit();
-                
-                if (totalOrderCommission > 0) {
-                    await createAndSendNotification(affiliateUid, {
-                        icon: 'DollarSign',
-                        title: 'New Pending Commission',
-                        description: `You have a new pending commission of ৳${roundPrice(totalOrderCommission)} from order #${newOrder.orderNumber}.`,
-                        href: '/affiliate/wallet'
-                    });
-                }
+            }
+            await commissionBatch.commit();
+            
+            if (totalOrderCommission > 0) {
+                await createAndSendNotification(affiliateUid, {
+                    icon: 'DollarSign',
+                    title: 'New Pending Commission',
+                    description: `You have a new pending commission of ৳${roundPrice(totalOrderCommission)} from order #${newOrder.orderNumber}.`,
+                    href: '/affiliate/wallet'
+                });
             }
         }
     }
+
 
     await createAndSendNotification(payload.userId, {
       icon: 'PackageCheck',
