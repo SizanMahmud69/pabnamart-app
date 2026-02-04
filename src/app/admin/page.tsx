@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2, DollarSign } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
+import { processWithdrawals } from '@/app/affiliate/actions';
 
 const allMenuItems = [
     {
@@ -83,6 +84,19 @@ const AdminDashboard = () => {
                 setPermissions(JSON.parse(storedPermissions));
             }
         }
+
+        // Automatic Withdrawal Trigger
+        // When any admin/moderator visits the dashboard, it silently checks if withdrawals should be processed.
+        const triggerWithdrawals = async () => {
+            try {
+                // Pass false to respect the scheduled dates in settings
+                await processWithdrawals(false);
+            } catch (err) {
+                console.error("Silent withdrawal trigger failed:", err);
+            }
+        };
+        
+        triggerWithdrawals();
     }, []);
 
     const menuItems = useMemo(() => {

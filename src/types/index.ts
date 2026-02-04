@@ -262,6 +262,7 @@ export interface AffiliateSettings {
   withdrawalDay1: number;
   withdrawalDay2: number;
   minimumWithdrawal?: number;
+  lastWithdrawalRun?: string;
 }
 
 export interface Withdrawal {

@@ -14,7 +14,6 @@ import type { AffiliateRequest, AffiliateSettings } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { approveAffiliateRequest, denyAffiliateRequest } from '@/app/actions';
-import { processWithdrawals } from '@/app/affiliate/actions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,7 +66,6 @@ export default function AffiliateRequestsPage() {
     const [settings, setSettings] = useState<AffiliateSettings>({ withdrawalDay1: 16, withdrawalDay2: 1, minimumWithdrawal: 100 });
     const [isSettingsLoading, setIsSettingsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [isProcessingWd, setIsProcessingWd] = useState(false);
 
     useEffect(() => {
         const requestsRef = collection(db, 'affiliateRequests');
@@ -124,6 +122,7 @@ export default function AffiliateRequestsPage() {
                 withdrawalDay1: Number(settings.withdrawalDay1),
                 withdrawalDay2: Number(settings.withdrawalDay2),
                 minimumWithdrawal: Number(settings.minimumWithdrawal || 0),
+                lastWithdrawalRun: settings.lastWithdrawalRun || '',
             };
             await setDoc(settingsRef, settingsToSave);
             toast({ title: "Success", description: "Affiliate settings have been updated." });
@@ -131,22 +130,6 @@ export default function AffiliateRequestsPage() {
             toast({ title: "Error", description: error.message || "Failed to save settings.", variant: "destructive" });
         } finally {
             setIsSaving(false);
-        }
-    };
-
-    const handleManualProcessWd = async () => {
-        setIsProcessingWd(true);
-        try {
-            const result = await processWithdrawals(true);
-            if (result && result.success) {
-                toast({ title: "Process Complete", description: result.message });
-            } else {
-                toast({ title: "Error", description: result?.message || "Failed to process withdrawals.", variant: "destructive" });
-            }
-        } catch (error: any) {
-            toast({ title: "Error", description: error.message, variant: "destructive" });
-        } finally {
-            setIsProcessingWd(false);
         }
     };
 
@@ -159,28 +142,19 @@ export default function AffiliateRequestsPage() {
 
     return (
         <div className="container mx-auto p-4 max-w-4xl">
-            <header className="py-4 flex justify-between items-center">
+            <header className="py-4">
                 <Button asChild variant="outline" size="sm">
                     <Link href="/admin/settings">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Settings
                     </Link>
                 </Button>
-                <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    onClick={handleManualProcessWd} 
-                    disabled={isProcessingWd}
-                >
-                    {isProcessingWd ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                    Process Withdrawals Now
-                </Button>
             </header>
             <main className="space-y-6">
                 <Card>
                     <CardHeader>
                         <CardTitle>Affiliate Withdrawal Settings</CardTitle>
-                        <CardDescription>Configure the automatic withdrawal schedule and minimum payout.</CardDescription>
+                        <CardDescription>Configure the automatic withdrawal schedule and minimum payout. Withdrawals will process automatically when an Admin logs in on the designated dates.</CardDescription>
                     </CardHeader>
                      <form onSubmit={handleSettingsSave}>
                         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">

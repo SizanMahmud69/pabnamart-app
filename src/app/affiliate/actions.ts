@@ -29,7 +29,7 @@ const getFirebaseAdmin = (): admin.App | null => {
 
 /**
  * Processes eligible affiliate earnings and creates withdrawal requests.
- * @param force If true, bypasses the date check (used for manual triggers from admin).
+ * @param force If true, bypasses the date check.
  */
 export async function processWithdrawals(force: boolean = false) {
   const adminApp = getFirebaseAdmin();
@@ -46,19 +46,34 @@ export async function processWithdrawals(force: boolean = false) {
         ? settingsSnap.data() as AffiliateSettings 
         : { withdrawalDay1: 16, withdrawalDay2: 1, minimumWithdrawal: 100 };
     
-    const { withdrawalDay1, withdrawalDay2, minimumWithdrawal } = settings;
+    const { withdrawalDay1, withdrawalDay2, minimumWithdrawal, lastWithdrawalRun } = settings;
 
-    const today = new Date();
-    const currentDay = today.getDate();
+    // Use Bangladesh Time for consistent date checking
+    const bdTimeStr = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Dhaka',
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric'
+    }).format(new Date());
+    
+    const [month, day, year] = bdTimeStr.split('/');
+    const currentDay = parseInt(day);
+    const todayStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+    // Check if it's already been run today
+    if (!force && lastWithdrawalRun === todayStr) {
+        return { success: true, message: "Already processed today." };
+    }
 
     // Check if today is a scheduled withdrawal day
     const isDay1 = withdrawalDay1 > 0 && currentDay === withdrawalDay1;
     const isDay2 = withdrawalDay2 > 0 && currentDay === withdrawalDay2;
 
     if (!force && !isDay1 && !isDay2) {
-      console.log(`Today (${currentDay}) is not a scheduled withdrawal day.`);
-      return { success: true, message: "Not a withdrawal day. Skipped." };
+      return { success: true, message: `Today (${currentDay}) is not a scheduled withdrawal day.` };
     }
+
+    console.log(`Starting withdrawal processing for ${todayStr}...`);
 
     // Fetch all users who are affiliates
     const usersSnap = await db.collection('users').where('isAffiliate', '==', true).get();
@@ -71,7 +86,7 @@ export async function processWithdrawals(force: boolean = false) {
       // Skip users without payout info
       if (!user.payoutInfo || !user.payoutInfo.accountNumber) continue;
       
-      // Fetch all earnings with status 'paid' (earned but not yet withdrawn)
+      // Fetch all earnings with status 'paid'
       const earningsSnap = await db.collection('affiliateEarnings')
         .where('affiliateUid', '==', userUid)
         .where('status', '==', 'paid')
@@ -82,12 +97,11 @@ export async function processWithdrawals(force: boolean = false) {
       let totalAmount = 0;
       const earningsToUpdate: admin.firestore.DocumentReference[] = [];
 
-      // Collect all order IDs to batch check their status
+      // Collect order IDs
       const orderIds = [...new Set(earningsSnap.docs.map(doc => doc.data().orderId))];
       const orders: Record<string, Order> = {};
       
       if (orderIds.length > 0) {
-          // Firestore 'in' queries are limited to 10-30 items depending on SDK
           const chunks = [];
           for (let i = 0; i < orderIds.length; i += 10) {
               chunks.push(orderIds.slice(i, i + 10));
@@ -100,27 +114,27 @@ export async function processWithdrawals(force: boolean = false) {
           }
       }
 
-      // Check eligibility for each earning
+      const now = new Date();
+
+      // Check eligibility
       for (const eDoc of earningsSnap.docs) {
         const earning = eDoc.data() as AffiliateEarning;
         const order = orders[earning.orderId];
         
         if (order && order.status === 'delivered' && order.deliveredAt) {
-            // Find the maximum return policy days from items
             const maxReturnDays = Math.max(0, ...order.items.map(item => item.returnPolicy || 0));
             const deliveryDate = new Date(order.deliveredAt);
             const returnDeadline = new Date(deliveryDate);
             returnDeadline.setDate(deliveryDate.getDate() + maxReturnDays);
 
-            // If the current time is past the return window, it's eligible
-            if (new Date() > returnDeadline) {
+            if (now > returnDeadline) {
                 totalAmount += earning.commissionAmount;
                 earningsToUpdate.push(eDoc.ref);
             }
         }
       }
 
-      // Create withdrawal request if threshold is met
+      // Create withdrawal if threshold is met
       if (totalAmount > 0 && totalAmount >= (minimumWithdrawal || 100)) {
         const withdrawalRef = db.collection('withdrawals').doc();
         const newWithdrawal: Withdrawal = {
@@ -148,6 +162,9 @@ export async function processWithdrawals(force: boolean = false) {
         totalProcessed++;
       }
     }
+    
+    // Mark as run today
+    await settingsRef.update({ lastWithdrawalRun: todayStr });
     
     return { success: true, message: `Finished. Processed ${totalProcessed} withdrawal requests.` };
   } catch (error: any) {
