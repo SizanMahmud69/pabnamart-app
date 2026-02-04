@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Check, X, Eye, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, X, Eye, Loader2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -14,6 +14,7 @@ import type { AffiliateRequest, AffiliateSettings } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { approveAffiliateRequest, denyAffiliateRequest } from '@/app/actions';
+import { processWithdrawals } from '@/app/affiliate/actions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -66,6 +67,7 @@ export default function AffiliateRequestsPage() {
     const [settings, setSettings] = useState<AffiliateSettings>({ withdrawalDay1: 16, withdrawalDay2: 1, minimumWithdrawal: 100 });
     const [isSettingsLoading, setIsSettingsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isProcessingWd, setIsProcessingWd] = useState(false);
 
     useEffect(() => {
         const requestsRef = collection(db, 'affiliateRequests');
@@ -132,6 +134,22 @@ export default function AffiliateRequestsPage() {
         }
     };
 
+    const handleManualProcessWd = async () => {
+        setIsProcessingWd(true);
+        try {
+            const result = await processWithdrawals(true);
+            if (result && result.success) {
+                toast({ title: "Process Complete", description: result.message });
+            } else {
+                toast({ title: "Error", description: result?.message || "Failed to process withdrawals.", variant: "destructive" });
+            }
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message, variant: "destructive" });
+        } finally {
+            setIsProcessingWd(false);
+        }
+    };
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setSettings(prev => ({ ...prev, [name]: Number(value) }));
@@ -141,12 +159,21 @@ export default function AffiliateRequestsPage() {
 
     return (
         <div className="container mx-auto p-4 max-w-4xl">
-            <header className="py-4">
+            <header className="py-4 flex justify-between items-center">
                 <Button asChild variant="outline" size="sm">
                     <Link href="/admin/settings">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Settings
                     </Link>
+                </Button>
+                <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={handleManualProcessWd} 
+                    disabled={isProcessingWd}
+                >
+                    {isProcessingWd ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                    Process Withdrawals Now
                 </Button>
             </header>
             <main className="space-y-6">
@@ -169,7 +196,7 @@ export default function AffiliateRequestsPage() {
                                     placeholder="e.g., 16"
                                     disabled={isSaving}
                                 />
-                                <p className="text-xs text-muted-foreground">Day for 1st-15th earnings. Set to 0 to disable.</p>
+                                <p className="text-xs text-muted-foreground">Payout for 1st half of month. Set to 0 to disable.</p>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="withdrawalDay2">Second Withdrawal Day</Label>
@@ -183,7 +210,7 @@ export default function AffiliateRequestsPage() {
                                     placeholder="e.g., 1"
                                     disabled={isSaving}
                                 />
-                                <p className="text-xs text-muted-foreground">Day for 16th-EOM earnings. Set to 0 to disable.</p>
+                                <p className="text-xs text-muted-foreground">Payout for 2nd half of month. Set to 0 to disable.</p>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="minimumWithdrawal">Minimum Withdrawal (৳)</Label>
@@ -197,7 +224,7 @@ export default function AffiliateRequestsPage() {
                                     placeholder="e.g., 100"
                                     disabled={isSaving}
                                 />
-                                <p className="text-xs text-muted-foreground">The minimum amount required for a withdrawal.</p>
+                                <p className="text-xs text-muted-foreground">Minimum balance required for a withdrawal.</p>
                             </div>
                         </CardContent>
                         <CardFooter>
