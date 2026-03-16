@@ -42,7 +42,7 @@ export async function processWithdrawals(force: boolean = false) {
   try {
     const settingsRef = db.collection('settings').doc('affiliate');
     const settingsSnap = await settingsRef.get();
-    const settings: AffiliateSettings = settingsSnap.exists() 
+    const settings: AffiliateSettings = settingsSnap.exists 
         ? settingsSnap.data() as AffiliateSettings 
         : { withdrawalDay1: 16, withdrawalDay2: 1, minimumWithdrawal: 100 };
     
@@ -171,4 +171,102 @@ export async function processWithdrawals(force: boolean = false) {
     console.error("Error processing withdrawals:", error);
     return { success: false, message: error.message || "Failed to process withdrawals." };
   }
+}
+
+export async function requestManualWithdrawal(userId: string): Promise<{ success: boolean; message: string }> {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) return { success: false, message: "Firebase Admin not available." };
+    const db = admin.firestore();
+
+    try {
+        const userRef = db.collection('users').doc(userId);
+        const userSnap = await userRef.get();
+        if (!userSnap.exists) throw new Error("User not found.");
+        const user = userSnap.data() as User;
+
+        if (!user.payoutInfo || !user.payoutInfo.accountNumber) {
+            return { success: false, message: "Please set your payout information in settings first." };
+        }
+
+        const settingsRef = db.collection('settings').doc('affiliate');
+        const settingsSnap = await settingsRef.get();
+        const settings: AffiliateSettings = settingsSnap.exists 
+            ? settingsSnap.data() as AffiliateSettings 
+            : { withdrawalDay1: 16, withdrawalDay2: 1, minimumWithdrawal: 100 };
+
+        const earningsSnap = await db.collection('affiliateEarnings')
+            .where('affiliateUid', '==', userId)
+            .where('status', '==', 'paid')
+            .get();
+
+        if (earningsSnap.empty) return { success: false, message: "No eligible earnings found." };
+
+        const orderIds = [...new Set(earningsSnap.docs.map(doc => doc.data().orderId))];
+        const orders: Record<string, Order> = {};
+        
+        if (orderIds.length > 0) {
+            const chunks = [];
+            for (let i = 0; i < orderIds.length; i += 10) {
+                chunks.push(orderIds.slice(i, i + 10));
+            }
+            for (const chunk of chunks) {
+                const ordersSnap = await db.collection('orders').where(admin.firestore.FieldPath.documentId(), 'in', chunk).get();
+                ordersSnap.forEach(oDoc => {
+                    orders[oDoc.id] = { id: oDoc.id, ...oDoc.data() } as Order;
+                });
+            }
+        }
+
+        const now = new Date();
+        let totalAmount = 0;
+        const earningsToUpdate: admin.firestore.DocumentReference[] = [];
+
+        for (const eDoc of earningsSnap.docs) {
+            const earning = eDoc.data() as AffiliateEarning;
+            const order = orders[earning.orderId];
+            
+            if (order && order.status === 'delivered' && order.deliveredAt) {
+                const maxReturnDays = Math.max(0, ...order.items.map(item => item.returnPolicy || 0));
+                const deliveryDate = new Date(order.deliveredAt);
+                const returnDeadline = new Date(deliveryDate);
+                returnDeadline.setDate(deliveryDate.getDate() + maxReturnDays);
+
+                if (now > returnDeadline) {
+                    totalAmount += earning.commissionAmount;
+                    earningsToUpdate.push(eDoc.ref);
+                }
+            }
+        }
+
+        if (totalAmount <= 0) {
+            return { success: false, message: "No earnings have passed the return period yet." };
+        }
+
+        if (totalAmount < (settings.minimumWithdrawal || 100)) {
+            return { success: false, message: `Minimum withdrawal amount is ৳${settings.minimumWithdrawal || 100}. Your eligible amount is ৳${totalAmount.toFixed(2)}.` };
+        }
+
+        const withdrawalRef = db.collection('withdrawals').doc();
+        const newWithdrawal: Withdrawal = {
+            id: withdrawalRef.id,
+            affiliateUid: userId,
+            amount: totalAmount,
+            status: 'pending',
+            requestedAt: new Date().toISOString(),
+            payoutInfo: user.payoutInfo,
+        };
+
+        const batch = db.batch();
+        batch.set(withdrawalRef, newWithdrawal);
+        earningsToUpdate.forEach(ref => {
+            batch.update(ref, { status: 'withdrawn', withdrawalId: withdrawalRef.id });
+        });
+        await batch.commit();
+
+        return { success: true, message: `Withdrawal request for ৳${totalAmount.toFixed(2)} submitted successfully.` };
+
+    } catch (error: any) {
+        console.error("Manual withdrawal error:", error);
+        return { success: false, message: error.message || "Failed to process withdrawal request." };
+    }
 }
