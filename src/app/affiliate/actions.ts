@@ -116,18 +116,16 @@ export async function processWithdrawals(force: boolean = false) {
 
       const now = new Date();
 
-      // Check eligibility
+      // Check eligibility (24 hours after delivery)
       for (const eDoc of earningsSnap.docs) {
         const earning = eDoc.data() as AffiliateEarning;
         const order = orders[earning.orderId];
         
         if (order && order.status === 'delivered' && order.deliveredAt) {
-            const maxReturnDays = Math.max(0, ...order.items.map(item => item.returnPolicy || 0));
             const deliveryDate = new Date(order.deliveredAt);
-            const returnDeadline = new Date(deliveryDate);
-            returnDeadline.setDate(deliveryDate.getDate() + maxReturnDays);
+            const withdrawalDeadline = new Date(deliveryDate.getTime() + 24 * 60 * 60 * 1000);
 
-            if (now > returnDeadline) {
+            if (now >= withdrawalDeadline) {
                 totalAmount += earning.commissionAmount;
                 earningsToUpdate.push(eDoc.ref);
             }
@@ -225,13 +223,12 @@ export async function requestManualWithdrawal(userId: string): Promise<{ success
             const earning = eDoc.data() as AffiliateEarning;
             const order = orders[earning.orderId];
             
+            // Check eligibility (24 hours after delivery)
             if (order && order.status === 'delivered' && order.deliveredAt) {
-                const maxReturnDays = Math.max(0, ...order.items.map(item => item.returnPolicy || 0));
                 const deliveryDate = new Date(order.deliveredAt);
-                const returnDeadline = new Date(deliveryDate);
-                returnDeadline.setDate(deliveryDate.getDate() + maxReturnDays);
+                const withdrawalDeadline = new Date(deliveryDate.getTime() + 24 * 60 * 60 * 1000);
 
-                if (now > returnDeadline) {
+                if (now >= withdrawalDeadline) {
                     totalAmount += earning.commissionAmount;
                     earningsToUpdate.push(eDoc.ref);
                 }
@@ -239,7 +236,7 @@ export async function requestManualWithdrawal(userId: string): Promise<{ success
         }
 
         if (totalAmount <= 0) {
-            return { success: false, message: "No earnings have passed the return period yet." };
+            return { success: false, message: "No earnings have passed the 24-hour waiting period yet." };
         }
 
         if (totalAmount < (settings.minimumWithdrawal || 100)) {

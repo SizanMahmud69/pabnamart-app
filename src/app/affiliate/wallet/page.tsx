@@ -7,7 +7,7 @@ import { getFirestore, collection, query, where, onSnapshot, doc, getDocs, docum
 import app from "@/lib/firebase";
 import type { AffiliateEarning, Withdrawal, AffiliateSettings, Order } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Wallet, DollarSign, AlertCircle, Users, Hourglass, Undo2, History, Send, Loader2 } from "lucide-react";
+import { Wallet, DollarSign, AlertCircle, Users, Hourglass, Undo2, History, Send, Loader2, Clock } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -57,13 +57,12 @@ function AffiliateWalletPageContent() {
 
         paid.forEach(earning => {
             const order = orders[earning.orderId];
+            // Only allow withdrawal after 24 hours of delivery
             if (order && order.status === 'delivered' && order.deliveredAt) {
-                const maxReturnDays = Math.max(0, ...order.items.map(item => item.returnPolicy || 0));
                 const deliveryDate = new Date(order.deliveredAt);
-                const returnDeadline = new Date(deliveryDate);
-                returnDeadline.setDate(deliveryDate.getDate() + maxReturnDays);
+                const withdrawalDeadline = new Date(deliveryDate.getTime() + 24 * 60 * 60 * 1000);
 
-                if (now > returnDeadline) {
+                if (now >= withdrawalDeadline) {
                     eligibleForWithdrawal += earning.commissionAmount;
                 }
             }
@@ -254,11 +253,11 @@ function AffiliateWalletPageContent() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Affiliate Balance</CardTitle>
-                        <DollarSign className="h-4 w-4 text-green-500" />
+                        <Clock className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">৳{affiliateBalance.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">Commissions earned and ready to be processed.</p>
+                        <div className="text-2xl font-bold text-primary">৳{affiliateBalance.toFixed(2)}</div>
+                        <p className="text-xs text-muted-foreground">Commissions confirmed. Moves to withdrawable after 24h.</p>
                     </CardContent>
                 </Card>
                 <Card>
