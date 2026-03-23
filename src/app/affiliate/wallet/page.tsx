@@ -47,15 +47,14 @@ function AffiliateWalletPageContent() {
     const [affiliateSettings, setAffiliateSettings] = useState<AffiliateSettings | null>(null);
 
     const { affiliateBalance, pendingEarnings, withdrawableBalance, pendingPayout } = useMemo(() => {
-        const paid = earnings.filter(e => e.status === 'paid');
-        const pending = earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0);
+        const paidEarnings = earnings.filter(e => e.status === 'paid');
+        const pendingTotal = earnings.filter(e => e.status === 'pending').reduce((acc, e) => acc + e.commissionAmount, 0);
 
-        const totalAffiliateBalance = paid.reduce((acc, e) => acc + e.commissionAmount, 0);
-        
         let eligibleForWithdrawal = 0;
+        let lockedAffiliateBalance = 0;
         const now = new Date();
 
-        paid.forEach(earning => {
+        paidEarnings.forEach(earning => {
             const order = orders[earning.orderId];
             // Only allow withdrawal after 24 hours of delivery
             if (order && order.status === 'delivered' && order.deliveredAt) {
@@ -64,7 +63,11 @@ function AffiliateWalletPageContent() {
 
                 if (now >= withdrawalDeadline) {
                     eligibleForWithdrawal += earning.commissionAmount;
+                } else {
+                    lockedAffiliateBalance += earning.commissionAmount;
                 }
+            } else {
+                lockedAffiliateBalance += earning.commissionAmount;
             }
         });
 
@@ -73,8 +76,8 @@ function AffiliateWalletPageContent() {
             .reduce((acc, w) => acc + w.amount, 0);
 
         return {
-            affiliateBalance: totalAffiliateBalance,
-            pendingEarnings: pending,
+            affiliateBalance: lockedAffiliateBalance,
+            pendingEarnings: pendingTotal,
             withdrawableBalance: eligibleForWithdrawal,
             pendingPayout: totalPendingPayout
         };
@@ -257,7 +260,7 @@ function AffiliateWalletPageContent() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-primary">৳{affiliateBalance.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">Commissions confirmed. Moves to withdrawable after 24h.</p>
+                        <p className="text-xs text-muted-foreground">Commissions confirmed. Waiting for 24h waiting period.</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -299,7 +302,7 @@ function AffiliateWalletPageContent() {
                         <div className="text-2xl font-bold text-purple-600">৳{pendingPayout.toFixed(2)}</div>
                          <p className="text-xs text-muted-foreground">Amount currently in processing.</p>
                     </CardContent>
-                </Card>
+                </div>
             </div>
             
             <Card>
