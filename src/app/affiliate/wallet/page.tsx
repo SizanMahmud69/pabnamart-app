@@ -2,12 +2,11 @@
 "use client";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import { getFirestore, collection, query, where, onSnapshot, doc, getDocs, documentId, orderBy } from "firebase/firestore";
 import app from "@/lib/firebase";
 import type { AffiliateEarning, Withdrawal, AffiliateSettings, Order } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Wallet, DollarSign, AlertCircle, Users, Hourglass, Undo2, History, Send, Loader2, Clock } from "lucide-react";
+import { Wallet, DollarSign, Hourglass, History, Send, Loader2, Clock, Undo2 } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,6 @@ function AffiliateWalletPageContent() {
     const [orders, setOrders] = useState<Record<string, Order>>({});
     const [loading, setLoading] = useState(true);
     const [isWithdrawing, setIsWithdrawing] = useState(false);
-    const router = useRouter();
     const [affiliateSettings, setAffiliateSettings] = useState<AffiliateSettings | null>(null);
 
     const { affiliateBalance, pendingEarnings, withdrawableBalance, pendingPayout } = useMemo(() => {
@@ -56,7 +54,6 @@ function AffiliateWalletPageContent() {
 
         paidEarnings.forEach(earning => {
             const order = orders[earning.orderId];
-            // Only allow withdrawal after 24 hours of delivery
             if (order && order.status === 'delivered' && order.deliveredAt) {
                 const deliveryDate = new Date(order.deliveredAt);
                 const withdrawalDeadline = new Date(deliveryDate.getTime() + 24 * 60 * 60 * 1000);
@@ -260,7 +257,7 @@ function AffiliateWalletPageContent() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-primary">৳{affiliateBalance.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">Commissions confirmed. Waiting for 24h waiting period.</p>
+                        <p className="text-xs text-muted-foreground">Commissions confirmed. Waiting for 24h period.</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -302,7 +299,7 @@ function AffiliateWalletPageContent() {
                         <div className="text-2xl font-bold text-purple-600">৳{pendingPayout.toFixed(2)}</div>
                          <p className="text-xs text-muted-foreground">Amount currently in processing.</p>
                     </CardContent>
-                </div>
+                </Card>
             </div>
             
             <Card>
