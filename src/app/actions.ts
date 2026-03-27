@@ -30,13 +30,11 @@ const getFirebaseAdmin = (): admin.App | null => {
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     if (!serviceAccountJson) {
         let errorMessage = 'Firebase service account JSON is not set. Ensure FIREBASE_SERVICE_ACCOUNT_JSON is configured in your environment variables.';
-        // Provide a more specific hint if running on Vercel
         if (process.env.VERCEL_ENV) {
           errorMessage += " A new Deployment is required for your changes to take effect. Go to your Vercel project -> Deployments, find the latest deployment, and click 'Redeploy'."
         }
-        // In a dev environment, this is expected if not set up. Don't throw, just log.
         if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-            console.error('This server action is disabled in the local development or preview environment because it requires Firebase Admin credentials. It is only available on the live, deployed website. ' + errorMessage);
+            console.error('FIREBASE_SERVICE_ACCOUNT_JSON is not set.');
             return null;
         }
         throw new Error(errorMessage);
@@ -44,8 +42,6 @@ const getFirebaseAdmin = (): admin.App | null => {
     
     try {
         const serviceAccount = JSON.parse(serviceAccountJson);
-        
-        // Vercel UI can sometimes escape newlines in the private key. We need to un-escape them.
         if (serviceAccount.private_key) {
             serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
         }
@@ -63,12 +59,11 @@ const getFirebaseAdmin = (): admin.App | null => {
     }
     
   } catch (error) {
-    console.error('Firebase admin initialization error:', error);
-    // In a dev environment, this is expected if not set up. Don't throw, just log.
+    console.error('Firebase admin unexpected error:', error);
     if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
       return null;
     }
-    throw error; // Re-throw the error to be caught by Next.js
+    throw error;
   }
 };
 
@@ -249,8 +244,8 @@ export async function placeOrder(
       let userDoc = await transaction.get(userDocRef);
 
       const itemsForOrder: OrderItem[] = [];
-      let subtotal = 0; // This is the original price subtotal
-      let offerSubtotal = 0; // This is the price after offers/flash sales
+      let subtotal = 0; 
+      let offerSubtotal = 0; 
 
 
       for (let i = 0; i < productDocs.length; i++) {
@@ -332,7 +327,7 @@ export async function placeOrder(
                 if (voucher.discountType !== 'shipping') {
                     if (voucher.type === 'fixed') {
                         voucherDiscount = voucher.discount;
-                    } else { // percentage
+                    } else { 
                         voucherDiscount = (subtotal * voucher.discount) / 100;
                     }
                 }
@@ -372,7 +367,6 @@ export async function placeOrder(
       return { orderId: orderRef.id, total, itemsForOrder };
     });
 
-    // --- Affiliate Commission Logic ---
     const userRef = db.collection('users').doc(payload.userId);
     const userSnap = await userRef.get();
     let finalReferrerId: string | undefined;
@@ -383,7 +377,6 @@ export async function placeOrder(
             finalReferrerId = userData.referredBy;
         } else if (payload.referrerId) {
             finalReferrerId = payload.referrerId;
-            // Persist the referrer for future orders
             await userRef.update({ referredBy: payload.referrerId });
         }
     }

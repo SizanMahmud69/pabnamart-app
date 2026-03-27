@@ -34,6 +34,12 @@ const getUnifiedStatusBadgeVariant = (status: AffiliateEarning['status'] | Withd
     }
 };
 
+const getOrdinal = (n: number) => {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
+
 function AffiliateWalletPageContent() {
     const { user, appUser } = useAuth();
     const { toast } = useToast();
@@ -97,18 +103,18 @@ function AffiliateWalletPageContent() {
 
         if (day1Active && day2Active) {
             if (today >= withdrawalDay2 && today < withdrawalDay1) {
-                return `Auto-process on ${withdrawalDay1}th. ${minWithdrawalText}`;
+                return `Auto-process on ${getOrdinal(withdrawalDay1)}. ${minWithdrawalText}`;
             } else {
-                return `Auto-process on ${withdrawalDay2}st. ${minWithdrawalText}`;
+                return `Auto-process on ${getOrdinal(withdrawalDay2)}. ${minWithdrawalText}`;
             }
         }
 
         if (day1Active) {
-            return `Auto-process on ${withdrawalDay1}th. ${minWithdrawalText}`;
+            return `Auto-process on ${getOrdinal(withdrawalDay1)}. ${minWithdrawalText}`;
         }
 
         if (day2Active) {
-            return `Auto-process on ${withdrawalDay2}st. ${minWithdrawalText}`;
+            return `Auto-process on ${getOrdinal(withdrawalDay2)}. ${minWithdrawalText}`;
         }
 
         return '';
@@ -257,7 +263,7 @@ function AffiliateWalletPageContent() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-primary">৳{affiliateBalance.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">Commissions confirmed. Waiting for 24h period.</p>
+                        <p className="text-xs text-muted-foreground">Confirmed commissions in 24h waiting period.</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -354,17 +360,14 @@ function AffiliateWalletPageContent() {
                      )}
                 </CardContent>
             </Card>
-
         </div>
     );
 }
 
-function AffiliateWalletPage() {
+export default function AffiliateWalletPage() {
     return (
         <Suspense fallback={<LoadingSpinner />}>
             <AffiliateWalletPageContent />
         </Suspense>
     )
 }
-
-export default withAuth(AffiliateWalletPage);

@@ -13,19 +13,34 @@ const getFirebaseAdmin = (): admin.App | null => {
   try {
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     if (!serviceAccountJson) {
-      console.error('Firebase Admin not initialized.');
-      return null;
+        // Log locally for debugging but return null to be caught by the calling function
+        console.error('FIREBASE_SERVICE_ACCOUNT_JSON is missing.');
+        return null;
     }
-    const serviceAccount = JSON.parse(serviceAccountJson.replace(/\\n/g, '\n'));
-    if (serviceAccount.private_key) {
-        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    
+    try {
+        const serviceAccount = JSON.parse(serviceAccountJson);
+        
+        // Vercel UI can sometimes escape newlines in the private key. We need to un-escape them.
+        if (serviceAccount.private_key) {
+            serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+        }
+
+        return admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+    } catch (e: any) {
+        console.error('Failed to parse or initialize Firebase Admin SDK:', e);
+        return null;
     }
-    return admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    
   } catch (error) {
-    console.error('Firebase admin initialization error:', error);
+    console.error('Firebase admin unexpected error:', error);
     return null;
   }
 };
+
+const adminNotConfiguredMessage = "This feature is only available on the live, deployed website because it requires Firebase Admin credentials. If you are the owner, please ensure 'FIREBASE_SERVICE_ACCOUNT_JSON' is configured in your project environment variables and redeploy. See README.md for details.";
 
 /**
  * Processes eligible affiliate earnings and creates withdrawal requests.
@@ -34,8 +49,7 @@ const getFirebaseAdmin = (): admin.App | null => {
 export async function processWithdrawals(force: boolean = false) {
   const adminApp = getFirebaseAdmin();
   if (!adminApp) {
-    console.error("Skipping withdrawal processing: Firebase Admin not available.");
-    return { success: false, message: "Firebase Admin not available." };
+    return { success: false, message: adminNotConfiguredMessage };
   }
   const db = admin.firestore();
 
@@ -48,7 +62,6 @@ export async function processWithdrawals(force: boolean = false) {
     
     const { withdrawalDay1, withdrawalDay2, minimumWithdrawal, lastWithdrawalRun } = settings;
 
-    // Use Bangladesh Time for consistent date checking
     const bdTimeStr = new Intl.DateTimeFormat('en-US', {
         timeZone: 'Asia/Dhaka',
         day: 'numeric',
@@ -60,12 +73,10 @@ export async function processWithdrawals(force: boolean = false) {
     const currentDay = parseInt(day);
     const todayStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
-    // Check if it's already been run today
     if (!force && lastWithdrawalRun === todayStr) {
         return { success: true, message: "Already processed today." };
     }
 
-    // Check if today is a scheduled withdrawal day
     const isDay1 = withdrawalDay1 > 0 && currentDay === withdrawalDay1;
     const isDay2 = withdrawalDay2 > 0 && currentDay === withdrawalDay2;
 
@@ -73,9 +84,6 @@ export async function processWithdrawals(force: boolean = false) {
       return { success: true, message: `Today (${currentDay}) is not a scheduled withdrawal day.` };
     }
 
-    console.log(`Starting withdrawal processing for ${todayStr}...`);
-
-    // Fetch all users who are affiliates
     const usersSnap = await db.collection('users').where('isAffiliate', '==', true).get();
     let totalProcessed = 0;
     
@@ -83,10 +91,8 @@ export async function processWithdrawals(force: boolean = false) {
       const user = userDoc.data() as User;
       const userUid = userDoc.id;
 
-      // Skip users without payout info
       if (!user.payoutInfo || !user.payoutInfo.accountNumber) continue;
       
-      // Fetch all earnings with status 'paid'
       const earningsSnap = await db.collection('affiliateEarnings')
         .where('affiliateUid', '==', userUid)
         .where('status', '==', 'paid')
@@ -97,7 +103,6 @@ export async function processWithdrawals(force: boolean = false) {
       let totalAmount = 0;
       const earningsToUpdate: admin.firestore.DocumentReference[] = [];
 
-      // Collect order IDs
       const orderIds = [...new Set(earningsSnap.docs.map(doc => doc.data().orderId))];
       const orders: Record<string, Order> = {};
       
@@ -116,7 +121,6 @@ export async function processWithdrawals(force: boolean = false) {
 
       const now = new Date();
 
-      // Check eligibility (24 hours after delivery)
       for (const eDoc of earningsSnap.docs) {
         const earning = eDoc.data() as AffiliateEarning;
         const order = orders[earning.orderId];
@@ -132,7 +136,6 @@ export async function processWithdrawals(force: boolean = false) {
         }
       }
 
-      // Create withdrawal if threshold is met
       if (totalAmount > 0 && totalAmount >= (minimumWithdrawal || 100)) {
         const withdrawalRef = db.collection('withdrawals').doc();
         const newWithdrawal: Withdrawal = {
@@ -161,7 +164,6 @@ export async function processWithdrawals(force: boolean = false) {
       }
     }
     
-    // Mark as run today
     await settingsRef.update({ lastWithdrawalRun: todayStr });
     
     return { success: true, message: `Finished. Processed ${totalProcessed} withdrawal requests.` };
@@ -173,7 +175,9 @@ export async function processWithdrawals(force: boolean = false) {
 
 export async function requestManualWithdrawal(userId: string): Promise<{ success: boolean; message: string }> {
     const adminApp = getFirebaseAdmin();
-    if (!adminApp) return { success: false, message: "Firebase Admin not available." };
+    if (!adminApp) {
+        return { success: false, message: adminNotConfiguredMessage };
+    }
     const db = admin.firestore();
 
     try {
@@ -223,7 +227,6 @@ export async function requestManualWithdrawal(userId: string): Promise<{ success
             const earning = eDoc.data() as AffiliateEarning;
             const order = orders[earning.orderId];
             
-            // Check eligibility (24 hours after delivery)
             if (order && order.status === 'delivered' && order.deliveredAt) {
                 const deliveryDate = new Date(order.deliveredAt);
                 const withdrawalDeadline = new Date(deliveryDate.getTime() + 24 * 60 * 60 * 1000);
