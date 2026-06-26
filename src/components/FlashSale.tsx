@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -20,14 +21,15 @@ const CountdownTimer = ({ expiryDate }: { expiryDate: string | null }) => {
     const [isMounted, setIsMounted] = useState(false);
 
     const calculateTimeLeft = () => {
-        if (!expiryDate) return { hours: 0, minutes: 0, seconds: 0 };
+        if (!expiryDate) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
         const difference = +new Date(expiryDate) - +new Date();
-        let timeLeft = { hours: 0, minutes: 0, seconds: 0 };
+        let timeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
         if (difference > 0) {
             timeLeft = {
-                hours: Math.floor(difference / (1000 * 60 * 60)),
+                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
                 minutes: Math.floor((difference / 1000 / 60) % 60),
                 seconds: Math.floor((difference / 1000) % 60),
             };
@@ -53,19 +55,35 @@ const CountdownTimer = ({ expiryDate }: { expiryDate: string | null }) => {
     const formatTime = (time: number) => String(time).padStart(2, '0');
 
     return (
-        <div className="flex items-center gap-2">
-            <span className="text-gray-600">Ending in:</span>
-            <span className="bg-primary text-primary-foreground text-lg font-bold p-2 rounded-md min-w-[40px] text-center">
-                {formatTime(timeLeft.hours)}
-            </span>
-            <span className="font-bold text-xl">:</span>
-            <span className="bg-primary text-primary-foreground text-lg font-bold p-2 rounded-md w-10 text-center">
-                {formatTime(timeLeft.minutes)}
-            </span>
-            <span className="font-bold text-xl">:</span>
-            <span className="bg-primary text-primary-foreground text-lg font-bold p-2 rounded-md w-10 text-center">
-                {formatTime(timeLeft.seconds)}
-            </span>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="text-gray-600 text-xs sm:text-sm font-medium mr-1">Ending in:</span>
+            <div className="flex flex-col items-center">
+                <span className="bg-primary text-primary-foreground text-sm sm:text-lg font-bold p-1 sm:p-2 rounded-md min-w-[32px] sm:min-w-[40px] text-center">
+                    {formatTime(timeLeft.days)}
+                </span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Days</span>
+            </div>
+            <span className="font-bold text-lg sm:text-xl pb-4">:</span>
+            <div className="flex flex-col items-center">
+                <span className="bg-primary text-primary-foreground text-sm sm:text-lg font-bold p-1 sm:p-2 rounded-md min-w-[32px] sm:min-w-[40px] text-center">
+                    {formatTime(timeLeft.hours)}
+                </span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Hrs</span>
+            </div>
+            <span className="font-bold text-lg sm:text-xl pb-4">:</span>
+            <div className="flex flex-col items-center">
+                <span className="bg-primary text-primary-foreground text-sm sm:text-lg font-bold p-1 sm:p-2 rounded-md min-w-[32px] sm:min-w-[40px] text-center">
+                    {formatTime(timeLeft.minutes)}
+                </span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Min</span>
+            </div>
+            <span className="font-bold text-lg sm:text-xl pb-4">:</span>
+            <div className="flex flex-col items-center">
+                <span className="bg-primary text-primary-foreground text-sm sm:text-lg font-bold p-1 sm:p-2 rounded-md min-w-[32px] sm:min-w-[40px] text-center">
+                    {formatTime(timeLeft.seconds)}
+                </span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Sec</span>
+            </div>
         </div>
     );
 };
@@ -91,7 +109,7 @@ export default function FlashSale({ products: flashSaleProducts }: FlashSaleProp
     return (
         <Card className="bg-purple-50/50">
             <CardContent className="p-4">
-                <div className="flex flex-col items-center text-center mb-4 gap-4">
+                <div className="flex flex-col items-center text-center mb-6 gap-4">
                     <div>
                         <h2 className="text-2xl font-bold text-primary">Flash Sale</h2>
                         <p className="text-gray-600">Don't miss out on these amazing deals, ending soon!</p>
