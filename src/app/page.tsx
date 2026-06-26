@@ -216,7 +216,7 @@ function HomePageContent() {
         {/* Collect Vouchers Section */}
         <div onClick={handleVoucherClick} className="block hover:shadow-lg transition-all rounded-lg cursor-pointer group relative">
           {hasUncollectedVouchers && (
-            <Badge className="absolute -top-2 -right-2 z-10 bg-red-500 text-white px-3 py-1 shadow-lg border-2 border-white flex items-center">
+            <Badge className="absolute -top-2 -right-2 z-10 bg-primary text-white px-3 py-1 shadow-lg border-2 border-white flex items-center">
               {"New Voucher!".split("").map((char, i) => (
                 <span
                   key={i}
