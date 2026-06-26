@@ -9,6 +9,7 @@ export interface Review {
     uid: string;
     displayName: string;
     photoURL?: string;
+    emailVerified?: boolean;
   };
   rating: number;
   comment: string;
@@ -163,7 +164,8 @@ export interface User {
   payoutInfo?: {
     method: string;
     accountNumber: string;
-  }
+  };
+  emailVerified?: boolean;
 }
 
 export interface ShippingAddress {

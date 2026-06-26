@@ -308,7 +308,12 @@ function ProductDetailPageContent() {
                                                   </Avatar>
                                                   <div className="flex-1">
                                                       <div className="flex justify-between items-center">
-                                                          <p className="font-semibold">{review.user.displayName}</p>
+                                                          <div className="flex items-center gap-1">
+                                                              <p className="font-semibold">{review.user.displayName}</p>
+                                                              {review.user.emailVerified && (
+                                                                  <CheckCircle2 className="h-3.5 w-3.5 text-primary fill-primary text-white" />
+                                                              )}
+                                                          </div>
                                                           <StarRating rating={review.rating} />
                                                       </div>
                                                       <p className="text-muted-foreground mt-1 whitespace-pre-wrap">{review.comment}</p>

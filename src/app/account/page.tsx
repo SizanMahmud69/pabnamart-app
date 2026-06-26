@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Ticket, Settings, HelpCircle, Star, Users, ShoppingBag, ChevronRight, Package, Truck, CheckCircle, XCircle, Undo2, Phone, Camera, Loader2 } from "lucide-react";
+import { Heart, Ticket, Settings, HelpCircle, Star, Users, ShoppingBag, ChevronRight, Package, Truck, CheckCircle, XCircle, Undo2, Phone, Camera, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from 'lucide-react';
 import { useVouchers } from "@/hooks/useVouchers";
@@ -232,7 +232,12 @@ export default function AccountPage() {
                             />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <h2 className="text-xl font-bold truncate">{user.displayName || user.email}</h2>
+                            <div className="flex items-center gap-1.5">
+                                <h2 className="text-xl font-bold truncate">{user.displayName || user.email}</h2>
+                                {appUser?.emailVerified && (
+                                    <CheckCircle2 className="h-5 w-5 text-primary fill-primary text-white" />
+                                )}
+                            </div>
                             <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                                 <Link href="/account/wishlist" className="flex items-center gap-1 hover:text-primary">
                                     <Heart className="h-4 w-4" /> {wishlistItems.length} Wishlist

@@ -102,6 +102,7 @@ function NewReviewPageContent() {
                     uid: user.uid,
                     displayName: appUser.displayName || 'Anonymous',
                     photoURL: appUser.photoURL || undefined,
+                    emailVerified: appUser.emailVerified || false,
                 },
                 rating,
                 comment,
@@ -210,5 +211,3 @@ function NewReviewPage() {
 }
 
 export default withAuth(NewReviewPage);
-
-    
