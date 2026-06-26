@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const referrerId = localStorage.getItem('referrerId');
 
     const userDocRef = doc(db, 'users', firebaseUser.uid);
-    const newAppUser: Omit<AppUser, 'uid'> = {
+    const newAppUser: any = {
         email: firebaseUser.email,
         displayName: displayName,
         photoURL: DEFAULT_AVATAR_URL,
@@ -113,8 +113,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         shippingAddresses: [],
         usedVouchers: {},
         isAffiliate: false,
-        referredBy: referrerId || undefined,
     };
+
+    // Only add referredBy if referrerId exists
+    if (referrerId) {
+        newAppUser.referredBy = referrerId;
+    }
 
     await setDoc(userDocRef, newAppUser);
 
