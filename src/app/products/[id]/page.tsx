@@ -22,8 +22,35 @@ import app from '@/lib/firebase';
 import ProductCard from '@/components/ProductCard';
 import { useToast } from '@/hooks/use-toast';
 import ShareSheet from '@/components/ShareSheet';
+import { cn } from '@/lib/utils';
 
 const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
+
+const FormattedText = ({ text }: { text: string }) => {
+    if (!text) return null;
+    return (
+        <div className="space-y-1.5">
+            {text.split('\n').map((line, i) => {
+                const trimmedLine = line.trim();
+                if (trimmedLine.startsWith('•')) {
+                    return (
+                        <div key={i} className="flex items-start gap-2 text-muted-foreground group">
+                            <CheckCircle2 className="h-4 w-4 text-primary mt-1 flex-shrink-0 transition-transform group-hover:scale-110" />
+                            <span className="flex-1 text-sm md:text-base">{trimmedLine.substring(1).trim()}</span>
+                        </div>
+                    );
+                }
+                return line ? (
+                    <p key={i} className="text-muted-foreground leading-relaxed text-sm md:text-base">
+                        {line}
+                    </p>
+                ) : (
+                    <div key={i} className="h-2" />
+                );
+            })}
+        </div>
+    );
+};
 
 function ProductDetailPageContent() {
   const params = useParams();
@@ -84,7 +111,6 @@ function ProductDetailPageContent() {
   }, [products, params.id, isFlashSaleContext, getFlashSalePrice]);
 
   useEffect(() => {
-    // A short delay to ensure the DOM is ready after the product state update
     const timer = setTimeout(() => {
       if (window.location.hash === '#variations') {
         const element = document.getElementById('variations');
@@ -175,7 +201,10 @@ function ProductDetailPageContent() {
                               <StarRating rating={product.rating} />
                               <span className="text-muted-foreground text-sm">({reviews.length} reviews)</span>
                           </div>
-                          <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">{product.description}</p>
+                          
+                          <div className="pt-2">
+                            <FormattedText text={product.description} />
+                          </div>
                           
                           <div className="flex items-baseline gap-2 pt-2">
                               <span className="text-4xl font-bold text-primary">৳{product.price}</span>
@@ -233,8 +262,8 @@ function ProductDetailPageContent() {
                                   <Separator className="my-4"/>
                                   <div>
                                       <h2 className="text-xl font-bold mb-4">Product Details</h2>
-                                      <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-wrap">
-                                          {product.details}
+                                      <div className="prose prose-sm max-w-none">
+                                          <FormattedText text={product.details} />
                                       </div>
                                   </div>
                               </>
