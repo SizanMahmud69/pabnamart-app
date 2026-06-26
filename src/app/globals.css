@@ -40,7 +40,7 @@ body {
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover-foreground: 240 10% 3.9%;
     --primary: 262 84% 59%;
     --primary-foreground: 0 0% 98%;
     --secondary: 240 3.7% 15.9%;
@@ -86,5 +86,13 @@ body {
   }
   .animate-blink {
     animation: blink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes wave {
+    0%, 40%, 100% { transform: translateY(0); }
+    20% { transform: translateY(-3.5px); }
+  }
+  .animate-wave {
+    animation: wave 1.5s ease-in-out infinite;
   }
 }

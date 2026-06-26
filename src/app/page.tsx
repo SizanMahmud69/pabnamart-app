@@ -216,8 +216,16 @@ function HomePageContent() {
         {/* Collect Vouchers Section */}
         <div onClick={handleVoucherClick} className="block hover:shadow-lg transition-all rounded-lg cursor-pointer group relative">
           {hasUncollectedVouchers && (
-            <Badge className="absolute -top-2 -right-2 z-10 bg-red-500 text-white animate-blink px-3 py-1 shadow-lg border-2 border-white">
-              New Voucher!
+            <Badge className="absolute -top-2 -right-2 z-10 bg-red-500 text-white px-3 py-1 shadow-lg border-2 border-white flex items-center">
+              {"New Voucher!".split("").map((char, i) => (
+                <span
+                  key={i}
+                  className="inline-block animate-wave"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  {char === " " ? "\u00A0" : char}
+                </span>
+              ))}
             </Badge>
           )}
           <Card className={cn(
