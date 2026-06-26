@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
@@ -174,7 +175,7 @@ function ProductDetailPageContent() {
                               <StarRating rating={product.rating} />
                               <span className="text-muted-foreground text-sm">({reviews.length} reviews)</span>
                           </div>
-                          <p className="text-base text-muted-foreground leading-relaxed">{product.description}</p>
+                          <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">{product.description}</p>
                           
                           <div className="flex items-baseline gap-2 pt-2">
                               <span className="text-4xl font-bold text-primary">৳{product.price}</span>
@@ -232,8 +233,8 @@ function ProductDetailPageContent() {
                                   <Separator className="my-4"/>
                                   <div>
                                       <h2 className="text-xl font-bold mb-4">Product Details</h2>
-                                      <div className="prose prose-sm max-w-none text-muted-foreground">
-                                          <p>{product.details}</p>
+                                      <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-wrap">
+                                          {product.details}
                                       </div>
                                   </div>
                               </>
@@ -281,7 +282,7 @@ function ProductDetailPageContent() {
                                                           <p className="font-semibold">{review.user.displayName}</p>
                                                           <StarRating rating={review.rating} />
                                                       </div>
-                                                      <p className="text-muted-foreground mt-1">{review.comment}</p>
+                                                      <p className="text-muted-foreground mt-1 whitespace-pre-wrap">{review.comment}</p>
                                                       {review.images && review.images.length > 0 && (
                                                           <div className="mt-2 flex gap-2 flex-wrap">
                                                               {review.images.map((img, index) => (

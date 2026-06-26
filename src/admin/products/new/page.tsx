@@ -70,6 +70,10 @@ export default function NewProductPage() {
     const [colors, setColors] = useState('');
     const [sizes, setSizes] = useState('');
     const [affiliateCommission, setAffiliateCommission] = useState<number | undefined>(undefined);
+    
+    // States for auto-formatting textareas
+    const [description, setDescription] = useState('');
+    const [details, setDetails] = useState('');
 
 
     useEffect(() => {
@@ -100,6 +104,14 @@ export default function NewProductPage() {
     
     const removeImage = (index: number) => {
         setImageFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Auto-formatting handler
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>, setter: (val: string) => void) => {
+        const val = e.target.value;
+        // Automatically insert a newline before bullet point (•) if it's not already at the start of a line
+        const formatted = val.replace(/([^\n])•/g, '$1\n•');
+        setter(formatted);
     };
 
 
@@ -154,13 +166,13 @@ export default function NewProductPage() {
 
         const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
             name: form.get('name') as string,
-            description: form.get('description') as string,
+            description: description,
             price: parseFloat(form.get('price') as string) || 0,
             originalPrice: originalPriceValue ? parseFloat(originalPriceValue) : undefined,
             stock: parseInt(form.get('stock') as string, 10) || 0,
             category: category,
             images: uploadedImageUrls,
-            details: form.get('details') as string,
+            details: details,
             freeShipping: freeShipping,
             isFlashSale: isFlashSale,
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
@@ -236,11 +248,26 @@ export default function NewProductPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="description">Description</Label>
-                                <Textarea id="description" name="description" placeholder="Describe the product" required disabled={isLoading} />
+                                <Textarea 
+                                    id="description" 
+                                    name="description" 
+                                    placeholder="Describe the product (Use • for bullet points)" 
+                                    value={description}
+                                    onChange={(e) => handleTextareaChange(e, setDescription)}
+                                    required 
+                                    disabled={isLoading} 
+                                />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="details">Product Details</Label>
-                                <Textarea id="details" name="details" placeholder="Add detailed specifications or features" disabled={isLoading} />
+                                <Textarea 
+                                    id="details" 
+                                    name="details" 
+                                    placeholder="Add detailed specifications or features (Use • for bullet points)" 
+                                    value={details}
+                                    onChange={(e) => handleTextareaChange(e, setDetails)}
+                                    disabled={isLoading} 
+                                />
                             </div>
                              <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
@@ -369,5 +396,3 @@ export default function NewProductPage() {
         </div>
     );
 }
-
-    
