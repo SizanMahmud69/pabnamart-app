@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, Suspense, useMemo, useTransition } from 'react';
@@ -19,6 +18,8 @@ import { useOffers } from '@/hooks/useOffers';
 import { cn } from '@/lib/utils';
 import ProductCardSkeleton from '@/components/ProductCardSkeleton';
 import Footer from '@/components/Footer';
+import { useVouchers } from '@/hooks/useVouchers';
+import { Badge } from '@/components/ui/badge';
 
 const categoryImageMap: { [key: string]: { image: string; aiHint: string } } = {
   "Flash Sale": { image: "https://picsum.photos/seed/flashsale/800/600", aiHint: "flash sale" },
@@ -49,6 +50,7 @@ function HomePageContent() {
   const searchQuery = searchParams.get('q') || '';
   const { products: allProducts, getFlashSaleProducts, loading: productsLoading } = useProducts();
   const { activeOffers } = useOffers();
+  const { hasUncollectedVouchers } = useVouchers();
 
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [topRated, setTopRated] = useState<Product[]>([]);
@@ -212,11 +214,21 @@ function HomePageContent() {
         </Carousel>
         
         {/* Collect Vouchers Section */}
-        <div onClick={handleVoucherClick} className="block hover:shadow-lg transition-shadow rounded-lg cursor-pointer">
-          <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-0">
+        <div onClick={handleVoucherClick} className="block hover:shadow-lg transition-all rounded-lg cursor-pointer group relative">
+          {hasUncollectedVouchers && (
+            <Badge className="absolute -top-2 -right-2 z-10 bg-red-500 text-white animate-blink px-3 py-1 shadow-lg border-2 border-white">
+              New Voucher!
+            </Badge>
+          )}
+          <Card className={cn(
+              "bg-gradient-to-r from-purple-100 to-pink-100 border-0 transition-all",
+              hasUncollectedVouchers && "ring-2 ring-primary ring-offset-2"
+          )}>
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Ticket className="h-8 w-8 text-primary" />
+                <div className="p-3 bg-white/50 rounded-full">
+                  <Ticket className="h-8 w-8 text-primary" />
+                </div>
                 <div>
                   <h2 className="font-bold text-lg">Collect Vouchers!</h2>
                   <p className="text-sm text-gray-600">Get extra savings on your next purchase.</p>
@@ -225,7 +237,10 @@ function HomePageContent() {
               {isVoucherLoading ? (
                 <Loader2 className="h-6 w-6 text-gray-700 animate-spin" />
               ) : (
-                <ArrowRight className="h-6 w-6 text-gray-700" />
+                <div className="flex items-center gap-2">
+                   {hasUncollectedVouchers && <span className="text-xs font-bold text-primary animate-pulse hidden sm:inline">Claim Now</span>}
+                   <ArrowRight className="h-6 w-6 text-gray-700 transition-transform group-hover:translate-x-1" />
+                </div>
               )}
             </CardContent>
           </Card>

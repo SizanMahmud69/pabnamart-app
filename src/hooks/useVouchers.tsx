@@ -1,7 +1,6 @@
-
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo } from 'react';
 import type { Voucher } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './useAuth';
@@ -15,6 +14,7 @@ interface VoucherContextType {
   voucherCount: number;
   popupVoucher: Voucher | null;
   markVoucherAsSeen: (code: string) => void;
+  hasUncollectedVouchers: boolean;
 }
 
 const VoucherContext = createContext<VoucherContextType | undefined>(undefined);
@@ -82,6 +82,13 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       setAvailableReturnVouchers([]);
     }
   }, [user, db]);
+
+  // Logic for new voucher indicator
+  const hasUncollectedVouchers = useMemo(() => {
+    if (allVouchers.length === 0) return false;
+    const collectedVoucherCodes = new Set(collectedVouchers.map(v => v.code));
+    return allVouchers.some(v => !collectedVoucherCodes.has(v.code));
+  }, [allVouchers, collectedVouchers]);
 
   // Logic for new voucher popup
   useEffect(() => {
@@ -169,6 +176,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
         voucherCount,
         popupVoucher,
         markVoucherAsSeen,
+        hasUncollectedVouchers
       }}
     >
       {children}
