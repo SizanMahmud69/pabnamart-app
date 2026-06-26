@@ -4,19 +4,23 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Ticket, Settings, HelpCircle, Star, Users, ShoppingBag, ChevronRight, Package, Truck, CheckCircle, XCircle, Undo2, Phone } from "lucide-react";
+import { Heart, Ticket, Settings, HelpCircle, Star, Users, ShoppingBag, ChevronRight, Package, Truck, CheckCircle, XCircle, Undo2, Phone, Camera, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from 'lucide-react';
 import { useVouchers } from "@/hooks/useVouchers";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useRef } from "react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { Separator } from "@/components/ui/separator";
 import type { Order, Review } from "@/types";
 import { collection, getFirestore, limit, onSnapshot, query, where, orderBy, collectionGroup } from "firebase/firestore";
 import app from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import type { PutBlobResult } from '@vercel/blob';
 
 
 const db = getFirestore(app);
@@ -47,7 +51,9 @@ const OrderStatusIcon = ({ status }: { status: Order['status'] }) => {
         cancelled: XCircle,
         returned: Undo2,
         'return-requested': Undo2,
-        'return-approved': Undo2
+        'return-approved': Undo2,
+        'return-shipped': Undo2,
+        'return-denied': Undo2
     };
     const Icon = iconMap[status] || Package;
     return <Icon className="h-6 w-6 text-primary" />;
@@ -55,10 +61,13 @@ const OrderStatusIcon = ({ status }: { status: Order['status'] }) => {
 
 export default function AccountPage() {
     const { collectedVouchers } = useVouchers();
-    const { user, loading: authLoading, appUser } = useAuth();
+    const { user, loading: authLoading, appUser, updateUserProfilePicture } = useAuth();
     const { wishlistItems } = useWishlist();
     const [orders, setOrders] = useState<Order[]>([]);
     const [userReviews, setUserReviews] = useState<Review[]>([]);
+    const [isPhotoLoading, setIsPhotoLoading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const { toast } = useToast();
 
     const unusedVoucherCount = useMemo(() => {
         if (!appUser) return 0;
@@ -93,6 +102,47 @@ export default function AccountPage() {
             unsubscribeReviews();
         };
     }, [user]);
+
+    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        setIsPhotoLoading(true);
+
+        try {
+            const response = await fetch(
+                `/api/upload?filename=${file.name}`,
+                {
+                  method: 'POST',
+                  body: file,
+                },
+              );
+            
+            if (!response.ok) {
+                throw new Error('Failed to upload image.');
+            }
+            const newBlob = (await response.json()) as PutBlobResult;
+            const downloadURL = newBlob.url;
+            
+            await updateUserProfilePicture(downloadURL);
+
+            toast({
+                title: "Success",
+                description: "Profile picture updated successfully."
+            });
+        } catch (error) {
+            console.error("Profile picture update failed:", error);
+            const errorMessage = error instanceof Error ? error.message : "Please check your network connection or browser extensions.";
+            toast({
+                title: "Update Failed",
+                description: `Failed to update profile picture. ${errorMessage}`,
+                variant: "destructive"
+            });
+        } finally {
+            setIsPhotoLoading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
 
     if (authLoading) {
         return <LoadingSpinner />
@@ -158,10 +208,29 @@ export default function AccountPage() {
                 {/* User Info */}
                 <Card className="shadow-sm">
                     <CardContent className="p-4 flex items-center gap-4">
-                        <Avatar className="h-16 w-16 flex-shrink-0">
-                            <AvatarImage src={user.photoURL || DEFAULT_AVATAR_URL} alt="User Avatar" data-ai-hint="user avatar" />
-                            <AvatarFallback>{user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
+                        <div 
+                            className="relative group cursor-pointer flex-shrink-0" 
+                            onClick={() => !isPhotoLoading && fileInputRef.current?.click()}
+                        >
+                            <Avatar className="h-16 w-16">
+                                <AvatarImage src={user.photoURL || DEFAULT_AVATAR_URL} alt="User Avatar" data-ai-hint="user avatar" />
+                                <AvatarFallback>{user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className={cn(
+                                "absolute inset-0 flex items-center justify-center rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity",
+                                isPhotoLoading && "opacity-100"
+                            )}>
+                                {isPhotoLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
+                            </div>
+                            <Input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handlePhotoChange}
+                                disabled={isPhotoLoading}
+                            />
+                        </div>
                         <div className="min-w-0 flex-1">
                             <h2 className="text-xl font-bold truncate">{user.displayName || user.email}</h2>
                             <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
