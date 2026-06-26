@@ -10,9 +10,9 @@ import { useAuth, withAuth } from "@/hooks/useAuth";
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { getFirestore, doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import { Separator } from '@/components/ui/separator';
+import { sendVerificationEmail, verifyEmailCode } from '@/app/actions';
 
 const db = getFirestore(app);
 
@@ -30,7 +30,6 @@ function AccountSecurityPage() {
     const [isVerifying, setIsVerifying] = useState(false);
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState<'initial' | 'otp'>('initial');
-    const [sentCode, setSentCode] = useState('');
 
     const { toast } = useToast();
 
@@ -75,21 +74,23 @@ function AccountSecurityPage() {
     };
 
     const handleSendCode = async () => {
-        if (!user?.email) return;
+        if (!user?.email || !user?.uid) return;
         setIsVerifying(true);
         try {
-            // Generate a random 6-digit OTP
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
-            setSentCode(code);
-            
-            // In a real app, you would call a server action/API to send the email
-            // For this prototype, we simulate the sending and show the code in a toast
-            toast({
-                title: "Code Sent!",
-                description: `A verification code has been sent to ${user.email}. (Dev Code: ${code})`,
-            });
-            
-            setStep('otp');
+            const result = await sendVerificationEmail(user.uid, user.email);
+            if (result.success) {
+                toast({
+                    title: "Email Sent!",
+                    description: result.message,
+                });
+                setStep('otp');
+            } else {
+                toast({
+                    title: "Error",
+                    description: result.message,
+                    variant: "destructive"
+                });
+            }
         } catch (error) {
             toast({
                 title: "Error",
@@ -102,25 +103,23 @@ function AccountSecurityPage() {
     };
 
     const handleVerifyOtp = async () => {
-        if (otp !== sentCode) {
-            toast({
-                title: "Invalid Code",
-                description: "The code you entered is incorrect.",
-                variant: "destructive"
-            });
-            return;
-        }
-
+        if (!user?.uid || !otp) return;
         setIsVerifying(true);
         try {
-            const userDocRef = doc(db, 'users', user!.uid);
-            await updateDoc(userDocRef, { emailVerified: true });
-            
-            toast({
-                title: "Account Verified!",
-                description: "Your email has been successfully verified.",
-            });
-            setStep('initial');
+            const result = await verifyEmailCode(user.uid, otp);
+            if (result.success) {
+                toast({
+                    title: "Account Verified!",
+                    description: result.message,
+                });
+                setStep('initial');
+            } else {
+                toast({
+                    title: "Invalid Code",
+                    description: result.message,
+                    variant: "destructive"
+                });
+            }
         } catch (error) {
             toast({
                 title: "Error",
