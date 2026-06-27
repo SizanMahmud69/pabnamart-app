@@ -25,13 +25,6 @@ const allMenuItems = [
         permissionKey: 'canManageOrders'
     },
     {
-        title: "Coin Management",
-        description: "Control the user coin system and points.",
-        icon: Coins,
-        href: "/admin/coins",
-        permissionKey: 'canManageCoins'
-    },
-    {
         title: "Verify Payments",
         description: "Verify online payments for orders.",
         icon: CreditCard,

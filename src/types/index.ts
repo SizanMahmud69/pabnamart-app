@@ -155,6 +155,14 @@ export interface CoinTransaction {
     date: string;
 }
 
+export interface CoinSettings {
+  checkInPoints: number;
+  reviewPoints: number;
+  pointsPer100Taka: number;
+  takaPer100Coins: number;
+  maxCoinsPerOrder: number;
+}
+
 export interface User {
   uid: string;
   email: string | null;

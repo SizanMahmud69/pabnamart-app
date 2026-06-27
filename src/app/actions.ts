@@ -16,12 +16,21 @@ import type {
   CartItem,
   AffiliateEarning,
   AffiliateRequest,
-  CoinTransaction
+  CoinTransaction,
+  CoinSettings
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 import nodemailer from 'nodemailer';
 
 const serverActionNotAvailableMessage = 'This server action is disabled in the local development or preview environment because it requires Firebase Admin credentials. It is only available on the live, deployed website.';
+
+const defaultCoinSettings: CoinSettings = {
+    checkInPoints: 1,
+    reviewPoints: 20,
+    pointsPer100Taka: 10,
+    takaPer100Coins: 10,
+    maxCoinsPerOrder: 100,
+};
 
 const getFirebaseAdmin = (): admin.App | null => {
   if (admin.apps.length > 0) {
@@ -44,6 +53,16 @@ const getFirebaseAdmin = (): admin.App | null => {
     return null;
   }
 };
+
+async function getCoinSettings(db: admin.firestore.Firestore): Promise<CoinSettings> {
+    try {
+        const doc = await db.collection('settings').doc('coin').get();
+        if (doc.exists) return { ...defaultCoinSettings, ...doc.data() } as CoinSettings;
+        return defaultCoinSettings;
+    } catch (e) {
+        return defaultCoinSettings;
+    }
+}
 
 /**
  * Sends a real verification email using SMTP
@@ -129,8 +148,9 @@ export async function awardReviewCoins(userId: string, productName: string) {
     const adminApp = getFirebaseAdmin();
     if (!adminApp) return;
     const db = getFirestore(adminApp);
+    const settings = await getCoinSettings(db);
 
-    const coinAmount = 20;
+    const coinAmount = settings.reviewPoints;
     const transaction: CoinTransaction = {
         id: Math.random().toString(36).substr(2, 9),
         amount: coinAmount,
@@ -149,6 +169,7 @@ export async function dailyCheckInAction(userId: string) {
     const adminApp = getFirebaseAdmin();
     if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
     const db = getFirestore(adminApp);
+    const settings = await getCoinSettings(db);
 
     try {
         const userRef = db.collection('users').doc(userId);
@@ -163,7 +184,7 @@ export async function dailyCheckInAction(userId: string) {
             return { success: false, message: 'Already checked in today!' };
         }
 
-        const coinAmount = 1;
+        const coinAmount = settings.checkInPoints;
         const transaction: CoinTransaction = {
             id: Math.random().toString(36).substr(2, 9),
             amount: coinAmount,
@@ -178,7 +199,7 @@ export async function dailyCheckInAction(userId: string) {
         });
         await db.collection(`users/${userId}/coinHistory`).add(transaction);
 
-        return { success: true, message: 'Successfully checked in! +1 Coin' };
+        return { success: true, message: `Successfully checked in! +${coinAmount} Coin` };
     } catch (error: any) {
         return { success: false, message: error.message || 'Failed to check in.' };
     }
@@ -192,6 +213,7 @@ export async function placeOrder(
     return { success: false, message: "Server not configured." };
   }
   const db = getFirestore(adminApp);
+  const settings = await getCoinSettings(db);
 
   try {
     const transactionResult = await db.runTransaction(async (transaction) => {
@@ -270,10 +292,11 @@ export async function placeOrder(
       let coinDiscount = 0;
       if (payload.useCoins) {
           const userCoins = userData?.coins || 0;
-          const maxSpendableCoins = 100; // User said max 10 Taka (100 coins)
+          const maxSpendableCoins = settings.maxCoinsPerOrder;
           const coinsToUse = Math.min(userCoins, maxSpendableCoins);
           if (coinsToUse > 0) {
-              coinDiscount = coinsToUse / 10;
+              // Formula: (coins / 100) * valuePer100
+              coinDiscount = (coinsToUse / 100) * settings.takaPer100Coins;
               transaction.update(userDocRef, {
                   coins: FieldValue.increment(-coinsToUse)
               });
@@ -315,8 +338,8 @@ export async function placeOrder(
         transaction.update(userDocRef, { [`usedVouchers.${usedVoucherCode}`]: FieldValue.increment(1) });
       }
 
-      // Award coins for purchase: 100 Taka = 10 Coins
-      const coinsEarned = Math.floor(offerSubtotal / 10);
+      // Award coins for purchase: (total / 100) * pointsPer100
+      const coinsEarned = Math.floor((offerSubtotal / 100) * settings.pointsPer100Taka);
       if (coinsEarned > 0) {
           transaction.update(userDocRef, { coins: FieldValue.increment(coinsEarned) });
           await db.collection(`users/${payload.userId}/coinHistory`).add({

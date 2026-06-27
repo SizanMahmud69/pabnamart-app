@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useMemo, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Users, Truck, CreditCard, Loader2, LayoutGrid, UserCog, Phone, DollarSign } from "lucide-react";
+import { ArrowLeft, ArrowRight, Users, Truck, CreditCard, Loader2, LayoutGrid, UserCog, Phone, DollarSign, Coins } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
@@ -24,6 +24,13 @@ const allSettingsItems = [
         icon: CreditCard,
         href: "/admin/settings/payment",
         permissionKey: 'canManagePaymentSettings'
+    },
+    {
+        title: "Coin Management",
+        description: "Configure points, rewards and conversion rates.",
+        icon: Coins,
+        href: "/admin/settings/coins",
+        permissionKey: 'canManageCoins'
     },
     {
         title: "Category Settings",
