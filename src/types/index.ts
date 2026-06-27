@@ -93,6 +93,7 @@ export interface Order {
     paymentAccountNumber?: string;
     cashOnDeliveryFee?: number;
     deliveredAt?: string;
+    coinDiscount?: number;
 }
 
 export interface Voucher {
@@ -143,6 +144,15 @@ export interface ModeratorPermissions {
   canManageContactSettings: boolean;
   canManageAffiliates: boolean;
   canManageWithdrawals: boolean;
+  canManageCoins: boolean;
+}
+
+export interface CoinTransaction {
+    id: string;
+    amount: number;
+    type: 'earn' | 'spend';
+    reason: string;
+    date: string;
 }
 
 export interface User {
@@ -166,6 +176,8 @@ export interface User {
     accountNumber: string;
   };
   emailVerified?: boolean;
+  coins?: number;
+  lastCheckIn?: string;
 }
 
 export interface ShippingAddress {
@@ -230,6 +242,7 @@ export interface OrderPayload {
   paymentAccountNumber?: string;
   cashOnDeliveryFee?: number;
   referrerId?: string;
+  useCoins?: boolean;
 }
 
 export interface AffiliateEarning {

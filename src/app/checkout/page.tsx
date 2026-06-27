@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Home, Building, Plus, Ticket, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, Home, Building, Plus, Ticket, AlertCircle, Coins } from "lucide-react";
 import Link from 'next/link';
 import type { ShippingAddress, Voucher } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -23,6 +23,7 @@ import { getDoc, getFirestore, doc, updateDoc, arrayUnion, setDoc, onSnapshot } 
 import app from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 
 function CheckoutPage() {
     const { user, appUser } = useAuth();
@@ -42,6 +43,7 @@ function CheckoutPage() {
     const [voucherCode, setVoucherCode] = useState('');
     const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
     const [voucherError, setVoucherError] = useState<string | null>(null);
+    const [useCoins, setUseCoins] = useState(false);
     const [isProceeding, startProceeding] = useTransition();
     
     useEffect(() => {
@@ -123,22 +125,27 @@ function CheckoutPage() {
     };
     
     const subtotalWithDiscount = useMemo(() => {
-        if (!appliedVoucher || appliedVoucher.discountType === 'shipping') return selectedCartTotal;
-        let discount = 0;
-        if (appliedVoucher.type === 'fixed') {
-            discount = appliedVoucher.discount;
-        } else {
-            discount = (selectedCartTotal * appliedVoucher.discount) / 100;
+        let currentSubtotal = selectedCartTotal;
+        if (appliedVoucher && appliedVoucher.discountType !== 'shipping') {
+            let discount = appliedVoucher.type === 'fixed' ? appliedVoucher.discount : (selectedCartTotal * appliedVoucher.discount) / 100;
+            currentSubtotal = Math.max(0, selectedCartTotal - discount);
         }
-        return Math.max(0, selectedCartTotal - discount);
+        return currentSubtotal;
     }, [selectedCartTotal, appliedVoucher]);
+
+    const coinDiscount = useMemo(() => {
+        if (!useCoins || !appUser?.coins) return 0;
+        const maxCoinsToUse = 100; // 10 Taka limit
+        const coinsToUse = Math.min(appUser.coins, maxCoinsToUse);
+        return coinsToUse / 10;
+    }, [useCoins, appUser]);
     
     const shippingFeeWithDiscount = useMemo(() => {
         if (appliedVoucher?.discountType === 'shipping') return 0;
         return shippingFee;
     }, [shippingFee, appliedVoucher]);
 
-    const finalTotal = Math.round(subtotalWithDiscount + shippingFeeWithDiscount);
+    const finalTotal = Math.round(subtotalWithDiscount - coinDiscount + shippingFeeWithDiscount);
     
     const handleAddressChange = (addressId: string) => {
         const address = addresses.find(a => a.id === addressId);
@@ -162,6 +169,7 @@ function CheckoutPage() {
                 total: finalTotal,
                 subtotal: selectedCartTotal,
                 voucherCode: appliedVoucher?.code,
+                useCoins: useCoins,
                 referrerId: referrerId || undefined,
             }));
             router.push('/payment');
@@ -275,6 +283,35 @@ function CheckoutPage() {
                                     )}
                                 </CardContent>
                             </Card>
+
+                            {/* Coin Section */}
+                            <Card className="border-yellow-200 bg-yellow-50/20">
+                                <CardContent className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="bg-yellow-400 p-1.5 rounded-full">
+                                                <Coins className="h-5 w-5 text-yellow-900" />
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-sm">Use Coins</p>
+                                                <p className="text-xs text-muted-foreground">You have {appUser?.coins || 0} coins</p>
+                                            </div>
+                                        </div>
+                                        <Checkbox 
+                                            id="use-coins" 
+                                            checked={useCoins} 
+                                            onCheckedChange={(checked) => setUseCoins(checked as boolean)}
+                                            disabled={!appUser?.coins || appUser.coins === 0}
+                                        />
+                                    </div>
+                                    {useCoins && appUser?.coins && (
+                                        <div className="mt-3 p-2 bg-yellow-100/50 rounded-md border border-yellow-200 text-xs flex justify-between">
+                                            <span>Applying {Math.min(appUser.coins, 100)} coins discount</span>
+                                            <span className="font-bold">- ৳{coinDiscount}</span>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
                             
                             <Card>
                                 <CardHeader>
@@ -284,6 +321,9 @@ function CheckoutPage() {
                                     <div className="flex justify-between"><span>Subtotal</span><span>৳{selectedCartTotal}</span></div>
                                     {appliedVoucher?.discountType !== 'shipping' && appliedVoucher?.discount > 0 && (
                                         <div className="flex justify-between text-green-600"><span>Voucher Discount</span><span>- ৳{(selectedCartTotal - subtotalWithDiscount).toFixed(2)}</span></div>
+                                    )}
+                                    {coinDiscount > 0 && (
+                                        <div className="flex justify-between text-yellow-600"><span>Coin Discount</span><span>- ৳{coinDiscount.toFixed(2)}</span></div>
                                     )}
                                     <div className="flex justify-between"><span>Shipping Fee</span>
                                         {appliedVoucher?.discountType === 'shipping' ? (

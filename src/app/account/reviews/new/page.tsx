@@ -12,12 +12,12 @@ import { useToast } from "@/hooks/use-toast";
 import { getFirestore, doc, collection, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { useAuth, withAuth } from "@/hooks/useAuth";
-import type { User as FirebaseUser } from 'firebase/auth';
-import { ArrowLeft, Loader2, Upload, X } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, X, Coins } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import type { Review } from "@/types";
 import { Input } from "@/components/ui/input";
 import type { PutBlobResult } from '@vercel/blob';
+import { awardReviewCoins } from '@/app/actions';
 
 const db = getFirestore(app);
 
@@ -78,10 +78,10 @@ function NewReviewPageContent() {
                 }
             } catch (error) {
                 console.error("Image upload failed:", error);
-                const errorMessage = error instanceof Error ? error.message : "Please check your network connection or browser extensions.";
+                const errorMessage = error instanceof Error ? error.message : "Please check your network connection.";
                 toast({
                     title: "Image Upload Failed",
-                    description: `Could not upload images. ${errorMessage}`,
+                    description: errorMessage,
                     variant: "destructive",
                 });
                 setIsSubmitting(false);
@@ -91,8 +91,8 @@ function NewReviewPageContent() {
         
         try {
             const reviewsRef = collection(db, 'products', productId, 'reviews');
-            
             const reviewDocRef = doc(reviewsRef);
+            
             const newReviewData: Review = {
                 id: reviewDocRef.id,
                 productId: Number(productId),
@@ -112,10 +112,13 @@ function NewReviewPageContent() {
             };
             
             await setDoc(reviewDocRef, newReviewData);
+            
+            // Award coins for review
+            await awardReviewCoins(user.uid, productName || 'Product');
 
             toast({
-                title: "Review Submitted",
-                description: "Thank you for your feedback!",
+                title: "Review Submitted!",
+                description: "Thank you for your feedback! You've earned 20 Coins.",
             });
             router.push('/account/orders');
         } catch (error) {
@@ -147,6 +150,10 @@ function NewReviewPageContent() {
                     <CardHeader>
                         <CardTitle>Write a Review</CardTitle>
                         <CardDescription>Share your thoughts on {decodeURIComponent(productName)}</CardDescription>
+                        <div className="flex items-center gap-2 mt-2 bg-yellow-100 text-yellow-800 p-2 rounded-md text-xs font-bold w-fit">
+                            <Coins className="h-4 w-4" />
+                            <span>Earn 20 Coins for your review!</span>
+                        </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-2 text-center">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, Suspense, useMemo, useTransition } from 'react';
@@ -20,6 +21,7 @@ import ProductCardSkeleton from '@/components/ProductCardSkeleton';
 import Footer from '@/components/Footer';
 import { useVouchers } from '@/hooks/useVouchers';
 import { Badge } from '@/components/ui/badge';
+import FloatingCoin from '@/components/FloatingCoin';
 
 const categoryImageMap: { [key: string]: { image: string; aiHint: string } } = {
   "Flash Sale": { image: "https://picsum.photos/seed/flashsale/800/600", aiHint: "flash sale" },
@@ -128,8 +130,6 @@ function HomePageContent() {
     return banners;
   }, [activeOffers, flashSaleProducts, allProducts]);
   
-  const showRecommendations = searchQuery.trim().length > 0;
-  
   const handleSeeMore = () => {
     setVisibleProductsCount(prevCount => prevCount + 9);
   };
@@ -147,6 +147,7 @@ function HomePageContent() {
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
+      <FloatingCoin />
       <div className="container mx-auto px-4 py-6 space-y-8">
         {/* Hero Section */}
         <Carousel

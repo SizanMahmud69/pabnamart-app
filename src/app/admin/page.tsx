@@ -4,7 +4,7 @@
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2, DollarSign } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2, DollarSign, Coins } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
 import { processWithdrawals } from '@/app/affiliate/actions';
@@ -23,6 +23,13 @@ const allMenuItems = [
         icon: ShoppingCart,
         href: "/admin/orders",
         permissionKey: 'canManageOrders'
+    },
+    {
+        title: "Coin Management",
+        description: "Control the user coin system and points.",
+        icon: Coins,
+        href: "/admin/coins",
+        permissionKey: 'canManageCoins'
     },
     {
         title: "Verify Payments",
@@ -85,11 +92,8 @@ const AdminDashboard = () => {
             }
         }
 
-        // Automatic Withdrawal Trigger
-        // When any admin/moderator visits the dashboard, it silently checks if withdrawals should be processed.
         const triggerWithdrawals = async () => {
             try {
-                // Pass false to respect the scheduled dates in settings
                 await processWithdrawals(false);
             } catch (err) {
                 console.error("Silent withdrawal trigger failed:", err);
@@ -105,11 +109,6 @@ const AdminDashboard = () => {
         }
         if (permissions) {
              return allMenuItems.filter(item => {
-                if (Array.isArray(item.permissionKey)) {
-                    // If it's an array of keys, check if the moderator has at least one of them.
-                    return item.permissionKey.some(key => permissions[key as keyof ModeratorPermissions]);
-                }
-                // Otherwise, it's a single key.
                 return permissions[item.permissionKey as keyof ModeratorPermissions];
             });
         }
