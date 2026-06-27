@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Coins, Users, Search, TrendingUp, DollarSign, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Coins, Users, Search, TrendingUp, DollarSign, Loader2, Save, Settings } from 'lucide-react';
 import { getFirestore, collection, query, orderBy, onSnapshot, limit, doc, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { User, CoinSettings } from '@/types';
@@ -168,7 +168,6 @@ export default function AdminCoinManagement() {
                                 <div className="text-3xl font-bold">৳{(totalCoinsInCirculation * (settings.takaPer100Coins / 100)).toFixed(2)}</div>
                                 <p className="text-xs text-muted-foreground mt-1">Total potential discount cost</p>
                             </CardContent>
-                        </Card>
                     </div>
                 </div>
 
