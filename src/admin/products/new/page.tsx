@@ -70,6 +70,7 @@ export default function NewProductPage() {
     const [colors, setColors] = useState('');
     const [sizes, setSizes] = useState('');
     const [affiliateCommission, setAffiliateCommission] = useState<number | undefined>(undefined);
+    const [isB1G1, setIsB1G1] = useState(false);
     
     // States for auto-formatting textareas
     const [description, setDescription] = useState('');
@@ -182,6 +183,7 @@ export default function NewProductPage() {
             sizes: parsedSizes,
             createdAt: new Date().toISOString(),
             affiliateCommission: affiliateCommission || undefined,
+            isB1G1: isB1G1,
         };
 
         try {
@@ -314,15 +316,17 @@ export default function NewProductPage() {
                             
                             <div className="space-y-4 border-t pt-4">
                                 <Label className="text-base font-semibold">Settings</Label>
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox id="free-shipping" checked={freeShipping} onCheckedChange={(checked) => setFreeShipping(checked as boolean)} disabled={isLoading} />
-                                    <label
-                                        htmlFor="free-shipping"
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                    >
-                                        Eligible for free shipping
-                                    </label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox id="free-shipping" checked={freeShipping} onCheckedChange={(checked) => setFreeShipping(checked as boolean)} disabled={isLoading} />
+                                        <label htmlFor="free-shipping" className="text-sm font-medium leading-none cursor-pointer">Eligible for free shipping</label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox id="b1g1-offer" checked={isB1G1} onCheckedChange={(v) => setIsB1G1(v as boolean)} disabled={isLoading} />
+                                        <label htmlFor="b1g1-offer" className="text-sm font-medium leading-none cursor-pointer">Buy One Get One (B1G1)</label>
+                                    </div>
                                 </div>
+
                                  <div className="flex flex-col gap-4">
                                     <div className="flex items-center space-x-2">
                                         <Checkbox id="flash-sale" checked={isFlashSale} onCheckedChange={(checked) => setIsFlashSale(checked as boolean)} disabled={isLoading} />

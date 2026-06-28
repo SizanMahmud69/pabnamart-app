@@ -165,6 +165,25 @@ export async function awardReviewCoins(userId: string, productName: string) {
     await db.collection(`users/${userId}/coinHistory`).add(transaction);
 }
 
+export async function awardSpinCoins(userId: string, amount: number) {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) return;
+    const db = getFirestore(adminApp);
+
+    const transaction: CoinTransaction = {
+        id: Math.random().toString(36).substr(2, 9),
+        amount: amount,
+        type: 'earn',
+        reason: 'Won from Lucky Spin',
+        date: new Date().toISOString()
+    };
+
+    await db.collection('users').doc(userId).update({
+        coins: FieldValue.increment(amount)
+    });
+    await db.collection(`users/${userId}/coinHistory`).add(transaction);
+}
+
 export async function dailyCheckInAction(userId: string) {
     const adminApp = getFirebaseAdmin();
     if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };

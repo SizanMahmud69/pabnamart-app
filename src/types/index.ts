@@ -47,6 +47,7 @@ export interface Product {
   colors: ProductVariant[];
   sizes: ProductVariant[];
   affiliateCommission?: number;
+  isB1G1?: boolean;
 }
 
 export interface CartItem {
@@ -196,6 +197,7 @@ export interface User {
   emailVerified?: boolean;
   coins?: number;
   lastCheckIn?: string;
+  lastSpinDate?: string;
 }
 
 export interface ShippingAddress {
