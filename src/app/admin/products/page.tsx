@@ -5,7 +5,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, PlusCircle, Star, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, PlusCircle, Star, Trash2, MoreHorizontal, Loader2, Gift } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -115,6 +115,7 @@ export default function AdminProductManagement() {
                                   <TableHead>Price</TableHead>
                                   <TableHead>Stock</TableHead>
                                   <TableHead>Sold</TableHead>
+                                  <TableHead>B1G1</TableHead>
                                   <TableHead>Flash Sale</TableHead>
                                   <TableHead>Rating</TableHead>
                                   <TableHead className="text-right">Actions</TableHead>
@@ -147,6 +148,13 @@ export default function AdminProductManagement() {
                                           </Badge>
                                       </TableCell>
                                       <TableCell>{product.sold || 0}</TableCell>
+                                      <TableCell>
+                                          {product.isB1G1 ? (
+                                              <Badge className="bg-pink-100 text-pink-700 border-pink-200">Yes</Badge>
+                                          ) : (
+                                              <span className="text-muted-foreground text-xs">No</span>
+                                          )}
+                                      </TableCell>
                                       <TableCell>
                                           {(() => {
                                               if (!product.isFlashSale || !product.flashSaleEndDate) {

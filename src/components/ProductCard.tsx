@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -5,7 +6,7 @@ import type { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
-import { ShoppingCart, Star, Truck, Heart, DollarSign } from 'lucide-react';
+import { ShoppingCart, Star, Truck, Heart, DollarSign, Gift } from 'lucide-react';
 import { cn, rgbToHsl } from '@/lib/utils';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useState, useEffect } from 'react';
@@ -133,6 +134,11 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                           <span className="text-white font-bold">Sold Out</span>
                       </div>
                   )}
+                  {product.isB1G1 && !isSoldOut && (
+                    <div className="absolute top-2 right-2 bg-pink-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-md animate-pulse">
+                        B1G1
+                    </div>
+                  )}
               </div>
           </Link>
           <CardContent className="p-2 flex flex-col flex-grow">
@@ -179,17 +185,6 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                       </Button>
                   )}
               </div>
-              {showCommission && product.affiliateCommission && commissionAmount > 0 && (
-                <div className="flex justify-between items-end mt-2 pt-2 border-t">
-                    <div>
-                        <span className="text-xs font-semibold border border-orange-400 text-orange-500 rounded px-1.5 py-0.5 whitespace-nowrap">
-                            Comm. {product.affiliateCommission}%
-                        </span>
-                        <p className="text-orange-500 font-bold text-sm mt-1">৳{commissionAmount.toFixed(2)}</p>
-                    </div>
-                    <Button onClick={handleEarnClick} className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white h-7 px-3 text-xs self-end">Earn</Button>
-                </div>
-              )}
           </CardContent>
       </Card>
     );
@@ -217,12 +212,17 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
               - ৳{discountAmount.toFixed(0)}
             </div>
           )}
+          {product.isB1G1 && !isSoldOut && (
+            <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-black px-2 py-1 rounded-full shadow-lg border border-white/20 animate-bounce">
+                BUY 1 GET 1
+            </div>
+          )}
           {isSoldOut && (
              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <span className="text-white text-lg font-bold">Sold Out</span>
             </div>
           )}
-           {product.freeShipping && !isSoldOut && !isSmall && (
+           {product.freeShipping && !isSoldOut && (
             <div className="absolute bottom-2 left-2 bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 w-fit">
                 <Truck className="h-3 w-3" />
                 <span>Free Delivery</span>
