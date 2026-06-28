@@ -4,7 +4,7 @@
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2, DollarSign, Coins } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2, DollarSign, Coins, Image as ImageIcon } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions } from '@/types';
 import { processWithdrawals } from '@/app/affiliate/actions';
@@ -23,6 +23,13 @@ const allMenuItems = [
         icon: ShoppingCart,
         href: "/admin/orders",
         permissionKey: 'canManageOrders'
+    },
+    {
+        title: "Banner Management",
+        description: "Add and remove homepage banners.",
+        icon: ImageIcon,
+        href: "/admin/banners",
+        permissionKey: 'canManageBanners'
     },
     {
         title: "Verify Payments",

@@ -3,7 +3,7 @@
 
 import { useState, useEffect, Suspense, useMemo, useTransition } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import type { Product } from '@/types';
+import type { Product, Banner } from '@/types';
 import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
@@ -22,6 +22,10 @@ import Footer from '@/components/Footer';
 import { useVouchers } from '@/hooks/useVouchers';
 import { Badge } from '@/components/ui/badge';
 import FloatingCoin from '@/components/FloatingCoin';
+import { getFirestore, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import app from '@/lib/firebase';
+
+const db = getFirestore(app);
 
 const categoryImageMap: { [key: string]: { image: string; aiHint: string } } = {
   "Flash Sale": { image: "https://picsum.photos/seed/flashsale/800/600", aiHint: "flash sale" },
@@ -59,7 +63,17 @@ function HomePageContent() {
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
   const [visibleProductsCount, setVisibleProductsCount] = useState(9);
   const [isVoucherLoading, startVoucherTransition] = useTransition();
+  const [customBanners, setCustomBanners] = useState<Banner[]>([]);
 
+  useEffect(() => {
+    // Fetch custom banners from Firestore
+    const bannersRef = collection(db, 'banners');
+    const q = query(bannersRef, orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        setCustomBanners(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Banner)));
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (allProducts.length > 0) {
@@ -82,7 +96,20 @@ function HomePageContent() {
         return layout;
     };
     
-    const banners = activeOffers.map(offer => {
+    // 1. Add Custom Admin Banners
+    const banners = customBanners.map(cb => ({
+        title: cb.title,
+        description: cb.description,
+        backgroundImage: cb.imageUrl,
+        link: cb.link || '/products',
+        aiHint: 'offer banner',
+        Icon: ShoppingBag,
+        alignment: getNextLayout(),
+        isCustom: true
+    }));
+
+    // 2. Add Automatic Offer Banners
+    activeOffers.forEach(offer => {
         const productsInCategory = allProducts.filter(p => p.category === offer.name);
         let randomProduct = null;
         if (productsInCategory.length > 0) {
@@ -90,7 +117,7 @@ function HomePageContent() {
         }
         const categoryInfo = categoryImageMap[offer.name] || categoryImageMap.default;
 
-        return {
+        banners.push({
             title: `${offer.discount}% Off on ${offer.name}`,
             description: `Get the best deals on our ${offer.name} collection.`,
             productImage: randomProduct?.images?.[0],
@@ -99,13 +126,14 @@ function HomePageContent() {
             aiHint: categoryInfo.aiHint,
             Icon: Percent,
             alignment: getNextLayout(),
-        };
+        } as any);
     });
 
+    // 3. Add Flash Sale Banner
     if (flashSaleProducts.length > 0) {
       const flashProductForBanner = flashSaleProducts[Math.floor(Math.random() * flashSaleProducts.length)];
       
-      const flashSaleBanner = {
+      banners.unshift({
         title: "Flash Sale Live Now!",
         description: "Limited time offers. Grab them before they're gone!",
         productImage: flashProductForBanner?.images?.[0],
@@ -114,8 +142,7 @@ function HomePageContent() {
         aiHint: categoryImageMap["Flash Sale"].aiHint,
         Icon: Zap,
         alignment: getNextLayout(),
-      };
-      banners.unshift(flashSaleBanner);
+      } as any);
     }
 
     if (banners.length === 0) {
@@ -128,7 +155,7 @@ function HomePageContent() {
     }
 
     return banners;
-  }, [activeOffers, flashSaleProducts, allProducts]);
+  }, [customBanners, activeOffers, flashSaleProducts, allProducts]);
   
   const handleSeeMore = () => {
     setVisibleProductsCount(prevCount => prevCount + 9);
@@ -171,14 +198,14 @@ function HomePageContent() {
                             data-ai-hint={banner.aiHint}
                         />
                         {/* Overlay */}
-                        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
+                        <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
 
                         {/* Content Container */}
                         <div className={cn(
                             "relative w-full h-full flex items-center p-4 md:p-8",
                             banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
                         )}>
-                            {/* Product Image */}
+                            {/* Product Image (Optional for custom banners) */}
                             <div className="w-1/2 md:w-2/5 h-full flex items-center justify-center">
                                 {banner.productImage ? (
                                     <img 
@@ -186,18 +213,21 @@ function HomePageContent() {
                                         alt={banner.title} 
                                         className="max-h-full max-w-full object-contain drop-shadow-lg"
                                     />
-                                ) : (
+                                ) : !banner.isCustom ? (
                                   <div className="w-full h-full flex items-center justify-center">
                                       <ShoppingBag className="w-12 h-12 text-gray-300/50"/>
                                   </div>
-                                )}
+                                ) : null}
                             </div>
 
                             {/* Text Content */}
-                            <div className="w-1/2 md:w-3/5 flex flex-col justify-center text-white px-4">
-                                <h1 className="text-xl md:text-3xl font-bold mb-2">{banner.title}</h1>
-                                <p className="text-sm md:text-base mb-4 hidden md:block">{banner.description}</p>
-                                <Button asChild size="sm" className="w-fit bg-primary hover:bg-primary/90 h-8 md:h-10 md:px-6">
+                            <div className={cn(
+                                "flex flex-col justify-center text-white px-4",
+                                banner.isCustom ? "w-full text-center items-center" : "w-1/2 md:w-3/5"
+                            )}>
+                                <h1 className="text-xl md:text-3xl font-bold mb-2 drop-shadow-md">{banner.title}</h1>
+                                <p className="text-sm md:text-base mb-4 hidden md:block drop-shadow-sm">{banner.description}</p>
+                                <Button asChild size="sm" className="w-fit bg-primary hover:bg-primary/90 h-8 md:h-10 md:px-6 shadow-md">
                                     <Link href={banner.link}>
                                         <Icon className="mr-2 h-4 w-4" />
                                         Shop Now

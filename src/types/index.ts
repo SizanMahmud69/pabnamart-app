@@ -145,6 +145,7 @@ export interface ModeratorPermissions {
   canManageAffiliates: boolean;
   canManageWithdrawals: boolean;
   canManageCoins: boolean;
+  canManageBanners: boolean;
 }
 
 export interface CoinTransaction {
@@ -161,6 +162,15 @@ export interface CoinSettings {
   pointsPer100Taka: number;
   takaPer100Coins: number;
   maxCoinsPerOrder: number;
+}
+
+export interface Banner {
+    id: string;
+    imageUrl: string;
+    title: string;
+    description: string;
+    link: string;
+    createdAt: string;
 }
 
 export interface User {
