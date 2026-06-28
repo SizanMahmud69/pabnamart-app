@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Home, Building, Plus, Ticket, AlertCircle, Coins } from "lucide-react";
+import { ArrowLeft, Loader2, Home, Building, Plus, Ticket, AlertCircle, Coins, Sparkles, Clock } from "lucide-react";
 import Link from 'next/link';
 import type { ShippingAddress, Voucher } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -45,6 +45,8 @@ function CheckoutPage() {
     const [voucherError, setVoucherError] = useState<string | null>(null);
     const [useCoins, setUseCoins] = useState(false);
     const [isProceeding, startProceeding] = useTransition();
+
+    const [spinDiscountTimeLeft, setSpinDiscountTimeLeft] = useState<number | null>(null);
     
     useEffect(() => {
         if (user) {
@@ -65,6 +67,23 @@ function CheckoutPage() {
             return () => unsubscribe();
         }
     }, [user, selectedShippingAddress, setSelectedShippingAddress]);
+
+    useEffect(() => {
+        if (appUser?.spinDiscountExpiry) {
+            const expiry = new Date(appUser.spinDiscountExpiry).getTime();
+            const interval = setInterval(() => {
+                const now = new Date().getTime();
+                const diff = expiry - now;
+                if (diff <= 0) {
+                    setSpinDiscountTimeLeft(null);
+                    clearInterval(interval);
+                } else {
+                    setSpinDiscountTimeLeft(Math.floor(diff / 1000));
+                }
+            }, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [appUser]);
     
     useEffect(() => {
         if (cartItems.length === 0) {
@@ -124,7 +143,7 @@ function CheckoutPage() {
         toast({ title: "Voucher Applied!", description: `You've got a discount with ${voucher.code}.` });
     };
     
-    const subtotalWithDiscount = useMemo(() => {
+    const subtotalWithVoucher = useMemo(() => {
         let currentSubtotal = selectedCartTotal;
         if (appliedVoucher && appliedVoucher.discountType !== 'shipping') {
             let discount = appliedVoucher.type === 'fixed' ? appliedVoucher.discount : (selectedCartTotal * appliedVoucher.discount) / 100;
@@ -139,13 +158,23 @@ function CheckoutPage() {
         const coinsToUse = Math.min(appUser.coins, maxCoinsToUse);
         return coinsToUse / 10;
     }, [useCoins, appUser]);
+
+    const hasSpinDiscount = useMemo(() => {
+        return !!(appUser?.activeSpinDiscount && spinDiscountTimeLeft !== null);
+    }, [appUser, spinDiscountTimeLeft]);
+
+    const spinDiscountAmount = useMemo(() => {
+        if (!hasSpinDiscount || !appUser?.activeSpinDiscount) return 0;
+        const baseForSpin = subtotalWithVoucher - coinDiscount;
+        return (baseForSpin * appUser.activeSpinDiscount) / 100;
+    }, [hasSpinDiscount, appUser, subtotalWithVoucher, coinDiscount]);
     
     const shippingFeeWithDiscount = useMemo(() => {
         if (appliedVoucher?.discountType === 'shipping') return 0;
         return shippingFee;
     }, [shippingFee, appliedVoucher]);
 
-    const finalTotal = Math.round(subtotalWithDiscount - coinDiscount + shippingFeeWithDiscount);
+    const finalTotal = Math.round(subtotalWithVoucher - coinDiscount - spinDiscountAmount + shippingFeeWithDiscount);
     
     const handleAddressChange = (addressId: string) => {
         const address = addresses.find(a => a.id === addressId);
@@ -170,6 +199,7 @@ function CheckoutPage() {
                 subtotal: selectedCartTotal,
                 voucherCode: appliedVoucher?.code,
                 useCoins: useCoins,
+                useSpinDiscount: hasSpinDiscount,
                 referrerId: referrerId || undefined,
             }));
             router.push('/payment');
@@ -179,6 +209,12 @@ function CheckoutPage() {
     if (cartItems.length === 0) {
         return <LoadingSpinner />;
     }
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
 
     return (
         <>
@@ -257,6 +293,30 @@ function CheckoutPage() {
                         </div>
 
                         <div className="sticky top-24 space-y-6">
+                             {/* Lucky Spin Discount Display */}
+                             {hasSpinDiscount && (
+                                <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white overflow-hidden">
+                                    <CardContent className="p-4 relative">
+                                        <Sparkles className="absolute top-2 right-2 h-12 w-12 opacity-20 rotate-12" />
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
+                                                    <Trophy className="h-6 w-6 text-yellow-300" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-lg tracking-tight">EXTRA {appUser?.activeSpinDiscount}% OFF!</p>
+                                                    <p className="text-xs opacity-90 flex items-center gap-1">
+                                                        <Clock className="h-3 w-3" />
+                                                        Expiring in: <span className="font-bold font-mono">{formatTime(spinDiscountTimeLeft!)}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Badge className="bg-yellow-400 text-purple-900 font-bold border-0">ACTIVE</Badge>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                             )}
+
                              <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2"><Ticket className="h-5 w-5 text-primary" />Apply Voucher</CardTitle>
@@ -284,7 +344,6 @@ function CheckoutPage() {
                                 </CardContent>
                             </Card>
 
-                            {/* Coin Section */}
                             <Card className="border-yellow-200 bg-yellow-50/20">
                                 <CardContent className="p-4">
                                     <div className="flex items-center justify-between">
@@ -320,10 +379,22 @@ function CheckoutPage() {
                                 <CardContent className="space-y-3">
                                     <div className="flex justify-between"><span>Subtotal</span><span>৳{selectedCartTotal}</span></div>
                                     {appliedVoucher?.discountType !== 'shipping' && appliedVoucher?.discount > 0 && (
-                                        <div className="flex justify-between text-green-600"><span>Voucher Discount</span><span>- ৳{(selectedCartTotal - subtotalWithDiscount).toFixed(2)}</span></div>
+                                        <div className="flex justify-between text-green-600 text-sm">
+                                            <span>Voucher Discount</span>
+                                            <span>- ৳{(selectedCartTotal - subtotalWithVoucher).toFixed(2)}</span>
+                                        </div>
                                     )}
                                     {coinDiscount > 0 && (
-                                        <div className="flex justify-between text-yellow-600"><span>Coin Discount</span><span>- ৳{coinDiscount.toFixed(2)}</span></div>
+                                        <div className="flex justify-between text-yellow-600 text-sm">
+                                            <span>Coin Discount</span>
+                                            <span>- ৳{coinDiscount.toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                    {spinDiscountAmount > 0 && (
+                                        <div className="flex justify-between text-indigo-600 font-bold text-sm">
+                                            <span>Lucky Spin ({appUser?.activeSpinDiscount}%)</span>
+                                            <span>- ৳{spinDiscountAmount.toFixed(2)}</span>
+                                        </div>
                                     )}
                                     <div className="flex justify-between"><span>Shipping Fee</span>
                                         {appliedVoucher?.discountType === 'shipping' ? (

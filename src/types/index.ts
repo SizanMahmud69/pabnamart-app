@@ -95,6 +95,8 @@ export interface Order {
     cashOnDeliveryFee?: number;
     deliveredAt?: string;
     coinDiscount?: number;
+    spinDiscount?: number;
+    spinDiscountPercentage?: number;
 }
 
 export interface Voucher {
@@ -198,6 +200,8 @@ export interface User {
   coins?: number;
   lastCheckIn?: string;
   lastSpinDate?: string;
+  activeSpinDiscount?: number;
+  spinDiscountExpiry?: string;
 }
 
 export interface ShippingAddress {
@@ -263,6 +267,7 @@ export interface OrderPayload {
   cashOnDeliveryFee?: number;
   referrerId?: string;
   useCoins?: boolean;
+  useSpinDiscount?: boolean;
 }
 
 export interface AffiliateEarning {

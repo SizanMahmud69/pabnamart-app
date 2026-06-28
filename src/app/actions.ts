@@ -314,7 +314,6 @@ export async function placeOrder(
           const maxSpendableCoins = settings.maxCoinsPerOrder;
           const coinsToUse = Math.min(userCoins, maxSpendableCoins);
           if (coinsToUse > 0) {
-              // Formula: (coins / 100) * valuePer100
               coinDiscount = (coinsToUse / 100) * settings.takaPer100Coins;
               transaction.update(userDocRef, {
                   coins: FieldValue.increment(-coinsToUse)
@@ -329,8 +328,25 @@ export async function placeOrder(
           }
       }
 
+      let spinDiscount = 0;
+      let spinPercentageUsed = 0;
+      if (payload.useSpinDiscount && userData.activeSpinDiscount && userData.spinDiscountExpiry) {
+          const now = new Date();
+          const expiry = new Date(userData.spinDiscountExpiry);
+          if (now < expiry) {
+              spinPercentageUsed = userData.activeSpinDiscount;
+              const baseForSpin = offerSubtotal - voucherDiscount - coinDiscount;
+              spinDiscount = (baseForSpin * spinPercentageUsed) / 100;
+              // Clear the discount after use
+              transaction.update(userDocRef, { 
+                  activeSpinDiscount: FieldValue.delete(),
+                  spinDiscountExpiry: FieldValue.delete()
+              });
+          }
+      }
+
       const codFee = payload.paymentMethod === 'cash-on-delivery' ? payload.cashOnDeliveryFee || 0 : 0;
-      const total = Math.round((offerSubtotal - voucherDiscount - coinDiscount) + payload.shippingFee + codFee);
+      const total = Math.round((offerSubtotal - voucherDiscount - coinDiscount - spinDiscount) + payload.shippingFee + codFee);
 
       const orderRef = db.collection('orders').doc();
       const orderNumber = nowToOrderNumber();
@@ -350,6 +366,8 @@ export async function placeOrder(
         voucherCode: usedVoucherCode,
         voucherDiscount,
         coinDiscount,
+        spinDiscount,
+        spinDiscountPercentage: spinPercentageUsed,
         cashOnDeliveryFee: codFee,
       });
 
@@ -357,7 +375,6 @@ export async function placeOrder(
         transaction.update(userDocRef, { [`usedVouchers.${usedVoucherCode}`]: FieldValue.increment(1) });
       }
 
-      // Award coins for purchase: (total / 100) * pointsPer100
       const coinsEarned = Math.floor((offerSubtotal / 100) * settings.pointsPer100Taka);
       if (coinsEarned > 0) {
           transaction.update(userDocRef, { coins: FieldValue.increment(coinsEarned) });
@@ -384,9 +401,6 @@ function nowToOrderNumber() {
     const now = new Date();
     return `${now.getFullYear().toString().slice(-2)}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${Math.floor(10000 + Math.random() * 90000)}`;
 }
-
-// REST OF THE FILE REMAINS THE SAME...
-// (Moderator management, Notifications, etc.)
 
 export async function createModerator(
   email: string,
