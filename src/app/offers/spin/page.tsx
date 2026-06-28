@@ -12,6 +12,7 @@ import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 const db = getFirestore(app);
 
@@ -53,7 +54,6 @@ function SpinWinPage() {
             const today = new Date().toISOString().split('T')[0];
             setHasSpunToday(appUser.lastSpinDate === today);
             
-            // Timer logic for active discount
             if (appUser.spinDiscountExpiry) {
                 const expiry = new Date(appUser.spinDiscountExpiry).getTime();
                 const interval = setInterval(() => {
@@ -75,11 +75,11 @@ function SpinWinPage() {
 
     if (!isActive) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-                <div className="bg-primary/10 p-6 rounded-full mb-6">
+            <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center text-white bg-slate-950">
+                <div className="bg-primary/10 p-6 rounded-full mb-6 ring-1 ring-primary/20">
                     <Sparkles className="h-16 w-16 text-primary" />
                 </div>
-                <h1 className="text-3xl font-bold mb-2">Coming Soon!</h1>
+                <h1 className="text-3xl font-bold mb-2">Offer Coming Soon!</h1>
                 <p className="text-muted-foreground max-w-md">Our Spin & Win lucky draw is currently resting. Check back soon for a chance to win big!</p>
                 <Button asChild className="mt-8">
                     <Link href="/">Back to Shopping</Link>
@@ -94,21 +94,31 @@ function SpinWinPage() {
         setIsSpinning(true);
         setResult(null);
 
-        const extraSpins = 5; 
+        // Calculate rotation
+        // We want to spin multiple times (e.g. 5 to 8 full rotations)
+        const minFullSpins = 7;
         const randomSector = Math.floor(Math.random() * PRIZES.length);
         const sectorDegrees = 360 / PRIZES.length;
-        const targetRotation = rotation + (360 * extraSpins) + (randomSector * sectorDegrees) + (360 - (rotation % 360));
+        
+        // Target angle is: current rotation + full circles + shift to random sector
+        // We subtract the random sector degree because wheel rotations are clockwise
+        const targetRotation = rotation + (360 * minFullSpins) + (randomSector * sectorDegrees);
         
         setRotation(targetRotation);
 
         setTimeout(async () => {
-            const prizeIndex = (PRIZES.length - Math.floor((targetRotation % 360) / sectorDegrees)) % PRIZES.length;
+            // Find which prize we landed on. Since rotation is cumulative, we use % 360
+            // The 0 degree in our SVG path logic is at the top (12 o'clock).
+            // As the wheel spins clockwise, the sector at 12 o'clock is (360 - (rotation % 360))
+            const normalizedRotation = targetRotation % 360;
+            const prizeIndex = (PRIZES.length - Math.floor(normalizedRotation / sectorDegrees)) % PRIZES.length;
             const finalPrize = PRIZES[prizeIndex];
+            
             setResult(finalPrize);
             setIsSpinning(false);
 
             const today = new Date().toISOString().split('T')[0];
-            const expiryTime = new Date(Date.now() + 5 * 60000).toISOString(); // 5 minutes from now
+            const expiryTime = new Date(Date.now() + 5 * 60000).toISOString(); 
             
             try {
                 const updateData: any = { lastSpinDate: today };
@@ -118,13 +128,14 @@ function SpinWinPage() {
                     updateData.spinDiscountExpiry = expiryTime;
                     
                     toast({
-                        title: "Congratulations!",
+                        title: "🎉 Congratulations!",
                         description: `You won ${finalPrize.label} Extra Discount! It's valid for only 5 minutes.`,
                     });
                 } else {
                     toast({
                         title: "Better luck next time!",
-                        description: "You didn't win any discount this time.",
+                        description: "No discount won today. Try again tomorrow!",
+                        variant: "default"
                     });
                 }
                 
@@ -133,7 +144,7 @@ function SpinWinPage() {
             } catch (e) {
                 console.error(e);
             }
-        }, 4000);
+        }, 5000); // 5 seconds for a very smooth long spin
     };
 
     const formatTime = (seconds: number) => {
@@ -160,21 +171,37 @@ function SpinWinPage() {
             </header>
 
             <main className="flex-1 flex flex-col items-center justify-center p-6 space-y-12">
-                <div className="text-center space-y-2">
-                    <h1 className="text-4xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">Lucky Spin</h1>
+                <div className="text-center space-y-2 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500">
+                        Lucky Spin
+                    </h1>
                     <p className="text-gray-400 text-sm">Spin once every day to win <span className="text-white font-bold">Extra Discount!</span></p>
                 </div>
 
                 <div className="relative">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-slate-900">
-                             <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[16px] border-t-slate-900 mt-2" />
+                    {/* Arrow Pointer */}
+                    <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 z-30 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                        <div className="w-8 h-10 bg-white rounded-t-full flex items-center justify-center border-x-4 border-b-[12px] border-slate-900">
+                             <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[20px] border-t-white mt-4" />
                         </div>
                     </div>
 
+                    {/* Outer Glow */}
+                    <div className={cn(
+                        "absolute inset-0 rounded-full bg-primary/20 blur-[60px] transition-opacity duration-1000",
+                        isSpinning ? "opacity-100" : "opacity-0"
+                    )} />
+
+                    {/* Wheel */}
                     <div 
-                        className="w-72 h-72 sm:w-80 sm:h-80 rounded-full border-8 border-slate-800 shadow-[0_0_50px_rgba(139,92,246,0.3)] relative overflow-hidden transition-transform duration-[4000ms] cubic-bezier(0.15, 0, 0.15, 1)"
-                        style={{ transform: `rotate(${rotation}deg)` }}
+                        className={cn(
+                            "w-72 h-72 sm:w-80 sm:h-80 rounded-full border-[12px] border-slate-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden transition-all",
+                            isSpinning ? "duration-[5000ms] cubic-bezier(0.15, 0, 0, 1) scale-[1.02]" : "duration-500"
+                        )}
+                        style={{ 
+                            transform: `rotate(${rotation}deg)`,
+                            filter: isSpinning ? 'blur(0.5px)' : 'none'
+                        }}
                     >
                         <svg viewBox="0 0 100 100" className="w-full h-full">
                             {PRIZES.map((prize, i) => {
@@ -185,14 +212,17 @@ function SpinWinPage() {
                                         <path 
                                             d={`M 50,50 L 50,0 A 50,50 0 0,1 ${50 + 50 * Math.sin(angle * Math.PI / 180)},${50 - 50 * Math.cos(angle * Math.PI / 180)} Z`} 
                                             fill={prize.color} 
+                                            className="stroke-slate-900/20 stroke-[0.5]"
                                         />
                                         <text 
-                                            x="50" y="20" 
+                                            x="50" y="18" 
                                             fill="white" 
-                                            fontSize="3.5" 
-                                            fontWeight="bold" 
+                                            fontSize="3.2" 
+                                            fontWeight="900" 
                                             textAnchor="middle" 
+                                            className="drop-shadow-sm"
                                             transform={`rotate(${angle/2}, 50, 50)`}
+                                            style={{ filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.5))' }}
                                         >
                                             {prize.label}
                                         </text>
@@ -200,23 +230,26 @@ function SpinWinPage() {
                                 );
                             })}
                         </svg>
-                        <div className="absolute inset-0 rounded-full border-4 border-white/10 pointer-events-none" />
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-inner flex items-center justify-center border-4 border-slate-900">
-                             <Sparkles className="h-6 w-6 text-purple-600" />
+                        
+                        {/* Wheel Center */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-slate-900 rounded-full shadow-2xl flex items-center justify-center border-4 border-slate-700">
+                             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center animate-pulse">
+                                <Sparkles className="h-5 w-5 text-purple-600" />
+                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-full max-w-xs space-y-4">
+                <div className="w-full max-w-xs space-y-4 pb-12">
                     {hasSpunToday ? (
-                        <div className="flex flex-col items-center gap-3 bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
+                        <div className="flex flex-col items-center gap-3 bg-white/5 p-6 rounded-2xl border border-white/10 text-center animate-in zoom-in-95 duration-500">
                             <Ban className="h-10 w-10 text-red-400 opacity-50" />
                             <div>
                                 <h3 className="font-bold text-lg">Already Spun Today!</h3>
                                 <p className="text-xs text-gray-500 mt-1">You've already tried your luck for today. Come back tomorrow!</p>
                             </div>
                             {timeLeft !== null && (
-                                <Button asChild className="w-full mt-2 bg-red-600 hover:bg-red-700">
+                                <Button asChild className="w-full mt-2 bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20">
                                     <Link href="/cart">Use Discount Now ({formatTime(timeLeft)})</Link>
                                 </Button>
                             )}
@@ -225,29 +258,42 @@ function SpinWinPage() {
                         <Button 
                             onClick={handleSpin} 
                             disabled={isSpinning} 
-                            className="w-full h-14 text-xl font-black uppercase tracking-widest bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-xl shadow-purple-900/20 active:scale-95 transition-transform"
+                            className={cn(
+                                "w-full h-16 text-xl font-black uppercase tracking-widest bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-2xl shadow-purple-900/40 transition-all duration-300",
+                                isSpinning ? "opacity-50 scale-95" : "hover:scale-105 active:scale-95"
+                            )}
                         >
-                            {isSpinning ? <Loader2 className="h-6 w-6 animate-spin" /> : "Spin Now!"}
+                            {isSpinning ? <Loader2 className="h-7 w-7 animate-spin" /> : "Spin the Wheel!"}
                         </Button>
                     )}
 
                     {result && !isSpinning && (
-                        <Card className="bg-white/10 border-white/20 animate-in zoom-in-95 fade-in duration-500">
-                            <CardContent className="p-4 flex flex-col items-center justify-center gap-3">
+                        <Card className="bg-white/10 border-white/20 animate-in zoom-in-95 fade-in slide-in-from-bottom-4 duration-500 overflow-hidden backdrop-blur-md">
+                            <div className="h-1 w-full bg-gradient-to-r from-yellow-400 to-orange-500" />
+                            <CardContent className="p-6 flex flex-col items-center justify-center gap-4">
                                 {result.value > 0 ? (
                                     <>
-                                        <Trophy className="h-8 w-8 text-yellow-400" />
-                                        <div className="text-center">
-                                            <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">You Won</p>
-                                            <p className="text-2xl font-black text-yellow-400">{result.label}</p>
-                                            <p className="text-[10px] text-red-400 font-bold mt-1 uppercase">Hurry! Valid for 5 minutes only.</p>
+                                        <div className="relative">
+                                            <Trophy className="h-12 w-12 text-yellow-400 animate-bounce" />
+                                            <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-white animate-pulse" />
                                         </div>
-                                        <Button asChild className="w-full bg-yellow-500 text-slate-900 hover:bg-yellow-600 font-bold">
-                                            <Link href="/cart">Shop Now</Link>
+                                        <div className="text-center">
+                                            <p className="text-xs text-gray-400 uppercase font-black tracking-widest">Victory!</p>
+                                            <p className="text-3xl font-black text-white">{result.label}</p>
+                                            <div className="mt-2 flex items-center gap-1.5 justify-center text-red-400 text-[10px] font-bold uppercase animate-pulse">
+                                                <Clock className="h-3 w-3" />
+                                                Expires in 5 Minutes
+                                            </div>
+                                        </div>
+                                        <Button asChild className="w-full bg-white text-slate-900 hover:bg-gray-200 font-black uppercase tracking-tight">
+                                            <Link href="/cart">Go to Checkout</Link>
                                         </Button>
                                     </>
                                 ) : (
-                                    <p className="font-bold text-gray-300">Try again tomorrow! 🍀</p>
+                                    <div className="text-center py-2">
+                                        <p className="font-bold text-gray-300 text-lg">Better luck tomorrow! 🍀</p>
+                                        <p className="text-xs text-gray-500 mt-1">Keep shopping for more rewards.</p>
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>
