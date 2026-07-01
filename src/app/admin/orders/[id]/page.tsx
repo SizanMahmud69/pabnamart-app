@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -79,6 +80,7 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
                         <tr key={`${item.id}-${index}`}>
                             <td>
                                 {item.name}
+                                {item.isB1G1 && <span className="ml-1 text-[8px] font-bold text-pink-600 border border-pink-200 px-1 rounded">B1G1</span>}
                                 {(item.color || item.size) && (
                                     <div className="text-xs text-gray-500">
                                         {item.color}{item.color && item.size ? ', ' : ''}{item.size}
@@ -257,7 +259,12 @@ export default function AdminOrderDetailsPage() {
                                     <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-3">
                                         <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                         <div className="flex-grow">
-                                            <p className="font-semibold">{item.name}</p>
+                                            <p className="font-semibold flex items-center gap-2">
+                                                {item.name}
+                                                {item.isB1G1 && (
+                                                    <Badge className="bg-pink-100 text-pink-700 border-pink-200 text-[10px] h-5 px-1.5 font-black uppercase">B1G1</Badge>
+                                                )}
+                                            </p>
                                             {(item.color || item.size) && (
                                                 <p className="text-sm text-muted-foreground">
                                                     {item.color}{item.color && item.size ? ', ' : ''}{item.size}

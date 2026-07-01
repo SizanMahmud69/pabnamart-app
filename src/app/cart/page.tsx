@@ -87,7 +87,12 @@ export default function CartPage() {
                                     />
                                 </div>
                                 <div className="flex-grow min-w-0">
-                                    <h3 className="font-semibold truncate">{item.name}</h3>
+                                    <h3 className="font-semibold truncate flex items-center gap-2">
+                                        {item.name}
+                                        {item.isB1G1 && (
+                                            <Badge className="bg-pink-100 text-pink-700 hover:bg-pink-100 border-pink-200 text-[10px] h-5 px-1.5 font-black uppercase">B1G1</Badge>
+                                        )}
+                                    </h3>
                                     {item.color && <p className="text-sm text-muted-foreground">Color: {item.color}</p>}
                                     {item.size && <p className="text-sm text-muted-foreground">Size: {item.size}</p>}
                                     <p className="text-sm text-muted-foreground">

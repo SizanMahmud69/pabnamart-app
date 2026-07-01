@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Home, Building, Plus, Ticket, AlertCircle, Coins, Sparkles, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, Home, Building, Plus, Ticket, AlertCircle, Coins, Sparkles, Clock, Trophy } from "lucide-react";
 import Link from 'next/link';
 import type { ShippingAddress, Voucher } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -275,7 +275,12 @@ function CheckoutPage() {
                                             <div key={item.cartItemId} className="flex items-center gap-4">
                                                 <img src={item.images[0]} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                                 <div className="flex-grow">
-                                                    <p className="font-semibold">{item.name}</p>
+                                                    <p className="font-semibold flex items-center gap-2">
+                                                        {item.name}
+                                                        {item.isB1G1 && (
+                                                            <Badge className="bg-pink-100 text-pink-700 hover:bg-pink-100 border-pink-200 text-[10px] h-5 px-1.5 font-black uppercase">B1G1</Badge>
+                                                        )}
+                                                    </p>
                                                     {(item.color || item.size) && (
                                                         <p className="text-sm text-muted-foreground">
                                                             {item.color}{item.color && item.size && ', '}{item.size}

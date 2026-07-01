@@ -63,6 +63,7 @@ export interface CartItem {
   category: string;
   color?: string;
   size?: string;
+  isB1G1?: boolean;
 }
 
 export interface OrderItem {
@@ -75,6 +76,7 @@ export interface OrderItem {
     returnPolicy: number;
     color?: string;
     size?: string;
+    isB1G1?: boolean;
 }
 
 export interface Order {

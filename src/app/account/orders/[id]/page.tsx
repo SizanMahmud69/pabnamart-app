@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -109,7 +110,12 @@ function OrderDetailsPage() {
                                 <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-3">
                                     <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                     <div className="flex-grow">
-                                        <p className="font-semibold">{item.name}</p>
+                                        <p className="font-semibold flex items-center gap-2">
+                                            {item.name}
+                                            {item.isB1G1 && (
+                                                <Badge className="bg-pink-100 text-pink-700 border-pink-200 text-[10px] h-5 px-1.5 font-black uppercase">B1G1</Badge>
+                                            )}
+                                        </p>
                                         {(item.color || item.size) && (
                                             <p className="text-sm text-muted-foreground">
                                                 {item.color}{item.color && item.size ? ', ' : ''}{item.size}

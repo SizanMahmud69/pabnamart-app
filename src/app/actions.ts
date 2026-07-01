@@ -288,6 +288,7 @@ export async function placeOrder(
           returnPolicy: productData.returnPolicy || 0,
           color: cartItem.color,
           size: cartItem.size,
+          isB1G1: cartItem.isB1G1,
         });
       }
 
@@ -570,7 +571,7 @@ export async function cancelOrderByUser(
   const db = getFirestore(adminApp);
 
   try {
-    const orderRef = db.collection('orders').doc(orderId);
+    const orderRef = db.collection(orderId).doc(orderId);
     await db.runTransaction(async (transaction) => {
       const doc = await transaction.get(orderRef);
       if (!doc.exists) throw new Error('Order not found.');

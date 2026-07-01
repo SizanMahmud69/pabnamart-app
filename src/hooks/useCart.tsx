@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
@@ -181,6 +182,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             quantity: 1,
             color: variations.color,
             size: variations.size,
+            isB1G1: product.isB1G1,
         };
 
         setSelectedItemIds(prevSelectedIds => {
