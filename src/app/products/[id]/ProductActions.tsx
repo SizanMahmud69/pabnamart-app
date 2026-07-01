@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 
-// Helper function to aggregate variants
 const aggregateVariants = (variants: ProductVariant[] | undefined): ProductVariant[] => {
     if (!variants) return [];
     const variantsMap = new Map<string, number>();
@@ -29,7 +28,15 @@ const aggregateVariants = (variants: ProductVariant[] | undefined): ProductVaria
 };
 
 
-export default function ProductActions({ product, isFlashSaleContext = false }: { product: Product, isFlashSaleContext?: boolean }) {
+export default function ProductActions({ 
+    product, 
+    isFlashSaleContext = false,
+    isB1G1Context = false
+}: { 
+    product: Product, 
+    isFlashSaleContext?: boolean,
+    isB1G1Context?: boolean
+}) {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
@@ -52,13 +59,13 @@ export default function ProductActions({ product, isFlashSaleContext = false }: 
 
   const handleAddToCart = () => {
     if (!canAddToCart) return;
-    addToCart(product, { color: selectedColor, size: selectedSize }, isFlashSaleContext);
+    addToCart(product, { color: selectedColor, size: selectedSize }, isFlashSaleContext, isB1G1Context);
   }
 
   const handleBuyNow = () => {
     if (!canAddToCart) return;
     setIsLoading(true);
-    addToCart(product, { color: selectedColor, size: selectedSize }, isFlashSaleContext);
+    addToCart(product, { color: selectedColor, size: selectedSize }, isFlashSaleContext, isB1G1Context);
     router.push('/checkout');
   }
   

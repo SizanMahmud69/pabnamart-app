@@ -17,11 +17,18 @@ import { useToast } from "@/hooks/use-toast";
 interface ProductCardProps {
   product: Product;
   isFlashSaleContext?: boolean;
+  isB1G1Context?: boolean;
   size?: 'default' | 'small';
   showCommission?: boolean;
 }
 
-export default function ProductCard({ product, isFlashSaleContext = false, size = 'default', showCommission = false }: ProductCardProps) {
+export default function ProductCard({ 
+    product, 
+    isFlashSaleContext = false, 
+    isB1G1Context = false,
+    size = 'default', 
+    showCommission = false 
+}: ProductCardProps) {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
   const [cardStyle, setCardStyle] = useState<React.CSSProperties>({});
@@ -46,14 +53,24 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   };
 
   const hasVariants = (product.colors && product.colors.length > 0) || (product.sizes && product.sizes.length > 0);
-  const productLink = isFlashSaleContext ? `/products/${product.id}?flash=true` : `/products/${product.id}`;
+  
+  // Logic to build product link based on context
+  const productLink = (() => {
+      let url = `/products/${product.id}`;
+      const params = new URLSearchParams();
+      if (isFlashSaleContext) params.set('flash', 'true');
+      if (isB1G1Context) params.set('offer', 'b1g1');
+      
+      const query = params.toString();
+      return query ? `${url}?${query}` : url;
+  })();
 
   const handleCartAction = (e: React.MouseEvent) => {
       e.preventDefault();
       if (hasVariants) {
           router.push(`${productLink}#variations`);
       } else {
-          addToCart(product, {}, isFlashSaleContext);
+          addToCart(product, {}, isFlashSaleContext, isB1G1Context);
       }
   }
   
@@ -76,7 +93,7 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
   }
   
   useEffect(() => {
-    setCardStyle({}); // Reset style for new product/image
+    setCardStyle({});
     const img = new window.Image();
     img.crossOrigin = "Anonymous";
     img.src = imageUrl;
@@ -85,32 +102,19 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-
       canvas.width = 1;
       canvas.height = 1;
-
-      // Draw the center of the image onto the 1x1 canvas to get an average color
       const sourceSize = Math.min(img.width, img.height);
       const sourceX = (img.width - sourceSize) / 2;
       const sourceY = (img.height - sourceSize) / 2;
       ctx.drawImage(img, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 1, 1);
-      
       try {
         const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
         const [h, s, l] = rgbToHsl(r, g, b);
-
-        // Check if the color is not too gray/white/black to avoid bland backgrounds
         if (s > 10 && l < 95 && l > 5) { 
-          setCardStyle({
-            backgroundColor: `hsl(${h}, 50%, 96%)`,
-          });
+          setCardStyle({ backgroundColor: `hsl(${h}, 50%, 96%)` });
         }
-      } catch (e) {
-        console.error(`CORS error getting image data for ${imageUrl}. Cannot extract color.`, e);
-      }
-    };
-    img.onerror = () => {
-      // Failed to load image, do nothing, card will have default background
+      } catch (e) {}
     };
   }, [imageUrl]);
 
@@ -131,10 +135,11 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
                   />
                   {isSoldOut && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                          <span className="text-white font-bold">Sold Out</span>
+                          <span className="text-white font-bold text-[10px]">Sold Out</span>
                       </div>
                   )}
-                  {product.isB1G1 && !isSoldOut && (
+                  {/* B1G1 Badge only in B1G1 context */}
+                  {product.isB1G1 && isB1G1Context && !isSoldOut && (
                     <div className="absolute top-2 right-2 bg-pink-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-md animate-pulse">
                         B1G1
                     </div>
@@ -212,7 +217,8 @@ export default function ProductCard({ product, isFlashSaleContext = false, size 
               - ৳{discountAmount.toFixed(0)}
             </div>
           )}
-          {product.isB1G1 && !isSoldOut && (
+          {/* B1G1 Badge only in B1G1 context */}
+          {product.isB1G1 && isB1G1Context && !isSoldOut && (
             <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-black px-2 py-1 rounded-full shadow-lg border border-white/20 animate-bounce">
                 BUY 1 GET 1
             </div>

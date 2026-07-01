@@ -11,7 +11,7 @@ import { useEffect, useState, useMemo, Suspense } from 'react';
 import type { Product, ShippingAddress, Review } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, CheckCircle2, Truck, Package, Share2, DollarSign } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Truck, Package, Share2, Badge } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -65,6 +65,7 @@ function ProductDetailPageContent() {
   const [baseUrl, setBaseUrl] = useState('');
   
   const isFlashSaleContext = searchParams.get('flash') === 'true';
+  const isB1G1Context = searchParams.get('offer') === 'b1g1';
 
   const defaultAddress = useMemo(() => {
     if (!appUser?.shippingAddresses) return null;
@@ -72,7 +73,7 @@ function ProductDetailPageContent() {
   }, [appUser]);
 
   const deliveryTime = useMemo(() => {
-    if (!defaultAddress) return deliveryTimeOutside; // Default to outside if no address
+    if (!defaultAddress) return deliveryTimeOutside; 
     const isInsidePabna = defaultAddress.city.toLowerCase().trim() === 'pabna';
     return isInsidePabna ? deliveryTimeInside : deliveryTimeOutside;
   }, [defaultAddress, deliveryTimeInside, deliveryTimeOutside]);
@@ -194,7 +195,12 @@ function ProductDetailPageContent() {
                           <p className="text-sm font-bold text-primary uppercase tracking-wider">{product.category}</p>
                           
                           <div className="flex justify-between items-start gap-4">
-                              <h1 className="text-2xl font-bold">{product.name}</h1>
+                              <h1 className="text-2xl font-bold flex items-center gap-3">
+                                {product.name}
+                                {product.isB1G1 && isB1G1Context && (
+                                    <span className="bg-pink-500 text-white text-[10px] font-black px-2 py-1 rounded-full animate-pulse whitespace-nowrap">B1G1 ACTIVE</span>
+                                )}
+                              </h1>
                           </div>
                           
                           <div className="flex items-center gap-2">
@@ -215,7 +221,7 @@ function ProductDetailPageContent() {
                               )}
                           </div>
                           
-                          <ProductActions product={product} isFlashSaleContext={isFlashSaleContext} />
+                          <ProductActions product={product} isFlashSaleContext={isFlashSaleContext} isB1G1Context={isB1G1Context} />
   
                           <div className="flex items-center gap-2">
                               {product.stock > 0 ? (

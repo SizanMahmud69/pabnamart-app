@@ -13,7 +13,7 @@ import { useRouter, usePathname } from 'next/navigation';
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product, variations: { color?: string; size?: string }, isFlashSaleContext?: boolean) => void;
+  addToCart: (product: Product, variations: { color?: string; size?: string }, isFlashSaleContext?: boolean, isB1G1Context?: boolean) => void;
   removeFromCart: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -140,7 +140,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [selectedItemIds, cartItems, user, updateFirestoreCart]);
 
-  const addToCart = useCallback((product: Product, variations: { color?: string, size?: string }, isFlashSaleContext = false) => {
+  const addToCart = useCallback((
+      product: Product, 
+      variations: { color?: string, size?: string }, 
+      isFlashSaleContext = false,
+      isB1G1Context = false
+  ) => {
     if (!user) {
         toast({
             title: "Please log in",
@@ -157,7 +162,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const existingItem = prevCartItems.find(item => 
             item.id === product.id && 
             item.color === variations.color && 
-            item.size === variations.size
+            item.size === variations.size &&
+            item.isB1G1 === (isB1G1Context && product.isB1G1) // Distinguish if needed
         );
         
         if (existingItem) {
@@ -182,7 +188,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             quantity: 1,
             color: variations.color,
             size: variations.size,
-            isB1G1: product.isB1G1,
+            isB1G1: isB1G1Context && product.isB1G1, // Only true if both are true
         };
 
         setSelectedItemIds(prevSelectedIds => {
