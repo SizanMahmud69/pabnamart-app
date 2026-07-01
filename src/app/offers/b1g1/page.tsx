@@ -3,29 +3,52 @@
 
 import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
-import { ArrowLeft, Gift } from 'lucide-react';
+import { ArrowLeft, Gift, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, collection, query, where, orderBy, limit } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import type { Banner } from '@/types';
 
 const db = getFirestore(app);
 
 export default function B1G1Page() {
     const { products: allProducts, loading: productsLoading } = useProducts();
     const [isActive, setIsActive] = useState<boolean | null>(null);
+    const [banner, setBanner] = useState<Banner | null>(null);
 
     useEffect(() => {
-        const unsub = onSnapshot(doc(db, 'settings', 'offerPages'), (docSnap) => {
+        // Check if page is active
+        const unsubStatus = onSnapshot(doc(db, 'settings', 'offerPages'), (docSnap) => {
             if (docSnap.exists()) {
                 setIsActive(docSnap.data().b1g1 ?? true);
             } else {
                 setIsActive(true);
             }
         });
-        return () => unsub();
+
+        // Fetch custom banner for this page
+        const bannersRef = collection(db, 'banners');
+        const q = query(
+            bannersRef, 
+            where('link', '==', '/offers/b1g1'),
+            orderBy('createdAt', 'desc'),
+            limit(1)
+        );
+        const unsubBanner = onSnapshot(q, (snapshot) => {
+            if (!snapshot.empty) {
+                setBanner({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Banner);
+            } else {
+                setBanner(null);
+            }
+        });
+
+        return () => {
+            unsubStatus();
+            unsubBanner();
+        };
     }, []);
 
     if (isActive === null || productsLoading) return <LoadingSpinner />;
@@ -50,21 +73,46 @@ export default function B1G1Page() {
     return (
         <div className="bg-purple-50/30 min-h-screen">
             <div className="container mx-auto px-4 py-8">
-                <div className="mb-8 p-8 bg-gradient-to-r from-primary to-purple-600 rounded-2xl shadow-xl text-white text-center relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-20">
-                        <Gift className="h-32 w-32 rotate-12" />
+                {banner ? (
+                    <div className="relative mb-8 rounded-2xl overflow-hidden shadow-xl h-48 md:h-72 flex items-center group">
+                        <img 
+                            src={banner.imageUrl} 
+                            alt={banner.title} 
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+                        <div className="relative z-10 p-6 md:p-12 text-white w-full max-w-2xl">
+                             <Button asChild variant="ghost" size="sm" className="mb-4 text-white hover:bg-white/20 p-0 h-auto">
+                                <Link href="/" className="flex items-center gap-2">
+                                    <div className="bg-white/20 p-1 rounded-full"><ArrowLeft className="h-4 w-4" /></div>
+                                    <span className="font-bold uppercase tracking-widest text-[10px]">Back to Home</span>
+                                </Link>
+                            </Button>
+                            <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 drop-shadow-lg leading-none">
+                                {banner.title}
+                            </h1>
+                            <p className="text-sm md:text-lg text-gray-200 drop-shadow-md line-clamp-2">
+                                {banner.description}
+                            </p>
+                        </div>
                     </div>
-                    <div className="relative z-10">
-                        <Button asChild variant="ghost" className="mb-4 text-white hover:bg-white/20">
-                            <Link href="/">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Home
-                            </Link>
-                        </Button>
-                        <h1 className="text-4xl md:text-5xl font-black mb-2 uppercase tracking-tighter">Buy 1 Get 1 Free!</h1>
-                        <p className="text-purple-100 max-w-md mx-auto">Double the happiness with every purchase. Limited time only!</p>
+                ) : (
+                    <div className="mb-8 p-8 bg-gradient-to-r from-primary to-purple-600 rounded-2xl shadow-xl text-white text-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-20">
+                            <Gift className="h-32 w-32 rotate-12" />
+                        </div>
+                        <div className="relative z-10">
+                            <Button asChild variant="ghost" className="mb-4 text-white hover:bg-white/20">
+                                <Link href="/">
+                                    <ArrowLeft className="mr-2 h-4 w-4" />
+                                    Back to Home
+                                </Link>
+                            </Button>
+                            <h1 className="text-4xl md:text-5xl font-black mb-2 uppercase tracking-tighter">Buy 1 Get 1 Free!</h1>
+                            <p className="text-purple-100 max-w-md mx-auto">Double the happiness with every purchase. Limited time only!</p>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {b1g1Products.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

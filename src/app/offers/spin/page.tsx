@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Loader2, Sparkles, Trophy, Coins, Clock, Ban } from 'lucide-react';
 import Link from 'next/link';
-import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, collection, query, where, orderBy, limit } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import type { Banner } from '@/types';
 
 const db = getFirestore(app);
 
@@ -37,6 +38,7 @@ function SpinWinPage() {
     const [result, setResult] = useState<typeof PRIZES[0] | null>(null);
     const [hasSpunToday, setHasSpunToday] = useState(false);
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
+    const [banner, setBanner] = useState<Banner | null>(null);
 
     useEffect(() => {
         const unsubStatus = onSnapshot(doc(db, 'settings', 'offerPages'), (docSnap) => {
@@ -46,7 +48,27 @@ function SpinWinPage() {
                 setIsActive(true);
             }
         });
-        return () => unsubStatus();
+
+        // Fetch custom banner for this page
+        const bannersRef = collection(db, 'banners');
+        const q = query(
+            bannersRef, 
+            where('link', '==', '/offers/spin'),
+            orderBy('createdAt', 'desc'),
+            limit(1)
+        );
+        const unsubBanner = onSnapshot(q, (snapshot) => {
+            if (!snapshot.empty) {
+                setBanner({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Banner);
+            } else {
+                setBanner(null);
+            }
+        });
+
+        return () => {
+            unsubStatus();
+            unsubBanner();
+        };
     }, []);
 
     useEffect(() => {
@@ -94,22 +116,14 @@ function SpinWinPage() {
         setIsSpinning(true);
         setResult(null);
 
-        // Calculate rotation
-        // We want to spin multiple times (e.g. 5 to 8 full rotations)
         const minFullSpins = 7;
         const randomSector = Math.floor(Math.random() * PRIZES.length);
         const sectorDegrees = 360 / PRIZES.length;
-        
-        // Target angle is: current rotation + full circles + shift to random sector
-        // We subtract the random sector degree because wheel rotations are clockwise
         const targetRotation = rotation + (360 * minFullSpins) + (randomSector * sectorDegrees);
         
         setRotation(targetRotation);
 
         setTimeout(async () => {
-            // Find which prize we landed on. Since rotation is cumulative, we use % 360
-            // The 0 degree in our SVG path logic is at the top (12 o'clock).
-            // As the wheel spins clockwise, the sector at 12 o'clock is (360 - (rotation % 360))
             const normalizedRotation = targetRotation % 360;
             const prizeIndex = (PRIZES.length - Math.floor(normalizedRotation / sectorDegrees)) % PRIZES.length;
             const finalPrize = PRIZES[prizeIndex];
@@ -144,7 +158,7 @@ function SpinWinPage() {
             } catch (e) {
                 console.error(e);
             }
-        }, 5000); // 5 seconds for a very smooth long spin
+        }, 5000);
     };
 
     const formatTime = (seconds: number) => {
@@ -155,44 +169,73 @@ function SpinWinPage() {
 
     return (
         <div className="bg-slate-950 min-h-screen text-white overflow-hidden flex flex-col">
-            <header className="p-4 border-b border-white/10 flex items-center justify-between">
-                <Button asChild variant="ghost" size="sm" className="text-white hover:bg-white/10">
-                    <Link href="/">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Main
-                    </Link>
-                </Button>
-                {timeLeft !== null && (
-                    <div className="flex items-center gap-2 bg-red-500/20 px-3 py-1 rounded-full border border-red-500/50">
-                        <Clock className="h-4 w-4 text-red-500 animate-pulse" />
-                        <span className="font-mono font-bold text-red-500">{formatTime(timeLeft)}</span>
+            {banner ? (
+                <div className="relative h-48 md:h-64 flex items-center overflow-hidden border-b border-white/10">
+                    <img src={banner.imageUrl} alt={banner.title} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/60" />
+                    <div className="relative z-10 container mx-auto px-6 flex justify-between items-center">
+                        <div className="max-w-xl">
+                            <Button asChild variant="ghost" size="sm" className="mb-4 text-white hover:bg-white/10 p-0 h-auto">
+                                <Link href="/" className="flex items-center gap-2">
+                                    <div className="bg-white/20 p-1 rounded-full"><ArrowLeft className="h-4 w-4" /></div>
+                                    <span className="font-bold uppercase tracking-widest text-[10px]">Back to Shopping</span>
+                                </Link>
+                            </Button>
+                            <h1 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500">
+                                {banner.title}
+                            </h1>
+                            <p className="text-sm md:text-base text-gray-300 mt-1">{banner.description}</p>
+                        </div>
+                        {timeLeft !== null && (
+                            <div className="hidden sm:flex flex-col items-end gap-1 bg-red-500/20 p-4 rounded-xl border border-red-500/30 backdrop-blur-sm">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-red-400">Discount Expiry</span>
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-5 w-5 text-red-500 animate-pulse" />
+                                    <span className="font-mono text-2xl font-black text-red-500">{formatTime(timeLeft)}</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
-            </header>
+                </div>
+            ) : (
+                <header className="p-4 border-b border-white/10 flex items-center justify-between">
+                    <Button asChild variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                        <Link href="/">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Main
+                        </Link>
+                    </Button>
+                    {timeLeft !== null && (
+                        <div className="flex items-center gap-2 bg-red-500/20 px-3 py-1 rounded-full border border-red-500/50">
+                            <Clock className="h-4 w-4 text-red-500 animate-pulse" />
+                            <span className="font-mono font-bold text-red-500">{formatTime(timeLeft)}</span>
+                        </div>
+                    )}
+                </header>
+            )}
 
             <main className="flex-1 flex flex-col items-center justify-center p-6 space-y-12">
-                <div className="text-center space-y-2 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500">
-                        Lucky Spin
-                    </h1>
-                    <p className="text-gray-400 text-sm">Spin once every day to win <span className="text-white font-bold">Extra Discount!</span></p>
-                </div>
+                {!banner && (
+                    <div className="text-center space-y-2 animate-in fade-in slide-in-from-top-4 duration-700">
+                        <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500">
+                            Lucky Spin
+                        </h1>
+                        <p className="text-gray-400 text-sm">Spin once every day to win <span className="text-white font-bold">Extra Discount!</span></p>
+                    </div>
+                )}
 
                 <div className="relative">
-                    {/* Arrow Pointer */}
                     <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 z-30 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                         <div className="w-8 h-10 bg-white rounded-t-full flex items-center justify-center border-x-4 border-b-[12px] border-slate-900">
                              <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[20px] border-t-white mt-4" />
                         </div>
                     </div>
 
-                    {/* Outer Glow */}
                     <div className={cn(
                         "absolute inset-0 rounded-full bg-primary/20 blur-[60px] transition-opacity duration-1000",
                         isSpinning ? "opacity-100" : "opacity-0"
                     )} />
 
-                    {/* Wheel */}
                     <div 
                         className={cn(
                             "w-72 h-72 sm:w-80 sm:h-80 rounded-full border-[12px] border-slate-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden transition-all",
@@ -231,7 +274,6 @@ function SpinWinPage() {
                             })}
                         </svg>
                         
-                        {/* Wheel Center */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-slate-900 rounded-full shadow-2xl flex items-center justify-center border-4 border-slate-700">
                              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center animate-pulse">
                                 <Sparkles className="h-5 w-5 text-purple-600" />
