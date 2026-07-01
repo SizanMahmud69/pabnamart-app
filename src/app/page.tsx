@@ -96,17 +96,21 @@ function HomePageContent() {
         return layout;
     };
     
-    // 1. Add Custom Admin Banners
-    const banners = customBanners.map(cb => ({
-        title: cb.title,
-        description: cb.description,
-        backgroundImage: cb.imageUrl,
-        link: cb.link || '/products',
-        aiHint: 'offer banner',
-        Icon: ShoppingBag,
-        alignment: getNextLayout(),
-        isCustom: true
-    }));
+    const now = new Date();
+
+    // 1. Add Custom Admin Banners (Filtered by expiry)
+    const banners = customBanners
+        .filter(cb => !cb.expiresAt || new Date(cb.expiresAt) > now)
+        .map(cb => ({
+            title: cb.title,
+            description: cb.description,
+            backgroundImage: cb.imageUrl,
+            link: cb.link || '/products',
+            aiHint: 'offer banner',
+            Icon: ShoppingBag,
+            alignment: getNextLayout(),
+            isCustom: true
+        }));
 
     // 2. Add Automatic Offer Banners
     activeOffers.forEach(offer => {
@@ -425,8 +429,6 @@ function SearchPageContent({ searchQuery }: { searchQuery: string }) {
       setIsLoading(false);
     }, 500);
   }, [searchQuery, allProducts]);
-
-  const showRecommendations = searchQuery.trim().length > 0;
 
   return (
      <div className="bg-purple-50/30 min-h-screen">

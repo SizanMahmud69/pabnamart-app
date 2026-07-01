@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Loader2, Plus, Trash2, Upload, X, Image as ImageIcon, Settings2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Trash2, Upload, X, Image as ImageIcon, Settings2, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy, setDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import type { PutBlobResult } from '@vercel/blob';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 
 const db = getFirestore(app);
 
@@ -35,6 +36,7 @@ export default function BannerManagementPage() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [link, setLink] = useState('');
+    const [expiryDays, setExpiryDays] = useState('7');
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -128,17 +130,22 @@ export default function BannerManagementPage() {
         }
 
         try {
+            const now = new Date();
+            const expiresAt = new Date(now.getTime() + Number(expiryDays) * 24 * 60 * 60 * 1000).toISOString();
+
             await addDoc(collection(db, 'banners'), {
                 title,
                 description,
                 link,
                 imageUrl,
-                createdAt: new Date().toISOString(),
+                createdAt: now.toISOString(),
+                expiresAt,
             });
             toast({ title: "Success", description: "Banner added successfully." });
             setTitle('');
             setDescription('');
             setLink('');
+            setExpiryDays('7');
             setImageFile(null);
             if (inputFileRef.current) inputFileRef.current.value = '';
         } catch (error) {
@@ -255,6 +262,20 @@ export default function BannerManagementPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="expiryDays">Duration (Days)</Label>
+                                    <Input 
+                                        id="expiryDays" 
+                                        type="number" 
+                                        value={expiryDays} 
+                                        onChange={(e) => setExpiryDays(e.target.value)} 
+                                        min="1"
+                                        placeholder="e.g. 7"
+                                        required 
+                                        disabled={isSubmitting} 
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">Banner will disappear after this many days.</p>
+                                </div>
                             </CardContent>
                             <CardFooter>
                                 <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -277,43 +298,57 @@ export default function BannerManagementPage() {
                             <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
                         ) : banners.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {banners.map(banner => (
-                                    <Card key={banner.id} className="overflow-hidden group relative">
-                                        <div className="aspect-video relative bg-muted">
-                                            <img src={banner.imageUrl} alt={banner.title} className="object-cover w-full h-full" />
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                <AlertDialog onOpenChange={(open) => !open && setBannerToDelete(null)}>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button variant="destructive" size="icon" onClick={() => setBannerToDelete(banner)}>
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                            <AlertDialogDescription>This will permanently delete this banner. This action cannot be undone.</AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={handleDeleteBanner} disabled={isDeleting}>
-                                                                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                                Delete
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
+                                {banners.map(banner => {
+                                    const isExpired = banner.expiresAt ? new Date(banner.expiresAt) < new Date() : false;
+                                    return (
+                                        <Card key={banner.id} className={cn("overflow-hidden group relative", isExpired && "opacity-60")}>
+                                            <div className="aspect-video relative bg-muted">
+                                                <img src={banner.imageUrl} alt={banner.title} className="object-cover w-full h-full" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                    <AlertDialog onOpenChange={(open) => !open && setBannerToDelete(null)}>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="destructive" size="icon" onClick={() => setBannerToDelete(banner)}>
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                <AlertDialogDescription>This will permanently delete this banner. This action cannot be undone.</AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={handleDeleteBanner} disabled={isDeleting}>
+                                                                    {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                                    Delete
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </div>
+                                                {isExpired && (
+                                                    <div className="absolute top-2 left-2">
+                                                        <Badge variant="destructive" className="uppercase font-bold">Expired</Badge>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-                                        <CardContent className="p-3">
-                                            <p className="font-bold text-sm truncate">{banner.title}</p>
-                                            <div className="flex justify-between items-center mt-1">
-                                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
-                                                    Link: {PREDEFINED_LINKS.find(l => l.value === banner.link)?.label || banner.link}
-                                                </p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                                            <CardContent className="p-3">
+                                                <p className="font-bold text-sm truncate">{banner.title}</p>
+                                                <div className="flex flex-col gap-1 mt-1">
+                                                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+                                                        Link: {PREDEFINED_LINKS.find(l => l.value === banner.link)?.label || banner.link}
+                                                    </p>
+                                                    {banner.expiresAt && (
+                                                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                                            <Calendar className="h-3 w-3" />
+                                                            <span>Expires: {new Date(banner.expiresAt).toLocaleDateString()}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="text-center py-20 border-2 border-dashed rounded-lg">
@@ -326,4 +361,8 @@ export default function BannerManagementPage() {
             </main>
         </div>
     );
+}
+
+function cn(...classes: any[]) {
+    return classes.filter(Boolean).join(' ');
 }

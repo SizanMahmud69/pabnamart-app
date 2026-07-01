@@ -174,6 +174,7 @@ export interface Banner {
     description: string;
     link: string;
     createdAt: string;
+    expiresAt?: string;
 }
 
 export interface User {
