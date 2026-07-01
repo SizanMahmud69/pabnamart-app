@@ -233,27 +233,39 @@ export async function placeOrder(
     return { success: false, message: "Server not configured. Please add FIREBASE_SERVICE_ACCOUNT_JSON to your environment variables." };
   }
   const db = getFirestore(adminApp);
-  const settings = await getCoinSettings(db);
 
   try {
     const transactionResult = await db.runTransaction(async (transaction) => {
+      // --- ALL READS MUST COME FIRST ---
       const productRefs = payload.items.map((item) =>
         db.collection('products').doc(item.id.toString())
       );
-      const productDocs = await transaction.getAll(...productRefs);
+      const productSnaps = await transaction.getAll(...productRefs);
+      
       const userDocRef = db.collection('users').doc(payload.userId);
-      let userDoc = await transaction.get(userDocRef);
-      const userData = userDoc.data() as User;
+      const userSnap = await transaction.get(userDocRef);
+      if (!userSnap.exists) throw new Error("User profile not found.");
+      const userData = userSnap.data() as User;
+
+      let voucherSnap = null;
+      if (payload.voucherCode) {
+          voucherSnap = await transaction.get(db.collection('vouchers').doc(payload.voucherCode));
+      }
+
+      const coinSettingsSnap = await transaction.get(db.collection('settings').doc('coin'));
+      const settings = { ...defaultCoinSettings, ...(coinSettingsSnap.data() || {}) } as CoinSettings;
+      
+      // --- END OF READS ---
 
       const itemsForOrder: OrderItem[] = [];
       let subtotal = 0; 
       let offerSubtotal = 0; 
 
-      for (let i = 0; i < productDocs.length; i++) {
-        const productDoc = productDocs[i];
+      for (let i = 0; i < productSnaps.length; i++) {
+        const productSnap = productSnaps[i];
         const cartItem = payload.items[i];
-        if (!productDoc.exists) throw new Error(`Product ${cartItem.name} not found.`);
-        const productData = productDoc.data() as Product;
+        if (!productSnap.exists) throw new Error(`Product ${cartItem.name} not found.`);
+        const productData = productSnap.data() as Product;
         if (productData.stock < cartItem.quantity) throw new Error(`Not enough stock for ${productData.name}.`);
 
         let newColors = [...(productData.colors || [])];
@@ -268,7 +280,8 @@ export async function placeOrder(
             if (idx !== -1) newSizes[idx].stock -= cartItem.quantity;
         }
         
-        transaction.update(productDoc.ref, {
+        // --- START OF WRITES ---
+        transaction.update(productSnap.ref, {
           stock: FieldValue.increment(-cartItem.quantity),
           sold: FieldValue.increment(cartItem.quantity),
           colors: newColors,
@@ -296,16 +309,13 @@ export async function placeOrder(
       let voucherDiscount = 0;
       let usedVoucherCode = '';
 
-      if (payload.voucherCode) {
-        const vSnap = await db.collection('vouchers').doc(payload.voucherCode).get();
-        if (vSnap.exists) {
-            const v = vSnap.data() as Voucher;
-            const usage = userData?.usedVouchers?.[v.code] || 0;
-            if ((!v.usageLimit || usage < v.usageLimit) && (!v.minSpend || subtotal >= v.minSpend)) {
-                usedVoucherCode = v.code;
-                if (v.discountType !== 'shipping') {
-                    voucherDiscount = v.type === 'fixed' ? v.discount : (subtotal * v.discount) / 100;
-                }
+      if (voucherSnap && voucherSnap.exists) {
+        const v = voucherSnap.data() as Voucher;
+        const usage = userData?.usedVouchers?.[v.code] || 0;
+        if ((!v.usageLimit || usage < v.usageLimit) && (!v.minSpend || subtotal >= v.minSpend)) {
+            usedVoucherCode = v.code;
+            if (v.discountType !== 'shipping') {
+                voucherDiscount = v.type === 'fixed' ? v.discount : (subtotal * v.discount) / 100;
             }
         }
       }
@@ -314,19 +324,16 @@ export async function placeOrder(
       let coinsToUse = 0;
       if (payload.useCoins) {
           const userCoins = userData?.coins || 0;
-          const maxSpendableCoins = settings.maxCoinsPerOrder * 10; // Convert Taka to Coins assuming 10 coins = 1 Taka
-          // Wait, logic check: takaPer100Coins = 10 (default). So 100 coins = 10 Taka. 
-          // 1 coin = 0.1 Taka.
-          // maxCoinsPerOrder is in Taka (e.g. 10 Taka). To get coins: (10 / 10) * 100 = 100 coins.
           const maxCoins = (settings.maxCoinsPerOrder / settings.takaPer100Coins) * 100;
-          coinsToUse = Math.min(userCoins, maxCoins);
+          coinsToUse = Math.min(userCoins, Math.floor(maxCoins));
           if (coinsToUse > 0) {
               coinDiscount = (coinsToUse / 100) * settings.takaPer100Coins;
               transaction.update(userDocRef, {
                   coins: FieldValue.increment(-coinsToUse)
               });
-              await db.collection(`users/${payload.userId}/coinHistory`).add({
-                  id: Math.random().toString(36).substr(2, 9),
+              const coinHistoryRef = db.collection(`users/${payload.userId}/coinHistory`).doc();
+              transaction.set(coinHistoryRef, {
+                  id: coinHistoryRef.id,
                   amount: coinsToUse,
                   type: 'spend',
                   reason: 'Discount on order',
@@ -344,7 +351,6 @@ export async function placeOrder(
               spinPercentageUsed = userData.activeSpinDiscount;
               const baseForSpin = offerSubtotal - voucherDiscount - coinDiscount;
               spinDiscount = (baseForSpin * spinPercentageUsed) / 100;
-              // Clear the discount after use
               transaction.update(userDocRef, { 
                   activeSpinDiscount: FieldValue.delete(),
                   spinDiscountExpiry: FieldValue.delete()
@@ -385,8 +391,9 @@ export async function placeOrder(
       const coinsEarned = Math.floor((offerSubtotal / 100) * settings.pointsPer100Taka);
       if (coinsEarned > 0) {
           transaction.update(userDocRef, { coins: FieldValue.increment(coinsEarned) });
-          await db.collection(`users/${payload.userId}/coinHistory`).add({
-            id: Math.random().toString(36).substr(2, 9),
+          const coinHistoryRef = db.collection(`users/${payload.userId}/coinHistory`).doc();
+          transaction.set(coinHistoryRef, {
+            id: coinHistoryRef.id,
             amount: coinsEarned,
             type: 'earn',
             reason: `Earned from Order #${orderNumber}`,
@@ -527,13 +534,23 @@ export async function createAndSendNotification(
 
 /**
  * Common logic to restore stock and reverse coins when an order is cancelled
+ * REFACTORED: ALL READS BEFORE WRITES to satisfy Firestore transaction requirements.
  */
 async function handleOrderCancellationEffects(transaction: admin.firestore.Transaction, db: admin.firestore.Firestore, orderData: Order) {
-    // 1. Restore Stock
-    for (const item of orderData.items) {
-        const productRef = db.collection('products').doc(item.id.toString());
-        const productSnap = await transaction.get(productRef);
-        
+    // 1. Prepare references
+    const productRefs = orderData.items.map(item => db.collection('products').doc(item.id.toString()));
+    const settingsRef = db.collection('settings').doc('coin');
+    const userRef = db.collection('users').doc(orderData.userId);
+
+    // 2. ALL READS
+    const productSnaps = await transaction.getAll(...productRefs);
+    const settingsSnap = await transaction.get(settingsRef);
+    const settings = { ...defaultCoinSettings, ...(settingsSnap.data() || {}) } as CoinSettings;
+
+    // 3. ALL WRITES
+    // Restore Stock
+    productSnaps.forEach((productSnap, index) => {
+        const item = orderData.items[index];
         if (productSnap.exists) {
             const productData = productSnap.data() as Product;
             let newColors = [...(productData.colors || [])];
@@ -548,28 +565,24 @@ async function handleOrderCancellationEffects(transaction: admin.firestore.Trans
                 if (idx !== -1) newSizes[idx].stock += item.quantity;
             }
 
-            transaction.update(productRef, {
+            transaction.update(productSnap.ref, {
                 stock: FieldValue.increment(item.quantity),
                 sold: FieldValue.increment(-item.quantity),
                 colors: newColors,
                 sizes: newSizes
             });
         }
-    }
+    });
 
-    // 2. Reverse Coins
-    const settingsDoc = await transaction.get(db.collection('settings').doc('coin'));
-    const settings = { ...defaultCoinSettings, ...(settingsDoc.data() || {}) } as CoinSettings;
-    
+    // Reverse Coins
     // Restore spent coins
-    const coinsToRestore = orderData.coinDiscount ? (orderData.coinDiscount / settings.takaPer100Coins) * 100 : 0;
+    const coinsToRestore = orderData.coinDiscount ? Math.round((orderData.coinDiscount / settings.takaPer100Coins) * 100) : 0;
     
     // Remove earned coins
     const offerSubtotal = orderData.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const coinsEarned = Math.floor((offerSubtotal / 100) * settings.pointsPer100Taka);
 
     const netCoinChange = Math.round(coinsToRestore - coinsEarned);
-    const userRef = db.collection('users').doc(orderData.userId);
 
     if (netCoinChange !== 0) {
         transaction.update(userRef, {
@@ -577,8 +590,9 @@ async function handleOrderCancellationEffects(transaction: admin.firestore.Trans
         });
         
         if (coinsToRestore > 0) {
-            await db.collection(`users/${orderData.userId}/coinHistory`).add({
-                id: Math.random().toString(36).substr(2, 9),
+            const histRef = db.collection(`users/${orderData.userId}/coinHistory`).doc();
+            transaction.set(histRef, {
+                id: histRef.id,
                 amount: coinsToRestore,
                 type: 'earn',
                 reason: `Refund for Order #${orderData.orderNumber}`,
@@ -586,8 +600,9 @@ async function handleOrderCancellationEffects(transaction: admin.firestore.Trans
             });
         }
         if (coinsEarned > 0) {
-             await db.collection(`users/${orderData.userId}/coinHistory`).add({
-                id: Math.random().toString(36).substr(2, 9),
+             const histRef = db.collection(`users/${orderData.userId}/coinHistory`).doc();
+             transaction.set(histRef, {
+                id: histRef.id,
                 amount: coinsEarned,
                 type: 'spend',
                 reason: `Reversal for Order #${orderData.orderNumber}`,
