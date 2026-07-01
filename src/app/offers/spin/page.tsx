@@ -50,8 +50,6 @@ function SpinWinPage() {
             }
         });
 
-        // Fetch custom banner for this page
-        // Removed orderBy to avoid index requirement
         const bannersRef = collection(db, 'banners');
         const q = query(
             bannersRef, 
@@ -60,7 +58,6 @@ function SpinWinPage() {
         
         const unsubBanner = onSnapshot(q, (snapshot) => {
             if (!snapshot.empty) {
-                // Manually sort to get the latest one
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Banner));
                 data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 
@@ -124,18 +121,27 @@ function SpinWinPage() {
         setIsSpinning(true);
         setResult(null);
 
-        const minFullSpins = 7;
-        const randomSector = Math.floor(Math.random() * PRIZES.length);
-        const sectorDegrees = 360 / PRIZES.length;
-        const targetRotation = rotation + (360 * minFullSpins) + (randomSector * sectorDegrees);
+        // 1. Pick a random prize index
+        const prizeIndex = Math.floor(Math.random() * PRIZES.length);
+        const sectorStep = 360 / PRIZES.length;
         
-        setRotation(targetRotation);
+        // 2. Calculate how many degrees to rotate to land on prizeIndex
+        // The wheel starts with PRIZES[0] at the top.
+        // To bring PRIZES[i] to the top (pointer position), we need to rotate by:
+        // (360 - (i * sectorStep)) degrees.
+        // We also add a small random offset within the sector to make it look natural.
+        const sectorOffset = sectorStep / 4 + Math.random() * (sectorStep / 2);
+        const prizeRotation = 360 - (prizeIndex * sectorStep) - sectorOffset;
+        
+        // 3. Add multiple full rounds (8-10 rounds for excitement)
+        const fullRounds = 8 + Math.floor(Math.random() * 3);
+        const finalRotation = rotation + (fullRounds * 360) + (prizeRotation - (rotation % 360));
+        
+        setRotation(finalRotation);
 
+        // 4. Wait for the CSS transition to complete (matches duration-5000)
         setTimeout(async () => {
-            const normalizedRotation = targetRotation % 360;
-            const prizeIndex = (PRIZES.length - Math.floor(normalizedRotation / sectorDegrees)) % PRIZES.length;
             const finalPrize = PRIZES[prizeIndex];
-            
             setResult(finalPrize);
             setIsSpinning(false);
 
@@ -246,12 +252,11 @@ function SpinWinPage() {
 
                     <div 
                         className={cn(
-                            "w-72 h-72 sm:w-80 sm:h-80 rounded-full border-[12px] border-slate-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden transition-all",
-                            isSpinning ? "duration-[5000ms] cubic-bezier(0.15, 0, 0, 1) scale-[1.02]" : "duration-500"
+                            "w-72 h-72 sm:w-80 sm:h-80 rounded-full border-[12px] border-slate-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden transition-transform",
+                            isSpinning ? "duration-[5000ms] cubic-bezier(0.1, 0, 0.1, 1)" : "duration-500"
                         )}
                         style={{ 
                             transform: `rotate(${rotation}deg)`,
-                            filter: isSpinning ? 'blur(0.5px)' : 'none'
                         }}
                     >
                         <svg viewBox="0 0 100 100" className="w-full h-full">
