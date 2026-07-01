@@ -311,10 +311,15 @@ export async function placeOrder(
       }
       
       let coinDiscount = 0;
+      let coinsToUse = 0;
       if (payload.useCoins) {
           const userCoins = userData?.coins || 0;
-          const maxSpendableCoins = settings.maxCoinsPerOrder;
-          const coinsToUse = Math.min(userCoins, maxSpendableCoins);
+          const maxSpendableCoins = settings.maxCoinsPerOrder * 10; // Convert Taka to Coins assuming 10 coins = 1 Taka
+          // Wait, logic check: takaPer100Coins = 10 (default). So 100 coins = 10 Taka. 
+          // 1 coin = 0.1 Taka.
+          // maxCoinsPerOrder is in Taka (e.g. 10 Taka). To get coins: (10 / 10) * 100 = 100 coins.
+          const maxCoins = (settings.maxCoinsPerOrder / settings.takaPer100Coins) * 100;
+          coinsToUse = Math.min(userCoins, maxCoins);
           if (coinsToUse > 0) {
               coinDiscount = (coinsToUse / 100) * settings.takaPer100Coins;
               transaction.update(userDocRef, {
@@ -520,6 +525,78 @@ export async function createAndSendNotification(
   }
 }
 
+/**
+ * Common logic to restore stock and reverse coins when an order is cancelled
+ */
+async function handleOrderCancellationEffects(transaction: admin.firestore.Transaction, db: admin.firestore.Firestore, orderData: Order) {
+    // 1. Restore Stock
+    for (const item of orderData.items) {
+        const productRef = db.collection('products').doc(item.id.toString());
+        const productSnap = await transaction.get(productRef);
+        
+        if (productSnap.exists) {
+            const productData = productSnap.data() as Product;
+            let newColors = [...(productData.colors || [])];
+            let newSizes = [...(productData.sizes || [])];
+
+            if (item.color) {
+                const idx = newColors.findIndex(c => c.name === item.color);
+                if (idx !== -1) newColors[idx].stock += item.quantity;
+            }
+            if (item.size) {
+                const idx = newSizes.findIndex(s => s.name === item.size);
+                if (idx !== -1) newSizes[idx].stock += item.quantity;
+            }
+
+            transaction.update(productRef, {
+                stock: FieldValue.increment(item.quantity),
+                sold: FieldValue.increment(-item.quantity),
+                colors: newColors,
+                sizes: newSizes
+            });
+        }
+    }
+
+    // 2. Reverse Coins
+    const settingsDoc = await transaction.get(db.collection('settings').doc('coin'));
+    const settings = { ...defaultCoinSettings, ...(settingsDoc.data() || {}) } as CoinSettings;
+    
+    // Restore spent coins
+    const coinsToRestore = orderData.coinDiscount ? (orderData.coinDiscount / settings.takaPer100Coins) * 100 : 0;
+    
+    // Remove earned coins
+    const offerSubtotal = orderData.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const coinsEarned = Math.floor((offerSubtotal / 100) * settings.pointsPer100Taka);
+
+    const netCoinChange = Math.round(coinsToRestore - coinsEarned);
+    const userRef = db.collection('users').doc(orderData.userId);
+
+    if (netCoinChange !== 0) {
+        transaction.update(userRef, {
+            coins: FieldValue.increment(netCoinChange)
+        });
+        
+        if (coinsToRestore > 0) {
+            await db.collection(`users/${orderData.userId}/coinHistory`).add({
+                id: Math.random().toString(36).substr(2, 9),
+                amount: coinsToRestore,
+                type: 'earn',
+                reason: `Refund for Order #${orderData.orderNumber}`,
+                date: new Date().toISOString()
+            });
+        }
+        if (coinsEarned > 0) {
+             await db.collection(`users/${orderData.userId}/coinHistory`).add({
+                id: Math.random().toString(36).substr(2, 9),
+                amount: coinsEarned,
+                type: 'spend',
+                reason: `Reversal for Order #${orderData.orderNumber}`,
+                date: new Date().toISOString()
+            });
+        }
+    }
+}
+
 export async function updateOrderStatus(
   orderId: string,
   newStatus: Order['status']
@@ -539,6 +616,11 @@ export async function updateOrderStatus(
       const currentOrderData = orderDoc.data() as Order;
       orderData = currentOrderData;
       if (currentOrderData.status === newStatus) return;
+
+      // Handle stock and coin reversal if admin cancels the order
+      if (newStatus === 'cancelled' && currentOrderData.status !== 'cancelled') {
+          await handleOrderCancellationEffects(transaction, db, currentOrderData);
+      }
 
       const updatePayload: any = { status: newStatus };
       if (newStatus === 'delivered' && currentOrderData.status !== 'delivered') {
@@ -578,12 +660,19 @@ export async function cancelOrderByUser(
       if (!docSnap.exists) throw new Error('Order not found.');
       const orderData = docSnap.data() as Order;
       if (orderData.userId !== userId) throw new Error('Unauthorized access to order.');
+      
+      if (orderData.status === 'cancelled') return;
+      
       if (orderData.status !== 'pending' && orderData.status !== 'processing') {
           throw new Error('This order cannot be cancelled as it is already being shipped or completed.');
       }
+
+      // Restore stock and reverse coins
+      await handleOrderCancellationEffects(transaction, db, orderData);
+
       transaction.update(orderRef, { status: 'cancelled' });
     });
-    return { success: true, message: 'Your order has been successfully cancelled.' };
+    return { success: true, message: 'Your order has been successfully cancelled and stock restored.' };
   } catch (e: any) {
     return { success: false, message: e.message };
   }
