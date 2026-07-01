@@ -17,7 +17,8 @@ import type {
   AffiliateEarning,
   AffiliateRequest,
   CoinTransaction,
-  CoinSettings
+  CoinSettings,
+  ContactMessage
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 import nodemailer from 'nodemailer';
@@ -229,7 +230,7 @@ export async function placeOrder(
 ): Promise<{ success: boolean; orderId?: string; message?: string }> {
   const adminApp = getFirebaseAdmin();
   if (!adminApp) {
-    return { success: false, message: "Server not configured." };
+    return { success: false, message: "Server not configured. Please add FIREBASE_SERVICE_ACCOUNT_JSON to your environment variables." };
   }
   const db = getFirestore(adminApp);
   const settings = await getCoinSettings(db);
@@ -571,16 +572,18 @@ export async function cancelOrderByUser(
   const db = getFirestore(adminApp);
 
   try {
-    const orderRef = db.collection(orderId).doc(orderId);
+    const orderRef = db.collection('orders').doc(orderId);
     await db.runTransaction(async (transaction) => {
-      const doc = await transaction.get(orderRef);
-      if (!doc.exists) throw new Error('Order not found.');
-      const order = doc.data() as Order;
-      if (order.userId !== userId) throw new Error('Unauthorized');
-      if (order.status !== 'pending' && order.status !== 'processing') throw new Error('Cannot cancel now.');
+      const docSnap = await transaction.get(orderRef);
+      if (!docSnap.exists) throw new Error('Order not found.');
+      const orderData = docSnap.data() as Order;
+      if (orderData.userId !== userId) throw new Error('Unauthorized access to order.');
+      if (orderData.status !== 'pending' && orderData.status !== 'processing') {
+          throw new Error('This order cannot be cancelled as it is already being shipped or completed.');
+      }
       transaction.update(orderRef, { status: 'cancelled' });
     });
-    return { success: true, message: 'Order cancelled.' };
+    return { success: true, message: 'Your order has been successfully cancelled.' };
   } catch (e: any) {
     return { success: false, message: e.message };
   }
@@ -624,7 +627,7 @@ export async function approveAffiliateRequest(requestId: string) {
     affiliateId: `AFF-${data?.userId.substring(0, 5).toUpperCase()}`
   });
   await db.collection('affiliateRequests').doc(requestId).update({ status: 'approved' });
-  return { success: true };
+  return { success: true, message: 'Affiliate request approved.' };
 }
 
 export async function denyAffiliateRequest(requestId: string, reason: string) {
@@ -636,5 +639,54 @@ export async function denyAffiliateRequest(requestId: string, reason: string) {
   const data = snap.data();
   await db.collection('users').doc(data?.userId).update({ affiliateStatus: 'denied' });
   await db.collection('affiliateRequests').doc(requestId).update({ status: 'denied', rejectionReason: reason });
-  return { success: true };
+  return { success: true, message: 'Affiliate request denied.' };
+}
+
+export async function markMessageAsRead(id: string) {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) return { success: false };
+    const db = getFirestore(adminApp);
+    await db.collection('contactMessages').doc(id).update({ status: 'read' });
+    return { success: true };
+}
+
+export async function replyToContactMessage(id: string, reply: string) {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
+    const db = getFirestore(adminApp);
+    await db.collection('contactMessages').doc(id).update({ 
+        reply, 
+        status: 'replied',
+        repliedAt: new Date().toISOString() 
+    });
+    return { success: true };
+}
+
+export async function approveWithdrawal(id: string, transactionId: string) {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
+    const db = getFirestore(adminApp);
+    await db.collection('withdrawals').doc(id).update({ 
+        status: 'completed',
+        transactionId,
+        processedAt: new Date().toISOString()
+    });
+    return { success: true, message: 'Withdrawal approved.' };
+}
+
+export async function denyWithdrawal(id: string, reason: string) {
+    const adminApp = getFirebaseAdmin();
+    if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
+    const db = getFirestore(adminApp);
+    const snap = await db.collection('withdrawals').doc(id).get();
+    const data = snap.data();
+    if (data) {
+        // Return coins or balance if needed (this depends on your business logic)
+    }
+    await db.collection('withdrawals').doc(id).update({ 
+        status: 'failed',
+        rejectionReason: reason,
+        processedAt: new Date().toISOString()
+    });
+    return { success: true, message: 'Withdrawal denied.' };
 }

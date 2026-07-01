@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -218,7 +219,7 @@ function MyOrdersPageContent() {
                                                 })()}
                                             </div>
                                             <div className="flex gap-2 items-center">
-                                                {order.paymentMethod === 'cash-on-delivery' && order.status === 'processing' && (
+                                                {(order.status === 'pending' || order.status === 'processing') && (
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
                                                             <Button variant="destructive" size="sm">
