@@ -3,11 +3,11 @@
 
 import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
-import { ArrowLeft, Gift, Loader2 } from 'lucide-react';
+import { ArrowLeft, Gift } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-import { getFirestore, doc, onSnapshot, collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, collection, query, where } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import type { Banner } from '@/types';
@@ -18,6 +18,7 @@ export default function B1G1Page() {
     const { products: allProducts, loading: productsLoading } = useProducts();
     const [isActive, setIsActive] = useState<boolean | null>(null);
     const [banner, setBanner] = useState<Banner | null>(null);
+    const [loadingBanner, setLoadingBanner] = useState(true);
 
     useEffect(() => {
         // Check if page is active
@@ -30,19 +31,26 @@ export default function B1G1Page() {
         });
 
         // Fetch custom banner for this page
+        // Removed orderBy to avoid index requirement
         const bannersRef = collection(db, 'banners');
         const q = query(
             bannersRef, 
-            where('link', '==', '/offers/b1g1'),
-            orderBy('createdAt', 'desc'),
-            limit(1)
+            where('link', '==', '/offers/b1g1')
         );
+        
         const unsubBanner = onSnapshot(q, (snapshot) => {
             if (!snapshot.empty) {
-                setBanner({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Banner);
+                // Manually sort to get the latest one
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Banner));
+                data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                
+                const now = new Date();
+                const latestValid = data.find(b => !b.expiresAt || new Date(b.expiresAt) > now);
+                setBanner(latestValid || null);
             } else {
                 setBanner(null);
             }
+            setLoadingBanner(false);
         });
 
         return () => {
@@ -51,7 +59,7 @@ export default function B1G1Page() {
         };
     }, []);
 
-    if (isActive === null || productsLoading) return <LoadingSpinner />;
+    if (isActive === null || productsLoading || loadingBanner) return <LoadingSpinner />;
 
     if (!isActive) {
         return (

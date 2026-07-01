@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Loader2, Sparkles, Trophy, Coins, Clock, Ban } from 'lucide-react';
 import Link from 'next/link';
-import { getFirestore, doc, onSnapshot, setDoc, collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, collection, query, where } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +39,7 @@ function SpinWinPage() {
     const [hasSpunToday, setHasSpunToday] = useState(false);
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
     const [banner, setBanner] = useState<Banner | null>(null);
+    const [loadingBanner, setLoadingBanner] = useState(true);
 
     useEffect(() => {
         const unsubStatus = onSnapshot(doc(db, 'settings', 'offerPages'), (docSnap) => {
@@ -50,19 +51,26 @@ function SpinWinPage() {
         });
 
         // Fetch custom banner for this page
+        // Removed orderBy to avoid index requirement
         const bannersRef = collection(db, 'banners');
         const q = query(
             bannersRef, 
-            where('link', '==', '/offers/spin'),
-            orderBy('createdAt', 'desc'),
-            limit(1)
+            where('link', '==', '/offers/spin')
         );
+        
         const unsubBanner = onSnapshot(q, (snapshot) => {
             if (!snapshot.empty) {
-                setBanner({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Banner);
+                // Manually sort to get the latest one
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Banner));
+                data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                
+                const now = new Date();
+                const latestValid = data.find(b => !b.expiresAt || new Date(b.expiresAt) > now);
+                setBanner(latestValid || null);
             } else {
                 setBanner(null);
             }
+            setLoadingBanner(false);
         });
 
         return () => {
@@ -93,7 +101,7 @@ function SpinWinPage() {
         }
     }, [appUser]);
 
-    if (isActive === null) return <LoadingSpinner />;
+    if (isActive === null || loadingBanner) return <LoadingSpinner />;
 
     if (!isActive) {
         return (
