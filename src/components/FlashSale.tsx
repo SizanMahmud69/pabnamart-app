@@ -126,7 +126,7 @@ export default function FlashSale({ products: flashSaleProducts }: FlashSaleProp
                     >
                         <CarouselContent className="-ml-2">
                             {flashSaleProducts.map(product => (
-                                <CarouselItem key={product.id} className="pl-2 basis-1/2">
+                                <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3">
                                      <div className="p-1">
                                         <ProductCard product={product} isFlashSaleContext={true} />
                                     </div>
@@ -137,8 +137,8 @@ export default function FlashSale({ products: flashSaleProducts }: FlashSaleProp
                         <CarouselNext className="right-[-10px] sm:right-[-16px]" />
                     </Carousel>
                 ) : (
-                    <div className="grid grid-cols-2 gap-4">
-                        {flashSaleProducts.slice(0, 2).map(product => (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {flashSaleProducts.map(product => (
                             <ProductCard key={product.id} product={product} isFlashSaleContext={true} />
                         ))}
                     </div>
