@@ -22,10 +22,18 @@ If you get an error like "Invalid username or token" while pushing to GitHub, fo
     - Click **Generate new token**.
     - Select scopes (at least 'repo').
     - Copy the generated token.
-2.  **Use the Token:**
+2.  **Use the Token (If prompted for password):**
     - Run `git push`.
     - Use your GitHub username.
     - Use the **Token** you copied instead of your account password.
+
+### 🚀 Pro Tip: If Git doesn't ask for Password and directly shows Error
+If your computer has cached old credentials and won't let you login, use this command to embed your token:
+
+```bash
+git remote set-url origin https://YOUR_TOKEN_HERE@github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+```
+*(Replace `YOUR_TOKEN_HERE`, `YOUR_USERNAME`, and `YOUR_REPO_NAME` with your actual info. Then just run `git push origin main`)*
 
 ## Common Git Errors & Solutions
 
