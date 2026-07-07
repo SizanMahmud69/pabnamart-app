@@ -13,6 +13,30 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Git Authentication (Personal Access Token)
+
+If you get an error like "Invalid username or token" while pushing to GitHub, follow these steps:
+
+1.  **Generate a Token:** 
+    - Go to GitHub **Settings** -> **Developer settings** -> **Personal access tokens** -> **Tokens (classic)**.
+    - Click **Generate new token**.
+    - Select scopes (at least 'repo').
+    - Copy the generated token.
+2.  **Use the Token:**
+    - Run `git push`.
+    - Use your GitHub username.
+    - Use the **Token** you copied instead of your account password.
+
+## Common Git Errors & Solutions
+
+### 1. Updates were rejected (Remote contains work you do not have locally)
+**Cause:** Remote repo has commits you don't have. Often happens when repo is created with a README on GitHub.
+**Solution:**
+```bash
+git pull origin main --rebase
+git push origin main
+```
+
 ## Deployment Guide for Vercel
 
 Follow these simple steps to deploy your application to Vercel.

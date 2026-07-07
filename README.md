@@ -27,6 +27,20 @@ If you get an error like "Invalid username or token" while pushing to GitHub, fo
     - Use your GitHub username.
     - Use the **Token** you copied instead of your account password.
 
+## Common Git Errors & Solutions
+
+### 1. Updates were rejected (Remote contains work you do not have locally)
+**Cause:** You created the repo with a README/License on GitHub, which doesn't exist locally.
+**Solution:**
+```bash
+git pull origin main --rebase
+git push origin main
+```
+*Note: If you want to overwrite GitHub with your local code (risky):*
+```bash
+git push origin main --force
+```
+
 ## Deployment Guide for Vercel
 
 Follow these simple steps to deploy your application to Vercel.
