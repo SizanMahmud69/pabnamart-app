@@ -5,12 +5,12 @@ import { initializeApp, getApp, getApps, type FirebaseApp, type FirebaseOptions 
 import { getMessaging, type Messaging } from 'firebase/messaging';
 
 export const firebaseConfig: FirebaseOptions = {
-  "projectId": "pabnamart",
-  "appId": "1:600614180848:web:6f4e21fb4f5b6cd42a6f35",
-  "storageBucket": "pabnamart.appspot.com",
-  "apiKey": "AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk",
-  "authDomain": "pabnamart.firebaseapp.com",
-  "messagingSenderId": "600614180848"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 function createFirebaseApp(config: FirebaseOptions): FirebaseApp {

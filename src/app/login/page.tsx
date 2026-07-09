@@ -31,8 +31,11 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
 
-    const ADMIN_EMAIL = "admin@pabnamart.com";
-    const ADMIN_PASSWORD = "@Admin#PabnaMart";
+    // Get Admin credentials from Environment Variables with fallback
+    const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@pabnamart.com";
+    // Note: Passwords should ideally be handled via a secure server action, 
+    // but moving it to env is better than being hardcoded in components.
+    const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "@Admin#PabnaMart";
 
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
         localStorage.setItem('isAdmin', 'true');
