@@ -256,6 +256,7 @@ export interface Category {
   name: string;
   image: string;
   createdAt: string;
+  parentId?: string | null;
 }
 
 export interface OrderPayload {

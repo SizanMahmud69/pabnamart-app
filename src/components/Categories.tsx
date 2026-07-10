@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getFirestore, collection, onSnapshot, query, orderBy, type Firestore } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Category } from '@/types';
@@ -32,6 +33,10 @@ export default function Categories() {
     });
     return () => unsubscribe();
   }, []);
+
+  const topLevelCategories = useMemo(() => {
+    return categories.filter(c => !c.parentId || c.parentId === 'none');
+  }, [categories]);
 
   useEffect(() => {
     if (!api) {
@@ -71,7 +76,7 @@ export default function Categories() {
                                 </CarouselItem>
                             ))
                         ) : (
-                            categories.map((category) => (
+                            topLevelCategories.map((category) => (
                                 <CarouselItem key={category.id} className="pl-4 basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8">
                                     <Link href={`/category/${encodeURIComponent(category.name)}`} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-purple-100/50 transition-colors w-24 text-center">
                                         <div className="relative w-16 h-16 rounded-full flex items-center justify-center overflow-hidden border">

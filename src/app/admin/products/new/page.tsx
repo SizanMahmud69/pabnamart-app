@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, Upload, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, X, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product, Category, ProductVariant } from '@/types';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -71,6 +71,10 @@ export default function NewProductPage() {
     const [sizes, setSizes] = useState('');
     const [affiliateCommission, setAffiliateCommission] = useState<number | undefined>(undefined);
     const [isB1G1, setIsB1G1] = useState(false);
+    
+    // States for auto-formatting textareas
+    const [description, setDescription] = useState('');
+    const [details, setDetails] = useState('');
 
 
     useEffect(() => {
@@ -83,13 +87,12 @@ export default function NewProductPage() {
         return () => unsubscribe();
     }, []);
 
-    const uniqueCategories = useMemo(() => {
-        const seen = new Set();
-        return categories.filter(cat => {
-            const duplicate = seen.has(cat.name);
-            seen.add(cat.name);
-            return !duplicate;
-        });
+    const hierarchicalCategories = useMemo(() => {
+        const parents = categories.filter(c => !c.parentId || c.parentId === 'none');
+        return parents.map(parent => ({
+            ...parent,
+            subs: categories.filter(c => c.parentId === parent.id)
+        }));
     }, [categories]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,6 +104,14 @@ export default function NewProductPage() {
     
     const removeImage = (index: number) => {
         setImageFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Auto-formatting handler
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>, setter: (val: string) => void) => {
+        const val = e.target.value;
+        // Automatically insert a newline before bullet point (•) if it's not already at the start of a line
+        const formatted = val.replace(/([^\n])•/g, '$1\n•');
+        setter(formatted);
     };
 
 
@@ -155,13 +166,13 @@ export default function NewProductPage() {
 
         const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
             name: form.get('name') as string,
-            description: form.get('description') as string,
+            description: description,
             price: parseFloat(form.get('price') as string) || 0,
             originalPrice: originalPriceValue ? parseFloat(originalPriceValue) : undefined,
             stock: parseInt(form.get('stock') as string, 10) || 0,
             category: category,
             images: uploadedImageUrls,
-            details: form.get('details') as string,
+            details: details,
             freeShipping: freeShipping,
             isFlashSale: isFlashSale,
             flashSaleEndDate: isFlashSale ? flashSaleEndDate : '',
@@ -226,6 +237,7 @@ export default function NewProductPage() {
                                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                             <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
                                             <p className="mb-2 text-sm text-muted-foreground text-center">Click to upload</p>
+                                            <p className="text-xs text-muted-foreground">Max 4.5MB</p>
                                         </div>
                                         <Input id="image-upload" type="file" multiple className="hidden" onChange={handleFileChange} accept="image/*" ref={inputFileRef} />
                                     </Label>
@@ -237,11 +249,26 @@ export default function NewProductPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="description">Description</Label>
-                                <Textarea id="description" name="description" placeholder="Describe the product" required disabled={isLoading} />
+                                <Textarea 
+                                    id="description" 
+                                    name="description" 
+                                    placeholder="Describe the product (Use • for bullet points)" 
+                                    value={description}
+                                    onChange={(e) => handleTextareaChange(e, setDescription)}
+                                    required 
+                                    disabled={isLoading} 
+                                />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="details">Product Details</Label>
-                                <Textarea id="details" name="details" placeholder="Add detailed specifications or features" disabled={isLoading} />
+                                <Textarea 
+                                    id="details" 
+                                    name="details" 
+                                    placeholder="Add detailed specifications or features (Use • for bullet points)" 
+                                    value={details}
+                                    onChange={(e) => handleTextareaChange(e, setDetails)}
+                                    disabled={isLoading} 
+                                />
                             </div>
                              <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
@@ -258,16 +285,22 @@ export default function NewProductPage() {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="category">Category</Label>
+                                <Label htmlFor="category">Category / Sub-category</Label>
                                 <Select onValueChange={setCategory} required value={category} disabled={isLoading}>
                                     <SelectTrigger id="category">
-                                        <SelectValue placeholder="Select a category" />
+                                        <SelectValue placeholder="Select category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {uniqueCategories.map(cat => (
-                                            <SelectItem key={cat.id} value={cat.name}>
-                                                {cat.name}
-                                            </SelectItem>
+                                        {hierarchicalCategories.map(parent => (
+                                            <SelectGroup key={parent.id}>
+                                                <SelectLabel className="text-primary font-bold">{parent.name}</SelectLabel>
+                                                <SelectItem value={parent.name}>{parent.name} (Main)</SelectItem>
+                                                {parent.subs.map(sub => (
+                                                    <SelectItem key={sub.id} value={sub.name}>
+                                                        &nbsp;&nbsp;— {sub.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -291,18 +324,14 @@ export default function NewProductPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="flex items-center space-x-2">
                                         <Checkbox id="free-shipping" checked={freeShipping} onCheckedChange={(checked) => setFreeShipping(checked as boolean)} disabled={isLoading} />
-                                        <label
-                                            htmlFor="free-shipping"
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                        >
-                                            Eligible for free shipping
-                                        </label>
+                                        <label htmlFor="free-shipping" className="text-sm font-medium leading-none cursor-pointer">Eligible for free shipping</label>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <Checkbox id="b1g1-offer" checked={isB1G1} onCheckedChange={(v) => setIsB1G1(v as boolean)} disabled={isLoading} />
                                         <label htmlFor="b1g1-offer" className="text-sm font-medium leading-none cursor-pointer">Buy One Get One (B1G1)</label>
                                     </div>
                                 </div>
+
                                  <div className="flex flex-col gap-4">
                                     <div className="flex items-center space-x-2">
                                         <Checkbox id="flash-sale" checked={isFlashSale} onCheckedChange={(checked) => setIsFlashSale(checked as boolean)} disabled={isLoading} />
