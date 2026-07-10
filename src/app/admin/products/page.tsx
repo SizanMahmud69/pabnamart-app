@@ -5,7 +5,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, PlusCircle, Star, Trash2, MoreHorizontal, Loader2, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Edit, PlusCircle, Star, Trash2, MoreHorizontal, Loader2, ChevronRight, Zap, Truck, Gift } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useMemo, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
+import { cn } from '@/lib/utils';
 
 const db = getFirestore(app);
 
@@ -57,14 +58,12 @@ export default function AdminProductManagement() {
     if (!parentCat) return filtered;
 
     if (selectedSubId === 'All') {
-        // Show parent category products OR any of its sub-category products
         const validCategoryNames = [
             parentCat.name,
             ...categories.filter(c => c.parentId === selectedParentId).map(c => c.name)
         ];
         return filtered.filter(p => validCategoryNames.includes(p.category));
     } else {
-        // Show only products from specific sub-category
         const subCat = categories.find(c => c.id === selectedSubId);
         return subCat ? filtered.filter(p => p.category === subCat.name) : filtered;
     }
@@ -75,14 +74,14 @@ export default function AdminProductManagement() {
     if (cat && cat.parentId && cat.parentId !== 'none') {
         const parent = categories.find(c => c.id === cat.parentId);
         return parent ? (
-            <div className="flex items-center gap-1 text-xs">
-                <span className="text-muted-foreground">{parent.name}</span>
-                <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                <span className="font-semibold text-primary">{cat.name}</span>
+            <div className="flex items-center gap-1 text-[10px]">
+                <span className="text-muted-foreground truncate max-w-[60px]">{parent.name}</span>
+                <ChevronRight className="h-2 w-2 text-muted-foreground" />
+                <span className="font-semibold text-primary truncate max-w-[80px]">{cat.name}</span>
             </div>
         ) : categoryName;
     }
-    return <span className="font-medium">{categoryName}</span>;
+    return <span className="font-medium text-xs">{categoryName}</span>;
   };
 
   const handleDelete = async () => {
@@ -101,7 +100,7 @@ export default function AdminProductManagement() {
 
   return (
     <>
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-4 max-w-7xl">
           <header className="py-4 flex justify-between items-center">
               <Button asChild variant="outline" size="sm">
                   <Link href="/admin">
@@ -120,134 +119,175 @@ export default function AdminProductManagement() {
               <Card>
                   <CardHeader>
                       <CardTitle className="text-2xl">Product Management</CardTitle>
-                      <CardDescription>View, edit, or delete your store products.</CardDescription>
+                      <CardDescription>View, edit, or delete your store products with full details.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6">
                     {/* Main Categories Filter */}
-                    <ScrollArea className="w-full whitespace-nowrap rounded-md border p-2">
-                        <div className="flex w-max space-x-2">
-                            <Button
-                                variant={selectedParentId === 'All' ? "default" : "outline"}
-                                onClick={() => { setSelectedParentId('All'); setSelectedSubId('All'); }}
-                                size="sm"
-                                className="rounded-full px-6"
-                            >
-                                All
-                            </Button>
-                            {mainCategories.map(cat => (
+                    <div className="space-y-4">
+                        <ScrollArea className="w-full whitespace-nowrap rounded-md border p-2">
+                            <div className="flex w-max space-x-2">
                                 <Button
-                                    key={cat.id}
-                                    variant={selectedParentId === cat.id ? "default" : "outline"}
-                                    onClick={() => { setSelectedParentId(cat.id); setSelectedSubId('All'); }}
+                                    variant={selectedParentId === 'All' ? "default" : "outline"}
+                                    onClick={() => { setSelectedParentId('All'); setSelectedSubId('All'); }}
                                     size="sm"
                                     className="rounded-full px-6"
                                 >
-                                    {cat.name}
+                                    All Categories
                                 </Button>
-                            ))}
-                        </div>
-                        <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
-
-                    {/* Sub-categories Filter Row (Visible only if parent is selected) */}
-                    {selectedParentId !== 'All' && subCategories.length > 0 && (
-                        <div className="animate-in slide-in-from-top-2 duration-300">
-                             <ScrollArea className="w-full whitespace-nowrap rounded-md border p-2 bg-muted/20">
-                                <div className="flex w-max space-x-2">
+                                {mainCategories.map(cat => (
                                     <Button
-                                        variant={selectedSubId === 'All' ? "secondary" : "ghost"}
-                                        onClick={() => setSelectedSubId('All')}
+                                        key={cat.id}
+                                        variant={selectedParentId === cat.id ? "default" : "outline"}
+                                        onClick={() => { setSelectedParentId(cat.id); setSelectedSubId('All'); }}
                                         size="sm"
-                                        className="rounded-full px-4"
+                                        className="rounded-full px-6"
                                     >
-                                        All in {mainCategories.find(c => c.id === selectedParentId)?.name}
+                                        {cat.name}
                                     </Button>
-                                    {subCategories.map(sub => (
+                                ))}
+                            </div>
+                            <ScrollBar orientation="horizontal" />
+                        </ScrollArea>
+
+                        {/* Sub-categories Filter Row */}
+                        {selectedParentId !== 'All' && subCategories.length > 0 && (
+                            <div className="animate-in slide-in-from-top-2 duration-300">
+                                <ScrollArea className="w-full whitespace-nowrap rounded-md border p-2 bg-muted/20">
+                                    <div className="flex w-max space-x-2">
                                         <Button
-                                            key={sub.id}
-                                            variant={selectedSubId === sub.id ? "default" : "outline"}
-                                            onClick={() => setSelectedSubId(sub.id)}
+                                            variant={selectedSubId === 'All' ? "secondary" : "ghost"}
+                                            onClick={() => setSelectedSubId('All')}
                                             size="sm"
                                             className="rounded-full px-4"
                                         >
-                                            {sub.name}
+                                            All in {mainCategories.find(c => c.id === selectedParentId)?.name}
                                         </Button>
-                                    ))}
-                                </div>
-                                <ScrollBar orientation="horizontal" />
-                            </ScrollArea>
-                        </div>
-                    )}
+                                        {subCategories.map(sub => (
+                                            <Button
+                                                key={sub.id}
+                                                variant={selectedSubId === sub.id ? "default" : "outline"}
+                                                onClick={() => setSelectedSubId(sub.id)}
+                                                size="sm"
+                                                className="rounded-full px-4"
+                                            >
+                                                {sub.name}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                    <ScrollBar orientation="horizontal" />
+                                </ScrollArea>
+                            </div>
+                        )}
+                    </div>
 
-                      <Table>
-                          <TableHeader>
-                              <TableRow>
-                                  <TableHead>Image</TableHead>
-                                  <TableHead>Name</TableHead>
-                                  <TableHead>Category</TableHead>
-                                  <TableHead>Price</TableHead>
-                                  <TableHead>Stock</TableHead>
-                                  <TableHead>B1G1</TableHead>
-                                  <TableHead className="text-right">Actions</TableHead>
-                              </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                              {filteredProducts.map(product => {
-                                const defaultImage = "https://i.ibb.co/gV28rC7/default-image.jpg";
-                                let imageUrl = product.images?.[0] || defaultImage;
+                      <div className="rounded-md border overflow-hidden">
+                        <Table>
+                            <TableHeader className="bg-muted/50">
+                                <TableRow>
+                                    <TableHead className="w-[80px]">Image</TableHead>
+                                    <TableHead className="min-w-[200px]">Name</TableHead>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead>Price</TableHead>
+                                    <TableHead>Stock</TableHead>
+                                    <TableHead className="text-center">B1G1</TableHead>
+                                    <TableHead className="text-center">Flash</TableHead>
+                                    <TableHead className="text-center">Ship</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredProducts.map(product => {
+                                    const defaultImage = "https://i.ibb.co/gV28rC7/default-image.jpg";
+                                    let imageUrl = product.images?.[0] || defaultImage;
 
-                                return (
-                                  <TableRow key={product.id}>
-                                      <TableCell>
-                                          <div className="relative h-10 w-10 rounded-md overflow-hidden">
-                                            <img src={imageUrl} alt={product.name} className="object-cover w-full h-full" loading="lazy" />
-                                          </div>
-                                      </TableCell>
-                                      <TableCell className="font-medium">{product.name}</TableCell>
-                                      <TableCell>
-                                          {getProductCategoryDisplay(product.category)}
-                                      </TableCell>
-                                      <TableCell>৳{product.price}</TableCell>
-                                      <TableCell>
-                                          <Badge variant={product.stock > 10 ? 'default' : product.stock > 0 ? 'secondary' : 'destructive'}>
-                                              {product.stock}
-                                          </Badge>
-                                      </TableCell>
-                                      <TableCell>
-                                          {product.isB1G1 ? (
-                                              <Badge className="bg-pink-100 text-pink-700 border-pink-200">Yes</Badge>
-                                          ) : (
-                                              <span className="text-muted-foreground text-xs">No</span>
-                                          )}
-                                      </TableCell>
-                                      <TableCell className="text-right">
-                                          <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                  <Button variant="ghost" className="h-8 w-8 p-0">
-                                                      <MoreHorizontal className="h-4 w-4" />
-                                                  </Button>
-                                              </DropdownMenuTrigger>
-                                              <DropdownMenuContent align="end">
-                                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                  <DropdownMenuItem onSelect={() => router.push(`/admin/products/edit/${product.id}`)}>
-                                                      <Edit className="mr-2 h-4 w-4" />
-                                                      <span>Edit</span>
-                                                  </DropdownMenuItem>
-                                                  <DropdownMenuSeparator />
-                                                  <DropdownMenuItem 
-                                                      className="text-destructive" 
-                                                      onSelect={() => setProductToDelete(product)}
-                                                  >
-                                                      <Trash2 className="mr-2 h-4 w-4" />
-                                                      <span>Delete</span>
-                                                  </DropdownMenuItem>
-                                              </DropdownMenuContent>
-                                          </DropdownMenu>
-                                      </TableCell>
-                                  </TableRow>
-                              )})}
-                          </TableBody>
-                      </Table>
+                                    return (
+                                    <TableRow key={product.id} className="hover:bg-muted/30 transition-colors">
+                                        <TableCell>
+                                            <div className="relative h-12 w-12 rounded-md overflow-hidden border bg-white shadow-sm">
+                                                <img src={imageUrl} alt={product.name} className="object-cover w-full h-full" loading="lazy" />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-sm leading-tight line-clamp-1">{product.name}</span>
+                                                <span className="text-[10px] text-muted-foreground mt-1">ID: {product.id}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            {getProductCategoryDisplay(product.category)}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="font-bold text-sm">৳{product.price}</div>
+                                            {product.originalPrice && product.originalPrice > product.price && (
+                                                <div className="text-[10px] text-muted-foreground line-through">৳{product.originalPrice}</div>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge 
+                                                variant={product.stock > 10 ? 'default' : product.stock > 0 ? 'secondary' : 'destructive'}
+                                                className="h-5 px-2 text-[10px]"
+                                            >
+                                                {product.stock}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            {product.isB1G1 ? (
+                                                <Badge className="bg-pink-100 text-pink-700 border-pink-200 h-5 px-1.5"><Gift className="h-3 w-3 mr-0.5" />Yes</Badge>
+                                            ) : (
+                                                <span className="text-muted-foreground text-[10px]">-</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            {product.isFlashSale ? (
+                                                <Badge className="bg-orange-100 text-orange-700 border-orange-200 h-5 px-1.5"><Zap className="h-3 w-3 mr-0.5" />On</Badge>
+                                            ) : (
+                                                <span className="text-muted-foreground text-[10px]">-</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            {product.freeShipping ? (
+                                                <Badge className="bg-green-100 text-green-700 border-green-200 h-5 px-1.5"><Truck className="h-3 w-3 mr-0.5" />Free</Badge>
+                                            ) : (
+                                                <span className="text-muted-foreground text-[10px]">-</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-36">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem onSelect={() => router.push(`/admin/products/edit/${product.id}`)}>
+                                                        <Edit className="mr-2 h-4 w-4" />
+                                                        <span>Edit</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem 
+                                                        className="text-destructive focus:bg-destructive/10 focus:text-destructive" 
+                                                        onSelect={() => setProductToDelete(product)}
+                                                    >
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        <span>Delete</span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                )})}
+                                {filteredProducts.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={9} className="h-40 text-center text-muted-foreground">
+                                            No products found in this category.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                      </div>
                   </CardContent>
               </Card>
           </main>
@@ -257,13 +297,13 @@ export default function AdminProductManagement() {
               <AlertDialogHeader>
                   <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                      This will permanently delete <span className="font-bold">{productToDelete?.name}</span>.
+                      This will permanently delete <span className="font-bold">{productToDelete?.name}</span>. This action cannot be undone.
                   </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-                      {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Delete"}
+                  <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                      {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Confirm Delete"}
                   </AlertDialogAction>
               </AlertDialogFooter>
           </AlertDialogContent>
