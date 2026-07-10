@@ -5,7 +5,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, PlusCircle, Star, Trash2, MoreHorizontal, Loader2, ChevronRight, Zap, Truck, Gift } from 'lucide-react';
+import { ArrowLeft, Edit, PlusCircle, Star, Trash2, MoreHorizontal, Loader2, ChevronRight, Zap, Truck, Gift, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useMemo, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -250,7 +250,18 @@ export default function AdminProductManagement() {
                                         </TableCell>
                                         <TableCell className="text-center">
                                             {product.isFlashSale ? (
-                                                <Badge className="bg-orange-100 text-orange-700 border-orange-200 h-5 px-1.5"><Zap className="h-3 w-3 mr-0.5" />On</Badge>
+                                                (() => {
+                                                    const isExpired = product.flashSaleEndDate && new Date(product.flashSaleEndDate) < new Date();
+                                                    return isExpired ? (
+                                                        <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-destructive text-destructive bg-destructive/5 font-bold">
+                                                            <Clock className="h-2.5 w-2.5 mr-0.5" />End
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge className="bg-orange-100 text-orange-700 border-orange-200 h-5 px-1.5">
+                                                            <Zap className="h-3 w-3 mr-0.5" />On
+                                                        </Badge>
+                                                    );
+                                                })()
                                             ) : (
                                                 <span className="text-muted-foreground text-[10px]">-</span>
                                             )}
