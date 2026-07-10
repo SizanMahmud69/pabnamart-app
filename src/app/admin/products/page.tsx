@@ -189,6 +189,8 @@ export default function AdminProductManagement() {
                                     <TableHead>Category</TableHead>
                                     <TableHead>Price</TableHead>
                                     <TableHead>Stock</TableHead>
+                                    <TableHead className="text-center">Sold</TableHead>
+                                    <TableHead className="text-center">Rating</TableHead>
                                     <TableHead className="text-center">B1G1</TableHead>
                                     <TableHead className="text-center">Flash</TableHead>
                                     <TableHead className="text-center">Ship</TableHead>
@@ -229,6 +231,15 @@ export default function AdminProductManagement() {
                                             >
                                                 {product.stock}
                                             </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <span className="text-sm font-medium">{product.sold || 0}</span>
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Star className="h-3 w-3 fill-accent text-accent" />
+                                                <span className="text-xs font-bold">{product.rating ? product.rating.toFixed(1) : '0.0'}</span>
+                                            </div>
                                         </TableCell>
                                         <TableCell className="text-center">
                                             {product.isB1G1 ? (
@@ -280,7 +291,7 @@ export default function AdminProductManagement() {
                                 )})}
                                 {filteredProducts.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={9} className="h-40 text-center text-muted-foreground">
+                                        <TableCell colSpan={11} className="h-40 text-center text-muted-foreground">
                                             No products found in this category.
                                         </TableCell>
                                     </TableRow>
