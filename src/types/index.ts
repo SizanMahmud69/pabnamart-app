@@ -32,6 +32,7 @@ export interface Product {
   originalPrice?: number;
   rating: number;
   category: string;
+  unit: string;
   images: string[];
   reviews: Review[];
   stock: number;
@@ -61,6 +62,7 @@ export interface CartItem {
   quantity: number;
   freeShipping?: boolean;
   category: string;
+  unit: string;
   color?: string;
   size?: string;
   isB1G1?: boolean;
@@ -74,6 +76,7 @@ export interface OrderItem {
     quantity: number;
     image: string;
     returnPolicy: number;
+    unit: string;
     color?: string;
     size?: string;
     isB1G1?: boolean;

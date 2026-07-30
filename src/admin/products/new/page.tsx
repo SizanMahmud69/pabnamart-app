@@ -13,13 +13,15 @@ import { ArrowLeft, Loader2, Upload, X, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product, Category, ProductVariant } from '@/types';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { collection, getFirestore, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { PutBlobResult } from '@vercel/blob';
 
 const db = getFirestore(app);
+
+const UNIT_OPTIONS = ["Pcs", "KG", "Meter", "Litre", "Packet", "Box", "Dozen"];
 
 const parseVariantString = (str: string): ProductVariant[] => {
     if (!str.trim()) return [];
@@ -39,7 +41,7 @@ const parseVariantString = (str: string): ProductVariant[] => {
             stock = 0;
         } else {
             name = trimmedPart.substring(0, lastSpaceIndex).trim();
-            stock = parseInt(trimmedPart.substring(lastSpaceIndex + 1), 10);
+            stock = parseFloat(trimmedPart.substring(lastSpaceIndex + 1));
         }
         
         if (name) {
@@ -60,6 +62,7 @@ export default function NewProductPage() {
     const { addProduct } = useProducts();
     const [isLoading, setIsLoading] = useState(false);
     const [category, setCategory] = useState('');
+    const [unit, setUnit] = useState('Pcs');
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [freeShipping, setFreeShipping] = useState(false);
     const [isFlashSale, setIsFlashSale] = useState(false);
@@ -87,13 +90,12 @@ export default function NewProductPage() {
         return () => unsubscribe();
     }, []);
 
-    const uniqueCategories = useMemo(() => {
-        const seen = new Set();
-        return categories.filter(cat => {
-            const duplicate = seen.has(cat.name);
-            seen.add(cat.name);
-            return !duplicate;
-        });
+    const hierarchicalCategories = useMemo(() => {
+        const parents = categories.filter(c => !c.parentId || c.parentId === 'none');
+        return parents.map(parent => ({
+            ...parent,
+            subs: categories.filter(c => c.parentId === parent.id)
+        }));
     }, [categories]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,6 +116,8 @@ export default function NewProductPage() {
         const formatted = val.replace(/([^\n])•/g, '$1\n•');
         setter(formatted);
     };
+
+    const isDecimalUnit = unit === 'KG' || unit === 'Meter';
 
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -165,13 +169,14 @@ export default function NewProductPage() {
         const parsedSizes = parseVariantString(sizesInput);
 
 
-        const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
+        const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold' | 'createdAt'> = {
             name: form.get('name') as string,
             description: description,
             price: parseFloat(form.get('price') as string) || 0,
             originalPrice: originalPriceValue ? parseFloat(originalPriceValue) : undefined,
-            stock: parseInt(form.get('stock') as string, 10) || 0,
+            stock: isDecimalUnit ? parseFloat(form.get('stock') as string) : parseInt(form.get('stock') as string, 10) || 0,
             category: category,
+            unit: unit,
             images: uploadedImageUrls,
             details: details,
             freeShipping: freeShipping,
@@ -181,7 +186,6 @@ export default function NewProductPage() {
             returnPolicy: returnPolicyValue ? parseInt(returnPolicyValue, 10) : undefined,
             colors: parsedColors,
             sizes: parsedSizes,
-            createdAt: new Date().toISOString(),
             affiliateCommission: affiliateCommission || undefined,
             isB1G1: isB1G1,
         };
@@ -271,7 +275,7 @@ export default function NewProductPage() {
                                     disabled={isLoading} 
                                 />
                             </div>
-                             <div className="grid grid-cols-3 gap-4">
+                             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Discount Price</Label>
                                     <Input id="price" name="price" type="number" placeholder="e.g., 79" required disabled={isLoading} />
@@ -281,21 +285,47 @@ export default function NewProductPage() {
                                     <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 99" disabled={isLoading} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="stock">Total Stock</Label>
-                                    <Input id="stock" name="stock" type="number" placeholder="e.g., 50" required disabled={isLoading} />
+                                    <Label htmlFor="unit">Unit</Label>
+                                    <Select value={unit} onValueChange={setUnit} disabled={isLoading}>
+                                        <SelectTrigger id="unit">
+                                            <SelectValue placeholder="Select unit" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {UNIT_OPTIONS.map(opt => (
+                                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="stock">Total Stock {isDecimalUnit && "(Decimal allowed)"}</Label>
+                                    <Input 
+                                        id="stock" 
+                                        name="stock" 
+                                        type={isDecimalUnit ? "text" : "number"} 
+                                        placeholder={isDecimalUnit ? "e.g., 50.5" : "e.g., 50"} 
+                                        required 
+                                        disabled={isLoading} 
+                                    />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="category">Category</Label>
+                                <Label htmlFor="category">Category / Sub-category</Label>
                                 <Select onValueChange={setCategory} required value={category} disabled={isLoading}>
                                     <SelectTrigger id="category">
-                                        <SelectValue placeholder="Select a category" />
+                                        <SelectValue placeholder="Select category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {uniqueCategories.map(cat => (
-                                            <SelectItem key={cat.id} value={cat.name}>
-                                                {cat.name}
-                                            </SelectItem>
+                                        {hierarchicalCategories.map(parent => (
+                                            <SelectGroup key={parent.id}>
+                                                <SelectLabel className="text-primary font-bold">{parent.name}</SelectLabel>
+                                                <SelectItem value={parent.name}>{parent.name} (Main)</SelectItem>
+                                                {parent.subs.map(sub => (
+                                                    <SelectItem key={sub.id} value={sub.name}>
+                                                        &nbsp;&nbsp;— {sub.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
                                         ))}
                                     </SelectContent>
                                 </Select>
