@@ -145,7 +145,7 @@ export default function EditProductPage() {
         setter(formatted);
     };
 
-    const isDecimalUnit = unit === 'KG' || unit === 'Meter';
+    const isDecimalUnit = unit === 'KG' || unit === 'Meter' || unit === 'Litre';
 
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
