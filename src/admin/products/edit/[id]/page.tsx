@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, Upload, X, Gift } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product, Category, ProductVariant } from '@/types';
@@ -46,7 +46,6 @@ const parseVariantString = (str: string): ProductVariant[] => {
         }
         
         if (name) {
-            // Use case-insensitive matching for aggregation
             const existingKey = Array.from(variantsMap.keys()).find(k => k.toLowerCase() === name.toLowerCase());
             const keyToUse = existingKey || name;
             variantsMap.set(keyToUse, (variantsMap.get(keyToUse) || 0) + stock);
@@ -84,7 +83,6 @@ export default function EditProductPage() {
     const [affiliateCommission, setAffiliateCommission] = useState<number | undefined>(undefined);
     const [isB1G1, setIsB1G1] = useState(false);
 
-    // States for auto-formatting textareas
     const [description, setDescription] = useState('');
     const [details, setDetails] = useState('');
 
@@ -141,10 +139,8 @@ export default function EditProductPage() {
         setNewImageFiles(prev => prev.filter((_, i) => i !== index));
     };
 
-    // Auto-formatting handler
     const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>, setter: (val: string) => void) => {
         const val = e.target.value;
-        // Automatically insert a newline before bullet point (•) if it's not already at the start of a line
         const formatted = val.replace(/([^\n])•/g, '$1\n•');
         setter(formatted);
     };
