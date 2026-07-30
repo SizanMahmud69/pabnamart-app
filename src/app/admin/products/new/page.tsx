@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, Upload, X, Gift } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import type { Product, Category, ProductVariant } from '@/types';
@@ -20,6 +20,8 @@ import app from '@/lib/firebase';
 import type { PutBlobResult } from '@vercel/blob';
 
 const db = getFirestore(app);
+
+const UNIT_OPTIONS = ["Pcs", "KG", "Meter", "Litre", "Packet", "Box", "Dozen"];
 
 const parseVariantString = (str: string): ProductVariant[] => {
     if (!str.trim()) return [];
@@ -39,11 +41,10 @@ const parseVariantString = (str: string): ProductVariant[] => {
             stock = 0;
         } else {
             name = trimmedPart.substring(0, lastSpaceIndex).trim();
-            stock = parseInt(trimmedPart.substring(lastSpaceIndex + 1), 10);
+            stock = parseFloat(trimmedPart.substring(lastSpaceIndex + 1));
         }
         
         if (name) {
-            // Use case-insensitive matching for aggregation
             const existingKey = Array.from(variantsMap.keys()).find(k => k.toLowerCase() === name.toLowerCase());
             const keyToUse = existingKey || name;
             variantsMap.set(keyToUse, (variantsMap.get(keyToUse) || 0) + stock);
@@ -60,6 +61,7 @@ export default function NewProductPage() {
     const { addProduct } = useProducts();
     const [isLoading, setIsLoading] = useState(false);
     const [category, setCategory] = useState('');
+    const [unit, setUnit] = useState('Pcs');
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [freeShipping, setFreeShipping] = useState(false);
     const [isFlashSale, setIsFlashSale] = useState(false);
@@ -72,7 +74,6 @@ export default function NewProductPage() {
     const [affiliateCommission, setAffiliateCommission] = useState<number | undefined>(undefined);
     const [isB1G1, setIsB1G1] = useState(false);
     
-    // States for auto-formatting textareas
     const [description, setDescription] = useState('');
     const [details, setDetails] = useState('');
 
@@ -106,14 +107,13 @@ export default function NewProductPage() {
         setImageFiles(prev => prev.filter((_, i) => i !== index));
     };
 
-    // Auto-formatting handler
     const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>, setter: (val: string) => void) => {
         const val = e.target.value;
-        // Automatically insert a newline before bullet point (•) if it's not already at the start of a line
         const formatted = val.replace(/([^\n])•/g, '$1\n•');
         setter(formatted);
     };
 
+    const isDecimalUnit = unit === 'KG' || unit === 'Meter';
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -164,13 +164,14 @@ export default function NewProductPage() {
         const parsedSizes = parseVariantString(sizesInput);
 
 
-        const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold'> = {
+        const newProductData: Omit<Product, 'id' | 'rating' | 'reviews' | 'sold' | 'createdAt'> = {
             name: form.get('name') as string,
             description: description,
             price: parseFloat(form.get('price') as string) || 0,
             originalPrice: originalPriceValue ? parseFloat(originalPriceValue) : undefined,
-            stock: parseInt(form.get('stock') as string, 10) || 0,
+            stock: isDecimalUnit ? parseFloat(form.get('stock') as string) : parseInt(form.get('stock') as string, 10) || 0,
             category: category,
+            unit: unit,
             images: uploadedImageUrls,
             details: details,
             freeShipping: freeShipping,
@@ -180,7 +181,6 @@ export default function NewProductPage() {
             returnPolicy: returnPolicyValue ? parseInt(returnPolicyValue, 10) : undefined,
             colors: parsedColors,
             sizes: parsedSizes,
-            createdAt: new Date().toISOString(),
             affiliateCommission: affiliateCommission || undefined,
             isB1G1: isB1G1,
         };
@@ -270,7 +270,7 @@ export default function NewProductPage() {
                                     disabled={isLoading} 
                                 />
                             </div>
-                             <div className="grid grid-cols-3 gap-4">
+                             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Discount Price</Label>
                                     <Input id="price" name="price" type="number" placeholder="e.g., 79" required disabled={isLoading} />
@@ -280,8 +280,28 @@ export default function NewProductPage() {
                                     <Input id="originalPrice" name="originalPrice" type="number" placeholder="e.g., 99" disabled={isLoading} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="stock">Total Stock</Label>
-                                    <Input id="stock" name="stock" type="number" placeholder="e.g., 50" required disabled={isLoading} />
+                                    <Label htmlFor="unit">Unit</Label>
+                                    <Select value={unit} onValueChange={setUnit} disabled={isLoading}>
+                                        <SelectTrigger id="unit">
+                                            <SelectValue placeholder="Select unit" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {UNIT_OPTIONS.map(opt => (
+                                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="stock">Total Stock {isDecimalUnit && "(Decimal allowed)"}</Label>
+                                    <Input 
+                                        id="stock" 
+                                        name="stock" 
+                                        type={isDecimalUnit ? "text" : "number"} 
+                                        placeholder={isDecimalUnit ? "e.g., 50.5" : "e.g., 50"} 
+                                        required 
+                                        disabled={isLoading} 
+                                    />
                                 </div>
                             </div>
                             <div className="space-y-2">
