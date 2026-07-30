@@ -270,7 +270,7 @@ export default function NewProductPage() {
                                     disabled={isLoading} 
                                 />
                             </div>
-                             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Discount Price</Label>
                                     <Input id="price" name="price" type="number" placeholder="e.g., 79" required disabled={isLoading} />
