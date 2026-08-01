@@ -113,6 +113,18 @@ export default function NewProductPage() {
         setter(formatted);
     };
 
+    const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const val = e.target.value;
+        const words = val.trim().split(/\s+/).filter(Boolean);
+        
+        if (words.length <= 100 || val.length < description.length) {
+            const formatted = val.replace(/([^\n])•/g, '$1\n•');
+            setDescription(formatted);
+        }
+    };
+
+    const descriptionWordCount = description.trim().split(/\s+/).filter(Boolean).length;
+
     const isDecimalUnit = unit === 'KG' || unit === 'Meter' || unit === 'Litre';
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -248,13 +260,18 @@ export default function NewProductPage() {
                                 <Input id="name" name="name" placeholder="e.g., Wireless Headphones" required disabled={isLoading} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="description">Description</Label>
+                                <div className="flex justify-between items-center">
+                                    <Label htmlFor="description">Description</Label>
+                                    <span className={`text-[10px] font-medium ${descriptionWordCount > 90 ? "text-orange-500" : "text-muted-foreground"}`}>
+                                        {descriptionWordCount}/100 words
+                                    </span>
+                                </div>
                                 <Textarea 
                                     id="description" 
                                     name="description" 
-                                    placeholder="Describe the product (Use • for bullet points)" 
+                                    placeholder="Describe the product (Use • for bullet points - Max 100 words)" 
                                     value={description}
-                                    onChange={(e) => handleTextareaChange(e, setDescription)}
+                                    onChange={handleDescriptionChange}
                                     required 
                                     disabled={isLoading} 
                                 />
