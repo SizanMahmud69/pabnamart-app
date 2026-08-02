@@ -6,9 +6,9 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle, User } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle, User, Trash2, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Order } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { updateOrderStatus } from '@/app/actions';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 
 const db = getFirestore(app);
@@ -43,6 +44,10 @@ export default function AdminQuickOrderManagement() {
     const [activeTab, setActiveTab] = useState('all');
     const { toast } = useToast();
     const router = useRouter();
+
+    // Delete States
+    const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
 
     useEffect(() => {
@@ -78,6 +83,27 @@ export default function AdminQuickOrderManagement() {
             });
         }
     };
+
+    const handleDeleteOrder = async () => {
+        if (!orderToDelete) return;
+        setIsDeleting(true);
+        try {
+            await deleteDoc(doc(db, 'orders', orderToDelete.id));
+            toast({
+                title: "Order Deleted",
+                description: `Quick Order #${orderToDelete.orderNumber} has been permanently deleted.`
+            });
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to delete order.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsDeleting(false);
+            setOrderToDelete(null);
+        }
+    };
     
     const filteredOrders = useMemo(() => {
         if (activeTab === 'all') {
@@ -91,128 +117,155 @@ export default function AdminQuickOrderManagement() {
     }
 
     return (
-        <div className="container mx-auto p-4 max-w-4xl">
-            <header className="py-4">
-                <Button asChild variant="outline">
-                    <Link href="/admin">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Dashboard
-                    </Link>
-                </Button>
-            </header>
-            <main>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Quick Order Management</CardTitle>
-                        <CardDescription>View and manage orders placed by guest (unregistered) users.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ScrollArea className="w-full whitespace-nowrap rounded-md border">
-                            <div className="flex w-max space-x-2 p-2">
-                                {allStatusTabs.map(tab => (
-                                    <Button
-                                        key={tab}
-                                        variant={activeTab === tab ? "default" : "outline"}
-                                        onClick={() => setActiveTab(tab)}
-                                        size="sm"
-                                        className="capitalize"
-                                    >
-                                        {tab}
-                                    </Button>
-                                ))}
-                            </div>
-                            <ScrollBar orientation="horizontal" />
-                        </ScrollArea>
-
-                        <div className="mt-4">
-                           {filteredOrders.length > 0 ? (
-                                <div className="space-y-4">
-                                    {filteredOrders.map(order => (
-                                         <Card key={order.id} className="shadow-md border-orange-200">
-                                            <CardHeader className="flex flex-row items-start justify-between">
-                                                <div>
-                                                    <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
-                                                    <CardDescription className="flex items-center gap-1.5 mt-1">
-                                                        <User className="h-3.5 w-3.5" />
-                                                        <span className="font-bold text-foreground">{order.shippingAddress.fullName}</span>
-                                                        <span className="mx-1">•</span>
-                                                        <span>{new Date(order.date).toLocaleString()}</span>
-                                                    </CardDescription>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                     <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                                <span className="sr-only">Open menu</span>
-                                                                <MoreHorizontal className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                            <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
-                                                                <Eye className="mr-2 h-4 w-4" />
-                                                                <span>View Details</span>
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSub>
-                                                                <DropdownMenuSubTrigger>
-                                                                    <span>Change Status</span>
-                                                                </DropdownMenuSubTrigger>
-                                                                <DropdownMenuPortal>
-                                                                    <DropdownMenuSubContent>
-                                                                        {statusChangeOptions.map(status => (
-                                                                            <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order, status)} className="capitalize">
-                                                                                {status}
-                                                                            </DropdownMenuItem>
-                                                                        ))}
-                                                                    </DropdownMenuSubContent>
-                                                                </DropdownMenuPortal>
-                                                            </DropdownMenuSub>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-                                            </CardHeader>
-                                            <CardContent className="space-y-2">
-                                                {order.items.map((item, index) => {
-                                                    const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
-                                                    return (
-                                                    <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-2">
-                                                        <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
-                                                        <div className="flex-grow">
-                                                            <p className="font-semibold text-sm">{item.name}</p>
-                                                            {(item.color || item.size) && (
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    {item.color}{item.color && item.size ? ', ' : ''}{item.size}
-                                                                </p>
-                                                            )}
-                                                            <p className="text-xs text-muted-foreground">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
-                                                        </div>
-                                                        <p className="font-semibold text-sm">৳{(item.price * item.quantity).toFixed(0)}</p>
-                                                    </div>
-                                                )})}
-                                                <div className="bg-muted/30 p-2 rounded-md mt-2 text-xs">
-                                                    <p><strong>Phone:</strong> {order.shippingAddress.phone}</p>
-                                                    <p><strong>Address:</strong> {order.shippingAddress.address}, {order.shippingAddress.area}, {order.shippingAddress.city}</p>
-                                                </div>
-                                            </CardContent>
-                                            <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
-                                                <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
-                                                <div className="text-right">
-                                                    <p className="text-sm text-muted-foreground">Total Amount</p>
-                                                    <p className="text-xl font-bold">৳{order.total.toFixed(0)}</p>
-                                                </div>
-                                            </CardFooter>
-                                        </Card>
+        <>
+            <div className="container mx-auto p-4 max-w-4xl">
+                <header className="py-4">
+                    <Button asChild variant="outline">
+                        <Link href="/admin">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Dashboard
+                        </Link>
+                    </Button>
+                </header>
+                <main>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Quick Order Management</CardTitle>
+                            <CardDescription>View and manage orders placed by guest (unregistered) users.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea className="w-full whitespace-nowrap rounded-md border">
+                                <div className="flex w-max space-x-2 p-2">
+                                    {allStatusTabs.map(tab => (
+                                        <Button
+                                            key={tab}
+                                            variant={activeTab === tab ? "default" : "outline"}
+                                            onClick={() => setActiveTab(tab)}
+                                            size="sm"
+                                            className="capitalize"
+                                        >
+                                            {tab}
+                                        </Button>
                                     ))}
                                 </div>
-                           ) : (
-                                <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                                    <p className="text-muted-foreground">No guest orders found for this status.</p>
-                                </div>
-                           )}
-                        </div>
-                    </CardContent>
-                </Card>
-            </main>
-        </div>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
+
+                            <div className="mt-4">
+                            {filteredOrders.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {filteredOrders.map(order => (
+                                            <Card key={order.id} className="shadow-md border-orange-200">
+                                                <CardHeader className="flex flex-row items-start justify-between">
+                                                    <div>
+                                                        <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
+                                                        <CardDescription className="flex items-center gap-1.5 mt-1">
+                                                            <User className="h-3.5 w-3.5" />
+                                                            <span className="font-bold text-foreground">{order.shippingAddress.fullName}</span>
+                                                            <span className="mx-1">•</span>
+                                                            <span>{new Date(order.date).toLocaleString()}</span>
+                                                        </CardDescription>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                    <span className="sr-only">Open menu</span>
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                                <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
+                                                                    <Eye className="mr-2 h-4 w-4" />
+                                                                    <span>View Details</span>
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSub>
+                                                                    <DropdownMenuSubTrigger>
+                                                                        <span>Change Status</span>
+                                                                    </DropdownMenuSubTrigger>
+                                                                    <DropdownMenuPortal>
+                                                                        <DropdownMenuSubContent>
+                                                                            {statusChangeOptions.map(status => (
+                                                                                <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order, status)} className="capitalize">
+                                                                                    {status}
+                                                                                </DropdownMenuItem>
+                                                                            ))}
+                                                                        </DropdownMenuSubContent>
+                                                                    </DropdownMenuPortal>
+                                                                </DropdownMenuSub>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem 
+                                                                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                                    onSelect={() => setOrderToDelete(order)}
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    <span>Delete Order</span>
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </div>
+                                                </CardHeader>
+                                                <CardContent className="space-y-2">
+                                                    {order.items.map((item, index) => {
+                                                        const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
+                                                        return (
+                                                        <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-2">
+                                                            <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
+                                                            <div className="flex-grow">
+                                                                <p className="font-semibold text-sm">{item.name}</p>
+                                                                {(item.color || item.size) && (
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        {item.color}{item.color && item.size ? ', ' : ''}{item.size}
+                                                                    </p>
+                                                                )}
+                                                                <p className="text-xs text-muted-foreground">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
+                                                            </div>
+                                                            <p className="font-semibold text-sm">৳{(item.price * item.quantity).toFixed(0)}</p>
+                                                        </div>
+                                                    )})}
+                                                    <div className="bg-muted/30 p-2 rounded-md mt-2 text-xs">
+                                                        <p><strong>Phone:</strong> {order.shippingAddress.phone}</p>
+                                                        <p><strong>Address:</strong> {order.shippingAddress.address}, {order.shippingAddress.area}, {order.shippingAddress.city}</p>
+                                                    </div>
+                                                </CardContent>
+                                                <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
+                                                    <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
+                                                    <div className="text-right">
+                                                        <p className="text-sm text-muted-foreground">Total Amount</p>
+                                                        <p className="text-xl font-bold">৳{order.total.toFixed(0)}</p>
+                                                    </div>
+                                                </CardFooter>
+                                            </Card>
+                                        ))}
+                                    </div>
+                            ) : (
+                                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                                        <p className="text-muted-foreground">No guest orders found for this status.</p>
+                                    </div>
+                            )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </main>
+            </div>
+
+            <AlertDialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete order #{orderToDelete?.orderNumber}. This action cannot be undone and will remove the record from the database.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteOrder} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                            {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Delete Permanently"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }
