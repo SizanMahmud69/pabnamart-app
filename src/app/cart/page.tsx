@@ -117,8 +117,8 @@ export default function CartPage() {
                                                 min={minQuantity}
                                                 value={isDecimalUnit ? item.quantity.toFixed(3) : item.quantity}
                                                 onChange={(e) => {
-                                                    const val = parseFloat(e.target.value) || 0;
-                                                    updateQuantity(item.cartItemId, val);
+                                                    const val = parseFloat(e.target.value);
+                                                    updateQuantity(item.cartItemId, isNaN(val) ? 0 : val);
                                                 }}
                                                 onBlur={(e) => {
                                                     const val = parseFloat(e.target.value) || 0;

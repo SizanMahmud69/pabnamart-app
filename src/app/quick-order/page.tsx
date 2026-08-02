@@ -274,8 +274,8 @@ export default function QuickOrderPage() {
                                             min={minQuantity}
                                             value={isDecimalUnit ? quantity.toFixed(3) : quantity}
                                             onChange={(e) => {
-                                                const val = parseFloat(e.target.value) || 0;
-                                                setQuantity(val);
+                                                const val = parseFloat(e.target.value);
+                                                setQuantity(isNaN(val) ? 0 : val);
                                             }}
                                             onBlur={() => {
                                                 if (quantity < minQuantity) setQuantity(minQuantity);
@@ -289,7 +289,7 @@ export default function QuickOrderPage() {
                                             <Plus className="h-4 w-4" />
                                         </Button>
                                     </div>
-                                    {isDecimalUnit && <span className="text-xs text-muted-foreground font-medium">সর্বনিম্ন অর্ডার ০.২৫০ {product.unit}</span>}
+                                    <span className="text-xs text-muted-foreground font-medium">সর্বনিম্ন অর্ডার ০.২৫০ {product.unit}</span>
                                 </div>
                             </div>
 
