@@ -231,7 +231,11 @@ export default function ProductActions({
                 </Button>
             </div>
             <span className="text-xs text-muted-foreground font-medium">
-                সর্বনিম্ন অর্ডার {isDecimalUnit ? "০.২৫০" : "১"} {product.unit || 'Pcs'}
+                {user ? (
+                    `Min order ${isDecimalUnit ? "0.250" : "1"} ${product.unit || 'Pcs'}`
+                ) : (
+                    `সর্বনিম্ন অর্ডার ${isDecimalUnit ? "০.২৫০" : "১"} ${product.unit || 'Pcs'}`
+                )}
             </span>
         </div>
       </div>
