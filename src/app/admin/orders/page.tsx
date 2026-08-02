@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle, Trash2, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, runTransaction, increment } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Order, User } from '@/types';
+import type { Order, User, Product } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -107,15 +107,49 @@ export default function AdminOrderManagement() {
         if (!orderToDelete) return;
         setIsDeleting(true);
         try {
-            await deleteDoc(doc(db, 'orders', orderToDelete.id));
+            await runTransaction(db, async (transaction) => {
+                // Restore stock if the order was not already cancelled or returned
+                if (!['cancelled', 'returned', 'return-denied'].includes(orderToDelete.status)) {
+                    for (const item of orderToDelete.items) {
+                        const productRef = doc(db, 'products', item.id.toString());
+                        const productSnap = await transaction.get(productRef);
+                        
+                        if (productSnap.exists()) {
+                            const productData = productSnap.data() as Product;
+                            let newColors = [...(productData.colors || [])];
+                            let newSizes = [...(productData.sizes || [])];
+
+                            if (item.color) {
+                                const idx = newColors.findIndex(c => c.name === item.color);
+                                if (idx !== -1) newColors[idx].stock += item.quantity;
+                            }
+                            if (item.size) {
+                                const idx = newSizes.findIndex(s => s.name === item.size);
+                                if (idx !== -1) newSizes[idx].stock += item.quantity;
+                            }
+
+                            transaction.update(productRef, {
+                                stock: increment(item.quantity),
+                                sold: increment(-item.quantity),
+                                colors: newColors,
+                                sizes: newSizes
+                            });
+                        }
+                    }
+                }
+                // Finally delete the order document
+                transaction.delete(doc(db, 'orders', orderToDelete.id));
+            });
+
             toast({
                 title: "Order Deleted",
-                description: `Order #${orderToDelete.orderNumber} has been permanently deleted.`
+                description: `Order #${orderToDelete.orderNumber} has been permanently deleted and stock restored.`
             });
         } catch (error) {
+            console.error("Delete failed:", error);
             toast({
                 title: "Error",
-                description: "Failed to delete order.",
+                description: "Failed to delete order and restore stock.",
                 variant: "destructive"
             });
         } finally {
@@ -265,7 +299,7 @@ export default function AdminOrderManagement() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete order #{orderToDelete?.orderNumber}. This action cannot be undone and will remove the record from the database.
+                            This will permanently delete order #{orderToDelete?.orderNumber}. Stock will be automatically restored to the products. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
