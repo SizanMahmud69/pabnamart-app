@@ -5,12 +5,13 @@ import { useState, useMemo } from "react";
 import { useCart } from "@/hooks/useCart";
 import type { Product, ProductVariant } from "@/types";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, CreditCard, Heart, Loader2 } from "lucide-react";
+import { ShoppingCart, CreditCard, Heart, Loader2, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWishlist } from "@/hooks/useWishlist";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const aggregateVariants = (variants: ProductVariant[] | undefined): ProductVariant[] => {
     if (!variants) return [];
@@ -38,6 +39,7 @@ export default function ProductActions({
     isB1G1Context?: boolean
 }) {
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const { addToWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -69,6 +71,18 @@ export default function ProductActions({
     router.push('/checkout');
   }
   
+  const handleQuickOrder = () => {
+    if (!canAddToCart) return;
+    const quickOrderData = {
+        product,
+        variations: { color: selectedColor, size: selectedSize },
+        isFlashSaleContext,
+        isB1G1Context
+    };
+    sessionStorage.setItem('quickOrderData', JSON.stringify(quickOrderData));
+    router.push('/quick-order');
+  }
+
   const handleAddToWishlist = () => {
     addToWishlist(product);
   }
@@ -142,18 +156,32 @@ export default function ProductActions({
         </div>
       )}
 
-      <div className="flex gap-4 pt-2">
-        <Button size="lg" className="w-full" onClick={handleAddToCart} disabled={isLoading || !canAddToCart}>
-          <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
-        </Button>
-        <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isLoading || !canAddToCart}>
-          {isLoading ? (
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          ) : (
-            <CreditCard className="mr-2 h-5 w-5" />
-          )}
-          {isLoading ? "Processing..." : "Buy Now"}
-        </Button>
+      <div className="space-y-3">
+        <div className="flex gap-4 pt-2">
+          <Button size="lg" className="w-full h-12" onClick={handleAddToCart} disabled={isLoading || !canAddToCart}>
+            <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+          </Button>
+          <Button size="lg" variant="outline" className="w-full h-12" onClick={handleBuyNow} disabled={isLoading || !canAddToCart}>
+            {isLoading ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <CreditCard className="mr-2 h-5 w-5" />
+            )}
+            {isLoading ? "Processing..." : "Buy Now"}
+          </Button>
+        </div>
+        
+        {!user && (
+          <Button 
+            size="lg" 
+            className="w-full h-14 bg-orange-500 hover:bg-orange-600 text-white font-black text-lg uppercase tracking-tight shadow-lg transition-transform active:scale-95" 
+            onClick={handleQuickOrder} 
+            disabled={isLoading || !canAddToCart}
+          >
+            <Zap className="mr-2 h-6 w-6 fill-white" />
+            কন্টিনিউ শপিং
+          </Button>
+        )}
       </div>
     </div>
   );

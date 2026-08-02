@@ -242,10 +242,15 @@ export async function placeOrder(
       );
       const productSnaps = await transaction.getAll(...productRefs);
       
-      const userDocRef = db.collection('users').doc(payload.userId);
-      const userSnap = await transaction.get(userDocRef);
-      if (!userSnap.exists) throw new Error("User profile not found.");
-      const userData = userSnap.data() as User;
+      let userData: User | null = null;
+      const isGuest = payload.userId.startsWith('guest_');
+
+      if (!isGuest) {
+          const userDocRef = db.collection('users').doc(payload.userId);
+          const userSnap = await transaction.get(userDocRef);
+          if (!userSnap.exists) throw new Error("User profile not found.");
+          userData = userSnap.data() as User;
+      }
 
       let voucherSnap = null;
       if (payload.voucherCode) {
@@ -300,6 +305,7 @@ export async function placeOrder(
           quantity: cartItem.quantity,
           image: productData.images[0] || '',
           returnPolicy: productData.returnPolicy || 0,
+          unit: productData.unit || 'Pcs',
           color: cartItem.color,
           size: cartItem.size,
           isB1G1: cartItem.isB1G1,
@@ -322,13 +328,13 @@ export async function placeOrder(
       
       let coinDiscount = 0;
       let coinsToUse = 0;
-      if (payload.useCoins) {
-          const userCoins = userData?.coins || 0;
+      if (payload.useCoins && !isGuest && userData) {
+          const userCoins = userData.coins || 0;
           const maxCoins = (settings.maxCoinsPerOrder / settings.takaPer100Coins) * 100;
           coinsToUse = Math.min(userCoins, Math.floor(maxCoins));
           if (coinsToUse > 0) {
               coinDiscount = (coinsToUse / 100) * settings.takaPer100Coins;
-              transaction.update(userDocRef, {
+              transaction.update(db.collection('users').doc(payload.userId), {
                   coins: FieldValue.increment(-coinsToUse)
               });
               const coinHistoryRef = db.collection(`users/${payload.userId}/coinHistory`).doc();
@@ -344,14 +350,14 @@ export async function placeOrder(
 
       let spinDiscount = 0;
       let spinPercentageUsed = 0;
-      if (payload.useSpinDiscount && userData.activeSpinDiscount && userData.spinDiscountExpiry) {
+      if (payload.useSpinDiscount && !isGuest && userData && userData.activeSpinDiscount && userData.spinDiscountExpiry) {
           const now = new Date();
           const expiry = new Date(userData.spinDiscountExpiry);
           if (now < expiry) {
               spinPercentageUsed = userData.activeSpinDiscount;
               const baseForSpin = offerSubtotal - voucherDiscount - coinDiscount;
               spinDiscount = (baseForSpin * spinPercentageUsed) / 100;
-              transaction.update(userDocRef, { 
+              transaction.update(db.collection('users').doc(payload.userId), { 
                   activeSpinDiscount: FieldValue.delete(),
                   spinDiscountExpiry: FieldValue.delete()
               });
@@ -384,21 +390,23 @@ export async function placeOrder(
         cashOnDeliveryFee: codFee,
       });
 
-      if (usedVoucherCode) {
-        transaction.update(userDocRef, { [`usedVouchers.${usedVoucherCode}`]: FieldValue.increment(1) });
+      if (usedVoucherCode && !isGuest) {
+        transaction.update(db.collection('users').doc(payload.userId), { [`usedVouchers.${usedVoucherCode}`]: FieldValue.increment(1) });
       }
 
-      const coinsEarned = Math.floor((offerSubtotal / 100) * settings.pointsPer100Taka);
-      if (coinsEarned > 0) {
-          transaction.update(userDocRef, { coins: FieldValue.increment(coinsEarned) });
-          const coinHistoryRef = db.collection(`users/${payload.userId}/coinHistory`).doc();
-          transaction.set(coinHistoryRef, {
-            id: coinHistoryRef.id,
-            amount: coinsEarned,
-            type: 'earn',
-            reason: `Earned from Order #${orderNumber}`,
-            date: new Date().toISOString()
-          });
+      if (!isGuest) {
+          const coinsEarned = Math.floor((offerSubtotal / 100) * settings.pointsPer100Taka);
+          if (coinsEarned > 0) {
+              transaction.update(db.collection('users').doc(payload.userId), { coins: FieldValue.increment(coinsEarned) });
+              const coinHistoryRef = db.collection(`users/${payload.userId}/coinHistory`).doc();
+              transaction.set(coinHistoryRef, {
+                id: coinHistoryRef.id,
+                amount: coinsEarned,
+                type: 'earn',
+                reason: `Earned from Order #${orderNumber}`,
+                date: new Date().toISOString()
+              });
+          }
       }
 
       return { orderId: orderRef.id };
@@ -584,7 +592,7 @@ async function handleOrderCancellationEffects(transaction: admin.firestore.Trans
 
     const netCoinChange = Math.round(coinsToRestore - coinsEarned);
 
-    if (netCoinChange !== 0) {
+    if (netCoinChange !== 0 && !orderData.userId.startsWith('guest_')) {
         transaction.update(userRef, {
             coins: FieldValue.increment(netCoinChange)
         });
@@ -645,7 +653,7 @@ export async function updateOrderStatus(
       transaction.update(orderRef, updatePayload);
     });
 
-    if (orderData) {
+    if (orderData && !orderData.userId.startsWith('guest_')) {
         await createAndSendNotification(orderData.userId, {
             icon: 'Truck',
             title: `Order ${newStatus.toUpperCase()}`,
