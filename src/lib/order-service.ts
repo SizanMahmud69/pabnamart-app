@@ -21,8 +21,26 @@ function nowToOrderNumber() {
 }
 
 /**
+ * Helper to recursively remove undefined values from an object,
+ * as Firestore does not support undefined field values.
+ */
+function sanitize(obj: any): any {
+    if (obj === undefined) return null;
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(sanitize);
+    
+    const cleaned: any = {};
+    Object.keys(obj).forEach(key => {
+        const val = obj[key];
+        if (val !== undefined) {
+            cleaned[key] = sanitize(val);
+        }
+    });
+    return cleaned;
+}
+
+/**
  * Client-side order placement using Firestore transactions to ensure stock integrity.
- * This fixes the server/client module conflict and follows the guideline of client-side mutations.
  */
 export async function placeOrder(payload: OrderPayload): Promise<{ success: boolean; orderId?: string; message?: string }> {
   try {
@@ -87,9 +105,9 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
           image: productData.images[0] || '',
           returnPolicy: productData.returnPolicy || 0,
           unit: productData.unit || 'Pcs',
-          color: cartItem.color,
-          size: cartItem.size,
-          isB1G1: cartItem.isB1G1,
+          color: cartItem.color || null,
+          size: cartItem.size || null,
+          isB1G1: cartItem.isB1G1 || false,
         });
       }
 
@@ -162,7 +180,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
       const orderRef = doc(collection(db, 'orders'));
       const orderNumber = nowToOrderNumber();
       
-      transaction.set(orderRef, {
+      const orderData = {
         userId: payload.userId,
         items: itemsForOrder,
         total,
@@ -181,7 +199,10 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
         spinDiscountPercentage: spinPercentageUsed,
         cashOnDeliveryFee: codFee,
         referrerId: payload.referrerId || null,
-      });
+      };
+
+      // Sanitize data before setting to Firestore to remove any 'undefined' values
+      transaction.set(orderRef, sanitize(orderData));
 
       // 8. Award Coins for purchase
       if (!isGuest) {
