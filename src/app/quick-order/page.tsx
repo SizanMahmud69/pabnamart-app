@@ -266,6 +266,13 @@ export default function QuickOrderPage() {
                                     <span>৳{total}</span>
                                 </div>
                             </div>
+
+                            <div className="bg-green-50 p-3 rounded-lg border border-green-100 flex items-center gap-3 mt-4">
+                                <Truck className="h-5 w-5 text-green-600" />
+                                <div className="text-xs text-green-700 font-bold leading-tight">
+                                    পণ্য হাতে পেয়ে টাকা পরিশোধ করুন (ক্যাশ অন ডেলিভারি)
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -344,13 +351,6 @@ export default function QuickOrderPage() {
                                             onChange={(e) => setAddress(e.target.value)}
                                             required 
                                         />
-                                    </div>
-                                </div>
-                                
-                                <div className="bg-green-50 p-3 rounded-lg border border-green-100 flex items-center gap-3 mt-4">
-                                    <Truck className="h-5 w-5 text-green-600" />
-                                    <div className="text-xs text-green-700 font-bold leading-tight">
-                                        পণ্য হাতে পেয়ে টাকা পরিশোধ করুন (ক্যাশ অন ডেলিভারি)
                                     </div>
                                 </div>
                             </form>
