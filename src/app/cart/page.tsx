@@ -73,6 +73,7 @@ export default function CartPage() {
                         <div className="divide-y">
                         {cartItems.map((item) => {
                             const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
+                            const minQuantity = isDecimalUnit ? 0.250 : 1;
                             return (
                                 <div key={item.cartItemId} className="flex items-start gap-4 p-4">
                                     <Checkbox 
@@ -104,15 +105,23 @@ export default function CartPage() {
                                             <Button 
                                                 variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
                                                 onClick={() => updateQuantity(item.cartItemId, isDecimalUnit ? item.quantity - 0.1 : item.quantity - 1)}
-                                                disabled={item.quantity <= (isDecimalUnit ? 0.1 : 1)}
+                                                disabled={item.quantity <= minQuantity}
                                             >
                                                 <Minus className="h-4 w-4" />
                                             </Button>
                                             <Input
                                                 type="number"
                                                 step={isDecimalUnit ? "0.001" : "1"}
+                                                min={minQuantity}
                                                 value={item.quantity}
-                                                onChange={(e) => updateQuantity(item.cartItemId, parseFloat(e.target.value) || 0)}
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    updateQuantity(item.cartItemId, val < minQuantity ? minQuantity : val);
+                                                }}
+                                                onBlur={(e) => {
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    if (val < minQuantity) updateQuantity(item.cartItemId, minQuantity);
+                                                }}
                                                 className="h-8 w-20 text-center px-1 font-bold"
                                                 aria-label={`Quantity for ${item.name}`}
                                             />

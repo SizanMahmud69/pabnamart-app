@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useCart } from "@/hooks/useCart";
 import type { Product, ProductVariant } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -45,10 +45,17 @@ export default function ProductActions({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   
+  const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(product.unit || '');
+  const minQuantity = isDecimalUnit ? 0.250 : 1;
+
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(minQuantity);
   
+  useEffect(() => {
+    setQuantity(minQuantity);
+  }, [minQuantity]);
+
   const uniqueColors = useMemo(() => aggregateVariants(product.colors), [product.colors]);
   const uniqueSizes = useMemo(() => aggregateVariants(product.sizes), [product.sizes]);
 
@@ -59,7 +66,7 @@ export default function ProductActions({
     (uniqueColors.length === 0 || selectedColor) &&
     (uniqueSizes.length === 0 || selectedSize);
     
-  const canAddToCart = !isSoldOut && (!hasVariations || variationsSelected) && quantity > 0;
+  const canAddToCart = !isSoldOut && (!hasVariations || variationsSelected) && quantity >= minQuantity;
 
   const handleAddToCart = () => {
     if (!canAddToCart) return;
@@ -89,8 +96,6 @@ export default function ProductActions({
   const handleAddToWishlist = () => {
     addToWishlist(product);
   }
-
-  const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(product.unit || '');
 
   if (isSoldOut) {
     return (
@@ -170,17 +175,23 @@ export default function ProductActions({
                     variant="ghost" 
                     size="icon" 
                     className="h-full w-10 rounded-none border-r"
-                    onClick={() => setQuantity(prev => Math.max(isDecimalUnit ? prev - 0.1 : prev - 1, isDecimalUnit ? 0.1 : 1))}
-                    disabled={quantity <= (isDecimalUnit ? 0.1 : 1)}
+                    onClick={() => setQuantity(prev => Math.max(isDecimalUnit ? prev - 0.1 : prev - 1, minQuantity))}
+                    disabled={quantity <= minQuantity}
                 >
                     <Minus className="h-4 w-4" />
                 </Button>
                 <Input 
                     type="number"
                     step={isDecimalUnit ? "0.001" : "1"}
-                    min={isDecimalUnit ? "0.001" : "1"}
+                    min={minQuantity}
                     value={quantity}
-                    onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setQuantity(val < minQuantity ? minQuantity : val);
+                    }}
+                    onBlur={() => {
+                        if (quantity < minQuantity) setQuantity(minQuantity);
+                    }}
                     className="w-20 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
                 />
                 <Button 

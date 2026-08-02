@@ -40,23 +40,25 @@ export default function QuickOrderPage() {
     const [area, setArea] = useState('');
     const [quantity, setQuantity] = useState(1);
 
+    const product: Product | null = quickOrderData?.product || null;
+    const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(product?.unit || '');
+    const minQuantity = isDecimalUnit ? 0.250 : 1;
+
     useEffect(() => {
         const data = sessionStorage.getItem('quickOrderData');
         if (data) {
             const parsed = JSON.parse(data);
             setQuickOrderData(parsed);
-            if (parsed.quantity) setQuantity(parsed.quantity);
+            const initialQty = parsed.quantity || (['KG', 'Meter', 'Litre'].includes(parsed.product?.unit || '') ? 0.250 : 1);
+            setQuantity(initialQty < minQuantity ? minQuantity : initialQty);
         } else {
             router.replace('/');
         }
-    }, [router]);
+    }, [router, minQuantity]);
 
-    const product: Product | null = quickOrderData?.product || null;
     const variations = quickOrderData?.variations || {};
     const isFlashSaleContext = quickOrderData?.isFlashSaleContext || false;
     const isB1G1Context = quickOrderData?.isB1G1Context || false;
-
-    const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(product?.unit || '');
 
     const price = useMemo(() => {
         if (!product) return 0;
@@ -79,6 +81,11 @@ export default function QuickOrderPage() {
 
         if (!fullName || !phone || !address || !city || !area) {
             toast({ title: "Error", description: "Please fill all the details.", variant: "destructive" });
+            return;
+        }
+
+        if (quantity < minQuantity) {
+            toast({ title: "Error", description: `সর্বনিম্ন অর্ডার ${minQuantity} ${product.unit} হতে হবে।`, variant: "destructive" });
             return;
         }
 
@@ -254,15 +261,23 @@ export default function QuickOrderPage() {
                                     <div className="flex items-center border rounded-md h-10 overflow-hidden bg-background">
                                         <Button 
                                             variant="ghost" size="icon" className="h-full w-10 rounded-none border-r"
-                                            onClick={() => setQuantity(prev => Math.max(isDecimalUnit ? prev - 0.1 : prev - 1, isDecimalUnit ? 0.1 : 1))}
+                                            onClick={() => setQuantity(prev => Math.max(isDecimalUnit ? prev - 0.1 : prev - 1, minQuantity))}
+                                            disabled={quantity <= minQuantity}
                                         >
                                             <Minus className="h-4 w-4" />
                                         </Button>
                                         <Input 
                                             type="number" 
                                             step={isDecimalUnit ? "0.001" : "1"}
+                                            min={minQuantity}
                                             value={quantity}
-                                            onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
+                                            onChange={(e) => {
+                                                const val = parseFloat(e.target.value) || 0;
+                                                setQuantity(val < minQuantity ? minQuantity : val);
+                                            }}
+                                            onBlur={() => {
+                                                if (quantity < minQuantity) setQuantity(minQuantity);
+                                            }}
                                             className="w-20 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
                                         />
                                         <Button 
