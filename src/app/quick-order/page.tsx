@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Package, Truck, Phone, User, MapPin, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Truck, Phone, User, MapPin, Minus, Plus, Zap } from "lucide-react";
 import Link from 'next/link';
 import { useDeliveryCharge } from "@/hooks/useDeliveryCharge";
 import { useProducts } from "@/hooks/useProducts";
@@ -116,12 +116,12 @@ export default function QuickOrderPage() {
         if (!product) return;
 
         if (!fullName || !phone || !address || !city || !area) {
-            toast({ title: "Error", description: "Please fill all the details.", variant: "destructive" });
+            toast({ title: "তথ্য অসম্পূর্ণ", description: "অনুগ্রহ করে সব তথ্য পূরণ করুন।", variant: "destructive" });
             return;
         }
 
         if (quantity < minQuantity) {
-            toast({ title: "Error", description: `সর্বনিম্ন অর্ডার ${minQuantity} ${product.unit} হতে হবে।`, variant: "destructive" });
+            toast({ title: "ভুল পরিমাণ", description: `সর্বনিম্ন অর্ডার ${minQuantity} ${product.unit} হতে হবে।`, variant: "destructive" });
             return;
         }
 
@@ -176,7 +176,7 @@ export default function QuickOrderPage() {
     if (!product) return <LoadingSpinner />;
 
     return (
-        <div className="bg-purple-50/30 min-h-screen pb-12">
+        <div className="bg-purple-50/30 min-h-screen pb-20">
             <div className="container mx-auto max-w-2xl px-4 py-6">
                 <Button asChild variant="ghost" className="mb-4">
                     <Link href={`/products/${product.id}`}>
@@ -187,85 +187,8 @@ export default function QuickOrderPage() {
 
                 <h1 className="text-3xl font-black text-primary mb-6 text-center uppercase italic tracking-tighter">সরাসরি অর্ডার করুন</h1>
 
-                <div className="grid grid-cols-1 gap-6">
-                    <Card className="shadow-lg border-2 border-primary/10">
-                        <CardHeader className="bg-primary/5 border-b">
-                            <CardTitle className="flex items-center gap-2">
-                                <User className="h-5 w-5 text-primary" />
-                                আপনার তথ্য দিন
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-6">
-                            <form id="quick-order-form" onSubmit={handleSubmit} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="fullName">সম্পূর্ণ নাম</Label>
-                                    <div className="relative">
-                                        <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input 
-                                            id="fullName" 
-                                            placeholder="আপনার নাম লিখুন" 
-                                            className="pl-9"
-                                            value={fullName}
-                                            onChange={(e) => setFullName(e.target.value)}
-                                            required 
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="phone">মোবাইল নম্বর</Label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input 
-                                            id="phone" 
-                                            type="tel"
-                                            placeholder="১১ ডিজিটের নম্বরটি লিখুন" 
-                                            className="pl-9 font-mono"
-                                            value={phone}
-                                            onChange={(e) => setPhone(e.target.value)}
-                                            required 
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="city">শহর / জেলা</Label>
-                                        <Input 
-                                            id="city" 
-                                            placeholder="যেমন: পাবনা" 
-                                            value={city}
-                                            onChange={(e) => setCity(e.target.value)}
-                                            required 
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="area">উপজেলা / এলাকা</Label>
-                                        <Input 
-                                            id="area" 
-                                            placeholder="যেমন: ঈশ্বরদী" 
-                                            value={area}
-                                            onChange={(e) => setArea(e.target.value)}
-                                            required 
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="address">সম্পূর্ণ ঠিকানা</Label>
-                                    <div className="relative">
-                                        <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input 
-                                            id="address" 
-                                            placeholder="গ্রাম, রাস্তা বা বাড়ির নম্বর লিখুন" 
-                                            className="pl-9"
-                                            value={address}
-                                            onChange={(e) => setAddress(e.target.value)}
-                                            required 
-                                        />
-                                    </div>
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
-
+                <div className="space-y-6">
+                    {/* Step 1: Order Details */}
                     <Card className="shadow-lg border-2 border-primary/10 overflow-hidden">
                         <CardHeader className="bg-primary/5 border-b">
                             <CardTitle className="flex items-center gap-2">
@@ -292,31 +215,33 @@ export default function QuickOrderPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="font-bold">কতটুকু নিতে চান? ({product.unit || 'Pcs'})</Label>
+                                <Label className="font-bold text-sm">কতটুকু নিতে চান? ({product.unit || 'Pcs'})</Label>
                                 <div className="flex items-center gap-3">
-                                    <div className="flex items-center border rounded-md h-10 overflow-hidden bg-background">
+                                    <div className="flex items-center border-2 border-primary/20 rounded-md h-12 overflow-hidden bg-background w-fit">
                                         <Button 
-                                            variant="ghost" size="icon" className="h-full w-10 rounded-none border-r"
+                                            variant="ghost" size="icon" className="h-full w-12 rounded-none border-r"
                                             onClick={handleDecrement}
                                             disabled={quantity <= minQuantity}
                                         >
-                                            <Minus className="h-4 w-4" />
+                                            <Minus className="h-5 w-5" />
                                         </Button>
                                         <Input 
                                             type="text" 
                                             value={displayQty}
                                             onChange={(e) => handleManualInput(e.target.value)}
                                             onBlur={handleBlur}
-                                            className="w-24 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
+                                            className="w-24 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-black text-lg"
                                         />
                                         <Button 
-                                            variant="ghost" size="icon" className="h-full w-10 rounded-none border-l"
+                                            variant="ghost" size="icon" className="h-full w-12 rounded-none border-l"
                                             onClick={handleIncrement}
                                         >
-                                            <Plus className="h-4 w-4" />
+                                            <Plus className="h-5 w-5" />
                                         </Button>
                                     </div>
-                                    <span className="text-xs text-muted-foreground font-medium">সর্বনিম্ন অর্ডার ০.২৫০ {product.unit}</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase leading-tight max-w-[80px]">
+                                        সর্বনিম্ন অর্ডার ০.২৫০ {product.unit}
+                                    </span>
                                 </div>
                             </div>
 
@@ -336,37 +261,126 @@ export default function QuickOrderPage() {
                                     )}
                                 </div>
                                 <Separator className="my-2" />
-                                <div className="flex justify-between text-lg font-black text-primary">
+                                <div className="flex justify-between text-xl font-black text-primary">
                                     <span>সর্বমোট</span>
                                     <span>৳{total}</span>
                                 </div>
                             </div>
-
-                            <div className="bg-green-50 p-3 rounded-lg border border-green-100 flex items-center gap-3">
-                                <Truck className="h-5 w-5 text-green-600" />
-                                <div className="text-xs text-green-700 font-medium leading-tight">
-                                    পণ্য হাতে পেয়ে টাকা পরিশোধ করুন (ক্যাশ অন ডেলিভারি)
-                                </div>
-                            </div>
                         </CardContent>
-                        <CardFooter className="bg-primary/5 p-4 border-t">
-                            <Button 
-                                type="submit" 
-                                form="quick-order-form" 
-                                className="w-full h-14 text-xl font-black uppercase tracking-tighter" 
-                                disabled={isPending || quantity <= 0}
-                            >
-                                {isPending ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                                        প্রসেসিং হচ্ছে...
-                                    </>
-                                ) : (
-                                    'অর্ডার কনফার্ম করুন'
-                                )}
-                            </Button>
-                        </CardFooter>
                     </Card>
+
+                    {/* Step 2: Address Information */}
+                    <Card className="shadow-lg border-2 border-primary/10">
+                        <CardHeader className="bg-primary/5 border-b">
+                            <CardTitle className="flex items-center gap-2">
+                                <User className="h-5 w-5 text-primary" />
+                                আপনার তথ্য দিন
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-6">
+                            <form id="quick-order-form" onSubmit={handleSubmit} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="fullName" className="font-semibold">আপনার নাম</Label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <Input 
+                                            id="fullName" 
+                                            placeholder="পুরো নামটি লিখুন" 
+                                            className="pl-9 h-12"
+                                            value={fullName}
+                                            onChange={(e) => setFullName(e.target.value)}
+                                            required 
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="phone" className="font-semibold">মোবাইল নম্বর</Label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <Input 
+                                            id="phone" 
+                                            type="tel"
+                                            placeholder="১১ ডিজিটের মোবাইল নম্বর" 
+                                            className="pl-9 font-mono h-12"
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
+                                            required 
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="city" className="font-semibold">শহর / জেলা</Label>
+                                        <Input 
+                                            id="city" 
+                                            placeholder="যেমন: পাবনা" 
+                                            className="h-12"
+                                            value={city}
+                                            onChange={(e) => setCity(e.target.value)}
+                                            required 
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="area" className="font-semibold">উপজেলা / এলাকা</Label>
+                                        <Input 
+                                            id="area" 
+                                            placeholder="যেমন: ঈশ্বরদী" 
+                                            className="h-12"
+                                            value={area}
+                                            onChange={(e) => setArea(e.target.value)}
+                                            required 
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="address" className="font-semibold">পুরো ঠিকানা</Label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <Input 
+                                            id="address" 
+                                            placeholder="গ্রাম, রাস্তা বা বাড়ির নম্বর" 
+                                            className="pl-9 h-12"
+                                            value={address}
+                                            onChange={(e) => setAddress(e.target.value)}
+                                            required 
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-green-50 p-3 rounded-lg border border-green-100 flex items-center gap-3 mt-4">
+                                    <Truck className="h-5 w-5 text-green-600" />
+                                    <div className="text-xs text-green-700 font-bold leading-tight">
+                                        পণ্য হাতে পেয়ে টাকা পরিশোধ করুন (ক্যাশ অন ডেলিভারি)
+                                    </div>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+
+                    {/* Step 3: Action Button */}
+                    <div className="pt-2">
+                        <Button 
+                            type="submit" 
+                            form="quick-order-form" 
+                            className="w-full h-16 text-2xl font-black uppercase tracking-tighter shadow-2xl transition-all active:scale-95 bg-primary hover:bg-primary/90" 
+                            disabled={isPending || quantity <= 0}
+                        >
+                            {isPending ? (
+                                <>
+                                    <Loader2 className="mr-2 h-7 w-7 animate-spin" />
+                                    প্রসেসিং হচ্ছে...
+                                </>
+                            ) : (
+                                <>
+                                    <Zap className="mr-2 h-7 w-7 fill-white" />
+                                    অর্ডার কনফার্ম করুন
+                                </>
+                            )}
+                        </Button>
+                        <p className="text-center text-[10px] text-muted-foreground mt-3 uppercase font-bold tracking-widest">
+                            অর্ডারটি কনফার্ম করতে উপরের বাটনে ক্লিক করুন
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
