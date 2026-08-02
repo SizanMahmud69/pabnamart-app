@@ -20,6 +20,7 @@ import type { PutBlobResult } from '@vercel/blob';
 import { awardReviewCoins } from '@/app/actions';
 
 const db = getFirestore(app);
+const DEFAULT_AVATAR_URL = "https://pix1.wapkizfile.info/download/3090f1dc137678b1189db8cd9174efe6/sizan+wapkiz+click/1puser-(sizan.wapkiz.click).gif";
 
 function NewReviewPageContent() {
     const router = useRouter();
@@ -101,7 +102,7 @@ function NewReviewPageContent() {
                 user: {
                     uid: user.uid,
                     displayName: appUser.displayName || 'Anonymous',
-                    photoURL: appUser.photoURL || undefined,
+                    photoURL: appUser.photoURL || DEFAULT_AVATAR_URL,
                     emailVerified: appUser.emailVerified || false,
                 },
                 rating,

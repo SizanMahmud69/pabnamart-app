@@ -303,8 +303,9 @@ function ProductDetailPageContent() {
                                   {reviews.length > 0 ? (
                                       reviews.map((review) => {
                                           const isGuest = review.user.uid.startsWith('guest_');
+                                          // Enhanced logic to ensure photo visibility regardless of login state
                                           const reviewerPhoto = (appUser && review.user.uid === appUser.uid) 
-                                              ? (appUser.photoURL || DEFAULT_AVATAR_URL) 
+                                              ? (appUser.photoURL || review.user.photoURL || DEFAULT_AVATAR_URL) 
                                               : (review.user.photoURL || DEFAULT_AVATAR_URL);
   
                                           return (
@@ -318,7 +319,7 @@ function ProductDetailPageContent() {
                                                           <>
                                                               <AvatarImage src={reviewerPhoto} alt={review.user.displayName} />
                                                               <AvatarFallback className="bg-muted text-muted-foreground font-bold">
-                                                                  {review.user.displayName.charAt(0).toUpperCase()}
+                                                                  {review.user.displayName?.charAt(0).toUpperCase() || 'U'}
                                                               </AvatarFallback>
                                                           </>
                                                       )}
@@ -333,7 +334,7 @@ function ProductDetailPageContent() {
                                                           </div>
                                                           <StarRating rating={review.rating} />
                                                       </div>
-                                                      <p className="text-muted-foreground mt-1 whitespace-pre-wrap">{review.comment}</p>
+                                                      <p className="text-muted-foreground mt-1 whitespace-pre-wrap text-sm md:text-base">{review.comment}</p>
                                                       {review.images && review.images.length > 0 && (
                                                           <div className="mt-2 flex gap-2 flex-wrap">
                                                               {review.images.map((img, index) => (
