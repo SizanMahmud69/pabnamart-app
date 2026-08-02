@@ -116,7 +116,7 @@ export default function CartPage() {
                                                 value={item.quantity}
                                                 onChange={(e) => {
                                                     const val = parseFloat(e.target.value) || 0;
-                                                    updateQuantity(item.cartItemId, val < minQuantity ? minQuantity : val);
+                                                    updateQuantity(item.cartItemId, val);
                                                 }}
                                                 onBlur={(e) => {
                                                     const val = parseFloat(e.target.value) || 0;

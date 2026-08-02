@@ -187,7 +187,7 @@ export default function ProductActions({
                     value={quantity}
                     onChange={(e) => {
                         const val = parseFloat(e.target.value) || 0;
-                        setQuantity(val < minQuantity ? minQuantity : val);
+                        setQuantity(val);
                     }}
                     onBlur={() => {
                         if (quantity < minQuantity) setQuantity(minQuantity);
