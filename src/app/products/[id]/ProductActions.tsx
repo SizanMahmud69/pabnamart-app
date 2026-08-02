@@ -270,7 +270,7 @@ export default function ProductActions({
             disabled={isLoading || !canAddToCart}
           >
             <Zap className="mr-2 h-6 w-6 fill-white" />
-            কন্টিনিউ শপিং
+            কন্টিনিউ অর্ডার
           </Button>
         )}
       </div>
