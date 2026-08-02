@@ -46,6 +46,7 @@ export default function QuickOrderPage() {
     const minQuantity = isDecimalUnit ? 0.250 : 1;
 
     useEffect(() => {
+        window.scrollTo(0, 0); // Reset scroll to top on mount
         const data = sessionStorage.getItem('quickOrderData');
         if (data) {
             const parsed = JSON.parse(data);
@@ -223,7 +224,7 @@ export default function QuickOrderPage() {
                                             onClick={handleDecrement}
                                             disabled={quantity <= minQuantity}
                                         >
-                                            <Minus className="h-5 w-5" />
+                                            <Minus className="h-4 w-4" />
                                         </Button>
                                         <Input 
                                             type="text" 
@@ -236,7 +237,7 @@ export default function QuickOrderPage() {
                                             variant="ghost" size="icon" className="h-full w-12 rounded-none border-l"
                                             onClick={handleIncrement}
                                         >
-                                            <Plus className="h-5 w-5" />
+                                            <Plus className="h-4 w-4" />
                                         </Button>
                                     </div>
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase leading-tight max-w-[80px]">
