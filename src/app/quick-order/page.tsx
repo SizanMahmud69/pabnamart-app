@@ -38,6 +38,7 @@ export default function QuickOrderPage() {
     const [city, setCity] = useState('');
     const [area, setArea] = useState('');
     const [quantity, setQuantity] = useState(1);
+    const [displayQty, setDisplayQty] = useState("1");
 
     const product: Product | null = quickOrderData?.product || null;
     const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(product?.unit || '');
@@ -48,8 +49,13 @@ export default function QuickOrderPage() {
         if (data) {
             const parsed = JSON.parse(data);
             setQuickOrderData(parsed);
+            
             const initialQty = parsed.quantity || (['KG', 'Meter', 'Litre'].includes(parsed.product?.unit || '') ? 0.250 : 1);
-            setQuantity(initialQty < minQuantity ? minQuantity : initialQty);
+            const finalQty = initialQty < minQuantity ? minQuantity : initialQty;
+            
+            setQuantity(finalQty);
+            const unitIsDecimal = ['KG', 'Meter', 'Litre'].includes(parsed.product?.unit || '');
+            setDisplayQty(unitIsDecimal ? finalQty.toFixed(3) : finalQty.toString());
         } else {
             router.replace('/');
         }
@@ -73,6 +79,36 @@ export default function QuickOrderPage() {
     }, [product, city, chargeInsidePabnaSmall, chargeOutsidePabnaSmall]);
 
     const total = Math.round(price * quantity + shippingFee);
+
+    const handleManualInput = (val: string) => {
+        setDisplayQty(val);
+        const num = parseFloat(val);
+        if (!isNaN(num)) {
+            setQuantity(num);
+        }
+    };
+
+    const handleBlur = () => {
+        let num = parseFloat(displayQty);
+        if (isNaN(num) || num < minQuantity) {
+            num = minQuantity;
+        }
+        setQuantity(num);
+        setDisplayQty(isDecimalUnit ? num.toFixed(3) : num.toString());
+    };
+
+    const handleIncrement = () => {
+        const next = isDecimalUnit ? quantity + 0.1 : quantity + 1;
+        setQuantity(next);
+        setDisplayQty(isDecimalUnit ? next.toFixed(3) : next.toString());
+    };
+
+    const handleDecrement = () => {
+        const next = isDecimalUnit ? quantity - 0.1 : quantity - 1;
+        const final = Math.max(next, minQuantity);
+        setQuantity(final);
+        setDisplayQty(isDecimalUnit ? final.toFixed(3) : final.toString());
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -260,31 +296,21 @@ export default function QuickOrderPage() {
                                     <div className="flex items-center border rounded-md h-10 overflow-hidden bg-background">
                                         <Button 
                                             variant="ghost" size="icon" className="h-full w-10 rounded-none border-r"
-                                            onClick={() => setQuantity(prev => {
-                                                const next = isDecimalUnit ? prev - 0.1 : prev - 1;
-                                                return Math.max(next, minQuantity);
-                                            })}
+                                            onClick={handleDecrement}
                                             disabled={quantity <= minQuantity}
                                         >
                                             <Minus className="h-4 w-4" />
                                         </Button>
                                         <Input 
-                                            type="number" 
-                                            step={isDecimalUnit ? "0.001" : "1"}
-                                            min={minQuantity}
-                                            value={isDecimalUnit ? quantity.toFixed(3) : quantity}
-                                            onChange={(e) => {
-                                                const val = parseFloat(e.target.value);
-                                                setQuantity(isNaN(val) ? 0 : val);
-                                            }}
-                                            onBlur={() => {
-                                                if (quantity < minQuantity) setQuantity(minQuantity);
-                                            }}
+                                            type="text" 
+                                            value={displayQty}
+                                            onChange={(e) => handleManualInput(e.target.value)}
+                                            onBlur={handleBlur}
                                             className="w-24 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
                                         />
                                         <Button 
                                             variant="ghost" size="icon" className="h-full w-10 rounded-none border-l"
-                                            onClick={() => setQuantity(prev => isDecimalUnit ? prev + 0.1 : prev + 1)}
+                                            onClick={handleIncrement}
                                         >
                                             <Plus className="h-4 w-4" />
                                         </Button>

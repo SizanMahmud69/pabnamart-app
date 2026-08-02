@@ -50,10 +50,13 @@ export default function ProductActions({
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(minQuantity);
+  // Separate string state for smooth typing experience
+  const [displayQty, setDisplayQty] = useState(minQuantity.toString());
   
   useEffect(() => {
     setQuantity(minQuantity);
-  }, [minQuantity]);
+    setDisplayQty(isDecimalUnit ? minQuantity.toFixed(3) : minQuantity.toString());
+  }, [minQuantity, isDecimalUnit]);
 
   const uniqueColors = useMemo(() => aggregateVariants(product.colors), [product.colors]);
   const uniqueSizes = useMemo(() => aggregateVariants(product.sizes), [product.sizes]);
@@ -94,6 +97,36 @@ export default function ProductActions({
 
   const handleAddToWishlist = () => {
     addToWishlist(product);
+  }
+
+  const handleManualInput = (val: string) => {
+    setDisplayQty(val);
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      setQuantity(num);
+    }
+  }
+
+  const handleBlur = () => {
+    let num = parseFloat(displayQty);
+    if (isNaN(num) || num < minQuantity) {
+      num = minQuantity;
+    }
+    setQuantity(num);
+    setDisplayQty(isDecimalUnit ? num.toFixed(3) : num.toString());
+  }
+
+  const handleIncrement = () => {
+    const next = isDecimalUnit ? quantity + 0.1 : quantity + 1;
+    setQuantity(next);
+    setDisplayQty(isDecimalUnit ? next.toFixed(3) : next.toString());
+  }
+
+  const handleDecrement = () => {
+    const next = isDecimalUnit ? quantity - 0.1 : quantity - 1;
+    const final = Math.max(next, minQuantity);
+    setQuantity(final);
+    setDisplayQty(isDecimalUnit ? final.toFixed(3) : final.toString());
   }
 
   if (isSoldOut) {
@@ -174,26 +207,16 @@ export default function ProductActions({
                     variant="ghost" 
                     size="icon" 
                     className="h-full w-10 rounded-none border-r"
-                    onClick={() => setQuantity(prev => {
-                        const next = isDecimalUnit ? prev - 0.1 : prev - 1;
-                        return Math.max(next, minQuantity);
-                    })}
+                    onClick={handleDecrement}
                     disabled={quantity <= minQuantity}
                 >
                     <Minus className="h-4 w-4" />
                 </Button>
                 <Input 
-                    type="number"
-                    step={isDecimalUnit ? "0.001" : "1"}
-                    min={minQuantity}
-                    value={isDecimalUnit ? quantity.toFixed(3) : quantity}
-                    onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        setQuantity(isNaN(val) ? 0 : val);
-                    }}
-                    onBlur={() => {
-                        if (quantity < minQuantity) setQuantity(minQuantity);
-                    }}
+                    type="text"
+                    value={displayQty}
+                    onChange={(e) => handleManualInput(e.target.value)}
+                    onBlur={handleBlur}
                     className="w-24 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
                 />
                 <Button 
@@ -201,7 +224,7 @@ export default function ProductActions({
                     variant="ghost" 
                     size="icon" 
                     className="h-full w-10 rounded-none border-l"
-                    onClick={() => setQuantity(prev => isDecimalUnit ? prev + 0.1 : prev + 1)}
+                    onClick={handleIncrement}
                 >
                     <Plus className="h-4 w-4" />
                 </Button>

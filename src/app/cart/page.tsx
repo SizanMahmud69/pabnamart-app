@@ -31,9 +31,46 @@ export default function CartPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
+  // Local state to manage input display smoothly
+  const [localQtys, setLocalQtys] = useState<Record<string, string>>({});
+
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Sync local display value when cart items change (e.g. from buttons)
+  useEffect(() => {
+    const newLocalQtys: Record<string, string> = {};
+    cartItems.forEach(item => {
+      const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
+      newLocalQtys[item.cartItemId] = isDecimalUnit ? item.quantity.toFixed(3) : item.quantity.toString();
+    });
+    setLocalQtys(newLocalQtys);
+  }, [cartItems]);
+
+  const handleManualInput = (cartItemId: string, val: string) => {
+    setLocalQtys(prev => ({ ...prev, [cartItemId]: val }));
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      updateQuantity(cartItemId, num);
+    }
+  };
+
+  const handleBlur = (cartItemId: string, item: any) => {
+    const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
+    const minQuantity = isDecimalUnit ? 0.250 : 1;
+    
+    let num = parseFloat(localQtys[cartItemId]);
+    if (isNaN(num) || num < minQuantity) {
+      num = minQuantity;
+    }
+    
+    updateQuantity(cartItemId, num);
+    setLocalQtys(prev => ({ 
+      ...prev, 
+      [cartItemId]: isDecimalUnit ? num.toFixed(3) : num.toString() 
+    }));
+  };
 
   const handleCheckout = () => {
     if (selectedCartCount === 0) {
@@ -112,18 +149,10 @@ export default function CartPage() {
                                                 <Minus className="h-4 w-4" />
                                             </Button>
                                             <Input
-                                                type="number"
-                                                step={isDecimalUnit ? "0.001" : "1"}
-                                                min={minQuantity}
-                                                value={isDecimalUnit ? item.quantity.toFixed(3) : item.quantity}
-                                                onChange={(e) => {
-                                                    const val = parseFloat(e.target.value);
-                                                    updateQuantity(item.cartItemId, isNaN(val) ? 0 : val);
-                                                }}
-                                                onBlur={(e) => {
-                                                    const val = parseFloat(e.target.value) || 0;
-                                                    if (val < minQuantity) updateQuantity(item.cartItemId, minQuantity);
-                                                }}
+                                                type="text"
+                                                value={localQtys[item.cartItemId] || (isDecimalUnit ? item.quantity.toFixed(3) : item.quantity.toString())}
+                                                onChange={(e) => handleManualInput(item.cartItemId, e.target.value)}
+                                                onBlur={() => handleBlur(item.cartItemId, item)}
                                                 className="h-8 w-24 text-center px-1 font-bold"
                                                 aria-label={`Quantity for ${item.name}`}
                                             />
