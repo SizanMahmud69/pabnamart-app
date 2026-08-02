@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { placeOrder } from "@/app/actions";
+import { placeOrder } from "@/lib/order-service";
 import { useToast } from "@/hooks/use-toast";
 import type { CartItem, ShippingAddress, PaymentSettings } from "@/types";
 import { Loader2, ArrowLeft, Copy } from "lucide-react";
@@ -122,7 +122,7 @@ function OnlinePaymentPage() {
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
-            <div className="container mx-auto max-w-lg px-4 py-6">
+            <div className="container mx-auto max-lg px-4 py-6">
                 <Button asChild variant="ghost" className="mb-4">
                     <Link href="/payment">
                         <ArrowLeft className="mr-2 h-4 w-4" />

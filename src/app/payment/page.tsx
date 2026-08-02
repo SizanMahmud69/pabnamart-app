@@ -8,7 +8,7 @@ import { useCart } from "@/hooks/useCart";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { placeOrder } from "@/app/actions";
+import { placeOrder } from "@/lib/order-service";
 import { useToast } from "@/hooks/use-toast";
 import type { CartItem, ShippingAddress } from "@/types";
 import { Loader2, ArrowLeft, CreditCard, Truck, AlertCircle } from "lucide-react";
@@ -91,7 +91,7 @@ function PaymentPage() {
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
-            <div className="container mx-auto max-w-lg px-4 py-6">
+            <div className="container mx-auto max-lg px-4 py-6">
                 <Button asChild variant="ghost" className="mb-4">
                     <Link href="/checkout">
                         <ArrowLeft className="mr-2 h-4 w-4" />

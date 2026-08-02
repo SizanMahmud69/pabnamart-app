@@ -13,7 +13,7 @@ import { ArrowLeft, Loader2, Package, Truck, Phone, User, MapPin, Minus, Plus, Z
 import Link from 'next/link';
 import { useDeliveryCharge } from "@/hooks/useDeliveryCharge";
 import { useProducts } from "@/hooks/useProducts";
-import { placeOrder } from "@/app/actions";
+import { placeOrder } from "@/lib/order-service";
 import { useToast } from "@/hooks/use-toast";
 import type { Product, CartItem, ShippingAddress } from "@/types";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -46,7 +46,7 @@ export default function QuickOrderPage() {
     const minQuantity = isDecimalUnit ? 0.250 : 1;
 
     useEffect(() => {
-        window.scrollTo(0, 0); // Reset scroll to top on mount
+        window.scrollTo(0, 0); // Force scroll to top on mount
         const data = sessionStorage.getItem('quickOrderData');
         if (data) {
             const parsed = JSON.parse(data);
