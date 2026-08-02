@@ -5,13 +5,14 @@ import { useState, useMemo } from "react";
 import { useCart } from "@/hooks/useCart";
 import type { Product, ProductVariant } from "@/types";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, CreditCard, Heart, Loader2, Zap } from "lucide-react";
+import { ShoppingCart, CreditCard, Heart, Loader2, Zap, Minus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWishlist } from "@/hooks/useWishlist";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { Input } from "@/components/ui/input";
 
 const aggregateVariants = (variants: ProductVariant[] | undefined): ProductVariant[] => {
     if (!variants) return [];
@@ -46,6 +47,7 @@ export default function ProductActions({
   
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
+  const [quantity, setQuantity] = useState(1);
   
   const uniqueColors = useMemo(() => aggregateVariants(product.colors), [product.colors]);
   const uniqueSizes = useMemo(() => aggregateVariants(product.sizes), [product.sizes]);
@@ -57,17 +59,17 @@ export default function ProductActions({
     (uniqueColors.length === 0 || selectedColor) &&
     (uniqueSizes.length === 0 || selectedSize);
     
-  const canAddToCart = !isSoldOut && (!hasVariations || variationsSelected);
+  const canAddToCart = !isSoldOut && (!hasVariations || variationsSelected) && quantity > 0;
 
   const handleAddToCart = () => {
     if (!canAddToCart) return;
-    addToCart(product, { color: selectedColor, size: selectedSize }, isFlashSaleContext, isB1G1Context);
+    addToCart(product, { color: selectedColor, size: selectedSize }, isFlashSaleContext, isB1G1Context, quantity);
   }
 
   const handleBuyNow = () => {
     if (!canAddToCart) return;
     setIsLoading(true);
-    addToCart(product, { color: selectedColor, size: selectedSize }, isFlashSaleContext, isB1G1Context);
+    addToCart(product, { color: selectedColor, size: selectedSize }, isFlashSaleContext, isB1G1Context, quantity);
     router.push('/checkout');
   }
   
@@ -76,6 +78,7 @@ export default function ProductActions({
     const quickOrderData = {
         product,
         variations: { color: selectedColor, size: selectedSize },
+        quantity,
         isFlashSaleContext,
         isB1G1Context
     };
@@ -86,6 +89,8 @@ export default function ProductActions({
   const handleAddToWishlist = () => {
     addToWishlist(product);
   }
+
+  const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(product.unit || '');
 
   if (isSoldOut) {
     return (
@@ -155,6 +160,42 @@ export default function ProductActions({
             </RadioGroup>
         </div>
       )}
+
+      <div className="space-y-2">
+        <Label className="font-semibold">Quantity ({product.unit || 'Pcs'})</Label>
+        <div className="flex items-center gap-3">
+             <div className="flex items-center border rounded-md h-10 overflow-hidden bg-background">
+                <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-full w-10 rounded-none border-r"
+                    onClick={() => setQuantity(prev => Math.max(isDecimalUnit ? prev - 0.1 : prev - 1, isDecimalUnit ? 0.1 : 1))}
+                    disabled={quantity <= (isDecimalUnit ? 0.1 : 1)}
+                >
+                    <Minus className="h-4 w-4" />
+                </Button>
+                <Input 
+                    type="number"
+                    step={isDecimalUnit ? "0.001" : "1"}
+                    min={isDecimalUnit ? "0.001" : "1"}
+                    value={quantity}
+                    onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
+                    className="w-20 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
+                />
+                <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-full w-10 rounded-none border-l"
+                    onClick={() => setQuantity(prev => isDecimalUnit ? prev + 0.1 : prev + 1)}
+                >
+                    <Plus className="h-4 w-4" />
+                </Button>
+            </div>
+            {isDecimalUnit && <span className="text-xs text-muted-foreground font-medium">পয়েন্ট হিসেবেও লিখতে পারেন (যেমন: ০.৫০০)</span>}
+        </div>
+      </div>
 
       <div className="space-y-3">
         <div className="flex gap-4 pt-2">

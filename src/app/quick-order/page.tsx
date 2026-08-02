@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Package, Truck, Phone, User, MapPin } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Truck, Phone, User, MapPin, Minus, Plus } from "lucide-react";
 import Link from 'next/link';
 import { useDeliveryCharge } from "@/hooks/useDeliveryCharge";
 import { useProducts } from "@/hooks/useProducts";
@@ -38,11 +38,14 @@ export default function QuickOrderPage() {
     const [address, setAddress] = useState('');
     const [city, setCity] = useState('');
     const [area, setArea] = useState('');
+    const [quantity, setQuantity] = useState(1);
 
     useEffect(() => {
         const data = sessionStorage.getItem('quickOrderData');
         if (data) {
-            setQuickOrderData(JSON.parse(data));
+            const parsed = JSON.parse(data);
+            setQuickOrderData(parsed);
+            if (parsed.quantity) setQuantity(parsed.quantity);
         } else {
             router.replace('/');
         }
@@ -52,6 +55,8 @@ export default function QuickOrderPage() {
     const variations = quickOrderData?.variations || {};
     const isFlashSaleContext = quickOrderData?.isFlashSaleContext || false;
     const isB1G1Context = quickOrderData?.isB1G1Context || false;
+
+    const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(product?.unit || '');
 
     const price = useMemo(() => {
         if (!product) return 0;
@@ -63,11 +68,10 @@ export default function QuickOrderPage() {
         if (product.freeShipping) return 0;
         
         const isInsidePabna = city.toLowerCase().trim() === 'pabna';
-        // Quick order is always for 1 item
         return isInsidePabna ? chargeInsidePabnaSmall : chargeOutsidePabnaSmall;
     }, [product, city, chargeInsidePabnaSmall, chargeOutsidePabnaSmall]);
 
-    const total = Math.round(price + shippingFee);
+    const total = Math.round(price * quantity + shippingFee);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -99,7 +103,7 @@ export default function QuickOrderPage() {
                 originalPrice: product.originalPrice || product.price,
                 images: product.images,
                 stock: product.stock,
-                quantity: 1,
+                quantity: quantity,
                 freeShipping: product.freeShipping,
                 category: product.category,
                 unit: product.unit || 'Pcs',
@@ -113,13 +117,13 @@ export default function QuickOrderPage() {
                 items: [cartItem],
                 shippingAddress,
                 shippingFee,
-                paymentMethod: 'cash-on-delivery', // Default for guest quick order
+                paymentMethod: 'cash-on-delivery',
             });
 
             if (result.success && result.orderId) {
                 toast({ title: "অর্ডার সফল হয়েছে!", description: "আপনার অর্ডারটি গ্রহণ করা হয়েছে।" });
                 sessionStorage.removeItem('quickOrderData');
-                router.replace(`/track-order?id=${result.orderId}`); // Track via order ID
+                router.replace(`/track-order?id=${result.orderId}`);
             } else {
                 toast({ title: "অর্ডার ব্যর্থ হয়েছে", description: result.message || "আবার চেষ্টা করুন।", variant: "destructive" });
             }
@@ -141,7 +145,6 @@ export default function QuickOrderPage() {
                 <h1 className="text-3xl font-black text-primary mb-6 text-center uppercase italic tracking-tighter">সরাসরি অর্ডার করুন</h1>
 
                 <div className="grid grid-cols-1 gap-6">
-                    {/* Customer Info Form */}
                     <Card className="shadow-lg border-2 border-primary/10">
                         <CardHeader className="bg-primary/5 border-b">
                             <CardTitle className="flex items-center gap-2">
@@ -220,7 +223,6 @@ export default function QuickOrderPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Order Summary */}
                     <Card className="shadow-lg border-2 border-primary/10 overflow-hidden">
                         <CardHeader className="bg-primary/5 border-b">
                             <CardTitle className="flex items-center gap-2">
@@ -246,12 +248,39 @@ export default function QuickOrderPage() {
                                 </div>
                             </div>
 
+                            <div className="space-y-2">
+                                <Label className="font-bold">কতটুকু নিতে চান? ({product.unit || 'Pcs'})</Label>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center border rounded-md h-10 overflow-hidden bg-background">
+                                        <Button 
+                                            variant="ghost" size="icon" className="h-full w-10 rounded-none border-r"
+                                            onClick={() => setQuantity(prev => Math.max(isDecimalUnit ? prev - 0.1 : prev - 1, isDecimalUnit ? 0.1 : 1))}
+                                        >
+                                            <Minus className="h-4 w-4" />
+                                        </Button>
+                                        <Input 
+                                            type="number" 
+                                            step={isDecimalUnit ? "0.001" : "1"}
+                                            value={quantity}
+                                            onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
+                                            className="w-20 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
+                                        />
+                                        <Button 
+                                            variant="ghost" size="icon" className="h-full w-10 rounded-none border-l"
+                                            onClick={() => setQuantity(prev => isDecimalUnit ? prev + 0.1 : prev + 1)}
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <Separator />
 
                             <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">পণ্যের দাম</span>
-                                    <span className="font-bold">৳{price}</span>
+                                    <span className="text-muted-foreground">পণ্যের দাম ({quantity} {product.unit || 'Pcs'})</span>
+                                    <span className="font-bold">৳{(price * quantity).toFixed(0)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">ডেলিভারি চার্জ</span>
@@ -280,7 +309,7 @@ export default function QuickOrderPage() {
                                 type="submit" 
                                 form="quick-order-form" 
                                 className="w-full h-14 text-xl font-black uppercase tracking-tighter" 
-                                disabled={isPending}
+                                disabled={isPending || quantity <= 0}
                             >
                                 {isPending ? (
                                     <>

@@ -65,9 +65,6 @@ async function getCoinSettings(db: admin.firestore.Firestore): Promise<CoinSetti
     }
 }
 
-/**
- * Sends a real verification email using SMTP
- */
 export async function sendVerificationEmail(userId: string, email: string) {
     const adminApp = getFirebaseAdmin();
     if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
@@ -233,18 +230,24 @@ export async function placeOrder(
 ): Promise<{ success: boolean; orderId?: string; message?: string }> {
   const adminApp = getFirebaseAdmin();
   
-  // If Admin SDK is not configured, we use a simpler approach for the prototype.
-  // In a real production app, you MUST use Admin SDK for secure transactions.
   if (!adminApp) {
       console.warn("FIREBASE_SERVICE_ACCOUNT_JSON is missing. Running in Prototype Mode.");
-      // For the sake of the prototype, we will just add the order to the database.
-      // This is less secure but allows the user to see the flow in Firebase Studio.
       try {
-          const { getFirestore: getClientFirestore, collection: getClientCollection, addDoc } = await import('firebase/firestore');
+          const { getFirestore: getClientFirestore, collection: getClientCollection, addDoc, doc: getClientDoc, updateDoc: updateClientDoc, increment: incrementClient } = await import('firebase/firestore');
           const { default: clientApp } = await import('@/lib/firebase');
           const db = getClientFirestore(clientApp);
           
           const orderNumber = nowToOrderNumber();
+          
+          // Update stocks manually in prototype mode
+          for (const item of payload.items) {
+              const productRef = getClientDoc(db, 'products', item.id.toString());
+              await updateClientDoc(productRef, {
+                  stock: incrementClient(-item.quantity),
+                  sold: incrementClient(item.quantity)
+              });
+          }
+
           const orderRef = await addDoc(getClientCollection(db, 'orders'), {
               ...payload,
               status: payload.paymentMethod === 'cash-on-delivery' ? 'processing' : 'pending',
@@ -263,7 +266,6 @@ export async function placeOrder(
 
   try {
     const transactionResult = await db.runTransaction(async (transaction) => {
-      // --- ALL READS MUST COME FIRST ---
       const productRefs = payload.items.map((item) =>
         db.collection('products').doc(item.id.toString())
       );
@@ -287,8 +289,6 @@ export async function placeOrder(
       const coinSettingsSnap = await transaction.get(db.collection('settings').doc('coin'));
       const settings = { ...defaultCoinSettings, ...(coinSettingsSnap.data() || {}) } as CoinSettings;
       
-      // --- END OF READS ---
-
       const itemsForOrder: OrderItem[] = [];
       let subtotal = 0; 
       let offerSubtotal = 0; 
@@ -312,7 +312,6 @@ export async function placeOrder(
             if (idx !== -1) newSizes[idx].stock -= cartItem.quantity;
         }
         
-        // --- START OF WRITES ---
         transaction.update(productSnap.ref, {
           stock: FieldValue.increment(-cartItem.quantity),
           sold: FieldValue.increment(cartItem.quantity),
@@ -567,23 +566,15 @@ export async function createAndSendNotification(
   }
 }
 
-/**
- * Common logic to restore stock and reverse coins when an order is cancelled
- * REFACTORED: ALL READS BEFORE WRITES to satisfy Firestore transaction requirements.
- */
 async function handleOrderCancellationEffects(transaction: admin.firestore.Transaction, db: admin.firestore.Firestore, orderData: Order) {
-    // 1. Prepare references
     const productRefs = orderData.items.map(item => db.collection('products').doc(item.id.toString()));
     const settingsRef = db.collection('settings').doc('coin');
     const userRef = db.collection('users').doc(orderData.userId);
 
-    // 2. ALL READS
     const productSnaps = await transaction.getAll(...productRefs);
     const settingsSnap = await transaction.get(settingsRef);
     const settings = { ...defaultCoinSettings, ...(settingsSnap.data() || {}) } as CoinSettings;
 
-    // 3. ALL WRITES
-    // Restore Stock
     productSnaps.forEach((productSnap, index) => {
         const item = orderData.items[index];
         if (productSnap.exists) {
@@ -609,11 +600,8 @@ async function handleOrderCancellationEffects(transaction: admin.firestore.Trans
         }
     });
 
-    // Reverse Coins
-    // Restore spent coins
     const coinsToRestore = orderData.coinDiscount ? Math.round((orderData.coinDiscount / settings.takaPer100Coins) * 100) : 0;
     
-    // Remove earned coins
     const offerSubtotal = orderData.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const coinsEarned = Math.floor((offerSubtotal / 100) * settings.pointsPer100Taka);
 
@@ -667,7 +655,6 @@ export async function updateOrderStatus(
       orderData = currentOrderData;
       if (currentOrderData.status === newStatus) return;
 
-      // Handle stock and coin reversal if admin cancels the order
       if (newStatus === 'cancelled' && currentOrderData.status !== 'cancelled') {
           await handleOrderCancellationEffects(transaction, db, currentOrderData);
       }
@@ -717,7 +704,6 @@ export async function cancelOrderByUser(
           throw new Error('This order cannot be cancelled as it is already being shipped or completed.');
       }
 
-      // Restore stock and reverse coins
       await handleOrderCancellationEffects(transaction, db, orderData);
 
       transaction.update(orderRef, { status: 'cancelled' });
@@ -820,7 +806,6 @@ export async function denyWithdrawal(id: string, reason: string) {
     const snap = await db.collection('withdrawals').doc(id).get();
     const data = snap.data();
     if (data) {
-        // Return coins or balance if needed (this depends on your business logic)
     }
     await db.collection('withdrawals').doc(id).update({ 
         status: 'failed',

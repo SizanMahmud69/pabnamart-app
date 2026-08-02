@@ -13,7 +13,7 @@ import { useRouter, usePathname } from 'next/navigation';
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product, variations: { color?: string; size?: string }, isFlashSaleContext?: boolean, isB1G1Context?: boolean) => void;
+  addToCart: (product: Product, variations: { color?: string; size?: string }, isFlashSaleContext?: boolean, isB1G1Context?: boolean, quantity?: number) => void;
   removeFromCart: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -144,7 +144,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       product: Product, 
       variations: { color?: string, size?: string }, 
       isFlashSaleContext = false,
-      isB1G1Context = false
+      isB1G1Context = false,
+      quantity = 1
   ) => {
     if (!user) {
         toast({
@@ -163,13 +164,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             item.id === product.id && 
             item.color === variations.color && 
             item.size === variations.size &&
-            item.isB1G1 === (isB1G1Context && product.isB1G1) // Distinguish if needed
+            item.isB1G1 === (isB1G1Context && product.isB1G1)
         );
         
         if (existingItem) {
           return prevCartItems.map(item => 
             item.cartItemId === existingItem.cartItemId
-              ? { ...item, quantity: item.quantity + 1 }
+              ? { ...item, quantity: item.quantity + quantity }
               : item
           );
         }
@@ -185,10 +186,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             stock: product.stock,
             freeShipping: product.freeShipping,
             category: product.category,
-            quantity: 1,
+            quantity: quantity,
             color: variations.color,
             size: variations.size,
-            isB1G1: isB1G1Context && product.isB1G1, // Only true if both are true
+            unit: product.unit || 'Pcs',
+            isB1G1: isB1G1Context && product.isB1G1,
         };
 
         setSelectedItemIds(prevSelectedIds => {
@@ -203,7 +205,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     toast({
       title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
+      description: `${quantity} ${product.unit || 'Pcs'} of ${product.name} has been added to your cart.`,
     });
 }, [user, toast, router, getFlashSalePrice]);
 
@@ -270,7 +272,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     0
   );
 
-  const selectedCartCount = selectedCartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const selectedCartCount = selectedCartItems.length;
   const selectedCartTotal = selectedCartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
@@ -284,7 +286,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return 0;
     }
 
-    const itemCount = selectedCartItems.reduce((total, item) => total + item.quantity, 0);
+    const itemCount = selectedCartItems.length;
     const isInsidePabna = !!selectedShippingAddress && selectedShippingAddress.city.toLowerCase().trim() === 'pabna';
 
     if (isInsidePabna) {

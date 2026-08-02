@@ -71,72 +71,77 @@ export default function CartPage() {
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="divide-y">
-                        {cartItems.map((item) => (
-                            <div key={item.cartItemId} className="flex items-start gap-4 p-4">
-                                <Checkbox 
-                                    className="mt-8 flex-shrink-0"
-                                    checked={selectedItemIds.includes(item.cartItemId)}
-                                    onCheckedChange={() => toggleSelectItem(item.cartItemId)}
-                                />
-                                <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border">
-                                    <img
-                                    src={item.images[0]}
-                                    alt={item.name}
-                                    className="object-cover w-full h-full"
-                                    data-ai-hint="product image"
+                        {cartItems.map((item) => {
+                            const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
+                            return (
+                                <div key={item.cartItemId} className="flex items-start gap-4 p-4">
+                                    <Checkbox 
+                                        className="mt-8 flex-shrink-0"
+                                        checked={selectedItemIds.includes(item.cartItemId)}
+                                        onCheckedChange={() => toggleSelectItem(item.cartItemId)}
                                     />
-                                </div>
-                                <div className="flex-grow min-w-0">
-                                    <h3 className="font-semibold truncate flex items-center gap-2">
-                                        {item.name}
-                                        {item.isB1G1 && (
-                                            <Badge className="bg-pink-100 text-pink-700 hover:bg-pink-100 border-pink-200 text-[10px] h-5 px-1.5 font-black uppercase">B1G1</Badge>
-                                        )}
-                                    </h3>
-                                    {item.color && <p className="text-sm text-muted-foreground">Color: {item.color}</p>}
-                                    {item.size && <p className="text-sm text-muted-foreground">Size: {item.size}</p>}
-                                    <p className="text-sm text-muted-foreground">
-                                    Price: ৳{item.price}
-                                    </p>
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <Button 
-                                            variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
-                                            onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
-                                            disabled={item.quantity <= 1}
-                                        >
-                                            <Minus className="h-4 w-4" />
-                                        </Button>
-                                        <Input
-                                            type="number"
-                                            value={item.quantity}
-                                            onChange={(e) => updateQuantity(item.cartItemId, parseInt(e.target.value))}
-                                            className="h-8 w-14 text-center px-1"
-                                            aria-label={`Quantity for ${item.name}`}
+                                    <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border">
+                                        <img
+                                        src={item.images[0]}
+                                        alt={item.name}
+                                        className="object-cover w-full h-full"
+                                        data-ai-hint="product image"
                                         />
-                                        <Button 
-                                            variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
-                                            onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                                    </div>
+                                    <div className="flex-grow min-w-0">
+                                        <h3 className="font-semibold truncate flex items-center gap-2">
+                                            {item.name}
+                                            {item.isB1G1 && (
+                                                <Badge className="bg-pink-100 text-pink-700 hover:bg-pink-100 border-pink-200 text-[10px] h-5 px-1.5 font-black uppercase">B1G1</Badge>
+                                            )}
+                                        </h3>
+                                        {item.color && <p className="text-sm text-muted-foreground">Color: {item.color}</p>}
+                                        {item.size && <p className="text-sm text-muted-foreground">Size: {item.size}</p>}
+                                        <p className="text-sm text-muted-foreground">
+                                        Price: ৳{item.price} per {item.unit || 'Pcs'}
+                                        </p>
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <Button 
+                                                variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
+                                                onClick={() => updateQuantity(item.cartItemId, isDecimalUnit ? item.quantity - 0.1 : item.quantity - 1)}
+                                                disabled={item.quantity <= (isDecimalUnit ? 0.1 : 1)}
+                                            >
+                                                <Minus className="h-4 w-4" />
+                                            </Button>
+                                            <Input
+                                                type="number"
+                                                step={isDecimalUnit ? "0.001" : "1"}
+                                                value={item.quantity}
+                                                onChange={(e) => updateQuantity(item.cartItemId, parseFloat(e.target.value) || 0)}
+                                                className="h-8 w-20 text-center px-1 font-bold"
+                                                aria-label={`Quantity for ${item.name}`}
+                                            />
+                                            <Button 
+                                                variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
+                                                onClick={() => updateQuantity(item.cartItemId, isDecimalUnit ? item.quantity + 0.1 : item.quantity + 1)}
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                            </Button>
+                                            <span className="text-xs font-medium text-muted-foreground">{item.unit || 'Pcs'}</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right flex flex-col items-end">
+                                        <p className="font-semibold text-lg whitespace-nowrap">
+                                            ৳{(item.price * item.quantity).toFixed(0)}
+                                        </p>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="mt-2 h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            onClick={() => removeFromCart(item.cartItemId)}
+                                            aria-label={`Remove ${item.name}`}
                                         >
-                                            <Plus className="h-4 w-4" />
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </div>
-                                <div className="text-right flex flex-col items-end">
-                                    <p className="font-semibold text-lg whitespace-nowrap">
-                                        ৳{item.price * item.quantity}
-                                    </p>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="mt-2 h-8 w-8 text-muted-foreground hover:text-destructive"
-                                        onClick={() => removeFromCart(item.cartItemId)}
-                                        aria-label={`Remove ${item.name}`}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         </div>
                     </CardContent>
                 </Card>
@@ -150,7 +155,7 @@ export default function CartPage() {
                 <CardContent className="space-y-4">
                     <div className="flex justify-between">
                     <span>Subtotal ({selectedCartCount} items)</span>
-                    <span>৳{selectedCartTotal}</span>
+                    <span>৳{selectedCartTotal.toFixed(0)}</span>
                     </div>
                     <div className="flex justify-between">
                         <div>
@@ -170,7 +175,7 @@ export default function CartPage() {
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                     <span>Total Amount</span>
-                    <span>{isClient ? `৳${finalTotal}` : '...'}</span>
+                    <span>{isClient ? `৳${finalTotal.toFixed(0)}` : '...'}</span>
                     </div>
                 </CardContent>
                 <CardFooter>
