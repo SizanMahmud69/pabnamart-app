@@ -5,7 +5,7 @@ import { Suspense, useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Copy, ShoppingBag, ArrowRight, Link as LinkIcon, Star, Upload, X, Loader2, MessageSquare } from "lucide-react";
+import { CheckCircle2, Copy, ShoppingBag, ArrowRight, Star, Upload, X, Loader2, MessageSquare } from "lucide-react";
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -25,7 +25,6 @@ function SuccessContent() {
     const router = useRouter();
     const { toast } = useToast();
     const orderNumber = searchParams.get('num');
-    const [baseUrl, setBaseUrl] = useState('');
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -38,7 +37,6 @@ function SuccessContent() {
     const inputFileRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        setBaseUrl(window.location.origin);
         if (!orderNumber) {
             router.replace('/');
             return;
@@ -130,8 +128,6 @@ function SuccessContent() {
 
     if (loading || !orderNumber) return <LoadingSpinner />;
 
-    const trackLink = `${baseUrl}/track-order?id=${orderNumber}`;
-
     return (
         <div className="container mx-auto max-w-md px-4 py-12 text-center">
             <div className="mb-8 animate-in zoom-in duration-500">
@@ -145,7 +141,7 @@ function SuccessContent() {
                 <CardHeader className="bg-primary/5 pb-4">
                     <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">আপনার অর্ডার আইডি</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-6 space-y-6">
+                <CardContent className="pt-6">
                     <div className="flex items-center gap-2 p-3 bg-muted rounded-lg border-2 border-dashed">
                         <span className="flex-1 font-mono text-xl font-black tracking-widest text-primary">#{orderNumber}</span>
                         <Button 
@@ -154,22 +150,6 @@ function SuccessContent() {
                         >
                             <Copy className="h-5 w-5" />
                         </Button>
-                    </div>
-
-                    <Separator label="অর্ডার ট্র্যাক করুন" />
-
-                    <div className="space-y-3">
-                        <p className="text-xs font-bold text-muted-foreground uppercase text-left pl-1">ট্র্যাকিং লিঙ্ক</p>
-                        <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md border text-left overflow-hidden">
-                            <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <span className="flex-1 text-[10px] font-mono truncate text-muted-foreground">{trackLink}</span>
-                            <Button 
-                                variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"
-                                onClick={() => handleCopy(trackLink, "ট্র্যাকিং লিঙ্ক")}
-                            >
-                                <Copy className="h-4 w-4" />
-                            </Button>
-                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -260,12 +240,6 @@ function SuccessContent() {
             )}
 
             <div className="space-y-3">
-                <Button asChild size="lg" className="w-full h-14 text-lg font-bold shadow-lg">
-                    <Link href={`/track-order?id=${orderNumber}`}>
-                        অর্ডার ট্র্যাক করুন <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                </Button>
-                
                 <Button asChild variant="outline" size="lg" className="w-full h-14 text-lg font-bold">
                     <Link href="/">
                         <ShoppingBag className="mr-2 h-5 w-5" /> আরও কেনাকাটা করুন
@@ -277,13 +251,6 @@ function SuccessContent() {
         </div>
     );
 }
-
-const Separator = ({ label }: { label: string }) => (
-    <div className="relative">
-        <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-        <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground font-bold tracking-tighter">{label}</span></div>
-    </div>
-);
 
 export default function OrderSuccessPage() {
     return (
