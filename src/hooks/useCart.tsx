@@ -266,7 +266,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const selectedCartItems = useMemo(() => cartItems.filter(item => selectedItemIds.includes(item.cartItemId)), [cartItems, selectedItemIds]);
   
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const cartCount = cartItems.length;
   const cartTotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0

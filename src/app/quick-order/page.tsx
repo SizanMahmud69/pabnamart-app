@@ -241,7 +241,7 @@ export default function QuickOrderPage() {
                                         </Button>
                                     </div>
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase leading-tight max-w-[80px]">
-                                        সর্বনিম্ন অর্ডার ০.২৫০ {product.unit}
+                                        সর্বনিম্ন অর্ডার {isDecimalUnit ? "০.২৫০" : "১"} {product.unit}
                                     </span>
                                 </div>
                             </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -229,7 +230,9 @@ export default function ProductActions({
                     <Plus className="h-4 w-4" />
                 </Button>
             </div>
-            <span className="text-xs text-muted-foreground font-medium">সর্বনিম্ন অর্ডার ০.২৫০ {product.unit}</span>
+            <span className="text-xs text-muted-foreground font-medium">
+                সর্বনিম্ন অর্ডার {isDecimalUnit ? "০.২৫০" : "১"} {product.unit || 'Pcs'}
+            </span>
         </div>
       </div>
 
