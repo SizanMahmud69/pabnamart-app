@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useCart } from "@/hooks/useCart";
 import type { Product, ProductVariant } from "@/types";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, CreditCard, Heart, Loader2, Zap, Minus, Plus } from "lucide-react";
+import { ShoppingCart, CreditCard, Heart, Loader2, Zap, Minus, Plus, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWishlist } from "@/hooks/useWishlist";
 import { Label } from "@/components/ui/label";
@@ -237,19 +237,30 @@ export default function ProductActions({
       </div>
 
       <div className="space-y-3">
-        <div className="flex gap-4 pt-2">
-          <Button size="lg" className="w-full h-12" onClick={handleAddToCart} disabled={isLoading || !canAddToCart}>
-            <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+        {user ? (
+          <div className="flex gap-4 pt-2">
+            <Button size="default" className="w-full h-11" onClick={handleAddToCart} disabled={isLoading || !canAddToCart}>
+              <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
+            </Button>
+            <Button size="default" variant="outline" className="w-full h-11" onClick={handleBuyNow} disabled={isLoading || !canAddToCart}>
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CreditCard className="mr-2 h-4 w-4" />
+              )}
+              {isLoading ? "Processing..." : "Buy Now"}
+            </Button>
+          </div>
+        ) : (
+          <Button 
+            size="lg" 
+            className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold" 
+            onClick={() => router.push('/login')}
+          >
+            <LogIn className="mr-2 h-5 w-5" />
+            লগ ইন টু অর্ডার
           </Button>
-          <Button size="lg" variant="outline" className="w-full h-12" onClick={handleBuyNow} disabled={isLoading || !canAddToCart}>
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <CreditCard className="mr-2 h-5 w-5" />
-            )}
-            {isLoading ? "Processing..." : "Buy Now"}
-          </Button>
-        </div>
+        )}
         
         {!user && (
           <Button 
