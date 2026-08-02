@@ -35,7 +35,6 @@ const getStatusVariant = (status: Order['status']) => {
 
 const statusTabs: Order['status'][] = ['processing', 'shipped', 'delivered', 'cancelled', 'returned'];
 const allStatusTabs = ['all', ...statusTabs];
-const statusChangeOptions: Order['status'][] = ['cancelled', 'processing', 'shipped', 'delivered', 'returned'];
 
 
 export default function AdminQuickOrderManagement() {
@@ -66,6 +65,21 @@ export default function AdminQuickOrderManagement() {
 
         return () => ordersUnsubscribe();
     }, []);
+
+    const getAvailableStatuses = (currentStatus: Order['status']): Order['status'][] => {
+        switch (currentStatus) {
+            case 'pending':
+                return ['processing', 'cancelled'];
+            case 'processing':
+                return ['shipped', 'cancelled'];
+            case 'shipped':
+                return ['delivered'];
+            case 'delivered':
+                return ['returned'];
+            default:
+                return [];
+        }
+    };
 
     const handleStatusChange = async (order: Order, newStatus: Order['status']) => {
         const result = await updateOrderStatus(order.id, newStatus);
@@ -188,7 +202,9 @@ export default function AdminQuickOrderManagement() {
                             <div className="mt-4">
                             {filteredOrders.length > 0 ? (
                                     <div className="space-y-4">
-                                        {filteredOrders.map(order => (
+                                        {filteredOrders.map(order => {
+                                            const nextStatuses = getAvailableStatuses(order.status);
+                                            return (
                                             <Card key={order.id} className="shadow-md border-orange-200">
                                                 <CardHeader className="flex flex-row items-start justify-between">
                                                     <div>
@@ -214,20 +230,22 @@ export default function AdminQuickOrderManagement() {
                                                                     <Eye className="mr-2 h-4 w-4" />
                                                                     <span>View Details</span>
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuSub>
-                                                                    <DropdownMenuSubTrigger>
-                                                                        <span>Change Status</span>
-                                                                    </DropdownMenuSubTrigger>
-                                                                    <DropdownMenuPortal>
-                                                                        <DropdownMenuSubContent>
-                                                                            {statusChangeOptions.map(status => (
-                                                                                <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order, status)} className="capitalize">
-                                                                                    {status}
-                                                                                </DropdownMenuItem>
-                                                                            ))}
-                                                                        </DropdownMenuSubContent>
-                                                                    </DropdownMenuPortal>
-                                                                </DropdownMenuSub>
+                                                                {nextStatuses.length > 0 && (
+                                                                    <DropdownMenuSub>
+                                                                        <DropdownMenuSubTrigger>
+                                                                            <span>Change Status</span>
+                                                                        </DropdownMenuSubTrigger>
+                                                                        <DropdownMenuPortal>
+                                                                            <DropdownMenuSubContent>
+                                                                                {nextStatuses.map(status => (
+                                                                                    <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order, status)} className="capitalize">
+                                                                                        {status}
+                                                                                    </DropdownMenuItem>
+                                                                                ))}
+                                                                            </DropdownMenuSubContent>
+                                                                        </DropdownMenuPortal>
+                                                                    </DropdownMenuSub>
+                                                                )}
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem 
                                                                     className="text-destructive focus:bg-destructive/10 focus:text-destructive"
@@ -271,7 +289,7 @@ export default function AdminQuickOrderManagement() {
                                                     </div>
                                                 </CardFooter>
                                             </Card>
-                                        ))}
+                                        )})}
                                     </div>
                             ) : (
                                     <div className="text-center py-16 border-2 border-dashed rounded-lg">
