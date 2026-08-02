@@ -302,15 +302,26 @@ function ProductDetailPageContent() {
                               <div className="space-y-6">
                                   {reviews.length > 0 ? (
                                       reviews.map((review) => {
+                                          const isGuest = review.user.uid.startsWith('guest_');
                                           const reviewerPhoto = (appUser && review.user.uid === appUser.uid) 
                                               ? (appUser.photoURL || DEFAULT_AVATAR_URL) 
                                               : (review.user.photoURL || DEFAULT_AVATAR_URL);
   
                                           return (
                                               <div key={review.id} className="flex items-start gap-4">
-                                                  <Avatar>
-                                                      <AvatarImage src={reviewerPhoto} alt={review.user.displayName} />
-                                                      <AvatarFallback>{review.user.displayName.charAt(0)}</AvatarFallback>
+                                                  <Avatar className="h-10 w-10 border shadow-sm">
+                                                      {isGuest ? (
+                                                          <AvatarFallback className="bg-orange-100 text-orange-600 text-[10px] font-black uppercase leading-none">
+                                                              Guest
+                                                          </AvatarFallback>
+                                                      ) : (
+                                                          <>
+                                                              <AvatarImage src={reviewerPhoto} alt={review.user.displayName} />
+                                                              <AvatarFallback className="bg-muted text-muted-foreground font-bold">
+                                                                  {review.user.displayName.charAt(0).toUpperCase()}
+                                                              </AvatarFallback>
+                                                          </>
+                                                      )}
                                                   </Avatar>
                                                   <div className="flex-1">
                                                       <div className="flex justify-between items-center">
