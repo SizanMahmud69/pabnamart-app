@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -204,7 +203,7 @@ export default function ProductActions({
                     <Plus className="h-4 w-4" />
                 </Button>
             </div>
-            {isDecimalUnit && <span className="text-xs text-muted-foreground font-medium">পয়েন্ট হিসেবেও লিখতে পারেন (যেমন: ০.৫০০)</span>}
+            {isDecimalUnit && <span className="text-xs text-muted-foreground font-medium">সর্বনিম্ন অর্ডার ০.২৫০ {product.unit}</span>}
         </div>
       </div>
 
@@ -215,7 +214,7 @@ export default function ProductActions({
           </Button>
           <Button size="lg" variant="outline" className="w-full h-12" onClick={handleBuyNow} disabled={isLoading || !canAddToCart}>
             {isLoading ? (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <CreditCard className="mr-2 h-5 w-5" />
             )}

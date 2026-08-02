@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useTransition } from "react";
@@ -287,6 +286,7 @@ export default function QuickOrderPage() {
                                             <Plus className="h-4 w-4" />
                                         </Button>
                                     </div>
+                                    {isDecimalUnit && <span className="text-xs text-muted-foreground font-medium">সর্বনিম্ন অর্ডার ০.২৫০ {product.unit}</span>}
                                 </div>
                             </div>
 
