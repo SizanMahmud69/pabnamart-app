@@ -47,7 +47,7 @@ function OrderDetailsPage() {
         const unsubscribe = onSnapshot(orderRef, (docSnap) => {
             if (docSnap.exists()) {
                 const orderData = { ...docSnap.data(), id: docSnap.id } as Order;
-                if (orderData.userId === user.uid) {
+                if (orderData.userId === user.uid || orderData.userId.startsWith('guest_')) {
                     setOrder(orderData);
                 } else {
                     router.replace('/account/orders');
@@ -78,7 +78,6 @@ function OrderDetailsPage() {
     
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const voucherDiscount = order.voucherDiscount || 0;
-    const offerDiscount = order.items.reduce((acc, item) => acc + (item.originalPrice - item.price) * item.quantity, 0);
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -106,7 +105,9 @@ function OrderDetailsPage() {
                         
                         <div>
                             <h3 className="text-lg font-semibold mb-2">Order Summary</h3>
-                            {order.items.map((item, index) => (
+                            {order.items.map((item, index) => {
+                                const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
+                                return (
                                 <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-3">
                                     <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                     <div className="flex-grow">
@@ -121,11 +122,11 @@ function OrderDetailsPage() {
                                                 {item.color}{item.color && item.size ? ', ' : ''}{item.size}
                                             </p>
                                         )}
-                                        <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                        <p className="text-sm text-muted-foreground">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
                                     </div>
                                     <p className="font-semibold">৳{item.price * item.quantity}</p>
                                 </div>
-                            ))}
+                            )})}
                         </div>
 
                         <Separator />

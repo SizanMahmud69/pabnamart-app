@@ -271,7 +271,9 @@ function CheckoutPage() {
                                 </CardHeader>
                                 <CardContent>
                                      <div className="space-y-4">
-                                        {cartItems.map(item => (
+                                        {cartItems.map(item => {
+                                            const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
+                                            return (
                                             <div key={item.cartItemId} className="flex items-center gap-4">
                                                 <img src={item.images[0]} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                                 <div className="flex-grow">
@@ -286,11 +288,11 @@ function CheckoutPage() {
                                                             {item.color}{item.color && item.size && ', '}{item.size}
                                                         </p>
                                                     )}
-                                                    <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                                    <p className="text-sm text-muted-foreground">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
                                                 </div>
                                                 <p className="font-semibold">৳{item.price * item.quantity}</p>
                                             </div>
-                                        ))}
+                                        )})}
                                     </div>
                                 </CardContent>
                             </Card>

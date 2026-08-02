@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useTransition } from "react";
@@ -323,7 +324,7 @@ export default function QuickOrderPage() {
 
                             <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">পণ্যের দাম ({quantity} {product.unit || 'Pcs'})</span>
+                                    <span className="text-muted-foreground">পণ্যের দাম ({isDecimalUnit ? quantity.toFixed(3) : quantity} {product.unit || 'Pcs'})</span>
                                     <span className="font-bold">৳{(price * quantity).toFixed(0)}</span>
                                 </div>
                                 <div className="flex justify-between">

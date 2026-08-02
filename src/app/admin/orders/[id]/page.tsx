@@ -76,7 +76,9 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
                     </tr>
                 </thead>
                 <tbody>
-                    {order.items.map((item, index) => (
+                    {order.items.map((item, index) => {
+                        const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
+                        return (
                         <tr key={`${item.id}-${index}`}>
                             <td>
                                 {item.name}
@@ -87,11 +89,11 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
                                     </div>
                                 )}
                             </td>
-                            <td className="text-center">{item.quantity}</td>
+                            <td className="text-center">{isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</td>
                             <td className="text-right">৳{item.price.toFixed(2)}</td>
                             <td className="text-right">৳{(item.price * item.quantity).toFixed(2)}</td>
                         </tr>
-                    ))}
+                    )})}
                 </tbody>
             </table>
             
@@ -255,7 +257,9 @@ export default function AdminOrderDetailsPage() {
                             <Separator />
                             <div>
                                 <h3 className="text-lg font-semibold mb-2">Order Summary</h3>
-                                {order.items.map((item, index) => (
+                                {order.items.map((item, index) => {
+                                    const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
+                                    return (
                                     <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-3">
                                         <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                         <div className="flex-grow">
@@ -270,11 +274,11 @@ export default function AdminOrderDetailsPage() {
                                                     {item.color}{item.color && item.size ? ', ' : ''}{item.size}
                                                 </p>
                                             )}
-                                            <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                            <p className="text-sm text-muted-foreground">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
                                         </div>
                                         <p className="font-semibold">৳{item.price * item.quantity}</p>
                                     </div>
-                                ))}
+                                )})}
                             </div>
                             <Separator />
                             <div className="space-y-4">
