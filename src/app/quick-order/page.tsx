@@ -260,7 +260,10 @@ export default function QuickOrderPage() {
                                     <div className="flex items-center border rounded-md h-10 overflow-hidden bg-background">
                                         <Button 
                                             variant="ghost" size="icon" className="h-full w-10 rounded-none border-r"
-                                            onClick={() => setQuantity(prev => Math.max(isDecimalUnit ? prev - 0.1 : prev - 1, minQuantity))}
+                                            onClick={() => setQuantity(prev => {
+                                                const next = isDecimalUnit ? prev - 0.1 : prev - 1;
+                                                return Math.max(next, minQuantity);
+                                            })}
                                             disabled={quantity <= minQuantity}
                                         >
                                             <Minus className="h-4 w-4" />
@@ -269,7 +272,7 @@ export default function QuickOrderPage() {
                                             type="number" 
                                             step={isDecimalUnit ? "0.001" : "1"}
                                             min={minQuantity}
-                                            value={quantity}
+                                            value={isDecimalUnit ? quantity.toFixed(3) : quantity}
                                             onChange={(e) => {
                                                 const val = parseFloat(e.target.value) || 0;
                                                 setQuantity(val);
@@ -277,7 +280,7 @@ export default function QuickOrderPage() {
                                             onBlur={() => {
                                                 if (quantity < minQuantity) setQuantity(minQuantity);
                                             }}
-                                            className="w-20 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
+                                            className="w-24 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
                                         />
                                         <Button 
                                             variant="ghost" size="icon" className="h-full w-10 rounded-none border-l"

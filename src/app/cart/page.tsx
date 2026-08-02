@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -104,7 +103,10 @@ export default function CartPage() {
                                         <div className="mt-2 flex items-center gap-2">
                                             <Button 
                                                 variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
-                                                onClick={() => updateQuantity(item.cartItemId, isDecimalUnit ? item.quantity - 0.1 : item.quantity - 1)}
+                                                onClick={() => {
+                                                    const next = isDecimalUnit ? item.quantity - 0.1 : item.quantity - 1;
+                                                    updateQuantity(item.cartItemId, Math.max(next, minQuantity));
+                                                }}
                                                 disabled={item.quantity <= minQuantity}
                                             >
                                                 <Minus className="h-4 w-4" />
@@ -113,7 +115,7 @@ export default function CartPage() {
                                                 type="number"
                                                 step={isDecimalUnit ? "0.001" : "1"}
                                                 min={minQuantity}
-                                                value={item.quantity}
+                                                value={isDecimalUnit ? item.quantity.toFixed(3) : item.quantity}
                                                 onChange={(e) => {
                                                     const val = parseFloat(e.target.value) || 0;
                                                     updateQuantity(item.cartItemId, val);
@@ -122,7 +124,7 @@ export default function CartPage() {
                                                     const val = parseFloat(e.target.value) || 0;
                                                     if (val < minQuantity) updateQuantity(item.cartItemId, minQuantity);
                                                 }}
-                                                className="h-8 w-20 text-center px-1 font-bold"
+                                                className="h-8 w-24 text-center px-1 font-bold"
                                                 aria-label={`Quantity for ${item.name}`}
                                             />
                                             <Button 
