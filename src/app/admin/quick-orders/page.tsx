@@ -6,11 +6,11 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Eye, Ban, CheckCircle, Truck, RefreshCw, XCircle, User } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Order, User } from '@/types';
+import type { Order } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -37,9 +37,8 @@ const allStatusTabs = ['all', ...statusTabs];
 const statusChangeOptions: Order['status'][] = ['cancelled', 'processing', 'shipped', 'delivered', 'returned'];
 
 
-export default function AdminOrderManagement() {
+export default function AdminQuickOrderManagement() {
     const [orders, setOrders] = useState<Order[]>([]);
-    const [users, setUsers] = useState<{ [key: string]: User }>({});
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
     const { toast } = useToast();
@@ -50,44 +49,26 @@ export default function AdminOrderManagement() {
         const ordersQuery = query(collection(db, 'orders'), orderBy('date', 'desc'));
         const ordersUnsubscribe = onSnapshot(ordersQuery, (snapshot) => {
             const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
-            // Filter out guest orders
-            const registeredUserOrders = ordersData.filter(order => !order.userId.startsWith('guest_'));
+            // Filter ONLY guest orders
+            const guestOrders = ordersData.filter(order => order.userId.startsWith('guest_'));
             
-            setOrders(registeredUserOrders);
+            setOrders(guestOrders);
             setLoading(false);
-
-            // Fetch users for the new orders
-            const userIds = new Set(registeredUserOrders.map(order => order.userId));
-            userIds.forEach(userId => {
-                if (!users[userId]) {
-                    const userDocRef = doc(db, 'users', userId);
-                    onSnapshot(userDocRef, (userDoc) => {
-                        if (userDoc.exists()) {
-                            setUsers(prevUsers => ({ ...prevUsers, [userId]: userDoc.data() as User }));
-                        }
-                    });
-                }
-            });
-
         }, (error) => {
             console.error("Error fetching orders: ", error);
             setLoading(false);
         });
 
         return () => ordersUnsubscribe();
-    }, [users]);
+    }, []);
 
     const handleStatusChange = async (order: Order, newStatus: Order['status']) => {
         const result = await updateOrderStatus(order.id, newStatus);
         
         if (result.success) {
-            let toastDescription = `Order has been marked as ${newStatus}.`;
-            if (newStatus !== order.status) {
-                toastDescription += " A notification has been sent to the user.";
-            }
             toast({
                 title: "Order Status Updated",
-                description: toastDescription
+                description: `Quick Order has been marked as ${newStatus}.`
             });
         } else {
             toast({
@@ -122,8 +103,8 @@ export default function AdminOrderManagement() {
             <main>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Order Management</CardTitle>
-                        <CardDescription>View and manage orders from registered customers.</CardDescription>
+                        <CardTitle>Quick Order Management</CardTitle>
+                        <CardDescription>View and manage orders placed by guest (unregistered) users.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <ScrollArea className="w-full whitespace-nowrap rounded-md border">
@@ -147,11 +128,16 @@ export default function AdminOrderManagement() {
                            {filteredOrders.length > 0 ? (
                                 <div className="space-y-4">
                                     {filteredOrders.map(order => (
-                                         <Card key={order.id} className="shadow-md">
+                                         <Card key={order.id} className="shadow-md border-orange-200">
                                             <CardHeader className="flex flex-row items-start justify-between">
                                                 <div>
                                                     <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
-                                                    <CardDescription>{new Date(order.date).toLocaleString()} by {users[order.userId]?.displayName || '...'}</CardDescription>
+                                                    <CardDescription className="flex items-center gap-1.5 mt-1">
+                                                        <User className="h-3.5 w-3.5" />
+                                                        <span className="font-bold text-foreground">{order.shippingAddress.fullName}</span>
+                                                        <span className="mx-1">•</span>
+                                                        <span>{new Date(order.date).toLocaleString()}</span>
+                                                    </CardDescription>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                      <DropdownMenu>
@@ -203,6 +189,10 @@ export default function AdminOrderManagement() {
                                                         <p className="font-semibold text-sm">৳{(item.price * item.quantity).toFixed(0)}</p>
                                                     </div>
                                                 )})}
+                                                <div className="bg-muted/30 p-2 rounded-md mt-2 text-xs">
+                                                    <p><strong>Phone:</strong> {order.shippingAddress.phone}</p>
+                                                    <p><strong>Address:</strong> {order.shippingAddress.address}, {order.shippingAddress.area}, {order.shippingAddress.city}</p>
+                                                </div>
                                             </CardContent>
                                             <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
                                                 <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
@@ -216,7 +206,7 @@ export default function AdminOrderManagement() {
                                 </div>
                            ) : (
                                 <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                                    <p className="text-muted-foreground">No orders found for this status.</p>
+                                    <p className="text-muted-foreground">No guest orders found for this status.</p>
                                 </div>
                            )}
                         </div>

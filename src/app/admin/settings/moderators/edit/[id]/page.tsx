@@ -23,6 +23,7 @@ const permissionOptions: { id: keyof ModeratorPermissions, label: string }[] = [
     { id: 'canManageProducts', label: 'Manage Products' },
     { id: 'canManageUsers', label: 'Manage Users' },
     { id: 'canManageOrders', label: 'Manage Orders' },
+    { id: 'canManageQuickOrders', label: 'Manage Quick Orders' },
     { id: 'canVerifyPayments', label: 'Verify Payments' },
     { id: 'canManageReturns', label: 'Manage Returns' },
     { id: 'canManageOffers', label: 'Manage Offers' },
@@ -50,6 +51,7 @@ export default function EditModeratorPage() {
         canManageProducts: false,
         canManageUsers: false,
         canManageOrders: false,
+        canManageQuickOrders: false,
         canVerifyPayments: false,
         canManageReturns: false,
         canManageOffers: false,
@@ -62,6 +64,8 @@ export default function EditModeratorPage() {
         canManageContactSettings: false,
         canManageAffiliates: false,
         canManageWithdrawals: false,
+        canManageCoins: false,
+        canManageBanners: false,
     });
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);

@@ -140,6 +140,7 @@ export interface ModeratorPermissions {
   canManageProducts: boolean;
   canManageUsers: boolean;
   canManageOrders: boolean;
+  canManageQuickOrders: boolean;
   canVerifyPayments: boolean;
   canManageReturns: boolean;
   canManageOffers: boolean;
