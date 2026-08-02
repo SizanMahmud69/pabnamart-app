@@ -42,7 +42,7 @@ function sanitize(obj: any): any {
 /**
  * Client-side order placement using Firestore transactions to ensure stock integrity.
  */
-export async function placeOrder(payload: OrderPayload): Promise<{ success: boolean; orderId?: string; message?: string }> {
+export async function placeOrder(payload: OrderPayload): Promise<{ success: boolean; orderId?: string; orderNumber?: string; message?: string }> {
   try {
     const result = await runTransaction(db, async (transaction) => {
       // 1. Fetch products and check stock
@@ -220,10 +220,10 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
           }
       }
 
-      return { orderId: orderRef.id };
+      return { orderId: orderRef.id, orderNumber };
     });
 
-    return { success: true, orderId: result.orderId };
+    return { success: true, orderId: result.orderId, orderNumber: result.orderNumber };
   } catch (error: any) {
     console.error('Order placement failed:', error);
     return { success: false, message: error.message || "Something went wrong. Please try again." };

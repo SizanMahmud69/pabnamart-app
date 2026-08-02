@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const db = getFirestore(app);
 
@@ -96,17 +98,19 @@ const generateTimeline = (order: Order): TimelineEvent[] => {
     });
 };
 
-export default function TrackOrderPage() {
-    const [orderId, setOrderId] = useState('');
+function TrackOrderContent() {
+    const searchParams = useSearchParams();
+    const initialId = searchParams.get('id') || '';
+    
+    const [orderId, setOrderId] = useState(initialId);
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searched, setSearched] = useState(false);
     const { deliveryTimeInside, deliveryTimeOutside } = useDeliveryCharge();
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!orderId.trim()) return;
+    const fetchOrder = async (id: string) => {
+        if (!id.trim()) return;
 
         setLoading(true);
         setOrder(null);
@@ -114,7 +118,7 @@ export default function TrackOrderPage() {
         setSearched(true);
 
         const ordersRef = collection(db, 'orders');
-        const q = query(ordersRef, where('orderNumber', '==', orderId.trim()), limit(1));
+        const q = query(ordersRef, where('orderNumber', '==', id.trim()), limit(1));
 
         try {
             const querySnapshot = await getDocs(q);
@@ -130,6 +134,17 @@ export default function TrackOrderPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    useEffect(() => {
+        if (initialId) {
+            fetchOrder(initialId);
+        }
+    }, [initialId]);
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        fetchOrder(orderId);
     };
     
     const { estimatedDeliveryDate, deliveryLocation, deliveryDays } = useMemo(() => {
@@ -152,124 +167,131 @@ export default function TrackOrderPage() {
     const timelineEvents = order ? generateTimeline(order) : [];
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
-            <div className="container mx-auto max-w-2xl px-4 py-8">
-                <Button asChild variant="ghost" className="mb-4">
-                    <Link href="/account">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Account
-                    </Link>
-                </Button>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Track Your Order</CardTitle>
-                        <CardDescription>Enter your order ID to see its current status.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSearch} className="flex items-center gap-2">
-                            <Input
-                                id="order-id"
-                                placeholder="Enter Order ID (e.g., 24012112345)"
-                                value={orderId}
-                                onChange={(e) => setOrderId(e.target.value)}
-                                required
-                                disabled={loading}
-                            />
-                            <Button type="submit" disabled={loading}>
-                                {loading ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Search className="h-4 w-4" />
+        <div className="container mx-auto max-w-2xl px-4 py-8">
+            <Button asChild variant="ghost" className="mb-4">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Home
+                </Link>
+            </Button>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Track Your Order</CardTitle>
+                    <CardDescription>Enter your order ID to see its current status.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSearch} className="flex items-center gap-2">
+                        <Input
+                            id="order-id"
+                            placeholder="Enter Order ID (e.g., 24012112345)"
+                            value={orderId}
+                            onChange={(e) => setOrderId(e.target.value)}
+                            required
+                            disabled={loading}
+                        />
+                        <Button type="submit" disabled={loading}>
+                            {loading ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Search className="h-4 w-4" />
+                            )}
+                            <span className="ml-2">Track</span>
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
+
+            {loading && (
+                 <div className="mt-6 flex justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            )}
+            
+            {searched && !loading && (
+                <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {order ? (
+                        <Card>
+                            <CardHeader>
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <CardTitle>Order #{order.orderNumber}</CardTitle>
+                                        <CardDescription>Placed on {new Date(order.date).toLocaleDateString()}</CardDescription>
+                                    </div>
+                                    <Badge variant={getStatusVariant(order.status)} className="capitalize text-lg">{order.status.replace('-', ' ')}</Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                 <OrderStatusStepper currentStatus={order.status} />
+
+                                 {estimatedDeliveryDate && order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned' && (
+                                    <div className="flex flex-col items-center justify-center gap-1 pt-4 text-center text-sm text-muted-foreground">
+                                         <div className="flex items-center gap-2">
+                                            <Truck className="h-4 w-4 text-primary" />
+                                            <span>Estimated Delivery by:</span>
+                                            <span className="font-semibold text-primary">{estimatedDeliveryDate}</span>
+                                        </div>
+                                        <p className="text-xs">({deliveryDays} days for {deliveryLocation})</p>
+                                    </div>
                                 )}
-                                <span className="ml-2">Track</span>
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
 
-                {loading && (
-                     <div className="mt-6 flex justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                )}
-                
-                {searched && !loading && (
-                    <div className="mt-6">
-                        {order ? (
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <CardTitle>Order #{order.orderNumber}</CardTitle>
-                                            <CardDescription>Placed on {new Date(order.date).toLocaleDateString()}</CardDescription>
-                                        </div>
-                                        <Badge variant={getStatusVariant(order.status)} className="capitalize text-lg">{order.status.replace('-', ' ')}</Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                     <OrderStatusStepper currentStatus={order.status} />
-
-                                     {estimatedDeliveryDate && order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned' && (
-                                        <div className="flex flex-col items-center justify-center gap-1 pt-4 text-center text-sm text-muted-foreground">
-                                             <div className="flex items-center gap-2">
-                                                <Truck className="h-4 w-4 text-primary" />
-                                                <span>Estimated Delivery by:</span>
-                                                <span className="font-semibold text-primary">{estimatedDeliveryDate}</span>
-                                            </div>
-                                            <p className="text-xs">({deliveryDays} days for {deliveryLocation})</p>
-                                        </div>
-                                    )}
-
-                                     <Separator />
-                                     <div>
-                                        <h3 className="text-lg font-semibold mb-4">Order History</h3>
-                                        <div className="relative pl-4 space-y-8">
-                                            {timelineEvents.map((event, index) => (
-                                                <div key={index} className="flex gap-4">
-                                                    <div className="flex flex-col items-center">
+                                 <Separator />
+                                 <div>
+                                    <h3 className="text-lg font-semibold mb-4">Order History</h3>
+                                    <div className="relative pl-4 space-y-8">
+                                        {timelineEvents.map((event, index) => (
+                                            <div key={index} className="flex gap-4">
+                                                <div className="flex flex-col items-center">
+                                                    <div className={cn(
+                                                        "flex h-10 w-10 items-center justify-center rounded-full border-2",
+                                                        event.isCompleted || event.isCurrent ? "border-primary" : "border-muted-foreground/30",
+                                                        event.isCompleted ? "bg-primary text-primary-foreground" : "bg-muted"
+                                                    )}>
+                                                        <event.icon className={cn("h-5 w-5", !event.isCompleted && "text-muted-foreground")} />
+                                                    </div>
+                                                    {index < timelineEvents.length - 1 && (
                                                         <div className={cn(
-                                                            "flex h-10 w-10 items-center justify-center rounded-full border-2",
-                                                            event.isCompleted || event.isCurrent ? "border-primary" : "border-muted-foreground/30",
-                                                            event.isCompleted ? "bg-primary text-primary-foreground" : "bg-muted"
-                                                        )}>
-                                                            <event.icon className={cn("h-5 w-5", !event.isCompleted && "text-muted-foreground")} />
-                                                        </div>
-                                                        {index < timelineEvents.length - 1 && (
-                                                            <div className={cn(
-                                                                "w-0.5 flex-1 mt-2",
-                                                                event.isCompleted ? "bg-primary" : "bg-muted-foreground/30"
-                                                            )} />
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-semibold">{event.title}</p>
-                                                        <p className="text-sm text-muted-foreground">{event.description}</p>
-                                                    </div>
+                                                            "w-0.5 flex-1 mt-2",
+                                                            event.isCompleted ? "bg-primary" : "bg-muted-foreground/30"
+                                                        )} />
+                                                    )}
                                                 </div>
-                                            ))}
-                                        </div>
-                                     </div>
-                                </CardContent>
-                                <CardFooter>
-                                     <div className="flex justify-between font-bold text-xl w-full">
-                                        <span>Total</span>
-                                        <span>৳{order.total}</span>
+                                                <div>
+                                                    <p className="font-semibold">{event.title}</p>
+                                                    <p className="text-sm text-muted-foreground">{event.description}</p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                </CardFooter>
-                            </Card>
-                        ) : (
-                            <Card>
-                                <CardContent className="p-6 text-center">
-                                    <Package className="mx-auto h-12 w-12 text-muted-foreground" />
-                                    <h3 className="mt-4 text-lg font-semibold">Order Not Found</h3>
-                                    <p className="text-muted-foreground text-sm">{error || "Please check the order ID and try again."}</p>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </div>
-                )}
+                                 </div>
+                            </CardContent>
+                            <CardFooter>
+                                 <div className="flex justify-between font-bold text-xl w-full">
+                                    <span>Total</span>
+                                    <span>৳{order.total}</span>
+                                </div>
+                            </CardFooter>
+                        </Card>
+                    ) : (
+                        <Card>
+                            <CardContent className="p-6 text-center">
+                                <Package className="mx-auto h-12 w-12 text-muted-foreground" />
+                                <h3 className="mt-4 text-lg font-semibold">Order Not Found</h3>
+                                <p className="text-muted-foreground text-sm">{error || "Please check the order ID and try again."}</p>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
 
-            </div>
+export default function TrackOrderPage() {
+    return (
+        <div className="bg-purple-50/30 min-h-screen">
+            <Suspense fallback={<LoadingSpinner />}>
+                <TrackOrderContent />
+            </Suspense>
         </div>
     )
 }

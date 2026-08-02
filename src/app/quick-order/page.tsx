@@ -164,10 +164,10 @@ export default function QuickOrderPage() {
                 paymentMethod: 'cash-on-delivery',
             });
 
-            if (result.success && result.orderId) {
+            if (result.success && result.orderNumber) {
                 toast({ title: "অর্ডার সফল হয়েছে!", description: "আপনার অর্ডারটি গ্রহণ করা হয়েছে।" });
                 sessionStorage.removeItem('quickOrderData');
-                router.replace(`/track-order?id=${result.orderId}`);
+                router.replace(`/quick-order/success?num=${result.orderNumber}`);
             } else {
                 toast({ title: "অর্ডার ব্যর্থ হয়েছে", description: result.message || "আবার চেষ্টা করুন।", variant: "destructive" });
             }
@@ -226,12 +226,12 @@ export default function QuickOrderPage() {
                                         >
                                             <Minus className="h-4 w-4" />
                                         </Button>
-                                        <Input 
+                                        <input 
                                             type="text" 
                                             value={displayQty}
                                             onChange={(e) => handleManualInput(e.target.value)}
                                             onBlur={handleBlur}
-                                            className="w-24 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-black text-lg"
+                                            className="w-24 border-0 text-center h-full focus-visible:ring-0 focus-visible:ring-offset-0 font-black text-lg bg-transparent outline-none"
                                         />
                                         <Button 
                                             variant="ghost" size="icon" className="h-full w-12 rounded-none border-l"
