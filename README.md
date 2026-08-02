@@ -13,6 +13,22 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## 🛠 Backend Configuration (Important)
+
+If you see errors like "Server not configured" during checkout or admin tasks, it's because the Firebase Admin SDK needs a service account key.
+
+### How to get your Service Account Key:
+1.  Go to the [Firebase Console](https://console.firebase.google.com/).
+2.  Select your project: **PabnaMart**.
+3.  Click the gear icon (Project Settings) > **Service Accounts**.
+4.  Click **"Generate new private key"**.
+5.  A JSON file will download. Open it and copy everything.
+6.  In your local `.env` file or hosting environment (like Vercel), add a new variable:
+    - **Name:** `FIREBASE_SERVICE_ACCOUNT_JSON`
+    - **Value:** (Paste the entire JSON content here)
+
+---
+
 ## Git Authentication (Personal Access Token)
 
 If you get an error like "Invalid username or token" while pushing to GitHub, follow these steps:
@@ -34,20 +50,6 @@ If your computer has cached old credentials and won't let you login, use this co
 git remote set-url origin https://YOUR_TOKEN_HERE@github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
 ```
 *(Replace `YOUR_TOKEN_HERE`, `YOUR_USERNAME`, and `YOUR_REPO_NAME` with your actual info. Then just run `git push origin main`)*
-
-## Common Git Errors & Solutions
-
-### 1. Updates were rejected (Remote contains work you do not have locally)
-**Cause:** You created the repo with a README/License on GitHub, which doesn't exist locally.
-**Solution:**
-```bash
-git pull origin main --rebase
-git push origin main
-```
-*Note: If you want to overwrite GitHub with your local code (risky):*
-```bash
-git push origin main --force
-```
 
 ## Deployment Guide for Vercel
 

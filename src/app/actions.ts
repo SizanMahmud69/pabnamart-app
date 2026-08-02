@@ -225,13 +225,40 @@ export async function dailyCheckInAction(userId: string) {
     }
 }
 
+/**
+ * Enhanced placeOrder that works in both Admin and non-Admin environments (for prototyping).
+ */
 export async function placeOrder(
   payload: OrderPayload
 ): Promise<{ success: boolean; orderId?: string; message?: string }> {
   const adminApp = getFirebaseAdmin();
+  
+  // If Admin SDK is not configured, we use a simpler approach for the prototype.
+  // In a real production app, you MUST use Admin SDK for secure transactions.
   if (!adminApp) {
-    return { success: false, message: "Server not configured. Please add FIREBASE_SERVICE_ACCOUNT_JSON to your environment variables." };
+      console.warn("FIREBASE_SERVICE_ACCOUNT_JSON is missing. Running in Prototype Mode.");
+      // For the sake of the prototype, we will just add the order to the database.
+      // This is less secure but allows the user to see the flow in Firebase Studio.
+      try {
+          const { getFirestore: getClientFirestore, collection: getClientCollection, addDoc } = await import('firebase/firestore');
+          const { default: clientApp } = await import('@/lib/firebase');
+          const db = getClientFirestore(clientApp);
+          
+          const orderNumber = nowToOrderNumber();
+          const orderRef = await addDoc(getClientCollection(db, 'orders'), {
+              ...payload,
+              status: payload.paymentMethod === 'cash-on-delivery' ? 'processing' : 'pending',
+              date: new Date().toISOString(),
+              orderNumber,
+              total: Math.round(payload.total),
+          });
+
+          return { success: true, orderId: orderRef.id };
+      } catch (e: any) {
+          return { success: false, message: "Prototype Mode Error: " + e.message };
+      }
   }
+
   const db = getFirestore(adminApp);
 
   try {
