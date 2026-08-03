@@ -250,7 +250,7 @@ function HomePageContent() {
           transition: isRefreshing || pullDistance === 0 ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
         }}
       >
-        {/* Pull to Refresh Indicator with Custom Logo */}
+        {/* Branded Pull to Refresh Indicator */}
         <div 
           className={cn(
             "absolute left-1/2 -translate-x-1/2 z-[100] transition-opacity duration-300",
@@ -262,18 +262,15 @@ function HomePageContent() {
           }}
         >
           <div className={cn(
-            "bg-white p-1 rounded-full shadow-2xl border-2 border-primary/20 flex items-center justify-center overflow-hidden w-12 h-12",
+            "bg-white p-1 rounded-full shadow-2xl border-2 border-primary flex items-center justify-center overflow-hidden w-12 h-12",
             isRefreshing && "animate-pulse"
           )}>
-            <img 
-                src="https://picsum.photos/seed/pabnamart-logo/100/100" 
-                alt="Loading Logo"
-                className={cn(
-                    "w-full h-full object-contain rounded-full",
-                    isRefreshing && "animate-spin"
-                )}
-                data-ai-hint="delivery logo"
-            />
+            <div className={cn(
+                "w-full h-full bg-primary text-white text-[8px] font-black flex items-center justify-center text-center leading-none rounded-full",
+                isRefreshing && "animate-spin"
+            )}>
+                PABNA<br/>MART
+            </div>
           </div>
         </div>
 
