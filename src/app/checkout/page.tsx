@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2, Home, Building, Plus, Ticket, AlertCircle, Coins, Sparkles, Clock, Trophy, Tag } from "lucide-react";
 import Link from 'next/link';
-import type { ShippingAddress, Voucher } from "@/types";
+import type { ShippingAddress, Voucher, CoinSettings } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import AddressFormModal from "@/components/AddressFormModal";
@@ -24,6 +24,16 @@ import app from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+
+const db = getFirestore(app);
+
+const defaultCoinSettings: CoinSettings = {
+    checkInPoints: 1,
+    reviewPoints: 20,
+    pointsPer100Taka: 10,
+    takaPer100Coins: 10,
+    maxCoinsPerOrder: 100,
+};
 
 function CheckoutPage() {
     const { user, appUser } = useAuth();
@@ -44,13 +54,13 @@ function CheckoutPage() {
     const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
     const [voucherError, setVoucherError] = useState<string | null>(null);
     const [useCoins, setUseCoins] = useState(false);
+    const [coinSettings, setCoinSettings] = useState<CoinSettings>(defaultCoinSettings);
     const [isProceeding, startProceeding] = useTransition();
 
     const [spinDiscountTimeLeft, setSpinDiscountTimeLeft] = useState<number | null>(null);
     
     useEffect(() => {
         if (user) {
-            const db = getFirestore(app);
             const userDocRef = doc(db, 'users', user.uid);
             const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -64,7 +74,18 @@ function CheckoutPage() {
                     }
                 }
             });
-            return () => unsubscribe();
+            
+            const settingsRef = doc(db, 'settings', 'coin');
+            const unsubSettings = onSnapshot(settingsRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    setCoinSettings({ ...defaultCoinSettings, ...docSnap.data() });
+                }
+            });
+
+            return () => {
+                unsubscribe();
+                unsubSettings();
+            };
         }
     }, [user, selectedShippingAddress, setSelectedShippingAddress]);
 
@@ -93,7 +114,6 @@ function CheckoutPage() {
     
     const handleSaveAddress = async (address: Omit<ShippingAddress, 'id' | 'default'>) => {
         if (!user) return;
-        const db = getFirestore(app);
         const userDocRef = doc(db, 'users', user.uid);
         
         const newAddress: ShippingAddress = {
@@ -126,7 +146,6 @@ function CheckoutPage() {
             return;
         }
         
-        // Category Check
         if (voucher.applicableCategory) {
             const hasCategoryItem = cartItems.some(item => item.category === voucher.applicableCategory);
             if (!hasCategoryItem) {
@@ -135,7 +154,6 @@ function CheckoutPage() {
             }
         }
         
-        // Min Spend Check
         const relevantSubtotal = voucher.applicableCategory 
             ? cartItems.filter(item => item.category === voucher.applicableCategory).reduce((acc, item) => acc + (item.price * item.quantity), 0)
             : selectedCartTotal;
@@ -158,25 +176,23 @@ function CheckoutPage() {
         toast({ title: "Voucher Applied!", description: `You've got a discount with ${voucher.code}.` });
     };
     
-    const subtotalWithVoucher = useMemo(() => {
-        let currentSubtotal = selectedCartTotal;
+    const voucherDiscountAmount = useMemo(() => {
         if (appliedVoucher && appliedVoucher.discountType !== 'shipping') {
             const relevantSubtotal = appliedVoucher.applicableCategory 
                 ? cartItems.filter(item => item.category === appliedVoucher.applicableCategory).reduce((acc, item) => acc + (item.price * item.quantity), 0)
                 : selectedCartTotal;
 
-            let discount = appliedVoucher.type === 'fixed' ? appliedVoucher.discount : (relevantSubtotal * appliedVoucher.discount) / 100;
-            currentSubtotal = Math.max(0, selectedCartTotal - discount);
+            return appliedVoucher.type === 'fixed' ? appliedVoucher.discount : (relevantSubtotal * appliedVoucher.discount) / 100;
         }
-        return currentSubtotal;
+        return 0;
     }, [selectedCartTotal, appliedVoucher, cartItems]);
 
     const coinDiscount = useMemo(() => {
         if (!useCoins || !appUser?.coins) return 0;
-        const maxCoinsToUse = 100; // 10 Taka limit
-        const coinsToUse = Math.min(appUser.coins, maxCoinsToUse);
-        return coinsToUse / 10;
-    }, [useCoins, appUser]);
+        const maxCoinsAvailable = (coinSettings.maxCoinsPerOrder / coinSettings.takaPer100Coins) * 100;
+        const coinsToUse = Math.min(appUser.coins, Math.floor(maxCoinsAvailable));
+        return (coinsToUse / 100) * coinSettings.takaPer100Coins;
+    }, [useCoins, appUser, coinSettings]);
 
     const hasSpinDiscount = useMemo(() => {
         return !!(appUser?.activeSpinDiscount && spinDiscountTimeLeft !== null);
@@ -184,16 +200,16 @@ function CheckoutPage() {
 
     const spinDiscountAmount = useMemo(() => {
         if (!hasSpinDiscount || !appUser?.activeSpinDiscount) return 0;
-        const baseForSpin = subtotalWithVoucher - coinDiscount;
+        const baseForSpin = selectedCartTotal - voucherDiscountAmount - coinDiscount;
         return (baseForSpin * appUser.activeSpinDiscount) / 100;
-    }, [hasSpinDiscount, appUser, subtotalWithVoucher, coinDiscount]);
+    }, [hasSpinDiscount, appUser, selectedCartTotal, voucherDiscountAmount, coinDiscount]);
     
     const shippingFeeWithDiscount = useMemo(() => {
         if (appliedVoucher?.discountType === 'shipping') return 0;
         return shippingFee;
     }, [shippingFee, appliedVoucher]);
 
-    const finalTotal = Math.round(subtotalWithVoucher - coinDiscount - spinDiscountAmount + shippingFeeWithDiscount);
+    const finalTotal = Math.round(selectedCartTotal - voucherDiscountAmount - coinDiscount - spinDiscountAmount + shippingFeeWithDiscount);
     
     const handleAddressChange = (addressId: string) => {
         const address = addresses.find(a => a.id === addressId);
@@ -217,6 +233,10 @@ function CheckoutPage() {
                 total: finalTotal,
                 subtotal: selectedCartTotal,
                 voucherCode: appliedVoucher?.code,
+                voucherDiscount: voucherDiscountAmount,
+                coinDiscount: coinDiscount,
+                spinDiscount: spinDiscountAmount,
+                spinDiscountPercentage: appUser?.activeSpinDiscount || 0,
                 useCoins: useCoins,
                 useSpinDiscount: hasSpinDiscount,
                 referrerId: referrerId || undefined,
@@ -324,7 +344,6 @@ function CheckoutPage() {
                         </div>
 
                         <div className="space-y-6">
-                             {/* Lucky Spin Discount Display */}
                              {hasSpinDiscount && (
                                 <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white overflow-hidden">
                                     <CardContent className="p-4 relative">
@@ -403,8 +422,8 @@ function CheckoutPage() {
                                     </div>
                                     {useCoins && appUser?.coins && (
                                         <div className="mt-3 p-2 bg-yellow-100/50 rounded-md border border-yellow-200 text-xs flex justify-between">
-                                            <span>Applying {Math.min(appUser.coins, 100)} coins discount</span>
-                                            <span className="font-bold">- ৳{coinDiscount}</span>
+                                            <span>Applying {Math.min(appUser.coins, (coinSettings.maxCoinsPerOrder / coinSettings.takaPer100Coins) * 100)} coins discount</span>
+                                            <span className="font-bold">- ৳{coinDiscount.toFixed(2)}</span>
                                         </div>
                                     )}
                                 </CardContent>
@@ -416,15 +435,15 @@ function CheckoutPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-3">
                                     <div className="flex justify-between"><span>Subtotal</span><span>৳{selectedCartTotal}</span></div>
-                                    {appliedVoucher?.discountType !== 'shipping' && appliedVoucher?.discount && (
+                                    {voucherDiscountAmount > 0 && (
                                         <div className="flex justify-between text-green-600 text-sm">
                                             <div className="flex flex-col">
                                                 <span>Voucher Discount</span>
-                                                {appliedVoucher.applicableCategory && (
+                                                {appliedVoucher?.applicableCategory && (
                                                     <span className="text-[10px] text-muted-foreground uppercase tracking-tighter">(Only on {appliedVoucher.applicableCategory})</span>
                                                 )}
                                             </div>
-                                            <span>- ৳{(selectedCartTotal - subtotalWithVoucher).toFixed(2)}</span>
+                                            <span>- ৳{voucherDiscountAmount.toFixed(2)}</span>
                                         </div>
                                     )}
                                     {coinDiscount > 0 && (

@@ -20,10 +20,6 @@ function nowToOrderNumber() {
     return `${now.getFullYear().toString().slice(-2)}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${Math.floor(10000 + Math.random() * 90000)}`;
 }
 
-/**
- * Helper to recursively remove undefined values from an object,
- * as Firestore does not support undefined field values.
- */
 function sanitize(obj: any): any {
     if (obj === undefined) return null;
     if (obj === null || typeof obj !== 'object') return obj;
@@ -39,13 +35,9 @@ function sanitize(obj: any): any {
     return cleaned;
 }
 
-/**
- * Client-side order placement using Firestore transactions to ensure stock integrity.
- */
 export async function placeOrder(payload: OrderPayload): Promise<{ success: boolean; orderId?: string; orderNumber?: string; message?: string }> {
   try {
     const result = await runTransaction(db, async (transaction) => {
-      // 1. Fetch products and check stock
       const productRefs = payload.items.map(item => doc(db, 'products', item.id.toString()));
       const productSnaps = await Promise.all(productRefs.map(ref => transaction.get(ref)));
       
@@ -57,7 +49,6 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
           if (userSnap.exists()) userData = userSnap.data() as User;
       }
 
-      // 2. Fetch Coin Settings
       const coinSettingsSnap = await transaction.get(doc(db, 'settings', 'coin'));
       const settings = { ...defaultCoinSettings, ...(coinSettingsSnap.data() || {}) } as CoinSettings;
       
@@ -71,7 +62,6 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
         const productData = productSnap.data() as Product;
         if (productData.stock < cartItem.quantity) throw new Error(`Not enough stock for ${productData.name}.`);
 
-        // Handle variations stock
         let newColors = [...(productData.colors || [])];
         let newSizes = [...(productData.sizes || [])];
 
@@ -109,7 +99,6 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
         });
       }
 
-      // 3. Voucher Logic
       let voucherDiscount = 0;
       let usedVoucherCode = '';
 
@@ -118,26 +107,21 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
         if (vSnap.exists()) {
             const v = vSnap.data() as Voucher;
             const usage = userData?.usedVouchers?.[v.code] || 0;
-            
-            // Check usage limit
             const withinLimit = !v.usageLimit || usage < v.usageLimit;
             
             if (withinLimit) {
-                // Calculate Subtotal for the applicable scope (all or specific category)
                 const relevantItems = v.applicableCategory 
                     ? payload.items.filter(item => item.category === v.applicableCategory)
                     : payload.items;
                 
                 const relevantSubtotal = relevantItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
                 
-                // Check min spend against relevant subtotal
                 if (!v.minSpend || relevantSubtotal >= v.minSpend) {
                     if (relevantItems.length > 0) {
                         usedVoucherCode = v.code;
                         if (v.discountType !== 'shipping') {
                             voucherDiscount = v.type === 'fixed' ? v.discount : (relevantSubtotal * v.discount) / 100;
                         }
-                        // Mark voucher as used
                         transaction.update(doc(db, 'users', payload.userId), { [`usedVouchers.${usedVoucherCode}`]: increment(1) });
                     }
                 }
@@ -145,7 +129,6 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
         }
       }
       
-      // 4. Coin Logic
       let coinDiscount = 0;
       let coinsToUse = 0;
       if (payload.useCoins && !isGuest && userData) {
@@ -168,7 +151,6 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
           }
       }
 
-      // 5. Spin Discount Logic
       let spinDiscount = 0;
       let spinPercentageUsed = 0;
       if (payload.useSpinDiscount && !isGuest && userData && userData.activeSpinDiscount && userData.spinDiscountExpiry) {
@@ -178,7 +160,6 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
               spinPercentageUsed = userData.activeSpinDiscount;
               const baseForSpin = totalOfferSubtotal - voucherDiscount - coinDiscount;
               spinDiscount = (baseForSpin * spinPercentageUsed) / 100;
-              // Clear spin discount
               transaction.update(doc(db, 'users', payload.userId), { 
                   activeSpinDiscount: deleteField(),
                   spinDiscountExpiry: deleteField()
@@ -186,11 +167,9 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
           }
       }
 
-      // 6. Final Total Calculation
       const codFee = payload.paymentMethod === 'cash-on-delivery' ? payload.cashOnDeliveryFee || 0 : 0;
       const total = Math.round((totalOfferSubtotal - voucherDiscount - coinDiscount - spinDiscount) + payload.shippingFee + codFee);
 
-      // 7. Create Order Record
       const orderRef = doc(collection(db, 'orders'));
       const orderNumber = nowToOrderNumber();
       
@@ -215,10 +194,8 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
         referrerId: payload.referrerId || null,
       };
 
-      // Sanitize data before setting to Firestore to remove any 'undefined' values
       transaction.set(orderRef, sanitize(orderData));
 
-      // 8. Award Coins for purchase
       if (!isGuest) {
           const coinsEarned = Math.floor((totalOfferSubtotal / 100) * settings.pointsPer100Taka);
           if (coinsEarned > 0) {

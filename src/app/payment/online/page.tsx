@@ -14,10 +14,11 @@ import { Input } from "@/components/ui/input";
 import { placeOrder } from "@/lib/order-service";
 import { useToast } from "@/hooks/use-toast";
 import type { CartItem, ShippingAddress, PaymentSettings } from "@/types";
-import { Loader2, ArrowLeft, Copy } from "lucide-react";
+import { Loader2, ArrowLeft, Copy, Coins, Ticket, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 import app from "@/lib/firebase";
+import { Separator } from "@/components/ui/separator";
 
 interface CheckoutData {
     items: CartItem[];
@@ -26,6 +27,10 @@ interface CheckoutData {
     total: number;
     subtotal: number;
     voucherCode?: string;
+    voucherDiscount?: number;
+    coinDiscount?: number;
+    spinDiscount?: number;
+    spinDiscountPercentage?: number;
     referrerId?: string;
     useCoins?: boolean;
     useSpinDiscount?: boolean;
@@ -120,70 +125,127 @@ function OnlinePaymentPage() {
     }
 
     const { total } = checkoutData;
-    
     const selectedMethod = paymentSettings.methods.find(m => m.name === paymentMethod);
     const merchantNumber = selectedMethod ? selectedMethod.merchantNumber : '';
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
-            <div className="container mx-auto max-lg px-4 py-6">
+        <div className="bg-purple-50/30 min-h-screen pb-20">
+            <div className="container mx-auto max-w-2xl px-4 py-6">
                 <Button asChild variant="ghost" className="mb-4">
                     <Link href="/payment">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Payment Selection
                     </Link>
                 </Button>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Online Payment</CardTitle>
-                        <CardDescription>Your final order total is ৳{total}.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                            <h3 className="font-semibold mb-2">Select a Gateway</h3>
-                            
-                            {paymentSettings.methods.map((method) => (
-                                <Label key={method.id} htmlFor={method.id} className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer has-[:checked]:border-primary">
-                                    <RadioGroupItem value={method.name} id={method.id} />
-                                    {method.logo && <img src={method.logo} alt={method.name} className="h-8 object-contain" />}
-                                    <span className="flex-grow">{method.name}</span>
-                                </Label>
-                            ))}
-                           
-                        </RadioGroup>
 
-                        {paymentMethod && (
-                            <div className="space-y-4 pt-4 border-t">
-                                <p>Please send <strong>৳{total}</strong> to our {paymentMethod} merchant number:</p>
-                                <div className="flex items-center gap-2">
-                                     <p className="font-mono text-lg font-bold text-center bg-muted p-2 rounded-md flex-grow">
-                                        {merchantNumber}
-                                    </p>
-                                    <Button type="button" variant="outline" size="icon" onClick={() => handleCopyToClipboard(merchantNumber)}>
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <p className="text-sm text-muted-foreground">After payment, enter your payment account number and the transaction ID below.</p>
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="paymentAccount">Your Payment Account Number</Label>
-                                    <Input id="paymentAccount" placeholder="e.g., 01xxxxxxxxx" value={paymentAccountNumber} onChange={(e) => setPaymentAccountNumber(e.target.value)} required />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="trxId">Transaction ID</Label>
-                                    <Input id="trxId" placeholder="Enter your transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} required />
-                                </div>
+                <div className="grid grid-cols-1 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Order Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Subtotal</span>
+                                <span>৳{checkoutData.subtotal.toFixed(2)}</span>
                             </div>
-                        )}
-                    </CardContent>
-                    <CardFooter>
-                        <Button size="lg" className="w-full" onClick={handlePlaceOrder} disabled={isPlacingOrder || !paymentMethod || !transactionId || !paymentAccountNumber}>
-                            {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {isPlacingOrder ? 'Placing Order...' : `Place Order (৳${total})`}
-                        </Button>
-                    </CardFooter>
-                </Card>
+                            {checkoutData.voucherDiscount && checkoutData.voucherDiscount > 0 ? (
+                                <div className="flex justify-between text-sm text-green-600 font-medium">
+                                    <div className="flex items-center gap-1">
+                                        <Ticket className="h-3.5 w-3.5" />
+                                        <span>Voucher Discount</span>
+                                    </div>
+                                    <span>- ৳{checkoutData.voucherDiscount.toFixed(2)}</span>
+                                </div>
+                            ) : null}
+                            {checkoutData.coinDiscount && checkoutData.coinDiscount > 0 ? (
+                                <div className="flex justify-between text-sm text-yellow-600 font-medium">
+                                    <div className="flex items-center gap-1">
+                                        <Coins className="h-3.5 w-3.5" />
+                                        <span>Coin Discount</span>
+                                    </div>
+                                    <span>- ৳{checkoutData.coinDiscount.toFixed(2)}</span>
+                                </div>
+                            ) : null}
+                            {checkoutData.spinDiscount && checkoutData.spinDiscount > 0 ? (
+                                <div className="flex justify-between text-sm text-indigo-600 font-medium">
+                                    <div className="flex items-center gap-1">
+                                        <Sparkles className="h-3.5 w-3.5" />
+                                        <span>Lucky Spin ({checkoutData.spinDiscountPercentage}%)</span>
+                                    </div>
+                                    <span>- ৳{checkoutData.spinDiscount.toFixed(2)}</span>
+                                </div>
+                            ) : null}
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Shipping Fee</span>
+                                <span>৳{checkoutData.shippingFee.toFixed(2)}</span>
+                            </div>
+                            <Separator />
+                            <div className="flex justify-between font-black text-xl text-primary">
+                                <span>Payable Amount</span>
+                                <span>৳{total}</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Payment Details</CardTitle>
+                            <CardDescription>Select a gateway and enter transaction info.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                                <h3 className="font-semibold mb-2">Select a Gateway</h3>
+                                <div className="grid grid-cols-1 gap-3">
+                                    {paymentSettings.methods.map((method) => (
+                                        <Label key={method.id} htmlFor={method.id} className="flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                                            <RadioGroupItem value={method.name} id={method.id} />
+                                            {method.logo && <img src={method.logo} alt={method.name} className="h-8 object-contain" />}
+                                            <span className="flex-grow font-bold">{method.name}</span>
+                                        </Label>
+                                    ))}
+                                </div>
+                            </RadioGroup>
+
+                            {paymentMethod && (
+                                <div className="space-y-4 pt-4 border-t animate-in fade-in slide-in-from-top-2">
+                                    <div className="bg-muted/50 p-4 rounded-lg border border-dashed text-center space-y-2">
+                                        <p className="text-sm">Please send <span className="font-black text-primary">৳{total}</span> to this {paymentMethod} number:</p>
+                                        <div className="flex items-center justify-center gap-2">
+                                            <span className="font-mono text-2xl font-black tracking-tighter text-foreground">
+                                                {merchantNumber}
+                                            </span>
+                                            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopyToClipboard(merchantNumber)}>
+                                                <Copy className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Merchant Payment / Send Money</p>
+                                    </div>
+                                    
+                                    <div className="grid gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="paymentAccount">Your {paymentMethod} Number</Label>
+                                            <Input id="paymentAccount" placeholder="e.g., 01xxxxxxxxx" value={paymentAccountNumber} onChange={(e) => setPaymentAccountNumber(e.target.value)} required />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="trxId">Transaction ID</Label>
+                                            <Input id="trxId" placeholder="e.g., 8K29ML0PX" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} required />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                        <CardFooter>
+                            <Button size="lg" className="w-full font-bold" onClick={handlePlaceOrder} disabled={isPlacingOrder || !paymentMethod || !transactionId || !paymentAccountNumber}>
+                                {isPlacingOrder ? (
+                                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Placing Order...</>
+                                ) : (
+                                    `Confirm Payment (৳${total})`
+                                )}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
             </div>
         </div>
     );

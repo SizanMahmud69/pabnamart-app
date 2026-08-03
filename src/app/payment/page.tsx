@@ -11,12 +11,12 @@ import { Button } from "@/components/ui/button";
 import { placeOrder } from "@/lib/order-service";
 import { useToast } from "@/hooks/use-toast";
 import type { CartItem, ShippingAddress } from "@/types";
-import { Loader2, ArrowLeft, CreditCard, Truck, AlertCircle } from "lucide-react";
+import { Loader2, ArrowLeft, CreditCard, Truck, AlertCircle, Coins, Ticket, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useDeliveryCharge } from "@/hooks/useDeliveryCharge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
+import { Separator } from "@/components/ui/separator";
 
 interface CheckoutData {
     items: CartItem[];
@@ -25,6 +25,10 @@ interface CheckoutData {
     total: number;
     subtotal: number;
     voucherCode?: string;
+    voucherDiscount?: number;
+    coinDiscount?: number;
+    spinDiscount?: number;
+    spinDiscountPercentage?: number;
     referrerId?: string;
     useCoins?: boolean;
     useSpinDiscount?: boolean;
@@ -94,77 +98,140 @@ function PaymentPage() {
     const codTotal = checkoutData.total + (paymentMethod === 'cash-on-delivery' ? cashOnDeliveryFee : 0);
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
-            <div className="container mx-auto max-lg px-4 py-6">
+        <div className="bg-purple-50/30 min-h-screen pb-20">
+            <div className="container mx-auto max-w-2xl px-4 py-6">
                 <Button asChild variant="ghost" className="mb-4">
                     <Link href="/checkout">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Checkout
                     </Link>
                 </Button>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Select Payment Method</CardTitle>
-                        <CardDescription>Your order total is ৳{checkoutData.total}.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Card 
-                            className={cn(
-                                "cursor-pointer transition-all",
-                                paymentMethod === 'cash-on-delivery' ? "border-primary ring-2 ring-primary" : "hover:border-gray-400"
-                            )}
-                            onClick={() => setPaymentMethod('cash-on-delivery')}
-                        >
-                            <CardContent className="p-6 flex items-center gap-4">
-                                <Truck className="h-8 w-8 text-primary" />
-                                <div>
-                                    <h3 className="font-bold text-lg">Cash on Delivery</h3>
-                                    <p className="text-sm text-muted-foreground">Pay with cash when your order is delivered.</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                        
-                        {paymentMethod === 'cash-on-delivery' && cashOnDeliveryFee > 0 && (
-                            <Alert>
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertDescription className="flex items-center justify-between">
-                                    <span>Cash on Delivery Fee</span>
-                                    <span className="font-semibold">৳{cashOnDeliveryFee}</span>
-                                </AlertDescription>
-                            </Alert>
-                        )}
 
-                         <Card 
-                            className={cn(
-                                "cursor-pointer transition-all",
-                                paymentMethod === 'online' ? "border-primary ring-2 ring-primary" : "hover:border-gray-400"
+                <div className="grid grid-cols-1 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Select Payment Method</CardTitle>
+                            <CardDescription>Choose how you want to pay for your order.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Card 
+                                className={cn(
+                                    "cursor-pointer transition-all border-2",
+                                    paymentMethod === 'cash-on-delivery' ? "border-primary bg-primary/5" : "hover:border-gray-300"
+                                )}
+                                onClick={() => setPaymentMethod('cash-on-delivery')}
+                            >
+                                <CardContent className="p-4 flex items-center gap-4">
+                                    <div className={cn("p-2 rounded-full", paymentMethod === 'cash-on-delivery' ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>
+                                        <Truck className="h-6 w-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-bold">Cash on Delivery</h3>
+                                        <p className="text-xs text-muted-foreground">Pay with cash when your order is delivered.</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            
+                            {paymentMethod === 'cash-on-delivery' && cashOnDeliveryFee > 0 && (
+                                <Alert className="bg-orange-50 border-orange-200">
+                                    <AlertCircle className="h-4 w-4 text-orange-600" />
+                                    <AlertDescription className="text-xs text-orange-700 flex justify-between font-bold">
+                                        <span>Cash on Delivery Surcharge</span>
+                                        <span>+ ৳{cashOnDeliveryFee}</span>
+                                    </AlertDescription>
+                                </Alert>
                             )}
-                             onClick={() => setPaymentMethod('online')}
-                        >
-                            <CardContent className="p-6 flex items-center gap-4">
-                                <CreditCard className="h-8 w-8 text-primary" />
-                                <div>
-                                    <h3 className="font-bold text-lg">Online Payment</h3>
-                                    <p className="text-sm text-muted-foreground">Pay with bKash, Nagad, or Rocket.</p>
+
+                             <Card 
+                                className={cn(
+                                    "cursor-pointer transition-all border-2",
+                                    paymentMethod === 'online' ? "border-primary bg-primary/5" : "hover:border-gray-300"
+                                )}
+                                 onClick={() => setPaymentMethod('online')}
+                            >
+                                <CardContent className="p-4 flex items-center gap-4">
+                                    <div className={cn("p-2 rounded-full", paymentMethod === 'online' ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>
+                                        <CreditCard className="h-6 w-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-bold">Online Payment</h3>
+                                        <p className="text-xs text-muted-foreground">Pay securely via bKash, Nagad or Rocket.</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </CardContent>
+                    </Card>
+
+                    {/* Order Summary Display */}
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg">Order Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Subtotal</span>
+                                <span>৳{checkoutData.subtotal.toFixed(2)}</span>
+                            </div>
+                            {checkoutData.voucherDiscount && checkoutData.voucherDiscount > 0 ? (
+                                <div className="flex justify-between text-sm text-green-600 font-medium">
+                                    <div className="flex items-center gap-1">
+                                        <Ticket className="h-3.5 w-3.5" />
+                                        <span>Voucher ({checkoutData.voucherCode})</span>
+                                    </div>
+                                    <span>- ৳{checkoutData.voucherDiscount.toFixed(2)}</span>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </CardContent>
-                    <CardFooter>
-                       {paymentMethod === 'cash-on-delivery' && (
-                            <Button size="lg" className="w-full" onClick={handlePlaceOrder} disabled={isPlacingOrder}>
-                                {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {isPlacingOrder ? 'Placing Order...' : `Place Order (৳${codTotal})`}
-                            </Button>
-                        )}
-                        {paymentMethod === 'online' && (
-                             <Button size="lg" className="w-full" onClick={handleOnlinePayment} disabled={isNavigating}>
-                                {isNavigating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {isNavigating ? 'Proceeding...' : 'Continue to Online Payment'}
-                            </Button>
-                        )}
-                    </CardFooter>
-                </Card>
+                            ) : null}
+                            {checkoutData.coinDiscount && checkoutData.coinDiscount > 0 ? (
+                                <div className="flex justify-between text-sm text-yellow-600 font-medium">
+                                    <div className="flex items-center gap-1">
+                                        <Coins className="h-3.5 w-3.5" />
+                                        <span>Coin Discount</span>
+                                    </div>
+                                    <span>- ৳{checkoutData.coinDiscount.toFixed(2)}</span>
+                                </div>
+                            ) : null}
+                            {checkoutData.spinDiscount && checkoutData.spinDiscount > 0 ? (
+                                <div className="flex justify-between text-sm text-indigo-600 font-medium">
+                                    <div className="flex items-center gap-1">
+                                        <Sparkles className="h-3.5 w-3.5" />
+                                        <span>Lucky Spin ({checkoutData.spinDiscountPercentage}%)</span>
+                                    </div>
+                                    <span>- ৳{checkoutData.spinDiscount.toFixed(2)}</span>
+                                </div>
+                            ) : null}
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Shipping Fee</span>
+                                <span>৳{checkoutData.shippingFee.toFixed(2)}</span>
+                            </div>
+                            {paymentMethod === 'cash-on-delivery' && cashOnDeliveryFee > 0 && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">COD Fee</span>
+                                    <span>৳{cashOnDeliveryFee.toFixed(2)}</span>
+                                </div>
+                            )}
+                            <Separator />
+                            <div className="flex justify-between font-black text-xl text-primary">
+                                <span>Final Total</span>
+                                <span>৳{codTotal}</span>
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                           {paymentMethod === 'cash-on-delivery' ? (
+                                <Button size="lg" className="w-full font-bold" onClick={handlePlaceOrder} disabled={isPlacingOrder}>
+                                    {isPlacingOrder ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Truck className="mr-2 h-4 w-4" />}
+                                    Confirm Order (Cash on Delivery)
+                                </Button>
+                            ) : paymentMethod === 'online' ? (
+                                 <Button size="lg" className="w-full font-bold" onClick={handleOnlinePayment} disabled={isNavigating}>
+                                    {isNavigating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRight className="mr-2 h-4 w-4" />}
+                                    Continue to Online Payment
+                                </Button>
+                            ) : (
+                                <Button size="lg" className="w-full" disabled>Select Payment Method</Button>
+                            )}
+                        </CardFooter>
+                    </Card>
+                </div>
             </div>
         </div>
     );
