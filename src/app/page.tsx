@@ -32,6 +32,7 @@ import FloatingCoin from '@/components/FloatingCoin';
 import { getFirestore, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import DynamicFlashBanner from '@/components/DynamicFlashBanner';
 
 const db = getFirestore(app);
 
@@ -148,14 +149,11 @@ function HomePageContent() {
         });
     });
 
-    // 3. Add Flash Sale Banner
+    // 3. Add Dynamic Flash Sale Banner (ONLY if products exist)
     if (flashSaleProducts.length > 0) {
       banners.unshift({
-        title: "Flash Sale Live Now!",
-        backgroundImage: categoryImageMap["Flash Sale"].image,
+        type: 'dynamic-flash',
         link: "/flash-sale",
-        aiHint: categoryImageMap["Flash Sale"].aiHint,
-        alignment: getNextLayout(),
       });
     }
 
@@ -219,18 +217,22 @@ function HomePageContent() {
                         <CarouselContent>
                             {heroBanners.map((banner, index) => (
                                 <CarouselItem key={index}>
-                                    <Link href={banner.link} className="block group">
-                                        <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
-                                            <img 
-                                                src={banner.backgroundImage} 
-                                                alt=""
-                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                                                aria-hidden="true"
-                                                data-ai-hint={banner.aiHint}
-                                            />
-                                            <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
-                                        </div>
-                                    </Link>
+                                    {banner.type === 'dynamic-flash' ? (
+                                        <DynamicFlashBanner products={flashSaleProducts} />
+                                    ) : (
+                                        <Link href={banner.link} className="block group">
+                                            <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
+                                                <img 
+                                                    src={banner.backgroundImage} 
+                                                    alt=""
+                                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                                    aria-hidden="true"
+                                                    data-ai-hint={banner.aiHint}
+                                                />
+                                                <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
+                                            </div>
+                                        </Link>
+                                    )}
                                 </CarouselItem>
                             ))}
                         </CarouselContent>
