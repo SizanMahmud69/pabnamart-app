@@ -99,12 +99,14 @@ function MyVouchersPage() {
                                                         {voucher.discountType === 'shipping' ? 'Free Shipping' : (voucher.type === 'fixed' ? `৳${voucher.discount} Off` : `${voucher.discount}% Off`)}
                                                     </h3>
                                                     <p className="text-sm text-gray-600">{voucher.description}</p>
-                                                    {voucher.applicableCategory && (
-                                                        <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-black text-primary/70 uppercase tracking-tighter">
-                                                            <Tag className="h-3 w-3" />
-                                                            <span>Only for {voucher.applicableCategory}</span>
-                                                        </div>
-                                                    )}
+                                                    <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tighter">
+                                                        <Tag className="h-3 w-3 text-primary/70" />
+                                                        {voucher.applicableCategory ? (
+                                                            <span className="text-black">Only for <span className="text-primary">{voucher.applicableCategory}</span></span>
+                                                        ) : (
+                                                            <span className="text-black/60 italic">Use for all categories</span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
