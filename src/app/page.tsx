@@ -237,261 +237,263 @@ function HomePageContent() {
 
 
   return (
-    <div 
-      className="bg-purple-50/30 min-h-screen relative"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      ref={containerRef}
-      style={{ 
-        transform: `translateY(${pullDistance}px)`,
-        transition: isRefreshing || pullDistance === 0 ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
-      }}
-    >
-      {/* Pull to Refresh Indicator */}
+    <>
+      <FloatingCoin />
       <div 
-        className={cn(
-          "absolute left-1/2 -translate-x-1/2 z-[100] transition-opacity duration-300",
-          pullDistance > 20 || isRefreshing ? "opacity-100" : "opacity-0"
-        )}
+        className="bg-purple-50/30 min-h-screen relative"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        ref={containerRef}
         style={{ 
-            top: "-60px", // Stays fixed at the top of the translating div
-            transform: `translateX(-50%) rotate(${pullDistance * 3}deg)`
+          transform: `translateY(${pullDistance}px)`,
+          transition: isRefreshing || pullDistance === 0 ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
         }}
       >
-        <div className={cn(
-          "bg-white p-3 rounded-full shadow-2xl border-2 border-primary/20 flex items-center justify-center",
-          isRefreshing && "animate-pulse"
-        )}>
-          <RefreshCw 
-            className={cn(
-              "h-6 w-6 text-primary",
-              isRefreshing && "animate-spin"
-            )} 
-          />
-        </div>
-      </div>
-
-      <FloatingCoin />
-      <div className="container mx-auto px-4 py-6 space-y-8">
-        {/* Hero Section */}
-        <div className="space-y-4">
-            {loadingBanners ? (
-                <Skeleton className="w-full h-48 md:h-64 rounded-lg" />
-            ) : (
-                <>
-                    <Carousel
-                        setApi={setApi}
-                        plugins={[Autoplay({ delay: 3000, stopOnInteraction: true })]}
-                        opts={{ loop: true }}
-                        className="w-full"
-                    >
-                        <CarouselContent>
-                            {heroBanners.map((banner, index) => (
-                                <CarouselItem key={index}>
-                                    {banner.type === 'dynamic-flash' ? (
-                                        <DynamicFlashBanner products={flashSaleProducts} />
-                                    ) : (
-                                        <Link href={banner.link} className="block group">
-                                            <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
-                                                <img 
-                                                    src={banner.backgroundImage} 
-                                                    alt=""
-                                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                                                    aria-hidden="true"
-                                                    data-ai-hint={banner.aiHint}
-                                                />
-                                                <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
-                                            </div>
-                                        </Link>
-                                    )}
-                                </CarouselItem>
-                            ))}
-                        </CarouselContent>
-                    </Carousel>
-                    
-                    {heroBanners.length > 1 && (
-                        <div className="flex justify-center gap-2 mt-4 pb-2">
-                            {heroBanners.map((_, i) => (
-                                <button
-                                    key={i}
-                                    className={cn(
-                                        "h-2.5 rounded-full transition-all duration-300 shadow-sm border border-primary/10",
-                                        current === i 
-                                            ? "bg-primary w-8" 
-                                            : "bg-primary/20 w-2.5 hover:bg-primary/40"
-                                    )}
-                                    onClick={() => api?.scrollTo(i)}
-                                    aria-label={`Go to slide ${i + 1}`}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </>
-            )}
-        </div>
-        
-        {/* Collect Vouchers Section */}
-        <div onClick={handleVoucherClick} className="block hover:shadow-lg transition-all rounded-lg cursor-pointer group relative">
-          {hasUncollectedVouchers && (
-            <Badge className="absolute -top-2 -right-2 z-10 bg-primary text-white px-3 py-1 shadow-lg border-2 border-white flex items-center">
-              {"New Voucher!".split("").map((char, i) => (
-                <span
-                  key={i}
-                  className="inline-block animate-wave"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                >
-                  {char === " " ? "\u00A0" : char}
-                </span>
-              ))}
-            </Badge>
+        {/* Pull to Refresh Indicator */}
+        <div 
+          className={cn(
+            "absolute left-1/2 -translate-x-1/2 z-[100] transition-opacity duration-300",
+            pullDistance > 20 || isRefreshing ? "opacity-100" : "opacity-0"
           )}
-          <Card className={cn(
-              "bg-gradient-to-r from-purple-100 to-pink-100 border-0 transition-all",
-              hasUncollectedVouchers && "ring-2 ring-primary ring-offset-2"
+          style={{ 
+              top: "-60px", // Stays fixed at the top of the translating div
+              transform: `translateX(-50%) rotate(${pullDistance * 3}deg)`
+          }}
+        >
+          <div className={cn(
+            "bg-white p-3 rounded-full shadow-2xl border-2 border-primary/20 flex items-center justify-center",
+            isRefreshing && "animate-pulse"
           )}>
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/50 rounded-full">
-                  <Ticket className="h-8 w-8 text-primary" />
-                </div>
-                <div>
-                  <h2 className="font-bold text-lg">Collect Vouchers!</h2>
-                  <p className="text-sm text-gray-600">Get extra savings on your next purchase.</p>
-                </div>
-              </div>
-              {isVoucherLoading ? (
-                <Loader2 className="h-6 w-6 text-gray-700 animate-spin" />
-              ) : (
-                <div className="flex items-center gap-2">
-                   {hasUncollectedVouchers && <span className="text-xs font-bold text-primary animate-pulse hidden sm:inline">Claim Now</span>}
-                   <ArrowRight className="h-6 w-6 text-gray-700 transition-transform group-hover:translate-x-1" />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            <RefreshCw 
+              className={cn(
+                "h-6 w-6 text-primary",
+                isRefreshing && "animate-spin"
+              )} 
+            />
+          </div>
         </div>
 
-        {/* Flash Sale Section */}
-        <FlashSale products={flashSaleProducts} />
-
-        {/* Categories Section */}
-        <Categories />
-
-        {/* New Arrivals Section */}
-        <div>
-           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2"><Sparkles className="text-primary"/>New Arrivals</h2>
+        <div className="container mx-auto px-4 py-6 space-y-8">
+          {/* Hero Section */}
+          <div className="space-y-4">
+              {loadingBanners ? (
+                  <Skeleton className="w-full h-48 md:h-64 rounded-lg" />
+              ) : (
+                  <>
+                      <Carousel
+                          setApi={setApi}
+                          plugins={[Autoplay({ delay: 3000, stopOnInteraction: true })]}
+                          opts={{ loop: true }}
+                          className="w-full"
+                      >
+                          <CarouselContent>
+                              {heroBanners.map((banner, index) => (
+                                  <CarouselItem key={index}>
+                                      {banner.type === 'dynamic-flash' ? (
+                                          <DynamicFlashBanner products={flashSaleProducts} />
+                                      ) : (
+                                          <Link href={banner.link} className="block group">
+                                              <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
+                                                  <img 
+                                                      src={banner.backgroundImage} 
+                                                      alt=""
+                                                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                                      aria-hidden="true"
+                                                      data-ai-hint={banner.aiHint}
+                                                  />
+                                                  <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
+                                              </div>
+                                          </Link>
+                                      )}
+                                  </CarouselItem>
+                              ))}
+                          </CarouselContent>
+                      </Carousel>
+                      
+                      {heroBanners.length > 1 && (
+                          <div className="flex justify-center gap-2 mt-4 pb-2">
+                              {heroBanners.map((_, i) => (
+                                  <button
+                                      key={i}
+                                      className={cn(
+                                          "h-2.5 rounded-full transition-all duration-300 shadow-sm border border-primary/10",
+                                          current === i 
+                                              ? "bg-primary w-8" 
+                                              : "bg-primary/20 w-2.5 hover:bg-primary/40"
+                                      )}
+                                      onClick={() => api?.scrollTo(i)}
+                                      aria-label={`Go to slide ${i + 1}`}
+                                  />
+                              ))}
+                          </div>
+                      )}
+                  </>
+              )}
           </div>
-          <Carousel opts={{ align: "start", loop: false }} className="w-full">
-            <CarouselContent className="-ml-2 md:-ml-4">
+          
+          {/* Collect Vouchers Section */}
+          <div onClick={handleVoucherClick} className="block hover:shadow-lg transition-all rounded-lg cursor-pointer group relative">
+            {hasUncollectedVouchers && (
+              <Badge className="absolute -top-2 -right-2 z-10 bg-primary text-white px-3 py-1 shadow-lg border-2 border-white flex items-center">
+                {"New Voucher!".split("").map((char, i) => (
+                  <span
+                    key={i}
+                    className="inline-block animate-wave"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  >
+                    {char === " " ? "\u00A0" : char}
+                  </span>
+                ))}
+              </Badge>
+            )}
+            <Card className={cn(
+                "bg-gradient-to-r from-purple-100 to-pink-100 border-0 transition-all",
+                hasUncollectedVouchers && "ring-2 ring-primary ring-offset-2"
+            )}>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-white/50 rounded-full">
+                    <Ticket className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-lg">Collect Vouchers!</h2>
+                    <p className="text-sm text-gray-600">Get extra savings on your next purchase.</p>
+                  </div>
+                </div>
+                {isVoucherLoading ? (
+                  <Loader2 className="h-6 w-6 text-gray-700 animate-spin" />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {hasUncollectedVouchers && <span className="text-xs font-bold text-primary animate-pulse hidden sm:inline">Claim Now</span>}
+                    <ArrowRight className="h-6 w-6 text-gray-700 transition-transform group-hover:translate-x-1" />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Flash Sale Section */}
+          <FlashSale products={flashSaleProducts} />
+
+          {/* Categories Section */}
+          <Categories />
+
+          {/* New Arrivals Section */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold flex items-center gap-2"><Sparkles className="text-primary"/>New Arrivals</h2>
+            </div>
+            <Carousel opts={{ align: "start", loop: false }} className="w-full">
+              <CarouselContent className="-ml-2 md:-ml-4">
+                  {productsLoading ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <CarouselItem key={i} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                          <div className="p-1">
+                            <ProductCardSkeleton />
+                          </div>
+                      </CarouselItem>
+                    ))
+                  ) : (
+                    <>
+                      {newArrivals.map(product => (
+                          <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                              <div className="p-1">
+                                  <ProductCard product={product} />
+                              </div>
+                          </CarouselItem>
+                      ))}
+                      <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                          <div className="p-1 flex h-full items-center justify-center">
+                              <Button asChild variant="outline" className="h-full w-full">
+                                  <Link href="/new-arrivals" className="flex-col h-full">
+                                      <span>See More</span>
+                                      <ArrowRight className="mt-2 h-6 w-6" />
+                                  </Link>
+                              </Button>
+                          </div>
+                      </CarouselItem>
+                    </>
+                  )}
+              </CarouselContent>
+              <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
+              <CarouselNext className="right-[-10px] sm:right-[-16px]" />
+            </Carousel>
+          </div>
+
+          {/* Top Rated Products Section */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold flex items-center gap-2"><Star className="text-accent fill-accent" />Top Rated</h2>
+            </div>
+              <Carousel opts={{ align: "start", loop: false }} className="w-full">
+                  <CarouselContent className="-ml-2 md:-ml-4">
+                    {productsLoading ? (
+                        Array.from({ length: 6 }).map((_, i) => (
+                          <CarouselItem key={i} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                              <div className="p-1">
+                                <ProductCardSkeleton />
+                              </div>
+                          </CarouselItem>
+                        ))
+                      ) : (
+                        <>
+                          {topRated.map(product => (
+                              <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                                  <div className="p-1">
+                                      <ProductCard product={product} />
+                                  </div>
+                              </CarouselItem>
+                          ))}
+                          <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                              <div className="p-1 flex h-full items-center justify-center">
+                                  <Button asChild variant="outline" className="h-full w-full">
+                                      <Link href="/top-rated" className="flex-col h-full">
+                                          <span>See More</span>
+                                          <ArrowRight className="mt-2 h-6 w-6" />
+                                      </Link>
+                                  </Button>
+                              </div>
+                          </CarouselItem>
+                        </>
+                      )}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
+                  <CarouselNext className="right-[-10px] sm:right-[-16px]" />
+              </Carousel>
+          </div>
+
+          {/* All Products Section */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold flex items-center gap-2"><ShoppingBag className="text-primary"/>All Products</h2>
+              <Link href="/products" className="text-primary font-semibold hover:underline">
+                  See All
+              </Link>
+            </div>
+              <div className="grid grid-cols-3 gap-2 md:gap-4">
                 {productsLoading ? (
-                  Array.from({ length: 6 }).map((_, i) => (
-                    <CarouselItem key={i} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                        <div className="p-1">
-                           <ProductCardSkeleton />
-                        </div>
-                    </CarouselItem>
+                  Array.from({ length: 9 }).map((_, i) => (
+                    <ProductCardSkeleton key={i} size="small" />
                   ))
                 ) : (
-                  <>
-                    {newArrivals.map(product => (
-                        <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                            <div className="p-1">
-                                <ProductCard product={product} />
-                            </div>
-                        </CarouselItem>
-                    ))}
-                    <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                        <div className="p-1 flex h-full items-center justify-center">
-                            <Button asChild variant="outline" className="h-full w-full">
-                                <Link href="/new-arrivals" className="flex-col h-full">
-                                    <span>See More</span>
-                                    <ArrowRight className="mt-2 h-6 w-6" />
-                                </Link>
-                            </Button>
-                        </div>
-                    </CarouselItem>
-                  </>
+                  allProducts.slice(0, visibleProductsCount).map(product => (
+                    <ProductCard key={product.id} product={product} size="small" />
+                  ))
                 )}
-            </CarouselContent>
-            <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
-            <CarouselNext className="right-[-10px] sm:right-[-16px]" />
-          </Carousel>
-        </div>
-
-         {/* Top Rated Products Section */}
-        <div>
-           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2"><Star className="text-accent fill-accent" />Top Rated</h2>
-          </div>
-            <Carousel opts={{ align: "start", loop: false }} className="w-full">
-                <CarouselContent className="-ml-2 md:-ml-4">
-                   {productsLoading ? (
-                      Array.from({ length: 6 }).map((_, i) => (
-                        <CarouselItem key={i} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                            <div className="p-1">
-                               <ProductCardSkeleton />
-                            </div>
-                        </CarouselItem>
-                      ))
-                    ) : (
-                      <>
-                        {topRated.map(product => (
-                            <CarouselItem key={product.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                                <div className="p-1">
-                                    <ProductCard product={product} />
-                                </div>
-                            </CarouselItem>
-                        ))}
-                        <CarouselItem className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                            <div className="p-1 flex h-full items-center justify-center">
-                                <Button asChild variant="outline" className="h-full w-full">
-                                    <Link href="/top-rated" className="flex-col h-full">
-                                        <span>See More</span>
-                                        <ArrowRight className="mt-2 h-6 w-6" />
-                                    </Link>
-                                </Button>
-                            </div>
-                        </CarouselItem>
-                      </>
-                    )}
-                </CarouselContent>
-                <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
-                <CarouselNext className="right-[-10px] sm:right-[-16px]" />
-            </Carousel>
-        </div>
-
-        {/* All Products Section */}
-        <div>
-           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2"><ShoppingBag className="text-primary"/>All Products</h2>
-             <Link href="/products" className="text-primary font-semibold hover:underline">
-                See All
-            </Link>
-          </div>
-            <div className="grid grid-cols-3 gap-2 md:gap-4">
-              {productsLoading ? (
-                Array.from({ length: 9 }).map((_, i) => (
-                  <ProductCardSkeleton key={i} size="small" />
-                ))
-              ) : (
-                allProducts.slice(0, visibleProductsCount).map(product => (
-                  <ProductCard key={product.id} product={product} size="small" />
-                ))
-              )}
-            </div>
-            {!productsLoading && visibleProductsCount < allProducts.length && (
-              <div className="mt-6 text-center">
-                <Button onClick={handleSeeMore} variant="outline">
-                  See More
-                </Button>
               </div>
-            )}
-        </div>
+              {!productsLoading && visibleProductsCount < allProducts.length && (
+                <div className="mt-6 text-center">
+                  <Button onClick={handleSeeMore} variant="outline">
+                    See More
+                  </Button>
+                </div>
+              )}
+          </div>
 
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
