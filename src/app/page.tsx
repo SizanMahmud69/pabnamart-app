@@ -68,11 +68,9 @@ function HomePageContent() {
   // Carousel dots state
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
-  const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (!api) return;
-    setCount(api.scrollSnapList().length);
     setCurrent(api.selectedScrollSnap());
 
     api.on("select", () => {
@@ -220,7 +218,7 @@ function HomePageContent() {
                                     {/* Overlay */}
                                     <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
 
-                                    {/* Content Container */}
+                                    {/* Content Container - No text layering as requested */}
                                     <div className={cn(
                                         "relative w-full h-full flex items-center p-4 md:p-8",
                                         banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
@@ -234,17 +232,17 @@ function HomePageContent() {
                 </CarouselContent>
             </Carousel>
             
-            {/* Pagination Dots */}
-            {count > 1 && (
-                <div className="flex justify-center gap-1.5 mt-2">
-                    {Array.from({ length: count }).map((_, i) => (
+            {/* Pagination Dots - Improved Visibility */}
+            {heroBanners.length > 1 && (
+                <div className="flex justify-center gap-2 mt-4 pb-2">
+                    {heroBanners.map((_, i) => (
                         <button
                             key={i}
                             className={cn(
-                                "h-1.5 rounded-full transition-all duration-300",
+                                "h-2.5 rounded-full transition-all duration-300 shadow-sm border border-primary/10",
                                 current === i 
-                                    ? "bg-primary w-6" 
-                                    : "bg-muted-foreground/20 w-1.5 hover:bg-muted-foreground/40"
+                                    ? "bg-primary w-8" 
+                                    : "bg-primary/20 w-2.5 hover:bg-primary/40"
                             )}
                             onClick={() => api?.scrollTo(i)}
                             aria-label={`Go to slide ${i + 1}`}
