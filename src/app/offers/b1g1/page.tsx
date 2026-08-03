@@ -11,10 +11,11 @@ import { getFirestore, doc, onSnapshot, collection, query, where } from 'firebas
 import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import type { Banner } from '@/types';
+import { withAuth } from '@/hooks/useAuth';
 
 const db = getFirestore(app);
 
-export default function B1G1Page() {
+function B1G1Page() {
     const { products: allProducts, loading: productsLoading } = useProducts();
     const [isActive, setIsActive] = useState<boolean | null>(null);
     const [banner, setBanner] = useState<Banner | null>(null);
@@ -99,7 +100,6 @@ export default function B1G1Page() {
                                 <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 drop-shadow-lg leading-none">
                                     {banner.title}
                                 </h1>
-                                {/* Description removed per user request */}
                             </div>
                         </div>
                     </Link>
@@ -137,3 +137,5 @@ export default function B1G1Page() {
         </div>
     );
 }
+
+export default withAuth(B1G1Page);

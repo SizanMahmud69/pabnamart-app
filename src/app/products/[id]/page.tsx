@@ -91,7 +91,14 @@ function ProductDetailPageContent() {
     if (products.length > 0 && productId) {
         const foundProduct = products.find(p => p.id === parseInt(productId));
         if (foundProduct) {
-          if (isFlashSaleContext) {
+          if (isB1G1Context) {
+            // Force original price for B1G1
+            setProduct({
+                ...foundProduct,
+                originalPrice: undefined,
+                price: foundProduct.originalPrice || foundProduct.price
+            });
+          } else if (isFlashSaleContext) {
             const flashPrice = getFlashSalePrice(foundProduct);
             setProduct({
               ...foundProduct,
@@ -109,7 +116,7 @@ function ProductDetailPageContent() {
            setProduct(undefined);
         }
     }
-  }, [products, params.id, isFlashSaleContext, getFlashSalePrice]);
+  }, [products, params.id, isFlashSaleContext, isB1G1Context, getFlashSalePrice]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -152,7 +159,7 @@ function ProductDetailPageContent() {
     );
   }
   
-  const hasDiscount = (product.originalPrice && product.originalPrice > product.price);
+  const hasDiscount = !isB1G1Context && (product.originalPrice && product.originalPrice > product.price);
   const reviews = product.reviews || [];
 
   return (
@@ -303,7 +310,6 @@ function ProductDetailPageContent() {
                                   {reviews.length > 0 ? (
                                       reviews.map((review) => {
                                           const isGuest = review.user.uid.startsWith('guest_');
-                                          // Enhanced logic to ensure photo visibility regardless of login state
                                           const reviewerPhoto = (appUser && review.user.uid === appUser.uid) 
                                               ? (appUser.photoURL || review.user.photoURL || DEFAULT_AVATAR_URL) 
                                               : (review.user.photoURL || DEFAULT_AVATAR_URL);

@@ -41,9 +41,10 @@ export default function ProductCard({
     setBaseUrl(window.location.origin);
   }, []);
 
-  const price = product.price;
-  const originalPrice = product.originalPrice;
-  const hasDiscount = originalPrice && originalPrice > price;
+  // For B1G1 Context, we always use the original price and ignore discounts
+  const price = isB1G1Context ? (product.originalPrice || product.price) : product.price;
+  const originalPrice = isB1G1Context ? undefined : product.originalPrice;
+  const hasDiscount = !isB1G1Context && originalPrice && originalPrice > price;
   const discountAmount = hasDiscount ? originalPrice - price : 0;
   const isSoldOut = product.stock === 0;
 
@@ -54,7 +55,6 @@ export default function ProductCard({
 
   const hasVariants = (product.colors && product.colors.length > 0) || (product.sizes && product.sizes.length > 0);
   
-  // Logic to build product link based on context
   const productLink = (() => {
       let url = `/products/${product.id}`;
       const params = new URLSearchParams();
@@ -86,12 +86,6 @@ export default function ProductCard({
   const defaultImage = "https://i.ibb.co/gV28rC7/default-image.jpg";
   let imageUrl = product.images?.[0] || defaultImage;
 
-  try {
-    if (imageUrl) new URL(imageUrl);
-  } catch (e) {
-    imageUrl = defaultImage;
-  }
-  
   useEffect(() => {
     setCardStyle({});
     const img = new window.Image();
@@ -138,7 +132,6 @@ export default function ProductCard({
                           <span className="text-white font-bold text-[10px]">Sold Out</span>
                       </div>
                   )}
-                  {/* B1G1 Badge only in B1G1 context */}
                   {product.isB1G1 && isB1G1Context && !isSoldOut && (
                     <div className="absolute top-2 right-2 bg-pink-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-md animate-pulse">
                         B1G1
@@ -217,7 +210,6 @@ export default function ProductCard({
               - ৳{discountAmount.toFixed(0)}
             </div>
           )}
-          {/* B1G1 Badge only in B1G1 context */}
           {product.isB1G1 && isB1G1Context && !isSoldOut && (
             <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-black px-2 py-1 rounded-full shadow-lg border border-white/20 animate-bounce">
                 BUY 1 GET 1

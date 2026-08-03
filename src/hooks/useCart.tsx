@@ -157,7 +157,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
 
-    const price = isFlashSaleContext ? getFlashSalePrice(product) : product.price;
+    // Determine final price based on context
+    // User requested original price for B1G1 products
+    let price;
+    if (isB1G1Context) {
+        price = product.originalPrice || product.price;
+    } else if (isFlashSaleContext) {
+        price = getFlashSalePrice(product);
+    } else {
+        price = product.price;
+    }
 
     setCartItems(prevCartItems => {
         const existingItem = prevCartItems.find(item => 
