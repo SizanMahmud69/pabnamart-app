@@ -53,7 +53,7 @@ export default function VouchersPage() {
                         <h2 className="text-xl font-bold mb-4">Your Return Vouchers</h2>
                         <div className="space-y-4">
                             {returnVouchersToCollect.map((voucher) => (
-                                <div key={voucher.code} className="rounded-lg bg-gradient-to-r from-green-100 to-blue-100 shadow-sm overflow-hidden border-0">
+                                <div key={voucher.code} className="rounded-lg bg-gradient-to-r from-green-200 to-blue-200 shadow-sm overflow-hidden border-0">
                                     <div className="p-4">
                                         <div className="flex items-center gap-4">
                                             <Ticket className="h-10 w-10 text-green-600" />
@@ -85,7 +85,7 @@ export default function VouchersPage() {
                     <h2 className="text-xl font-bold mb-4 mt-6">Available Vouchers</h2>
                     <div className="space-y-4">
                         {generalVouchers.map((voucher) => (
-                            <div key={voucher.code} className="rounded-lg bg-gradient-to-r from-purple-100 to-pink-100 shadow-sm overflow-hidden border-0">
+                            <div key={voucher.code} className="rounded-lg bg-gradient-to-r from-purple-200 to-pink-200 shadow-sm overflow-hidden border-0">
                                 <div className="p-4">
                                     <div className="flex items-center gap-4">
                                         <Ticket className="h-10 w-10 text-primary" />

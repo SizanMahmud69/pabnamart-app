@@ -81,8 +81,8 @@ function MyVouchersPage() {
                                     <div key={voucher.code} className={cn(
                                         "rounded-lg shadow-sm overflow-hidden border-0 transition-opacity",
                                         voucher.isReturnVoucher 
-                                            ? "bg-gradient-to-r from-green-100 to-blue-100" 
-                                            : "bg-gradient-to-r from-purple-100 to-pink-100",
+                                            ? "bg-gradient-to-r from-green-200 to-blue-200" 
+                                            : "bg-gradient-to-r from-purple-200 to-pink-200",
                                         used && "opacity-60"
                                     )}>
                                         <div className="p-4">
