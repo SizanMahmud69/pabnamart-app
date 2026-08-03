@@ -1,8 +1,9 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Ticket, ArrowLeft, Info, CheckCircle, Copy } from "lucide-react";
+import { Ticket, ArrowLeft, Info, CheckCircle, Copy, Tag } from "lucide-react";
 import Link from "next/link";
 import { useVouchers } from "@/hooks/useVouchers";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,7 +48,7 @@ function MyVouchersPage() {
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
-            <div className="container mx-auto max-w-md px-4 py-6 space-y-6">
+            <div className="container mx-auto max-md px-4 py-6 space-y-6">
                 
                 <div className="flex items-center relative">
                     <Button asChild variant="ghost" size="icon" className="absolute">
@@ -90,7 +91,7 @@ function MyVouchersPage() {
                                                     "h-10 w-10",
                                                     voucher.isReturnVoucher ? "text-green-600" : "text-primary"
                                                 )} />
-                                                <div>
+                                                <div className="flex-1 min-w-0">
                                                     <h3 className={cn(
                                                         "text-xl font-bold",
                                                         voucher.isReturnVoucher ? "text-green-700" : "text-primary"
@@ -98,6 +99,12 @@ function MyVouchersPage() {
                                                         {voucher.discountType === 'shipping' ? 'Free Shipping' : (voucher.type === 'fixed' ? `৳${voucher.discount} Off` : `${voucher.discount}% Off`)}
                                                     </h3>
                                                     <p className="text-sm text-gray-600">{voucher.description}</p>
+                                                    {voucher.applicableCategory && (
+                                                        <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-black text-primary/70 uppercase tracking-tighter">
+                                                            <Tag className="h-3 w-3" />
+                                                            <span>Only for {voucher.applicableCategory}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

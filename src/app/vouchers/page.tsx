@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Download, Ticket, ArrowLeft, CheckCircle } from "lucide-react";
+import { Download, Ticket, ArrowLeft, CheckCircle, Tag } from "lucide-react";
 import Link from "next/link";
 import { useVouchers } from "@/hooks/useVouchers";
 import type { Voucher } from "@/types";
@@ -89,11 +89,17 @@ export default function VouchersPage() {
                                 <div className="p-4">
                                     <div className="flex items-center gap-4">
                                         <Ticket className="h-10 w-10 text-primary" />
-                                        <div>
+                                        <div className="flex-1 min-w-0">
                                             <h3 className="text-xl font-bold text-primary">
                                                 {voucher.discountType === 'shipping' ? 'Free Shipping' : (voucher.type === 'fixed' ? `৳${voucher.discount} Off` : `${voucher.discount}% Off`)}
                                             </h3>
                                             <p className="text-sm text-gray-600">{voucher.description}</p>
+                                            {voucher.applicableCategory && (
+                                                <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-black text-primary/70 uppercase tracking-tighter">
+                                                    <Tag className="h-3 w-3" />
+                                                    <span>Only for {voucher.applicableCategory}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
