@@ -8,7 +8,7 @@ import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
@@ -212,19 +212,19 @@ function HomePageContent() {
     const distance = currentTouch - touchStart;
     if (distance > 0) {
       // Add resistance and limit distance
-      setPullDistance(Math.min(distance * 0.4, 100));
+      setPullDistance(Math.min(distance * 0.4, 150));
     }
   };
 
   const handleTouchEnd = () => {
     if (isRefreshing) return;
-    if (pullDistance > 70) {
+    if (pullDistance > 80) {
       setIsRefreshing(true);
       setPullDistance(80); // Snap to refreshing position
-      // Simulate/Trigger refresh
+      // Trigger actual page refresh
       setTimeout(() => {
         window.location.reload();
-      }, 1200);
+      }, 1000);
     } else {
       setPullDistance(0);
     }
@@ -238,34 +238,36 @@ function HomePageContent() {
 
   return (
     <div 
-      className="bg-purple-50/30 min-h-screen relative overflow-hidden"
+      className="bg-purple-50/30 min-h-screen relative"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       ref={containerRef}
       style={{ 
         transform: `translateY(${pullDistance}px)`,
-        transition: isRefreshing || pullDistance === 0 ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
+        transition: isRefreshing || pullDistance === 0 ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
       }}
     >
-      {/* Refreshing Indicator */}
+      {/* Pull to Refresh Indicator */}
       <div 
         className={cn(
-          "absolute left-1/2 -translate-x-1/2 z-50 flex items-center justify-center transition-opacity duration-300",
+          "absolute left-1/2 -translate-x-1/2 z-[100] transition-opacity duration-300",
           pullDistance > 20 || isRefreshing ? "opacity-100" : "opacity-0"
         )}
-        style={{ top: `-${Math.max(60, pullDistance)}px` }}
+        style={{ 
+            top: "-60px", // Stays fixed at the top of the translating div
+            transform: `translateX(-50%) rotate(${pullDistance * 3}deg)`
+        }}
       >
         <div className={cn(
-          "bg-white p-3 rounded-full shadow-xl border border-primary/20",
+          "bg-white p-3 rounded-full shadow-2xl border-2 border-primary/20 flex items-center justify-center",
           isRefreshing && "animate-pulse"
         )}>
           <RefreshCw 
             className={cn(
               "h-6 w-6 text-primary",
-              isRefreshing ? "animate-spin" : "transition-transform"
+              isRefreshing && "animate-spin"
             )} 
-            style={{ transform: !isRefreshing ? `rotate(${pullDistance * 4}deg)` : 'none' }}
           />
         </div>
       </div>
