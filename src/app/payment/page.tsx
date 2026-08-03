@@ -26,6 +26,8 @@ interface CheckoutData {
     subtotal: number;
     voucherCode?: string;
     referrerId?: string;
+    useCoins?: boolean;
+    useSpinDiscount?: boolean;
 }
 
 function PaymentPage() {
@@ -63,6 +65,8 @@ function PaymentPage() {
                 transactionId: '',
                 cashOnDeliveryFee: cashOnDeliveryFee,
                 referrerId: checkoutData.referrerId,
+                useCoins: checkoutData.useCoins,
+                useSpinDiscount: checkoutData.useSpinDiscount,
             });
 
             if (result.success && result.orderId) {

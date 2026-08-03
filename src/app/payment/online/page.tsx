@@ -27,6 +27,8 @@ interface CheckoutData {
     subtotal: number;
     voucherCode?: string;
     referrerId?: string;
+    useCoins?: boolean;
+    useSpinDiscount?: boolean;
 }
 
 function OnlinePaymentPage() {
@@ -97,6 +99,8 @@ function OnlinePaymentPage() {
                 transactionId,
                 paymentAccountNumber,
                 referrerId: checkoutData.referrerId,
+                useCoins: checkoutData.useCoins,
+                useSpinDiscount: checkoutData.useSpinDiscount,
             });
 
             if (result.success && result.orderId) {

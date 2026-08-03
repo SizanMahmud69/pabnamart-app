@@ -31,7 +31,19 @@ const getStatusVariant = (status: Order['status']) => {
     }
 };
 
-const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, subtotal: number, voucherDiscount: number }) => {
+const PrintableInvoice = ({ 
+    order, 
+    subtotal, 
+    voucherDiscount,
+    coinDiscount,
+    spinDiscount
+}: { 
+    order: Order, 
+    subtotal: number, 
+    voucherDiscount: number,
+    coinDiscount: number,
+    spinDiscount: number
+}) => {
     const stampText = order.paymentMethod === 'cash-on-delivery' ? 'Unpaid' : 'Paid';
     const stampClass = order.paymentMethod === 'cash-on-delivery' ? 'unpaid' : 'paid';
     return (
@@ -103,8 +115,10 @@ const PrintableInvoice = ({ order, subtotal, voucherDiscount }: { order: Order, 
                     <tbody>
                         <tr><td>Subtotal:</td><td className="text-right">৳{subtotal.toFixed(2)}</td></tr>
                         {voucherDiscount > 0 && <tr><td>Voucher Discount:</td><td className="text-right">- ৳{voucherDiscount.toFixed(2)}</td></tr>}
+                        {coinDiscount > 0 && <tr><td>Coin Discount:</td><td className="text-right">- ৳{coinDiscount.toFixed(2)}</td></tr>}
+                        {spinDiscount > 0 && <tr><td>Lucky Spin ({order.spinDiscountPercentage}%):</td><td className="text-right">- ৳{spinDiscount.toFixed(2)}</td></tr>}
                         <tr><td>Shipping Fee:</td><td className="text-right">৳{order.shippingFee.toFixed(2)}</td></tr>
-                        {order.cashOnDeliveryFee > 0 && (
+                        {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
                             <tr><td>COD Fee:</td><td className="text-right">৳{order.cashOnDeliveryFee.toFixed(2)}</td></tr>
                         )}
                         <tr className="grand-total"><td>Grand Total:</td><td className="text-right">৳{order.total}</td></tr>
@@ -223,6 +237,8 @@ export default function AdminOrderDetailsPage() {
     
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const voucherDiscount = order.voucherDiscount || 0;
+    const coinDiscount = order.coinDiscount || 0;
+    const spinDiscount = order.spinDiscount || 0;
 
     return (
         <>
@@ -287,16 +303,28 @@ export default function AdminOrderDetailsPage() {
                                     <span>৳{subtotal.toFixed(2)}</span>
                                 </div>
                                 {voucherDiscount > 0 && (
-                                    <div className="flex justify-between text-green-600">
-                                        <span className="text-muted-foreground">Voucher Discount</span>
+                                    <div className="flex justify-between text-green-600 text-sm">
+                                        <span>Voucher Discount</span>
                                         <span>- ৳{voucherDiscount.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                {coinDiscount > 0 && (
+                                    <div className="flex justify-between text-yellow-600 text-sm">
+                                        <span>Coin Discount</span>
+                                        <span>- ৳{coinDiscount.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                {spinDiscount > 0 && (
+                                    <div className="flex justify-between text-indigo-600 text-sm font-semibold">
+                                        <span>Lucky Spin ({order.spinDiscountPercentage}%)</span>
+                                        <span>- ৳{spinDiscount.toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Shipping Fee</span>
                                     <span>৳{order.shippingFee.toFixed(2)}</span>
                                 </div>
-                                {order.cashOnDeliveryFee > 0 && (
+                                {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Cash on Delivery Fee</span>
                                         <span>৳{order.cashOnDeliveryFee.toFixed(2)}</span>
@@ -356,7 +384,13 @@ export default function AdminOrderDetailsPage() {
             </div>
 
             <div id="printable-invoice" className="hidden">
-              {order && <PrintableInvoice order={order} subtotal={subtotal} voucherDiscount={voucherDiscount} />}
+              {order && <PrintableInvoice 
+                order={order} 
+                subtotal={subtotal} 
+                voucherDiscount={voucherDiscount} 
+                coinDiscount={coinDiscount} 
+                spinDiscount={spinDiscount} 
+              />}
             </div>
         </>
     );

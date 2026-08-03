@@ -10,7 +10,7 @@ import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Truck, Calendar, Hash, CreditCard, Ticket, CheckCircle, Smartphone } from 'lucide-react';
+import { ArrowLeft, MapPin, Truck, Calendar, Hash, CreditCard, Ticket, CheckCircle, Smartphone, Coins, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -78,6 +78,8 @@ function OrderDetailsPage() {
     
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const voucherDiscount = order.voucherDiscount || 0;
+    const coinDiscount = order.coinDiscount || 0;
+    const spinDiscount = order.spinDiscount || 0;
 
     return (
         <div className="bg-purple-50/30 min-h-screen">
@@ -138,8 +140,29 @@ function OrderDetailsPage() {
                             </div>
                             {voucherDiscount > 0 && (
                                 <div className="flex justify-between text-green-600">
-                                    <span className="text-muted-foreground">Voucher Discount</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <Ticket className="h-4 w-4" />
+                                        <span className="text-muted-foreground">Voucher Discount</span>
+                                    </div>
                                     <span>- ৳{voucherDiscount.toFixed(2)}</span>
+                                </div>
+                            )}
+                            {coinDiscount > 0 && (
+                                <div className="flex justify-between text-yellow-600">
+                                    <div className="flex items-center gap-1.5">
+                                        <Coins className="h-4 w-4" />
+                                        <span className="text-muted-foreground">Coin Discount</span>
+                                    </div>
+                                    <span>- ৳{coinDiscount.toFixed(2)}</span>
+                                </div>
+                            )}
+                            {spinDiscount > 0 && (
+                                <div className="flex justify-between text-indigo-600">
+                                    <div className="flex items-center gap-1.5">
+                                        <Sparkles className="h-4 w-4" />
+                                        <span className="text-muted-foreground">Lucky Spin ({order.spinDiscountPercentage}%)</span>
+                                    </div>
+                                    <span>- ৳{spinDiscount.toFixed(2)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between">
