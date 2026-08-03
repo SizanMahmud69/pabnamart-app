@@ -8,7 +8,7 @@ import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
