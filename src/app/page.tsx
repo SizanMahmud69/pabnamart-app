@@ -200,39 +200,15 @@ function HomePageContent() {
                                 aria-hidden="true"
                                 data-ai-hint={banner.aiHint}
                             />
-                            {/* Overlay */}
-                            <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+                            {/* Overlay (Slightly reduced to prioritize background image) */}
+                            <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
 
-                            {/* Content Container */}
+                            {/* Content Container (Empty contents per user request to keep banner clean) */}
                             <div className={cn(
                                 "relative w-full h-full flex items-center p-4 md:p-8",
                                 banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
                             )}>
-                                {/* Product Image (Optional for custom banners) */}
-                                <div className="w-1/2 md:w-2/5 h-full flex items-center justify-center">
-                                    {banner.productImage ? (
-                                        <img 
-                                            src={banner.productImage} 
-                                            alt={banner.title} 
-                                            className="max-h-full max-w-full object-contain drop-shadow-lg"
-                                        />
-                                    ) : !banner.isCustom ? (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <ShoppingBag className="w-12 h-12 text-gray-300/50"/>
-                                    </div>
-                                    ) : null}
-                                </div>
-
-                                {/* Text Content */}
-                                <div className={cn(
-                                    "flex flex-col justify-center text-white px-4",
-                                    banner.isCustom ? "w-full text-center items-center" : "w-1/2 md:w-3/5"
-                                )}>
-                                    <h1 className="text-xl md:text-4xl font-black uppercase italic tracking-tighter mb-2 drop-shadow-md leading-tight">
-                                        {banner.title}
-                                    </h1>
-                                    {/* Description and Button removed per user request */}
-                                </div>
+                                {/* Text overlay removed per user request: "ব্যানারের টাইটেলটিও মুছে দেওয়া হয়" */}
                             </div>
                         </div>
                     </Link>
