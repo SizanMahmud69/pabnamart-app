@@ -12,7 +12,7 @@ import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2 
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import Categories from '@/components/Categories';
 import { useOffers } from '@/hooks/useOffers';
@@ -64,6 +64,21 @@ function HomePageContent() {
   const [visibleProductsCount, setVisibleProductsCount] = useState(9);
   const [isVoucherLoading, startVoucherTransition] = useTransition();
   const [customBanners, setCustomBanners] = useState<Banner[]>([]);
+
+  // Carousel dots state
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap());
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
 
   useEffect(() => {
     // Fetch custom banners from Firestore
@@ -181,44 +196,63 @@ function HomePageContent() {
       <FloatingCoin />
       <div className="container mx-auto px-4 py-6 space-y-8">
         {/* Hero Section */}
-        <Carousel
-          plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
-          opts={{ loop: true }}
-          className="w-full"
-        >
-          <CarouselContent>
-            {heroBanners.map((banner, index) => {
-                return (
-                  <CarouselItem key={index}>
-                    <Link href={banner.link} className="block group">
-                        <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
-                            {/* Background Image */}
-                            <img 
-                                src={banner.backgroundImage} 
-                                alt=""
-                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                                aria-hidden="true"
-                                data-ai-hint={banner.aiHint}
-                            />
-                            {/* Overlay (Slightly reduced to prioritize background image) */}
-                            <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
+        <div className="space-y-4">
+            <Carousel
+                setApi={setApi}
+                plugins={[Autoplay({ delay: 3000, stopOnInteraction: true })]}
+                opts={{ loop: true }}
+                className="w-full"
+            >
+                <CarouselContent>
+                    {heroBanners.map((banner, index) => {
+                        return (
+                        <CarouselItem key={index}>
+                            <Link href={banner.link} className="block group">
+                                <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
+                                    {/* Background Image */}
+                                    <img 
+                                        src={banner.backgroundImage} 
+                                        alt=""
+                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                        aria-hidden="true"
+                                        data-ai-hint={banner.aiHint}
+                                    />
+                                    {/* Overlay */}
+                                    <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
 
-                            {/* Content Container (Empty contents per user request to keep banner clean) */}
-                            <div className={cn(
-                                "relative w-full h-full flex items-center p-4 md:p-8",
-                                banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
-                            )}>
-                                {/* Text overlay removed per user request: "ব্যানারের টাইটেলটিও মুছে দেওয়া হয়" */}
-                            </div>
-                        </div>
-                    </Link>
-                  </CarouselItem>
-                )
-            })}
-          </CarouselContent>
-          <CarouselPrevious className="left-2" />
-          <CarouselNext className="right-2" />
-        </Carousel>
+                                    {/* Content Container */}
+                                    <div className={cn(
+                                        "relative w-full h-full flex items-center p-4 md:p-8",
+                                        banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
+                                    )}>
+                                    </div>
+                                </div>
+                            </Link>
+                        </CarouselItem>
+                        )
+                    })}
+                </CarouselContent>
+            </Carousel>
+            
+            {/* Pagination Dots */}
+            {count > 1 && (
+                <div className="flex justify-center gap-1.5 mt-2">
+                    {Array.from({ length: count }).map((_, i) => (
+                        <button
+                            key={i}
+                            className={cn(
+                                "h-1.5 rounded-full transition-all duration-300",
+                                current === i 
+                                    ? "bg-primary w-6" 
+                                    : "bg-muted-foreground/20 w-1.5 hover:bg-muted-foreground/40"
+                            )}
+                            onClick={() => api?.scrollTo(i)}
+                            aria-label={`Go to slide ${i + 1}`}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
         
         {/* Collect Vouchers Section */}
         <div onClick={handleVoucherClick} className="block hover:shadow-lg transition-all rounded-lg cursor-pointer group relative">
