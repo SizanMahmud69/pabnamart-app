@@ -107,7 +107,7 @@ export default function FlashSale({ products: flashSaleProducts }: FlashSaleProp
     const useCarousel = flashSaleProducts.length > 2;
 
     return (
-        <Card className="bg-purple-50/50">
+        <Card className="bg-primary/5 border-primary/10">
             <CardContent className="p-4">
                 <div className="flex flex-col items-center text-center mb-6 gap-4">
                     <div>
