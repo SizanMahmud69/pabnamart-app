@@ -153,7 +153,7 @@ export default function BannerManagementPage() {
 
             await addDoc(collection(db, 'banners'), {
                 title,
-                description,
+                description, // Keeping in DB for now, but UI will hide it
                 link,
                 imageUrl,
                 createdAt: now.toISOString(),
@@ -177,7 +177,7 @@ export default function BannerManagementPage() {
     const handleOpenEdit = (banner: Banner) => {
         setBannerToEdit(banner);
         setEditTitle(banner.title);
-        setEditDescription(banner.description);
+        setEditDescription(banner.description || '');
         setEditLink(banner.link);
         setEditExpiryDays('7');
         setEditImageFile(null);
@@ -318,12 +318,8 @@ export default function BannerManagementPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="title">Title</Label>
+                                    <Label htmlFor="title">Banner Title</Label>
                                     <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Summer Sale" required disabled={isSubmitting} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="description">Description</Label>
-                                    <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g., Up to 50% Off" disabled={isSubmitting} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="link">Redirect Page</Label>
@@ -352,6 +348,7 @@ export default function BannerManagementPage() {
                                     />
                                     <p className="text-[10px] text-muted-foreground">Banner will disappear after this many days.</p>
                                 </div>
+                                {/* Description hidden from form input as well to align with visual simplification */}
                             </CardContent>
                             <CardFooter>
                                 <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -470,12 +467,8 @@ export default function BannerManagementPage() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="edit-title">Title</Label>
+                            <Label htmlFor="edit-title">Banner Title</Label>
                             <Input id="edit-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-description">Description</Label>
-                            <Input id="edit-description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="edit-link">Redirect Page</Label>
@@ -515,4 +508,3 @@ export default function BannerManagementPage() {
         </div>
     );
 }
-

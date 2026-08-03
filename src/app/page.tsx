@@ -188,58 +188,54 @@ function HomePageContent() {
         >
           <CarouselContent>
             {heroBanners.map((banner, index) => {
-                const Icon = banner.Icon;
-                
                 return (
                   <CarouselItem key={index}>
-                    <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
-                        {/* Background Image */}
-                        <img 
-                            src={banner.backgroundImage} 
-                            alt=""
-                            className="absolute inset-0 w-full h-full object-cover" 
-                            aria-hidden="true"
-                            data-ai-hint={banner.aiHint}
-                        />
-                        {/* Overlay */}
-                        <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+                    <Link href={banner.link} className="block group">
+                        <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
+                            {/* Background Image */}
+                            <img 
+                                src={banner.backgroundImage} 
+                                alt=""
+                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                aria-hidden="true"
+                                data-ai-hint={banner.aiHint}
+                            />
+                            {/* Overlay */}
+                            <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
 
-                        {/* Content Container */}
-                        <div className={cn(
-                            "relative w-full h-full flex items-center p-4 md:p-8",
-                            banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
-                        )}>
-                            {/* Product Image (Optional for custom banners) */}
-                            <div className="w-1/2 md:w-2/5 h-full flex items-center justify-center">
-                                {banner.productImage ? (
-                                    <img 
-                                        src={banner.productImage} 
-                                        alt={banner.title} 
-                                        className="max-h-full max-w-full object-contain drop-shadow-lg"
-                                    />
-                                ) : !banner.isCustom ? (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                      <ShoppingBag className="w-12 h-12 text-gray-300/50"/>
-                                  </div>
-                                ) : null}
-                            </div>
-
-                            {/* Text Content */}
+                            {/* Content Container */}
                             <div className={cn(
-                                "flex flex-col justify-center text-white px-4",
-                                banner.isCustom ? "w-full text-center items-center" : "w-1/2 md:w-3/5"
+                                "relative w-full h-full flex items-center p-4 md:p-8",
+                                banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
                             )}>
-                                <h1 className="text-xl md:text-3xl font-bold mb-2 drop-shadow-md">{banner.title}</h1>
-                                <p className="text-sm md:text-base mb-4 hidden md:block drop-shadow-sm">{banner.description}</p>
-                                <Button asChild size="sm" className="w-fit bg-primary hover:bg-primary/90 h-8 md:h-10 md:px-6 shadow-md">
-                                    <Link href={banner.link}>
-                                        <Icon className="mr-2 h-4 w-4" />
-                                        Shop Now
-                                    </Link>
-                                </Button>
+                                {/* Product Image (Optional for custom banners) */}
+                                <div className="w-1/2 md:w-2/5 h-full flex items-center justify-center">
+                                    {banner.productImage ? (
+                                        <img 
+                                            src={banner.productImage} 
+                                            alt={banner.title} 
+                                            className="max-h-full max-w-full object-contain drop-shadow-lg"
+                                        />
+                                    ) : !banner.isCustom ? (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <ShoppingBag className="w-12 h-12 text-gray-300/50"/>
+                                    </div>
+                                    ) : null}
+                                </div>
+
+                                {/* Text Content */}
+                                <div className={cn(
+                                    "flex flex-col justify-center text-white px-4",
+                                    banner.isCustom ? "w-full text-center items-center" : "w-1/2 md:w-3/5"
+                                )}>
+                                    <h1 className="text-xl md:text-4xl font-black uppercase italic tracking-tighter mb-2 drop-shadow-md leading-tight">
+                                        {banner.title}
+                                    </h1>
+                                    {/* Description and Button removed per user request */}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </Link>
                   </CarouselItem>
                 )
             })}

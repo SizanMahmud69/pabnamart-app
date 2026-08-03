@@ -31,7 +31,6 @@ export default function B1G1Page() {
         });
 
         // Fetch custom banner for this page
-        // Removed orderBy to avoid index requirement
         const bannersRef = collection(db, 'banners');
         const q = query(
             bannersRef, 
@@ -82,28 +81,28 @@ export default function B1G1Page() {
         <div className="bg-purple-50/30 min-h-screen">
             <div className="container mx-auto px-4 py-8">
                 {banner ? (
-                    <div className="relative mb-8 rounded-2xl overflow-hidden shadow-xl h-48 md:h-72 flex items-center group">
-                        <img 
-                            src={banner.imageUrl} 
-                            alt={banner.title} 
-                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
-                        <div className="relative z-10 p-6 md:p-12 text-white w-full max-w-2xl">
-                             <Button asChild variant="ghost" size="sm" className="mb-4 text-white hover:bg-white/20 p-0 h-auto">
-                                <Link href="/" className="flex items-center gap-2">
-                                    <div className="bg-white/20 p-1 rounded-full"><ArrowLeft className="h-4 w-4" /></div>
-                                    <span className="font-bold uppercase tracking-widest text-[10px]">Back to Home</span>
-                                </Link>
-                            </Button>
-                            <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 drop-shadow-lg leading-none">
-                                {banner.title}
-                            </h1>
-                            <p className="text-sm md:text-lg text-gray-200 drop-shadow-md line-clamp-2">
-                                {banner.description}
-                            </p>
+                    <Link href={banner.link || '/'} className="block group">
+                        <div className="relative mb-8 rounded-2xl overflow-hidden shadow-xl h-48 md:h-72 flex items-center">
+                            <img 
+                                src={banner.imageUrl} 
+                                alt={banner.title} 
+                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+                            <div className="relative z-10 p-6 md:p-12 text-white w-full max-w-2xl">
+                                <Button asChild variant="ghost" size="sm" className="mb-4 text-white hover:bg-white/20 p-0 h-auto" onClick={(e) => e.stopPropagation()}>
+                                    <Link href="/" className="flex items-center gap-2">
+                                        <div className="bg-white/20 p-1 rounded-full"><ArrowLeft className="h-4 w-4" /></div>
+                                        <span className="font-bold uppercase tracking-widest text-[10px]">Back to Home</span>
+                                    </Link>
+                                </Button>
+                                <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 drop-shadow-lg leading-none">
+                                    {banner.title}
+                                </h1>
+                                {/* Description removed per user request */}
+                            </div>
                         </div>
-                    </div>
+                    </Link>
                 ) : (
                     <div className="mb-8 p-8 bg-gradient-to-r from-primary to-purple-600 rounded-2xl shadow-xl text-white text-center relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-20">

@@ -121,25 +121,17 @@ function SpinWinPage() {
         setIsSpinning(true);
         setResult(null);
 
-        // 1. Pick a random prize index
         const prizeIndex = Math.floor(Math.random() * PRIZES.length);
         const sectorStep = 360 / PRIZES.length;
         
-        // 2. Calculate how many degrees to rotate to land on prizeIndex
-        // The wheel starts with PRIZES[0] at the top.
-        // To bring PRIZES[i] to the top (pointer position), we need to rotate by:
-        // (360 - (i * sectorStep)) degrees.
-        // We also add a small random offset within the sector to make it look natural.
         const sectorOffset = sectorStep / 4 + Math.random() * (sectorStep / 2);
         const prizeRotation = 360 - (prizeIndex * sectorStep) - sectorOffset;
         
-        // 3. Add multiple full rounds (8-10 rounds for excitement)
         const fullRounds = 8 + Math.floor(Math.random() * 3);
         const finalRotation = rotation + (fullRounds * 360) + (prizeRotation - (rotation % 360));
         
         setRotation(finalRotation);
 
-        // 4. Wait for the CSS transition to complete (matches duration-5000)
         setTimeout(async () => {
             const finalPrize = PRIZES[prizeIndex];
             setResult(finalPrize);
@@ -184,33 +176,34 @@ function SpinWinPage() {
     return (
         <div className="bg-slate-950 min-h-screen text-white overflow-hidden flex flex-col">
             {banner ? (
-                <div className="relative h-48 md:h-64 flex items-center overflow-hidden border-b border-white/10">
-                    <img src={banner.imageUrl} alt={banner.title} className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60" />
-                    <div className="relative z-10 container mx-auto px-6 flex justify-between items-center">
-                        <div className="max-w-xl">
-                            <Button asChild variant="ghost" size="sm" className="mb-4 text-white hover:bg-white/10 p-0 h-auto">
-                                <Link href="/" className="flex items-center gap-2">
-                                    <div className="bg-white/20 p-1 rounded-full"><ArrowLeft className="h-4 w-4" /></div>
-                                    <span className="font-bold uppercase tracking-widest text-[10px]">Back to Shopping</span>
-                                </Link>
-                            </Button>
-                            <h1 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500">
-                                {banner.title}
-                            </h1>
-                            <p className="text-sm md:text-base text-gray-300 mt-1">{banner.description}</p>
-                        </div>
-                        {timeLeft !== null && (
-                            <div className="hidden sm:flex flex-col items-end gap-1 bg-red-500/20 p-4 rounded-xl border border-red-500/30 backdrop-blur-sm">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-red-400">Discount Expiry</span>
-                                <div className="flex items-center gap-2">
-                                    <Clock className="h-5 w-5 text-red-500 animate-pulse" />
-                                    <span className="font-mono text-2xl font-black text-red-500">{formatTime(timeLeft)}</span>
-                                </div>
+                <Link href={banner.link || '/'} className="block group border-b border-white/10">
+                    <div className="relative h-48 md:h-64 flex items-center overflow-hidden">
+                        <img src={banner.imageUrl} alt={banner.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-black/60" />
+                        <div className="relative z-10 container mx-auto px-6 flex justify-between items-center">
+                            <div className="max-w-xl">
+                                <Button asChild variant="ghost" size="sm" className="mb-4 text-white hover:bg-white/10 p-0 h-auto" onClick={(e) => e.stopPropagation()}>
+                                    <Link href="/" className="flex items-center gap-2">
+                                        <div className="bg-white/20 p-1 rounded-full"><ArrowLeft className="h-4 w-4" /></div>
+                                        <span className="font-bold uppercase tracking-widest text-[10px]">Back to Shopping</span>
+                                    </Link>
+                                </Button>
+                                <h1 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 leading-tight">
+                                    {banner.title}
+                                </h1>
                             </div>
-                        )}
+                            {timeLeft !== null && (
+                                <div className="hidden sm:flex flex-col items-end gap-1 bg-red-500/20 p-4 rounded-xl border border-red-500/30 backdrop-blur-sm">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-red-400">Discount Expiry</span>
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="h-5 w-5 text-red-500 animate-pulse" />
+                                        <span className="font-mono text-2xl font-black text-red-500">{formatTime(timeLeft)}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                </Link>
             ) : (
                 <header className="p-4 border-b border-white/10 flex items-center justify-between">
                     <Button asChild variant="ghost" size="sm" className="text-white hover:bg-white/10">
