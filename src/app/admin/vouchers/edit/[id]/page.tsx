@@ -11,9 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-import { doc, getDoc, getFirestore, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, updateDoc, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { Voucher } from '@/types';
+import type { Voucher, Category } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const db = getFirestore(app);
@@ -34,7 +34,17 @@ export default function EditVoucherPage() {
     const [description, setDescription] = useState('');
     const [discountType, setDiscountType] = useState<'order' | 'shipping'>('order');
     const [usageLimit, setUsageLimit] = useState<number | undefined>(1);
+    const [applicableCategory, setApplicableCategory] = useState<string>('all');
+    const [categories, setCategories] = useState<Category[]>([]);
 
+
+    useEffect(() => {
+        const q = query(collection(db, 'categories'), orderBy('createdAt', 'asc'));
+        const unsubCats = onSnapshot(q, (snapshot) => {
+            setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category)));
+        });
+        return () => unsubCats();
+    }, []);
 
     useEffect(() => {
         if (!voucherId) return;
@@ -49,10 +59,11 @@ export default function EditVoucherPage() {
                 setVoucherCode(data.code);
                 setVoucherType(data.type);
                 setDiscount(data.discount);
-                setMinSpend(data.minSpend);
+                setMinSpend(data.minSpend || undefined);
                 setDescription(data.description);
                 setDiscountType(data.discountType || 'order');
                 setUsageLimit(data.usageLimit || 1);
+                setApplicableCategory(data.applicableCategory || 'all');
             } else {
                 toast({ title: "Error", description: "Voucher not found.", variant: "destructive" });
                 router.push('/admin/vouchers');
@@ -75,6 +86,7 @@ export default function EditVoucherPage() {
                 description,
                 discountType,
                 usageLimit: usageLimit ? Number(usageLimit) : 1,
+                applicableCategory: applicableCategory === 'all' ? null : applicableCategory,
             });
 
             toast({
@@ -128,8 +140,8 @@ export default function EditVoucherPage() {
                                             <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="fixed">Fixed</SelectItem>
-                                            <SelectItem value="percentage">Percentage</SelectItem>
+                                            <SelectItem value="fixed">Fixed (Taka)</SelectItem>
+                                            <SelectItem value="percentage">Percentage (%)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -140,19 +152,35 @@ export default function EditVoucherPage() {
                                             <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="order">Order</SelectItem>
-                                            <SelectItem value="shipping">Shipping</SelectItem>
+                                            <SelectItem value="order">Order Discount</SelectItem>
+                                            <SelectItem value="shipping">Shipping Discount</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                             </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="applicableCategory">Applicable Category</Label>
+                                <Select value={applicableCategory} onValueChange={setApplicableCategory} disabled={isSaving}>
+                                    <SelectTrigger id="applicableCategory">
+                                        <SelectValue placeholder="Select Category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Categories</SelectItem>
+                                        {categories.map(cat => (
+                                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="discount">Discount Value</Label>
                                     <Input id="discount" type="number" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} required placeholder="e.g., 50 or 10" disabled={isSaving}/>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="min-spend">Minimum Spend (৳)</Label>
+                                    <Label htmlFor="min-spend">Min Spend (৳)</Label>
                                     <Input id="min-spend" type="number" value={minSpend || ''} onChange={(e) => setMinSpend(e.target.value ? Number(e.target.value) : undefined)} placeholder="e.g., 500" disabled={isSaving}/>
                                 </div>
                                 <div className="space-y-2">

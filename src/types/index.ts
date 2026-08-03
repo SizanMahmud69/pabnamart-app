@@ -116,6 +116,7 @@ export interface Voucher {
     collectedDate?: string;
     createdAt?: string;
     usageLimit?: number;
+    applicableCategory?: string; // If null/empty, applies to all
 }
 
 export interface Offer {

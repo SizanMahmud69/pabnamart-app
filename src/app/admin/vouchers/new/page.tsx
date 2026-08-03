@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
-import { collection, addDoc, getFirestore, doc, setDoc } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { collection, getFirestore, doc, setDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
+import type { Category } from '@/types';
 
 const db = getFirestore(app);
 
@@ -28,13 +29,21 @@ export default function NewVoucherPage() {
     const [description, setDescription] = useState('');
     const [discountType, setDiscountType] = useState<'order' | 'shipping'>('order');
     const [usageLimit, setUsageLimit] = useState<number | undefined>(1);
+    const [applicableCategory, setApplicableCategory] = useState<string>('all');
+    const [categories, setCategories] = useState<Category[]>([]);
 
+    useEffect(() => {
+        const q = query(collection(db, 'categories'), orderBy('createdAt', 'asc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category)));
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsCreating(true);
         try {
-            // Use setDoc with the voucher code as the ID
             const voucherRef = doc(db, 'vouchers', voucherCode);
             await setDoc(voucherRef, {
                 code: voucherCode,
@@ -45,6 +54,7 @@ export default function NewVoucherPage() {
                 discountType,
                 isReturnVoucher: false,
                 usageLimit: usageLimit ? Number(usageLimit) : 1,
+                applicableCategory: applicableCategory === 'all' ? null : applicableCategory,
                 createdAt: new Date().toISOString(),
             });
             
@@ -95,8 +105,8 @@ export default function NewVoucherPage() {
                                             <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="fixed">Fixed</SelectItem>
-                                            <SelectItem value="percentage">Percentage</SelectItem>
+                                            <SelectItem value="fixed">Fixed (Taka)</SelectItem>
+                                            <SelectItem value="percentage">Percentage (%)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -107,19 +117,36 @@ export default function NewVoucherPage() {
                                             <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="order">Order</SelectItem>
-                                            <SelectItem value="shipping">Shipping</SelectItem>
+                                            <SelectItem value="order">Order Discount</SelectItem>
+                                            <SelectItem value="shipping">Shipping Discount</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                             </div>
+                            
+                            <div className="space-y-2">
+                                <Label htmlFor="applicableCategory">Applicable Category</Label>
+                                <Select value={applicableCategory} onValueChange={setApplicableCategory} disabled={isCreating}>
+                                    <SelectTrigger id="applicableCategory">
+                                        <SelectValue placeholder="Select Category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Categories</SelectItem>
+                                        {categories.map(cat => (
+                                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-[10px] text-muted-foreground">If selected, the voucher only works if items from this category are in cart.</p>
+                            </div>
+
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="discount">Discount Value</Label>
                                     <Input id="discount" type="number" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} required placeholder="e.g., 50 or 10" disabled={isCreating}/>
                                 </div>
                                  <div className="space-y-2">
-                                    <Label htmlFor="min-spend">Minimum Spend (৳)</Label>
+                                    <Label htmlFor="min-spend">Min Spend (৳)</Label>
                                     <Input id="min-spend" type="number" value={minSpend || ''} onChange={(e) => setMinSpend(e.target.value ? Number(e.target.value) : undefined)} placeholder="e.g., 500" disabled={isCreating}/>
                                 </div>
                                  <div className="space-y-2">

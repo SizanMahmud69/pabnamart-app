@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, PlusCircle, Edit, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Edit, Trash2, MoreHorizontal, Loader2, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
@@ -60,16 +60,16 @@ export default function AdminVoucherManagement() {
     <>
         <div className="container mx-auto p-4">
             <header className="py-4 flex justify-between items-center">
-                <Button asChild variant="outline" size="xs">
+                <Button asChild variant="outline" size="sm">
                     <Link href="/admin">
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Dashboard
+                        Dashboard
                     </Link>
                 </Button>
-                <Button asChild size="xs">
+                <Button asChild size="sm">
                     <Link href="/admin/vouchers/new">
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Create New Voucher
+                        New Voucher
                     </Link>
                 </Button>
             </header>
@@ -77,35 +77,48 @@ export default function AdminVoucherManagement() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Voucher Management</CardTitle>
-                        <CardDescription>Create and distribute vouchers for your customers.</CardDescription>
+                        <CardDescription>Manage and create vouchers with category restrictions.</CardDescription>
                     </CardHeader>
                     <CardContent>
                          <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Voucher Code</TableHead>
-                                    <TableHead>Description</TableHead>
+                                    <TableHead>Code</TableHead>
                                     <TableHead>Type</TableHead>
-                                    <TableHead>Value</TableHead>
+                                    <TableHead>Discount</TableHead>
+                                    <TableHead>Category</TableHead>
                                     <TableHead>Min. Spend</TableHead>
-                                    <TableHead>Usage Limit</TableHead>
+                                    <TableHead>Usage</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {vouchers.map(voucher => (
                                     <TableRow key={voucher.id}>
-                                        <TableCell className="font-mono">{voucher.code}</TableCell>
-                                        <TableCell>{voucher.description}</TableCell>
-                                        <TableCell className="capitalize">{voucher.type}</TableCell>
-                                        <TableCell>{voucher.type === 'fixed' ? `৳${voucher.discount}` : `${voucher.discount}%`}</TableCell>
-                                        <TableCell>{voucher.minSpend ? `৳${voucher.minSpend}` : 'N/A'}</TableCell>
+                                        <TableCell className="font-mono font-bold">{voucher.code}</TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline" className="capitalize">
+                                                {voucher.discountType === 'shipping' ? 'Shipping' : 'Order'}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="font-bold text-primary">
+                                            {voucher.type === 'fixed' ? `৳${voucher.discount}` : `${voucher.discount}%`}
+                                        </TableCell>
+                                        <TableCell>
+                                            {voucher.applicableCategory ? (
+                                                <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 flex items-center gap-1 w-fit">
+                                                    <Tag className="h-3 w-3" /> {voucher.applicableCategory}
+                                                </Badge>
+                                            ) : (
+                                                <span className="text-muted-foreground italic text-xs">All</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>{voucher.minSpend ? `৳${voucher.minSpend}` : '-'}</TableCell>
                                         <TableCell>{voucher.usageLimit || 1}</TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>

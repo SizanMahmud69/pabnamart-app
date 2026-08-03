@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Home, Building, Plus, Ticket, AlertCircle, Coins, Sparkles, Clock, Trophy } from "lucide-react";
+import { ArrowLeft, Loader2, Home, Building, Plus, Ticket, AlertCircle, Coins, Sparkles, Clock, Trophy, Tag } from "lucide-react";
 import Link from 'next/link';
 import type { ShippingAddress, Voucher } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -126,8 +126,23 @@ function CheckoutPage() {
             return;
         }
         
-        if (voucher.minSpend && selectedCartTotal < voucher.minSpend) {
-            setVoucherError(`Minimum spend of ৳${voucher.minSpend} is required.`);
+        // Category Check
+        if (voucher.applicableCategory) {
+            const hasCategoryItem = cartItems.some(item => item.category === voucher.applicableCategory);
+            if (!hasCategoryItem) {
+                setVoucherError(`This voucher is only valid for items in the "${voucher.applicableCategory}" category.`);
+                return;
+            }
+        }
+        
+        // Min Spend Check
+        const relevantSubtotal = voucher.applicableCategory 
+            ? cartItems.filter(item => item.category === voucher.applicableCategory).reduce((acc, item) => acc + (item.price * item.quantity), 0)
+            : selectedCartTotal;
+
+        if (voucher.minSpend && relevantSubtotal < voucher.minSpend) {
+            const prefix = voucher.applicableCategory ? `"${voucher.applicableCategory}" items total` : "Order subtotal";
+            setVoucherError(`${prefix} must be at least ৳${voucher.minSpend}.`);
             return;
         }
         
@@ -146,11 +161,15 @@ function CheckoutPage() {
     const subtotalWithVoucher = useMemo(() => {
         let currentSubtotal = selectedCartTotal;
         if (appliedVoucher && appliedVoucher.discountType !== 'shipping') {
-            let discount = appliedVoucher.type === 'fixed' ? appliedVoucher.discount : (selectedCartTotal * appliedVoucher.discount) / 100;
+            const relevantSubtotal = appliedVoucher.applicableCategory 
+                ? cartItems.filter(item => item.category === appliedVoucher.applicableCategory).reduce((acc, item) => acc + (item.price * item.quantity), 0)
+                : selectedCartTotal;
+
+            let discount = appliedVoucher.type === 'fixed' ? appliedVoucher.discount : (relevantSubtotal * appliedVoucher.discount) / 100;
             currentSubtotal = Math.max(0, selectedCartTotal - discount);
         }
         return currentSubtotal;
-    }, [selectedCartTotal, appliedVoucher]);
+    }, [selectedCartTotal, appliedVoucher, cartItems]);
 
     const coinDiscount = useMemo(() => {
         if (!useCoins || !appUser?.coins) return 0;
@@ -226,7 +245,7 @@ function CheckoutPage() {
                             Back to Cart
                         </Link>
                     </Button>
-                    <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
+                    <div className="grid grid-cols-1 gap-8">
                         <div className="space-y-6">
                             <Card>
                                 <CardHeader className="flex flex-row justify-between items-center">
@@ -283,12 +302,17 @@ function CheckoutPage() {
                                                             <Badge className="bg-pink-100 text-pink-700 hover:bg-pink-100 border-pink-200 text-[10px] h-5 px-1.5 font-black uppercase">B1G1</Badge>
                                                         )}
                                                     </p>
-                                                    {(item.color || item.size) && (
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {item.color}{item.color && item.size && ', '}{item.size}
-                                                        </p>
-                                                    )}
-                                                    <p className="text-sm text-muted-foreground">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
+                                                    <div className="flex flex-wrap gap-2 mt-1">
+                                                        {(item.color || item.size) && (
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {item.color}{item.color && item.size && ', '}{item.size}
+                                                            </p>
+                                                        )}
+                                                        <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-bold uppercase tracking-wider">
+                                                            <Tag className="h-2 w-2 mr-1" /> {item.category}
+                                                        </Badge>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground mt-1">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
                                                 </div>
                                                 <p className="font-semibold">৳{item.price * item.quantity}</p>
                                             </div>
@@ -299,7 +323,7 @@ function CheckoutPage() {
                             
                         </div>
 
-                        <div className="sticky top-24 space-y-6">
+                        <div className="space-y-6">
                              {/* Lucky Spin Discount Display */}
                              {hasSpinDiscount && (
                                 <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white overflow-hidden">
@@ -330,9 +354,16 @@ function CheckoutPage() {
                                 </CardHeader>
                                 <CardContent>
                                     {appliedVoucher ? (
-                                        <div className="flex justify-between items-center p-3 bg-green-100 text-green-800 rounded-md">
-                                            <p className="font-semibold">Applied: {appliedVoucher.code}</p>
-                                            <Button variant="ghost" size="sm" onClick={() => { setAppliedVoucher(null); setVoucherCode(''); }}>Remove</Button>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center p-3 bg-green-100 text-green-800 rounded-md">
+                                                <p className="font-semibold">Applied: {appliedVoucher.code}</p>
+                                                <Button variant="ghost" size="sm" onClick={() => { setAppliedVoucher(null); setVoucherCode(''); }}>Remove</Button>
+                                            </div>
+                                            {appliedVoucher.applicableCategory && (
+                                                <p className="text-[10px] text-green-600 font-bold uppercase italic">
+                                                    * Restricted to {appliedVoucher.applicableCategory} category
+                                                </p>
+                                            )}
                                         </div>
                                     ) : (
                                         <>
@@ -385,9 +416,14 @@ function CheckoutPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-3">
                                     <div className="flex justify-between"><span>Subtotal</span><span>৳{selectedCartTotal}</span></div>
-                                    {appliedVoucher?.discountType !== 'shipping' && appliedVoucher?.discount > 0 && (
+                                    {appliedVoucher?.discountType !== 'shipping' && appliedVoucher?.discount && (
                                         <div className="flex justify-between text-green-600 text-sm">
-                                            <span>Voucher Discount</span>
+                                            <div className="flex flex-col">
+                                                <span>Voucher Discount</span>
+                                                {appliedVoucher.applicableCategory && (
+                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-tighter">(Only on {appliedVoucher.applicableCategory})</span>
+                                                )}
+                                            </div>
                                             <span>- ৳{(selectedCartTotal - subtotalWithVoucher).toFixed(2)}</span>
                                         </div>
                                     )}

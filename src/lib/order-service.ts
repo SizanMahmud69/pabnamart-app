@@ -62,8 +62,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
       const settings = { ...defaultCoinSettings, ...(coinSettingsSnap.data() || {}) } as CoinSettings;
       
       const itemsForOrder: OrderItem[] = [];
-      let subtotal = 0; 
-      let offerSubtotal = 0; 
+      let totalOfferSubtotal = 0; 
 
       for (let i = 0; i < productSnaps.length; i++) {
         const productSnap = productSnaps[i];
@@ -93,8 +92,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
         });
         
         const origPrice = cartItem.originalPrice ?? cartItem.price;
-        subtotal += origPrice * cartItem.quantity;
-        offerSubtotal += cartItem.price * cartItem.quantity;
+        totalOfferSubtotal += cartItem.price * cartItem.quantity;
 
         itemsForOrder.push({
           id: productData.id,
@@ -120,13 +118,29 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
         if (vSnap.exists()) {
             const v = vSnap.data() as Voucher;
             const usage = userData?.usedVouchers?.[v.code] || 0;
-            if ((!v.usageLimit || usage < v.usageLimit) && (!v.minSpend || subtotal >= v.minSpend)) {
-                usedVoucherCode = v.code;
-                if (v.discountType !== 'shipping') {
-                    voucherDiscount = v.type === 'fixed' ? v.discount : (subtotal * v.discount) / 100;
+            
+            // Check usage limit
+            const withinLimit = !v.usageLimit || usage < v.usageLimit;
+            
+            if (withinLimit) {
+                // Calculate Subtotal for the applicable scope (all or specific category)
+                const relevantItems = v.applicableCategory 
+                    ? payload.items.filter(item => item.category === v.applicableCategory)
+                    : payload.items;
+                
+                const relevantSubtotal = relevantItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+                
+                // Check min spend against relevant subtotal
+                if (!v.minSpend || relevantSubtotal >= v.minSpend) {
+                    if (relevantItems.length > 0) {
+                        usedVoucherCode = v.code;
+                        if (v.discountType !== 'shipping') {
+                            voucherDiscount = v.type === 'fixed' ? v.discount : (relevantSubtotal * v.discount) / 100;
+                        }
+                        // Mark voucher as used
+                        transaction.update(doc(db, 'users', payload.userId), { [`usedVouchers.${usedVoucherCode}`]: increment(1) });
+                    }
                 }
-                // Mark voucher as used
-                transaction.update(doc(db, 'users', payload.userId), { [`usedVouchers.${usedVoucherCode}`]: increment(1) });
             }
         }
       }
@@ -162,7 +176,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
           const expiry = new Date(userData.spinDiscountExpiry);
           if (now < expiry) {
               spinPercentageUsed = userData.activeSpinDiscount;
-              const baseForSpin = offerSubtotal - voucherDiscount - coinDiscount;
+              const baseForSpin = totalOfferSubtotal - voucherDiscount - coinDiscount;
               spinDiscount = (baseForSpin * spinPercentageUsed) / 100;
               // Clear spin discount
               transaction.update(doc(db, 'users', payload.userId), { 
@@ -174,7 +188,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
 
       // 6. Final Total Calculation
       const codFee = payload.paymentMethod === 'cash-on-delivery' ? payload.cashOnDeliveryFee || 0 : 0;
-      const total = Math.round((offerSubtotal - voucherDiscount - coinDiscount - spinDiscount) + payload.shippingFee + codFee);
+      const total = Math.round((totalOfferSubtotal - voucherDiscount - coinDiscount - spinDiscount) + payload.shippingFee + codFee);
 
       // 7. Create Order Record
       const orderRef = doc(collection(db, 'orders'));
@@ -206,7 +220,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
 
       // 8. Award Coins for purchase
       if (!isGuest) {
-          const coinsEarned = Math.floor((offerSubtotal / 100) * settings.pointsPer100Taka);
+          const coinsEarned = Math.floor((totalOfferSubtotal / 100) * settings.pointsPer100Taka);
           if (coinsEarned > 0) {
               transaction.update(doc(db, 'users', payload.userId), { coins: increment(coinsEarned) });
               const earnHistoryRef = doc(collection(db, `users/${payload.userId}/coinHistory`));
