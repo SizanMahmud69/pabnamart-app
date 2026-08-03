@@ -8,11 +8,18 @@ import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2, CarouselNext, CarouselPrevious } from 'lucide-react';
+import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi, CarouselPrevious as CarouselPrev, CarouselNext as CarouselNxt } from '@/components/ui/carousel';
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  type CarouselApi, 
+  CarouselPrevious, 
+  CarouselNext 
+} from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import Categories from '@/components/Categories';
 import { useOffers } from '@/hooks/useOffers';
@@ -24,6 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import FloatingCoin from '@/components/FloatingCoin';
 import { getFirestore, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const db = getFirestore(app);
 
@@ -40,11 +48,9 @@ const categoryImageMap: { [key: string]: { image: string; aiHint: string } } = {
 
 const defaultBanner = {
   title: "Welcome to PabnaMart",
-  description: "Your one-stop shop for all your needs. Quality products, great prices.",
   backgroundImage: "https://picsum.photos/seed/welcome/800/600",
   link: "/products",
   aiHint: "shopping store",
-  Icon: ShoppingBag,
   alignment: 'center'
 };
 
@@ -64,6 +70,7 @@ function HomePageContent() {
   const [visibleProductsCount, setVisibleProductsCount] = useState(9);
   const [isVoucherLoading, startVoucherTransition] = useTransition();
   const [customBanners, setCustomBanners] = useState<Banner[]>([]);
+  const [loadingBanners, setLoadingBanners] = useState(true);
 
   // Carousel dots state
   const [api, setApi] = useState<CarouselApi>();
@@ -79,11 +86,15 @@ function HomePageContent() {
   }, [api]);
 
   useEffect(() => {
-    // Fetch custom banners from Firestore
+    setLoadingBanners(true);
     const bannersRef = collection(db, 'banners');
     const q = query(bannersRef, orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         setCustomBanners(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Banner)));
+        setLoadingBanners(false);
+    }, (error) => {
+        console.error("Banner fetch error:", error);
+        setLoadingBanners(false);
     });
     return () => unsubscribe();
   }, []);
@@ -127,13 +138,7 @@ function HomePageContent() {
 
     // 2. Add Automatic Offer Banners
     activeOffers.forEach(offer => {
-        const productsInCategory = allProducts.filter(p => p.category === offer.name);
-        let randomProduct = null;
-        if (productsInCategory.length > 0) {
-            randomProduct = productsInCategory[Math.floor(Math.random() * productsInCategory.length)];
-        }
         const categoryInfo = categoryImageMap[offer.name] || categoryImageMap.default;
-
         banners.push({
             title: `${offer.discount}% Off on ${offer.name}`,
             backgroundImage: categoryInfo.image,
@@ -168,8 +173,8 @@ function HomePageContent() {
 
       if (fixedBanners.length > 0) {
         banners = fixedBanners;
-      } else {
-        // Absolute fallback to a default system banner
+      } else if (!loadingBanners) {
+        // Absolute fallback if everything is empty and loading is done
         banners = [{
           ...defaultBanner,
           alignment: getNextLayout(),
@@ -178,7 +183,7 @@ function HomePageContent() {
     }
 
     return banners;
-  }, [customBanners, activeOffers, flashSaleProducts, allProducts]);
+  }, [customBanners, activeOffers, flashSaleProducts, loadingBanners]);
   
   const handleSeeMore = () => {
     setVisibleProductsCount(prevCount => prevCount + 9);
@@ -201,53 +206,54 @@ function HomePageContent() {
       <div className="container mx-auto px-4 py-6 space-y-8">
         {/* Hero Section */}
         <div className="space-y-4">
-            <Carousel
-                setApi={setApi}
-                plugins={[Autoplay({ delay: 3000, stopOnInteraction: true })]}
-                opts={{ loop: true }}
-                className="w-full"
-            >
-                <CarouselContent>
-                    {heroBanners.map((banner, index) => {
-                        return (
-                        <CarouselItem key={index}>
-                            <Link href={banner.link} className="block group">
-                                <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
-                                    {/* Background Image */}
-                                    <img 
-                                        src={banner.backgroundImage} 
-                                        alt=""
-                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                                        aria-hidden="true"
-                                        data-ai-hint={banner.aiHint}
-                                    />
-                                    {/* Overlay */}
-                                    <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
-                                </div>
-                            </Link>
-                        </CarouselItem>
-                        )
-                    })}
-                </CarouselContent>
-            </Carousel>
-            
-            {/* Pagination Dots - Improved Visibility */}
-            {heroBanners.length > 1 && (
-                <div className="flex justify-center gap-2 mt-4 pb-2">
-                    {heroBanners.map((_, i) => (
-                        <button
-                            key={i}
-                            className={cn(
-                                "h-2.5 rounded-full transition-all duration-300 shadow-sm border border-primary/10",
-                                current === i 
-                                    ? "bg-primary w-8" 
-                                    : "bg-primary/20 w-2.5 hover:bg-primary/40"
-                            )}
-                            onClick={() => api?.scrollTo(i)}
-                            aria-label={`Go to slide ${i + 1}`}
-                        />
-                    ))}
-                </div>
+            {loadingBanners ? (
+                <Skeleton className="w-full h-48 md:h-64 rounded-lg" />
+            ) : (
+                <>
+                    <Carousel
+                        setApi={setApi}
+                        plugins={[Autoplay({ delay: 3000, stopOnInteraction: true })]}
+                        opts={{ loop: true }}
+                        className="w-full"
+                    >
+                        <CarouselContent>
+                            {heroBanners.map((banner, index) => (
+                                <CarouselItem key={index}>
+                                    <Link href={banner.link} className="block group">
+                                        <div className="relative bg-background rounded-lg overflow-hidden h-48 md:h-64 flex items-center justify-center">
+                                            <img 
+                                                src={banner.backgroundImage} 
+                                                alt=""
+                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                                aria-hidden="true"
+                                                data-ai-hint={banner.aiHint}
+                                            />
+                                            <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
+                                        </div>
+                                    </Link>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                    </Carousel>
+                    
+                    {heroBanners.length > 1 && (
+                        <div className="flex justify-center gap-2 mt-4 pb-2">
+                            {heroBanners.map((_, i) => (
+                                <button
+                                    key={i}
+                                    className={cn(
+                                        "h-2.5 rounded-full transition-all duration-300 shadow-sm border border-primary/10",
+                                        current === i 
+                                            ? "bg-primary w-8" 
+                                            : "bg-primary/20 w-2.5 hover:bg-primary/40"
+                                    )}
+                                    onClick={() => api?.scrollTo(i)}
+                                    aria-label={`Go to slide ${i + 1}`}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </>
             )}
         </div>
         
@@ -335,8 +341,8 @@ function HomePageContent() {
                   </>
                 )}
             </CarouselContent>
-            <CarouselPrev className="left-[-10px] sm:left-[-16px]" />
-            <CarouselNxt className="right-[-10px] sm:right-[-16px]" />
+            <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
+            <CarouselNext className="right-[-10px] sm:right-[-16px]" />
           </Carousel>
         </div>
 
@@ -377,8 +383,8 @@ function HomePageContent() {
                       </>
                     )}
                 </CarouselContent>
-                <CarouselPrev className="left-[-10px] sm:left-[-16px]" />
-                <CarouselNxt className="right-[-10px] sm:right-[-16px]" />
+                <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
+                <CarouselNext className="right-[-10px] sm:right-[-16px]" />
             </Carousel>
         </div>
 
