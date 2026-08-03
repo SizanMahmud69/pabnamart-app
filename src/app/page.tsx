@@ -250,26 +250,29 @@ function HomePageContent() {
           transition: isRefreshing || pullDistance === 0 ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
         }}
       >
-        {/* Pull to Refresh Indicator */}
+        {/* Pull to Refresh Indicator with Custom Logo */}
         <div 
           className={cn(
             "absolute left-1/2 -translate-x-1/2 z-[100] transition-opacity duration-300",
             pullDistance > 20 || isRefreshing ? "opacity-100" : "opacity-0"
           )}
           style={{ 
-              top: "-60px", // Stays fixed at the top of the translating div
+              top: "-60px", 
               transform: `translateX(-50%) rotate(${pullDistance * 3}deg)`
           }}
         >
           <div className={cn(
-            "bg-white p-3 rounded-full shadow-2xl border-2 border-primary/20 flex items-center justify-center",
+            "bg-white p-1 rounded-full shadow-2xl border-2 border-primary/20 flex items-center justify-center overflow-hidden w-12 h-12",
             isRefreshing && "animate-pulse"
           )}>
-            <RefreshCw 
-              className={cn(
-                "h-6 w-6 text-primary",
-                isRefreshing && "animate-spin"
-              )} 
+            <img 
+                src="https://picsum.photos/seed/pabnamart-logo/100/100" 
+                alt="Loading Logo"
+                className={cn(
+                    "w-full h-full object-contain rounded-full",
+                    isRefreshing && "animate-spin"
+                )}
+                data-ai-hint="delivery logo"
             />
           </div>
         </div>
