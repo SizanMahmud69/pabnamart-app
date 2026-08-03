@@ -7,16 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Loader2, Plus, Trash2, Upload, X, Image as ImageIcon, Settings2, Calendar } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Trash2, Upload, X, Image as ImageIcon, Settings2, Calendar, Edit2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy, setDoc, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Banner } from '@/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import type { PutBlobResult } from '@vercel/blob';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const db = getFirestore(app);
 
@@ -43,6 +45,16 @@ export default function BannerManagementPage() {
     const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const inputFileRef = useRef<HTMLInputElement>(null);
+
+    // Edit States
+    const [bannerToEdit, setBannerToEdit] = useState<Banner | null>(null);
+    const [editTitle, setEditTitle] = useState('');
+    const [editDescription, setEditDescription] = useState('');
+    const [editLink, setEditLink] = useState('');
+    const [editExpiryDays, setEditExpiryDays] = useState('7');
+    const [editImageFile, setEditImageFile] = useState<File | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const editInputFileRef = useRef<HTMLInputElement>(null);
 
     // Page Toggles State
     const [pageStatus, setPageStatus] = useState({ b1g1: true, spin: true });
@@ -86,6 +98,12 @@ export default function BannerManagementPage() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setImageFile(e.target.files[0]);
+        }
+    };
+
+    const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setEditImageFile(e.target.files[0]);
         }
     };
 
@@ -153,6 +171,64 @@ export default function BannerManagementPage() {
             toast({ title: "Error", description: "Failed to add banner.", variant: "destructive" });
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleOpenEdit = (banner: Banner) => {
+        setBannerToEdit(banner);
+        setEditTitle(banner.title);
+        setEditDescription(banner.description);
+        setEditLink(banner.link);
+        setEditExpiryDays('7');
+        setEditImageFile(null);
+    };
+
+    const handleUpdateBanner = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!bannerToEdit) return;
+
+        setIsUpdating(true);
+        let imageUrl = bannerToEdit.imageUrl;
+
+        if (editImageFile) {
+            try {
+                const response = await fetch(
+                    `/api/upload?filename=${editImageFile.name}`,
+                    {
+                      method: 'POST',
+                      body: editImageFile,
+                    },
+                  );
+                
+                if (!response.ok) throw new Error('Failed to upload image.');
+                const newBlob = (await response.json()) as PutBlobResult;
+                imageUrl = newBlob.url;
+            } catch (error) {
+                console.error("Image upload failed:", error);
+                toast({ title: "Upload Failed", variant: "destructive" });
+                setIsUpdating(false);
+                return;
+            }
+        }
+
+        try {
+            const now = new Date();
+            const expiresAt = new Date(now.getTime() + Number(editExpiryDays) * 24 * 60 * 60 * 1000).toISOString();
+
+            await updateDoc(doc(db, 'banners', bannerToEdit.id), {
+                title: editTitle,
+                description: editDescription,
+                link: editLink,
+                imageUrl,
+                expiresAt,
+            });
+            toast({ title: "Success", description: "Banner updated and reactivated." });
+            setBannerToEdit(null);
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to update banner.", variant: "destructive" });
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -304,7 +380,10 @@ export default function BannerManagementPage() {
                                         <Card key={banner.id} className={cn("overflow-hidden group relative", isExpired && "opacity-60")}>
                                             <div className="aspect-video relative bg-muted">
                                                 <img src={banner.imageUrl} alt={banner.title} className="object-cover w-full h-full" />
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                                    <Button variant="secondary" size="icon" onClick={() => handleOpenEdit(banner)}>
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </Button>
                                                     <AlertDialog onOpenChange={(open) => !open && setBannerToDelete(null)}>
                                                         <AlertDialogTrigger asChild>
                                                             <Button variant="destructive" size="icon" onClick={() => setBannerToDelete(banner)}>
@@ -359,10 +438,81 @@ export default function BannerManagementPage() {
                     </CardContent>
                 </Card>
             </main>
+
+            {/* Edit Banner Dialog */}
+            <Dialog open={!!bannerToEdit} onOpenChange={(open) => !open && setBannerToEdit(null)}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Edit Banner</DialogTitle>
+                        <DialogDescription>Update banner details and extend expiry.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleUpdateBanner} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Banner Image (Optional to change)</Label>
+                            <div className="aspect-video w-full">
+                                {editImageFile ? (
+                                    <div className="relative h-full">
+                                        <img src={URL.createObjectURL(editImageFile)} alt="Edit preview" className="object-cover w-full h-full rounded-md" />
+                                        <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => setEditImageFile(null)}>
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="relative h-full">
+                                        <img src={bannerToEdit?.imageUrl} alt="Current" className="object-cover w-full h-full rounded-md opacity-50" />
+                                        <Label htmlFor="edit-banner-upload" className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:bg-black/10 transition-colors rounded-md">
+                                            <Upload className="w-8 h-8 text-white drop-shadow-md" />
+                                            <p className="text-xs text-white font-bold drop-shadow-md mt-1">Change Image</p>
+                                            <Input id="edit-banner-upload" type="file" className="hidden" onChange={handleEditFileChange} accept="image/*" ref={editInputFileRef} />
+                                        </Label>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-title">Title</Label>
+                            <Input id="edit-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-description">Description</Label>
+                            <Input id="edit-description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-link">Redirect Page</Label>
+                            <Select value={editLink} onValueChange={setEditLink}>
+                                <SelectTrigger id="edit-link">
+                                    <SelectValue placeholder="Select offer page" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {PREDEFINED_LINKS.map(pl => (
+                                        <SelectItem key={pl.value} value={pl.value}>{pl.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-expiryDays">New Duration (Days from now)</Label>
+                            <Input 
+                                id="edit-expiryDays" 
+                                type="number" 
+                                value={editExpiryDays} 
+                                onChange={(e) => setEditExpiryDays(e.target.value)} 
+                                min="1"
+                                required 
+                            />
+                            <p className="text-[10px] text-muted-foreground italic">Updating will automatically reactivate the banner if it was expired.</p>
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setBannerToEdit(null)}>Cancel</Button>
+                            <Button type="submit" disabled={isUpdating}>
+                                {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                Save Changes
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
 
-function cn(...classes: any[]) {
-    return classes.filter(Boolean).join(' ');
-}
