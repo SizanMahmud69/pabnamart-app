@@ -1,14 +1,14 @@
 
 "use client";
 
-import { useState, useEffect, Suspense, useMemo, useTransition } from 'react';
+import { useState, useEffect, Suspense, useMemo, useTransition, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { Product, Banner } from '@/types';
 import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2 } from 'lucide-react';
+import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
@@ -72,6 +72,12 @@ function HomePageContent() {
   const [isVoucherLoading, startVoucherTransition] = useTransition();
   const [customBanners, setCustomBanners] = useState<Banner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
+
+  // Pull to Refresh States
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Carousel dots state
   const [api, setApi] = useState<CarouselApi>();
@@ -193,13 +199,77 @@ function HomePageContent() {
     });
   };
 
+  // Pull to Refresh Handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY === 0) {
+      setTouchStart(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === 0 || window.scrollY > 0 || isRefreshing) return;
+    const currentTouch = e.touches[0].clientY;
+    const distance = currentTouch - touchStart;
+    if (distance > 0) {
+      // Add resistance and limit distance
+      setPullDistance(Math.min(distance * 0.4, 100));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (isRefreshing) return;
+    if (pullDistance > 70) {
+      setIsRefreshing(true);
+      setPullDistance(80); // Snap to refreshing position
+      // Simulate/Trigger refresh
+      setTimeout(() => {
+        window.location.reload();
+      }, 1200);
+    } else {
+      setPullDistance(0);
+    }
+    setTouchStart(0);
+  };
+
   if (searchQuery) {
     return <Suspense fallback={<div>Loading...</div>}><SearchPageContent searchQuery={searchQuery} /></Suspense>;
   }
 
 
   return (
-    <div className="bg-purple-50/30 min-h-screen">
+    <div 
+      className="bg-purple-50/30 min-h-screen relative overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      ref={containerRef}
+      style={{ 
+        transform: `translateY(${pullDistance}px)`,
+        transition: isRefreshing || pullDistance === 0 ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
+      }}
+    >
+      {/* Refreshing Indicator */}
+      <div 
+        className={cn(
+          "absolute left-1/2 -translate-x-1/2 z-50 flex items-center justify-center transition-opacity duration-300",
+          pullDistance > 20 || isRefreshing ? "opacity-100" : "opacity-0"
+        )}
+        style={{ top: `-${Math.max(60, pullDistance)}px` }}
+      >
+        <div className={cn(
+          "bg-white p-3 rounded-full shadow-xl border border-primary/20",
+          isRefreshing && "animate-pulse"
+        )}>
+          <RefreshCw 
+            className={cn(
+              "h-6 w-6 text-primary",
+              isRefreshing ? "animate-spin" : "transition-transform"
+            )} 
+            style={{ transform: !isRefreshing ? `rotate(${pullDistance * 4}deg)` : 'none' }}
+          />
+        </div>
+      </div>
+
       <FloatingCoin />
       <div className="container mx-auto px-4 py-6 space-y-8">
         {/* Hero Section */}
