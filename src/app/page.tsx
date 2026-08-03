@@ -12,7 +12,7 @@ import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2,
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi, CarouselPrevious as CarouselPrev, CarouselNext as CarouselNxt } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import Categories from '@/components/Categories';
 import { useOffers } from '@/hooks/useOffers';
@@ -145,8 +145,6 @@ function HomePageContent() {
 
     // 3. Add Flash Sale Banner
     if (flashSaleProducts.length > 0) {
-      const flashProductForBanner = flashSaleProducts[Math.floor(Math.random() * flashSaleProducts.length)];
-      
       banners.unshift({
         title: "Flash Sale Live Now!",
         backgroundImage: categoryImageMap["Flash Sale"].image,
@@ -337,8 +335,8 @@ function HomePageContent() {
                   </>
                 )}
             </CarouselContent>
-            <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
-            <CarouselNext className="right-[-10px] sm:right-[-16px]" />
+            <CarouselPrev className="left-[-10px] sm:left-[-16px]" />
+            <CarouselNxt className="right-[-10px] sm:right-[-16px]" />
           </Carousel>
         </div>
 
@@ -379,8 +377,8 @@ function HomePageContent() {
                       </>
                     )}
                 </CarouselContent>
-                <CarouselPrevious className="left-[-10px] sm:left-[-16px]" />
-                <CarouselNext className="right-[-10px] sm:right-[-16px]" />
+                <CarouselPrev className="left-[-10px] sm:left-[-16px]" />
+                <CarouselNxt className="right-[-10px] sm:right-[-16px]" />
             </Carousel>
         </div>
 
