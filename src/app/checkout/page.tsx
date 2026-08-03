@@ -15,11 +15,11 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2, Home, Building, Plus, Ticket, AlertCircle, Coins, Sparkles, Clock, Trophy, Tag } from "lucide-react";
 import Link from 'next/link';
-import type { ShippingAddress, Voucher, CoinSettings } from "@/types";
+import type { ShippingAddress, Voucher, CoinSettings, Category } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import AddressFormModal from "@/components/AddressFormModal";
-import { getDoc, getFirestore, doc, updateDoc, arrayUnion, setDoc, onSnapshot } from 'firebase/firestore';
+import { getDoc, getFirestore, doc, updateDoc, arrayUnion, setDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import app from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -56,9 +56,18 @@ function CheckoutPage() {
     const [useCoins, setUseCoins] = useState(false);
     const [coinSettings, setCoinSettings] = useState<CoinSettings>(defaultCoinSettings);
     const [isProceeding, startProceeding] = useTransition();
+    const [categories, setCategories] = useState<Category[]>([]);
 
     const [spinDiscountTimeLeft, setSpinDiscountTimeLeft] = useState<number | null>(null);
     
+    useEffect(() => {
+        const q = query(collection(db, 'categories'), orderBy('createdAt', 'asc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category)));
+        });
+        return () => unsubscribe();
+    }, []);
+
     useEffect(() => {
         if (user) {
             const userDocRef = doc(db, 'users', user.uid);
@@ -131,6 +140,19 @@ function CheckoutPage() {
         setIsAddressModalOpen(false);
     };
 
+    const isItemValidForVoucher = (itemCategory: string, voucherCategory: string) => {
+        if (!voucherCategory) return true;
+        if (itemCategory === voucherCategory) return true;
+        
+        // Check if item's category is a subcategory of the voucher's category
+        const cat = categories.find(c => c.name === itemCategory);
+        if (cat && cat.parentId && cat.parentId !== 'none') {
+            const parent = categories.find(c => c.id === cat.parentId);
+            if (parent && parent.name === voucherCategory) return true;
+        }
+        return false;
+    };
+
     const handleApplyVoucher = () => {
         setVoucherError(null);
         setAppliedVoucher(null);
@@ -147,15 +169,15 @@ function CheckoutPage() {
         }
         
         if (voucher.applicableCategory) {
-            const hasCategoryItem = cartItems.some(item => item.category === voucher.applicableCategory);
-            if (!hasCategoryItem) {
+            const hasValidItem = cartItems.some(item => isItemValidForVoucher(item.category, voucher.applicableCategory!));
+            if (!hasValidItem) {
                 setVoucherError(`This voucher is only valid for items in the "${voucher.applicableCategory}" category.`);
                 return;
             }
         }
         
         const relevantSubtotal = voucher.applicableCategory 
-            ? cartItems.filter(item => item.category === voucher.applicableCategory).reduce((acc, item) => acc + (item.price * item.quantity), 0)
+            ? cartItems.filter(item => isItemValidForVoucher(item.category, voucher.applicableCategory!)).reduce((acc, item) => acc + (item.price * item.quantity), 0)
             : selectedCartTotal;
 
         if (voucher.minSpend && relevantSubtotal < voucher.minSpend) {
@@ -179,13 +201,13 @@ function CheckoutPage() {
     const voucherDiscountAmount = useMemo(() => {
         if (appliedVoucher && appliedVoucher.discountType !== 'shipping') {
             const relevantSubtotal = appliedVoucher.applicableCategory 
-                ? cartItems.filter(item => item.category === appliedVoucher.applicableCategory).reduce((acc, item) => acc + (item.price * item.quantity), 0)
+                ? cartItems.filter(item => isItemValidForVoucher(item.category, appliedVoucher.applicableCategory!)).reduce((acc, item) => acc + (item.price * item.quantity), 0)
                 : selectedCartTotal;
 
             return appliedVoucher.type === 'fixed' ? appliedVoucher.discount : (relevantSubtotal * appliedVoucher.discount) / 100;
         }
         return 0;
-    }, [selectedCartTotal, appliedVoucher, cartItems]);
+    }, [selectedCartTotal, appliedVoucher, cartItems, categories]);
 
     const coinDiscount = useMemo(() => {
         if (!useCoins || !appUser?.coins) return 0;

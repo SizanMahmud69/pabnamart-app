@@ -1,9 +1,9 @@
 
 "use client";
 
-import { getFirestore, doc, runTransaction, collection, increment, deleteField } from 'firebase/firestore';
+import { getFirestore, doc, runTransaction, collection, increment, deleteField, getDocs } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import type { OrderPayload, Product, User, Voucher, OrderItem, CoinSettings } from '@/types';
+import type { OrderPayload, Product, User, Voucher, OrderItem, CoinSettings, Category } from '@/types';
 
 const db = getFirestore(app);
 
@@ -37,6 +37,22 @@ function sanitize(obj: any): any {
 
 export async function placeOrder(payload: OrderPayload): Promise<{ success: boolean; orderId?: string; orderNumber?: string; message?: string }> {
   try {
+    // Fetch categories for hierarchical voucher support
+    const categoriesSnap = await getDocs(collection(db, 'categories'));
+    const allCategories = categoriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+
+    const isItemValidForVoucher = (itemCategory: string, voucherCategory: string) => {
+        if (!voucherCategory) return true;
+        if (itemCategory === voucherCategory) return true;
+        
+        const cat = allCategories.find(c => c.name === itemCategory);
+        if (cat && cat.parentId && cat.parentId !== 'none') {
+            const parent = allCategories.find(c => c.id === cat.parentId);
+            if (parent && parent.name === voucherCategory) return true;
+        }
+        return false;
+    };
+
     const result = await runTransaction(db, async (transaction) => {
       const productRefs = payload.items.map(item => doc(db, 'products', item.id.toString()));
       const productSnaps = await Promise.all(productRefs.map(ref => transaction.get(ref)));
@@ -111,7 +127,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
             
             if (withinLimit) {
                 const relevantItems = v.applicableCategory 
-                    ? payload.items.filter(item => item.category === v.applicableCategory)
+                    ? payload.items.filter(item => isItemValidForVoucher(item.category, v.applicableCategory!))
                     : payload.items;
                 
                 const relevantSubtotal = relevantItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
