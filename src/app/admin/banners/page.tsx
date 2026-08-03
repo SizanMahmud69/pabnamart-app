@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Loader2, Plus, Trash2, Upload, X, Image as ImageIcon, Settings2, Calendar, Edit2, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Trash2, Upload, X, Image as ImageIcon, Settings2, Calendar, Edit2, Save, Anchor } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy, setDoc, updateDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
@@ -36,9 +36,9 @@ export default function BannerManagementPage() {
     const { toast } = useToast();
     const [banners, setBanners] = useState<Banner[]>([]);
     const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
     const [link, setLink] = useState('');
     const [expiryDays, setExpiryDays] = useState('7');
+    const [isFixed, setIsFixed] = useState(false);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,9 +49,9 @@ export default function BannerManagementPage() {
     // Edit States
     const [bannerToEdit, setBannerToEdit] = useState<Banner | null>(null);
     const [editTitle, setEditTitle] = useState('');
-    const [editDescription, setEditDescription] = useState('');
     const [editLink, setEditLink] = useState('');
     const [editExpiryDays, setEditExpiryDays] = useState('7');
+    const [editIsFixed, setEditIsFixed] = useState(false);
     const [editImageFile, setEditImageFile] = useState<File | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const editInputFileRef = useRef<HTMLInputElement>(null);
@@ -149,21 +149,21 @@ export default function BannerManagementPage() {
 
         try {
             const now = new Date();
-            const expiresAt = new Date(now.getTime() + Number(expiryDays) * 24 * 60 * 60 * 1000).toISOString();
+            const expiresAt = isFixed ? null : new Date(now.getTime() + Number(expiryDays) * 24 * 60 * 60 * 1000).toISOString();
 
             await addDoc(collection(db, 'banners'), {
                 title,
-                description, // Keeping in DB for now, but UI will hide it
                 link,
                 imageUrl,
+                isFixed,
                 createdAt: now.toISOString(),
                 expiresAt,
             });
             toast({ title: "Success", description: "Banner added successfully." });
             setTitle('');
-            setDescription('');
             setLink('');
             setExpiryDays('7');
+            setIsFixed(false);
             setImageFile(null);
             if (inputFileRef.current) inputFileRef.current.value = '';
         } catch (error) {
@@ -177,9 +177,9 @@ export default function BannerManagementPage() {
     const handleOpenEdit = (banner: Banner) => {
         setBannerToEdit(banner);
         setEditTitle(banner.title);
-        setEditDescription(banner.description || '');
         setEditLink(banner.link);
         setEditExpiryDays('7');
+        setEditIsFixed(banner.isFixed || false);
         setEditImageFile(null);
     };
 
@@ -213,16 +213,16 @@ export default function BannerManagementPage() {
 
         try {
             const now = new Date();
-            const expiresAt = new Date(now.getTime() + Number(editExpiryDays) * 24 * 60 * 60 * 1000).toISOString();
+            const expiresAt = editIsFixed ? null : new Date(now.getTime() + Number(editExpiryDays) * 24 * 60 * 60 * 1000).toISOString();
 
             await updateDoc(doc(db, 'banners', bannerToEdit.id), {
                 title: editTitle,
-                description: editDescription,
                 link: editLink,
                 imageUrl,
+                isFixed: editIsFixed,
                 expiresAt,
             });
-            toast({ title: "Success", description: "Banner updated and reactivated." });
+            toast({ title: "Success", description: "Banner updated." });
             setBannerToEdit(null);
         } catch (error) {
             console.error(error);
@@ -334,21 +334,36 @@ export default function BannerManagementPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="expiryDays">Duration (Days)</Label>
-                                    <Input 
-                                        id="expiryDays" 
-                                        type="number" 
-                                        value={expiryDays} 
-                                        onChange={(e) => setExpiryDays(e.target.value)} 
-                                        min="1"
-                                        placeholder="e.g. 7"
-                                        required 
-                                        disabled={isSubmitting} 
+
+                                <div className="flex items-center justify-between p-3 rounded-lg border bg-blue-50/50">
+                                    <div className="space-y-0.5">
+                                        <Label htmlFor="isFixed" className="text-sm font-bold text-blue-700">Fixed Banner</Label>
+                                        <p className="text-[10px] text-blue-600">Acts as fallback if no active banners exist.</p>
+                                    </div>
+                                    <Switch 
+                                        id="isFixed" 
+                                        checked={isFixed} 
+                                        onCheckedChange={setIsFixed}
+                                        disabled={isSubmitting}
                                     />
-                                    <p className="text-[10px] text-muted-foreground">Banner will disappear after this many days.</p>
                                 </div>
-                                {/* Description hidden from form input as well to align with visual simplification */}
+
+                                {!isFixed && (
+                                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <Label htmlFor="expiryDays">Duration (Days)</Label>
+                                        <Input 
+                                            id="expiryDays" 
+                                            type="number" 
+                                            value={expiryDays} 
+                                            onChange={(e) => setExpiryDays(e.target.value)} 
+                                            min="1"
+                                            placeholder="e.g. 7"
+                                            required 
+                                            disabled={isSubmitting} 
+                                        />
+                                        <p className="text-[10px] text-muted-foreground">Banner will disappear after this many days.</p>
+                                    </div>
+                                )}
                             </CardContent>
                             <CardFooter>
                                 <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -364,7 +379,7 @@ export default function BannerManagementPage() {
                 <Card className="md:col-span-2">
                     <CardHeader>
                         <CardTitle>Existing Banners</CardTitle>
-                        <CardDescription>Manage currently active banners.</CardDescription>
+                        <CardDescription>Manage currently active or fixed fallback banners.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {isLoading ? (
@@ -372,7 +387,7 @@ export default function BannerManagementPage() {
                         ) : banners.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {banners.map(banner => {
-                                    const isExpired = banner.expiresAt ? new Date(banner.expiresAt) < new Date() : false;
+                                    const isExpired = !banner.isFixed && banner.expiresAt ? new Date(banner.expiresAt) < new Date() : false;
                                     return (
                                         <Card key={banner.id} className={cn("overflow-hidden group relative", isExpired && "opacity-60")}>
                                             <div className="aspect-video relative bg-muted">
@@ -402,11 +417,14 @@ export default function BannerManagementPage() {
                                                         </AlertDialogContent>
                                                     </AlertDialog>
                                                 </div>
-                                                {isExpired && (
-                                                    <div className="absolute top-2 left-2">
-                                                        <Badge variant="destructive" className="uppercase font-bold">Expired</Badge>
-                                                    </div>
-                                                )}
+                                                <div className="absolute top-2 left-2 flex gap-1">
+                                                    {banner.isFixed && (
+                                                        <Badge className="bg-blue-600 text-white border-0 font-black uppercase text-[10px] tracking-widest"><Anchor className="h-2.5 w-2.5 mr-1" />Fixed</Badge>
+                                                    )}
+                                                    {isExpired && (
+                                                        <Badge variant="destructive" className="uppercase font-bold text-[10px]">Expired</Badge>
+                                                    )}
+                                                </div>
                                             </div>
                                             <CardContent className="p-3">
                                                 <p className="font-bold text-sm truncate">{banner.title}</p>
@@ -414,7 +432,7 @@ export default function BannerManagementPage() {
                                                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
                                                         Link: {PREDEFINED_LINKS.find(l => l.value === banner.link)?.label || banner.link}
                                                     </p>
-                                                    {banner.expiresAt && (
+                                                    {!banner.isFixed && banner.expiresAt && (
                                                         <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                                             <Calendar className="h-3 w-3" />
                                                             <span>Expires: {new Date(banner.expiresAt).toLocaleDateString()}</span>
@@ -441,7 +459,7 @@ export default function BannerManagementPage() {
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Edit Banner</DialogTitle>
-                        <DialogDescription>Update banner details and extend expiry.</DialogDescription>
+                        <DialogDescription>Update banner details and fallback settings.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleUpdateBanner} className="space-y-4">
                         <div className="space-y-2">
@@ -483,18 +501,33 @@ export default function BannerManagementPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-expiryDays">New Duration (Days from now)</Label>
-                            <Input 
-                                id="edit-expiryDays" 
-                                type="number" 
-                                value={editExpiryDays} 
-                                onChange={(e) => setEditExpiryDays(e.target.value)} 
-                                min="1"
-                                required 
+
+                        <div className="flex items-center justify-between p-3 rounded-lg border bg-blue-50/50">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="edit-isFixed" className="text-sm font-bold text-blue-700">Fixed Banner</Label>
+                                <p className="text-[10px] text-blue-600">Acts as fallback if no active banners exist.</p>
+                            </div>
+                            <Switch 
+                                id="edit-isFixed" 
+                                checked={editIsFixed} 
+                                onCheckedChange={setEditIsFixed}
                             />
-                            <p className="text-[10px] text-muted-foreground italic">Updating will automatically reactivate the banner if it was expired.</p>
                         </div>
+
+                        {!editIsFixed && (
+                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <Label htmlFor="edit-expiryDays">New Duration (Days from now)</Label>
+                                <Input 
+                                    id="edit-expiryDays" 
+                                    type="number" 
+                                    value={editExpiryDays} 
+                                    onChange={(e) => setEditExpiryDays(e.target.value)} 
+                                    min="1"
+                                    required 
+                                />
+                                <p className="text-[10px] text-muted-foreground italic">Updating will automatically reactivate the banner if it was expired.</p>
+                            </div>
+                        )}
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setBannerToEdit(null)}>Cancel</Button>
                             <Button type="submit" disabled={isUpdating}>

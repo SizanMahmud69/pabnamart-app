@@ -8,11 +8,11 @@ import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2 } from 'lucide-react';
+import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2, CarouselNext, CarouselPrevious } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import Categories from '@/components/Categories';
 import { useOffers } from '@/hooks/useOffers';
@@ -110,20 +110,20 @@ function HomePageContent() {
     };
     
     const now = new Date();
+    let banners: any[] = [];
 
-    // 1. Add Custom Admin Banners (Filtered by expiry)
-    const banners = customBanners
-        .filter(cb => !cb.expiresAt || new Date(cb.expiresAt) > now)
+    // 1. Add Active Custom Admin Banners
+    const activeCustom = customBanners
+        .filter(cb => !cb.isFixed && (!cb.expiresAt || new Date(cb.expiresAt) > now))
         .map(cb => ({
             title: cb.title,
-            description: cb.description,
             backgroundImage: cb.imageUrl,
             link: cb.link || '/products',
             aiHint: 'offer banner',
-            Icon: ShoppingBag,
             alignment: getNextLayout(),
-            isCustom: true
         }));
+    
+    banners.push(...activeCustom);
 
     // 2. Add Automatic Offer Banners
     activeOffers.forEach(offer => {
@@ -136,14 +136,11 @@ function HomePageContent() {
 
         banners.push({
             title: `${offer.discount}% Off on ${offer.name}`,
-            description: `Get the best deals on our ${offer.name} collection.`,
-            productImage: randomProduct?.images?.[0],
             backgroundImage: categoryInfo.image,
             link: `/category/${encodeURIComponent(offer.name)}`,
             aiHint: categoryInfo.aiHint,
-            Icon: Percent,
             alignment: getNextLayout(),
-        } as any);
+        });
     });
 
     // 3. Add Flash Sale Banner
@@ -152,23 +149,34 @@ function HomePageContent() {
       
       banners.unshift({
         title: "Flash Sale Live Now!",
-        description: "Limited time offers. Grab them before they're gone!",
-        productImage: flashProductForBanner?.images?.[0],
         backgroundImage: categoryImageMap["Flash Sale"].image,
         link: "/flash-sale",
         aiHint: categoryImageMap["Flash Sale"].aiHint,
-        Icon: Zap,
         alignment: getNextLayout(),
-      } as any);
+      });
     }
 
+    // 4. FALLBACK: If no active promotional banners exist, use FIXED banners
     if (banners.length === 0) {
-      const firstProduct = allProducts[0];
-      return [{
-        ...defaultBanner,
-        productImage: firstProduct?.images?.[0],
-        alignment: getNextLayout(),
-      }];
+      const fixedBanners = customBanners
+        .filter(cb => cb.isFixed)
+        .map(cb => ({
+            title: cb.title,
+            backgroundImage: cb.imageUrl,
+            link: cb.link || '/products',
+            aiHint: 'fixed banner',
+            alignment: getNextLayout(),
+        }));
+
+      if (fixedBanners.length > 0) {
+        banners = fixedBanners;
+      } else {
+        // Absolute fallback to a default system banner
+        banners = [{
+          ...defaultBanner,
+          alignment: getNextLayout(),
+        }];
+      }
     }
 
     return banners;
@@ -216,14 +224,7 @@ function HomePageContent() {
                                         data-ai-hint={banner.aiHint}
                                     />
                                     {/* Overlay */}
-                                    <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
-
-                                    {/* Content Container - No text layering as requested */}
-                                    <div className={cn(
-                                        "relative w-full h-full flex items-center p-4 md:p-8",
-                                        banner.alignment === 'right' ? 'flex-row-reverse' : 'flex-row'
-                                    )}>
-                                    </div>
+                                    <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
                                 </div>
                             </Link>
                         </CarouselItem>

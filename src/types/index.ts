@@ -182,6 +182,7 @@ export interface Banner {
     link: string;
     createdAt: string;
     expiresAt?: string;
+    isFixed?: boolean;
 }
 
 export interface User {
