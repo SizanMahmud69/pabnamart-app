@@ -41,7 +41,10 @@ export default function EditVoucherPage() {
     useEffect(() => {
         const q = query(collection(db, 'categories'), orderBy('createdAt', 'asc'));
         const unsubCats = onSnapshot(q, (snapshot) => {
-            setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category)));
+            const allCats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+            // Filter only main categories (where parentId is null or 'none')
+            const mainCats = allCats.filter(c => !c.parentId || c.parentId === 'none');
+            setCategories(mainCats);
         });
         return () => unsubCats();
     }, []);
