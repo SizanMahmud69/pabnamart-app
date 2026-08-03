@@ -12,7 +12,7 @@ import { ArrowRight, ShoppingBag, Ticket, Sparkles, Star, Zap, Percent, Loader2 
 import { Card, CardContent } from '@/components/ui/card';
 import FlashSale from '@/components/FlashSale';
 import AiRecommendations from '@/components/AiRecommendations';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import Categories from '@/components/Categories';
 import { useOffers } from '@/hooks/useOffers';
