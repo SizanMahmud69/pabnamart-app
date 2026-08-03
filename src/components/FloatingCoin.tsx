@@ -21,6 +21,8 @@ export default function FloatingCoin() {
     }, []);
 
     const handleTouchStart = (e: React.TouchEvent) => {
+        // Prevent Pull to Refresh when starting to drag the coin
+        e.stopPropagation();
         setIsDragging(true);
         const touch = e.touches[0];
         setDragStart({
@@ -30,6 +32,8 @@ export default function FloatingCoin() {
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
+        // Prevent Pull to Refresh while moving the coin
+        e.stopPropagation();
         if (!isDragging) return;
         const touch = e.touches[0];
         const newX = touch.clientX - dragStart.x;
@@ -42,7 +46,9 @@ export default function FloatingCoin() {
         setPosition({ x: boundedX, y: boundedY });
     };
 
-    const handleTouchEnd = () => {
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        // Prevent any final refresh trigger from bubbling up
+        e.stopPropagation();
         setIsDragging(false);
         localStorage.setItem('coinPosition', JSON.stringify(position));
     };
