@@ -41,7 +41,7 @@ export default function CartPage() {
   useEffect(() => {
     const newLocalQtys: Record<string, string> = {};
     cartItems.forEach(item => {
-      newLocalQtys[item.cartItemId] = item.quantity.toFixed(3);
+      newLocalQtys[item.cartItemId] = Number(item.quantity.toFixed(3)).toString();
     });
     setLocalQtys(newLocalQtys);
   }, [cartItems]);
@@ -64,7 +64,7 @@ export default function CartPage() {
     updateQuantity(cartItemId, num);
     setLocalQtys(prev => ({ 
       ...prev, 
-      [cartItemId]: num.toFixed(3) 
+      [cartItemId]: Number(num.toFixed(3)).toString()
     }));
   };
 
@@ -81,6 +81,8 @@ export default function CartPage() {
   };
 
   const finalTotal = selectedCartTotal + (shippingFee || 0);
+
+  const format = (val: number) => Number(val.toFixed(3));
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
@@ -130,7 +132,7 @@ export default function CartPage() {
                                         {item.color && <p className="text-sm text-muted-foreground">Color: {item.color}</p>}
                                         {item.size && <p className="text-sm text-muted-foreground">Size: {item.size}</p>}
                                         <p className="text-sm text-muted-foreground">
-                                        Price: ৳{item.price.toFixed(3)} per {item.unit || 'Pcs'}
+                                        Price: ৳{format(item.price)} per {item.unit || 'Pcs'}
                                         </p>
                                         <div className="mt-2 flex items-center gap-2">
                                             <Button 
@@ -145,7 +147,7 @@ export default function CartPage() {
                                             </Button>
                                             <Input
                                                 type="text"
-                                                value={localQtys[item.cartItemId] || item.quantity.toFixed(3)}
+                                                value={localQtys[item.cartItemId] || format(item.quantity).toString()}
                                                 onChange={(e) => handleManualInput(item.cartItemId, e.target.value)}
                                                 onBlur={() => handleBlur(item.cartItemId, item)}
                                                 className="h-8 w-24 text-center px-1 font-bold"
@@ -162,7 +164,7 @@ export default function CartPage() {
                                     </div>
                                     <div className="text-right flex flex-col items-end">
                                         <p className="font-semibold text-lg whitespace-nowrap">
-                                            ৳{(item.price * item.quantity).toFixed(3)}
+                                            ৳{format(item.price * item.quantity)}
                                         </p>
                                         <Button
                                             variant="ghost"
@@ -190,7 +192,7 @@ export default function CartPage() {
                 <CardContent className="space-y-4">
                     <div className="flex justify-between">
                     <span>Subtotal ({selectedCartCount} items)</span>
-                    <span>৳{selectedCartTotal.toFixed(3)}</span>
+                    <span>৳{format(selectedCartTotal)}</span>
                     </div>
                     <div className="flex justify-between">
                         <div>
@@ -201,7 +203,7 @@ export default function CartPage() {
                             shippingFee === 0 && selectedCartCount > 0 ? (
                                 <Badge className="bg-green-100 text-green-800">Free Delivery</Badge>
                             ) : (
-                                <span>৳{(shippingFee || 0).toFixed(3)}</span>
+                                <span>৳{format(shippingFee || 0)}</span>
                             )
                         ) : (
                             <span>...</span>
@@ -210,7 +212,7 @@ export default function CartPage() {
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                     <span>Total Amount</span>
-                    <span>{isClient ? `৳${finalTotal.toFixed(3)}` : '...'}</span>
+                    <span>{isClient ? `৳${format(finalTotal)}` : '...'}</span>
                     </div>
                 </CardContent>
                 <CardFooter>

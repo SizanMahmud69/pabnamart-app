@@ -95,6 +95,7 @@ function PaymentPage() {
         return <LoadingSpinner />;
     }
 
+    const format = (val: number) => Number(val.toFixed(3));
     const codTotal = checkoutData.total + (paymentMethod === 'cash-on-delivery' ? cashOnDeliveryFee : 0);
 
     return (
@@ -137,7 +138,7 @@ function PaymentPage() {
                                     <AlertCircle className="h-4 w-4 text-orange-600" />
                                     <AlertDescription className="text-xs text-orange-700 flex justify-between font-bold">
                                         <span>Cash on Delivery Surcharge</span>
-                                        <span>+ ৳{cashOnDeliveryFee.toFixed(3)}</span>
+                                        <span>+ ৳{format(cashOnDeliveryFee)}</span>
                                     </AlertDescription>
                                 </Alert>
                             )}
@@ -169,7 +170,7 @@ function PaymentPage() {
                         <CardContent className="space-y-3">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Subtotal</span>
-                                <span>৳{checkoutData.subtotal.toFixed(3)}</span>
+                                <span>৳{format(checkoutData.subtotal)}</span>
                             </div>
                             {checkoutData.voucherDiscount && checkoutData.voucherDiscount > 0 ? (
                                 <div className="flex justify-between text-sm text-green-600 font-medium">
@@ -177,7 +178,7 @@ function PaymentPage() {
                                         <Ticket className="h-3.5 w-3.5" />
                                         <span>Voucher ({checkoutData.voucherCode})</span>
                                     </div>
-                                    <span>- ৳{checkoutData.voucherDiscount.toFixed(3)}</span>
+                                    <span>- ৳{format(checkoutData.voucherDiscount)}</span>
                                 </div>
                             ) : null}
                             {checkoutData.coinDiscount && checkoutData.coinDiscount > 0 ? (
@@ -186,7 +187,7 @@ function PaymentPage() {
                                         <Coins className="h-3.5 w-3.5" />
                                         <span>Coin Discount</span>
                                     </div>
-                                    <span>- ৳{checkoutData.coinDiscount.toFixed(3)}</span>
+                                    <span>- ৳{format(checkoutData.coinDiscount)}</span>
                                 </div>
                             ) : null}
                             {checkoutData.spinDiscount && checkoutData.spinDiscount > 0 ? (
@@ -195,23 +196,23 @@ function PaymentPage() {
                                         <Sparkles className="h-3.5 w-3.5" />
                                         <span>Lucky Spin ({checkoutData.spinDiscountPercentage}%)</span>
                                     </div>
-                                    <span>- ৳{checkoutData.spinDiscount.toFixed(3)}</span>
+                                    <span>- ৳{format(checkoutData.spinDiscount)}</span>
                                 </div>
                             ) : null}
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Shipping Fee</span>
-                                <span>৳{checkoutData.shippingFee.toFixed(3)}</span>
+                                <span>৳{format(checkoutData.shippingFee)}</span>
                             </div>
                             {paymentMethod === 'cash-on-delivery' && cashOnDeliveryFee > 0 && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">COD Fee</span>
-                                    <span>৳{cashOnDeliveryFee.toFixed(3)}</span>
+                                    <span>৳{format(cashOnDeliveryFee)}</span>
                                 </div>
                             )}
                             <Separator />
                             <div className="flex justify-between font-black text-xl text-primary">
                                 <span>Final Total</span>
-                                <span>৳{codTotal.toFixed(3)}</span>
+                                <span>৳{format(codTotal)}</span>
                             </div>
                         </CardContent>
                         <CardFooter>

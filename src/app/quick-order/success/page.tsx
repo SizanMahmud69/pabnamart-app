@@ -36,6 +36,8 @@ function SuccessContent() {
     const [reviewSubmitted, setReviewSubmitted] = useState(false);
     const inputFileRef = useRef<HTMLInputElement>(null);
 
+    const format = (val: number) => Number(val.toFixed(3));
+
     useEffect(() => {
         if (!orderNumber) {
             router.replace('/');
@@ -129,7 +131,7 @@ function SuccessContent() {
     if (loading || !orderNumber) return <LoadingSpinner />;
 
     return (
-        <div className="container mx-auto max-w-md px-4 py-12 text-center">
+        <div className="container mx-auto max-md px-4 py-12 text-center">
             <div className="mb-8 animate-in zoom-in duration-500">
                 <CheckCircle2 className="h-24 w-24 text-green-500 mx-auto drop-shadow-lg" />
             </div>
@@ -175,7 +177,7 @@ function SuccessContent() {
 
                         <div className="space-y-2 text-left">
                             <Label htmlFor="guest-comment" className="text-xs font-bold text-muted-foreground uppercase">মতামত লিখুন</Label>
-                            <Textarea 
+                            <Testarea 
                                 id="guest-comment"
                                 placeholder="পণ্যটি কেমন ছিল? ডেলিভারি সার্ভিস কেমন ছিল? এখানে লিখুন..."
                                 className="resize-none h-24"

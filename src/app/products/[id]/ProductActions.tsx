@@ -46,15 +46,16 @@ export default function ProductActions({
   const [isLoading, setIsLoading] = useState(false);
   
   const minQuantity = 0.250;
+  const format = (val: number) => Number(val.toFixed(3));
 
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(minQuantity);
-  const [displayQty, setDisplayQty] = useState(minQuantity.toFixed(3));
+  const [displayQty, setDisplayQty] = useState(format(minQuantity).toString());
   
   useEffect(() => {
     setQuantity(minQuantity);
-    setDisplayQty(minQuantity.toFixed(3));
+    setDisplayQty(format(minQuantity).toString());
   }, [minQuantity]);
 
   const uniqueColors = useMemo(() => aggregateVariants(product.colors), [product.colors]);
@@ -112,20 +113,20 @@ export default function ProductActions({
       num = minQuantity;
     }
     setQuantity(num);
-    setDisplayQty(num.toFixed(3));
+    setDisplayQty(format(num).toString());
   }
 
   const handleIncrement = () => {
     const next = quantity + 0.1;
     setQuantity(next);
-    setDisplayQty(next.toFixed(3));
+    setDisplayQty(format(next).toString());
   }
 
   const handleDecrement = () => {
     const next = quantity - 0.1;
     const final = Math.max(next, minQuantity);
     setQuantity(final);
-    setDisplayQty(final.toFixed(3));
+    setDisplayQty(format(final).toString());
   }
 
   if (isSoldOut) {
@@ -159,7 +160,7 @@ export default function ProductActions({
                             <span className={cn(isOutOfStock && "line-through")}>{color.name}</span>
                             {isOutOfStock ? 
                                 <span className="text-xs text-destructive ml-2">(Out of Stock)</span> :
-                                <span className="text-xs text-muted-foreground ml-2">({color.stock.toFixed(3)})</span>
+                                <span className="text-xs text-muted-foreground ml-2">({format(color.stock)})</span>
                             }
                         </Label>
                     )
@@ -188,7 +189,7 @@ export default function ProductActions({
                             <span className={cn(isOutOfStock && "line-through")}>{size.name}</span>
                              {isOutOfStock ? 
                                 <span className="text-xs text-destructive ml-2">(Out of Stock)</span> :
-                                <span className="text-xs text-muted-foreground ml-2">({size.stock.toFixed(3)})</span>
+                                <span className="text-xs text-muted-foreground ml-2">({format(size.stock)})</span>
                             }
                         </Label>
                     )
@@ -230,7 +231,7 @@ export default function ProductActions({
             </div>
             <span className="text-xs text-muted-foreground font-medium">
                 {user ? (
-                    `Min order 0.250 ${product.unit || 'Pcs'}`
+                    `Min order ${format(0.250)} ${product.unit || 'Pcs'}`
                 ) : (
                     `সর্বনিম্ন অর্ডার ০.২৫০ ${product.unit || 'Pcs'}`
                 )}

@@ -38,10 +38,11 @@ export default function QuickOrderPage() {
     const [city, setCity] = useState('');
     const [area, setArea] = useState('');
     const [quantity, setQuantity] = useState(1);
-    const [displayQty, setDisplayQty] = useState("1.000");
+    const [displayQty, setDisplayQty] = useState("1");
 
     const product: Product | null = quickOrderData?.product || null;
     const minQuantity = 0.250;
+    const format = (val: number) => Number(val.toFixed(3));
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -50,11 +51,11 @@ export default function QuickOrderPage() {
             const parsed = JSON.parse(data);
             setQuickOrderData(parsed);
             
-            const initialQty = parsed.quantity || 0.250;
+            const initialQty = parsed.quantity || 1;
             const finalQty = initialQty < minQuantity ? minQuantity : initialQty;
             
             setQuantity(finalQty);
-            setDisplayQty(finalQty.toFixed(3));
+            setDisplayQty(format(finalQty).toString());
         } else {
             router.replace('/');
         }
@@ -93,20 +94,20 @@ export default function QuickOrderPage() {
             num = minQuantity;
         }
         setQuantity(num);
-        setDisplayQty(num.toFixed(3));
+        setDisplayQty(format(num).toString());
     };
 
     const handleIncrement = () => {
         const next = quantity + 0.1;
         setQuantity(next);
-        setDisplayQty(next.toFixed(3));
+        setDisplayQty(format(next).toString());
     };
 
     const handleDecrement = () => {
         const next = quantity - 0.1;
         const final = Math.max(next, minQuantity);
         setQuantity(final);
-        setDisplayQty(final.toFixed(3));
+        setDisplayQty(format(final).toString());
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -119,7 +120,7 @@ export default function QuickOrderPage() {
         }
 
         if (quantity < minQuantity) {
-            toast({ title: "ভুল পরিমাণ", description: `সর্বনিম্ন অর্ডার ${minQuantity.toFixed(3)} ${product.unit} হতে হবে।`, variant: "destructive" });
+            toast({ title: "ভুল পরিমাণ", description: `সর্বনিম্ন অর্ডার ${format(minQuantity)} ${product.unit} হতে হবে।`, variant: "destructive" });
             return;
         }
 
@@ -207,7 +208,7 @@ export default function QuickOrderPage() {
                                             <Badge className="bg-pink-100 text-pink-700 text-[10px]">B1G1</Badge>
                                         )}
                                     </div>
-                                    <p className="font-black text-primary mt-1">৳{price.toFixed(3)}</p>
+                                    <p className="font-black text-primary mt-1">৳{format(price)}</p>
                                 </div>
                             </div>
 
@@ -237,7 +238,7 @@ export default function QuickOrderPage() {
                                         </Button>
                                     </div>
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase leading-tight max-w-[80px]">
-                                        সর্বনিম্ন অর্ডার ০.২৫০ {product.unit}
+                                        সর্বনিম্ন অর্ডার {format(minQuantity)} {product.unit}
                                     </span>
                                 </div>
                             </div>
@@ -246,21 +247,21 @@ export default function QuickOrderPage() {
 
                             <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">পণ্যের দাম ({quantity.toFixed(3)} {product.unit || 'Pcs'})</span>
-                                    <span className="font-bold">৳{(price * quantity).toFixed(3)}</span>
+                                    <span className="text-muted-foreground">পণ্যের দাম ({format(quantity)} {product.unit || 'Pcs'})</span>
+                                    <span className="font-bold">৳{format(price * quantity)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">ডেলিভারি চার্জ</span>
                                     {shippingFee === 0 ? (
                                         <span className="text-green-600 font-bold">ফ্রি ডেলিভারি</span>
                                     ) : (
-                                        <span className="font-bold">৳{shippingFee.toFixed(3)}</span>
+                                        <span className="font-bold">৳{format(shippingFee)}</span>
                                     )}
                                 </div>
                                 <Separator className="my-2" />
                                 <div className="flex justify-between text-xl font-black text-primary">
                                     <span>সর্বমোট</span>
-                                    <span>৳{total.toFixed(3)}</span>
+                                    <span>৳{format(total)}</span>
                                 </div>
                             </div>
 
