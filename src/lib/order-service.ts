@@ -54,19 +54,25 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
     };
 
     const result = await runTransaction(db, async (transaction) => {
+      // 1. PREPARE ALL REFERENCES
       const productRefs = payload.items.map(item => doc(db, 'products', item.id.toString()));
-      const productSnaps = await Promise.all(productRefs.map(ref => transaction.get(ref)));
+      const userRef = doc(db, 'users', payload.userId);
+      const coinSettingsRef = doc(db, 'settings', 'coin');
+      const voucherRef = payload.voucherCode ? doc(db, 'vouchers', payload.voucherCode) : null;
       
-      let userData: User | null = null;
       const isGuest = payload.userId.startsWith('guest_');
 
-      if (!isGuest) {
-          const userSnap = await transaction.get(doc(db, 'users', payload.userId));
-          if (userSnap.exists()) userData = userSnap.data() as User;
-      }
+      // 2. EXECUTE ALL READS FIRST (Strict Firestore rule: All gets before sets/updates)
+      const [productSnaps, userSnap, coinSettingsSnap, voucherSnap] = await Promise.all([
+          Promise.all(productRefs.map(ref => transaction.get(ref))),
+          isGuest ? Promise.resolve(null) : transaction.get(userRef),
+          transaction.get(coinSettingsRef),
+          voucherRef ? transaction.get(voucherRef) : Promise.resolve(null)
+      ]);
 
-      const coinSettingsSnap = await transaction.get(doc(db, 'settings', 'coin'));
-      const settings = { ...defaultCoinSettings, ...(coinSettingsSnap.data() || {}) } as CoinSettings;
+      // 3. VALIDATIONS & CALCULATIONS
+      const userData = userSnap?.exists() ? userSnap.data() as User : null;
+      const settings = { ...defaultCoinSettings, ...(coinSettingsSnap.exists() ? coinSettingsSnap.data() : {}) } as CoinSettings;
       
       const itemsForOrder: OrderItem[] = [];
       let totalOfferSubtotal = 0; 
@@ -74,9 +80,88 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
       for (let i = 0; i < productSnaps.length; i++) {
         const productSnap = productSnaps[i];
         const cartItem = payload.items[i];
+        
         if (!productSnap.exists()) throw new Error(`Product ${cartItem.name} not found.`);
         const productData = productSnap.data() as Product;
         if (productData.stock < cartItem.quantity) throw new Error(`Not enough stock for ${productData.name}.`);
+
+        const itemPrice = roundMoney(cartItem.price);
+        totalOfferSubtotal += itemPrice * cartItem.quantity;
+
+        itemsForOrder.push({
+          id: productData.id,
+          name: productData.name,
+          price: itemPrice,
+          originalPrice: roundMoney(cartItem.originalPrice ?? cartItem.price),
+          quantity: cartItem.quantity,
+          image: productData.images[0] || '',
+          returnPolicy: productData.returnPolicy || 0,
+          unit: productData.unit || 'Pcs',
+          color: cartItem.color || null,
+          size: cartItem.size || null,
+          isB1G1: cartItem.isB1G1 || false,
+        });
+      }
+
+      let voucherDiscount = 0;
+      let usedVoucherCode = '';
+
+      if (voucherSnap?.exists() && !isGuest) {
+        const v = voucherSnap.data() as Voucher;
+        const usage = userData?.usedVouchers?.[v.code] || 0;
+        const withinLimit = !v.usageLimit || usage < v.usageLimit;
+        
+        if (withinLimit) {
+            const relevantItems = v.applicableCategory 
+                ? payload.items.filter(item => isItemValidForVoucher(item.category, v.applicableCategory!))
+                : payload.items;
+            
+            const relevantSubtotal = relevantItems.reduce((acc, item) => acc + (roundMoney(item.price) * item.quantity), 0);
+            
+            if (!v.minSpend || relevantSubtotal >= v.minSpend) {
+                if (relevantItems.length > 0) {
+                    usedVoucherCode = v.code;
+                    if (v.discountType !== 'shipping') {
+                        voucherDiscount = v.type === 'fixed' ? v.discount : (relevantSubtotal * v.discount) / 100;
+                        voucherDiscount = roundMoney(voucherDiscount);
+                    }
+                }
+            }
+        }
+      }
+      
+      let coinDiscount = 0;
+      let coinsToUse = 0;
+      if (payload.useCoins && !isGuest && userData) {
+          const userCoins = userData.coins || 0;
+          const maxCoinsAvailable = (settings.maxCoinsPerOrder / settings.takaPer100Coins) * 100;
+          coinsToUse = Math.min(userCoins, Math.floor(maxCoinsAvailable));
+          if (coinsToUse > 0) {
+              coinDiscount = roundMoney((coinsToUse / 100) * settings.takaPer100Coins);
+          }
+      }
+
+      let spinDiscount = 0;
+      let spinPercentageUsed = 0;
+      if (payload.useSpinDiscount && !isGuest && userData?.activeSpinDiscount && userData?.spinDiscountExpiry) {
+          const now = new Date();
+          const expiry = new Date(userData.spinDiscountExpiry);
+          if (now < expiry) {
+              spinPercentageUsed = userData.activeSpinDiscount;
+              const baseForSpin = totalOfferSubtotal - voucherDiscount - coinDiscount;
+              spinDiscount = roundMoney((baseForSpin * spinPercentageUsed) / 100);
+          }
+      }
+
+      const codFee = payload.paymentMethod === 'cash-on-delivery' ? roundMoney(payload.cashOnDeliveryFee || 0) : 0;
+      const total = roundMoney((totalOfferSubtotal - voucherDiscount - coinDiscount - spinDiscount) + payload.shippingFee + codFee);
+
+      // 4. EXECUTE ALL WRITES AFTER ALL READS ARE DONE
+      // Update Stocks
+      for (let i = 0; i < productSnaps.length; i++) {
+        const productSnap = productSnaps[i];
+        const cartItem = payload.items[i];
+        const productData = productSnap.data() as Product;
 
         let newColors = [...(productData.colors || [])];
         let newSizes = [...(productData.sizes || [])];
@@ -96,69 +181,16 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
           colors: newColors,
           sizes: newSizes,
         });
-        
-        const origPrice = cartItem.originalPrice ?? cartItem.price;
-        const itemPrice = roundMoney(cartItem.price);
-        totalOfferSubtotal += itemPrice * cartItem.quantity;
-
-        itemsForOrder.push({
-          id: productData.id,
-          name: productData.name,
-          price: itemPrice,
-          originalPrice: roundMoney(origPrice),
-          quantity: cartItem.quantity,
-          image: productData.images[0] || '',
-          returnPolicy: productData.returnPolicy || 0,
-          unit: productData.unit || 'Pcs',
-          color: cartItem.color || null,
-          size: cartItem.size || null,
-          isB1G1: cartItem.isB1G1 || false,
-        });
       }
 
-      let voucherDiscount = 0;
-      let usedVoucherCode = '';
-
-      if (payload.voucherCode && !isGuest) {
-        const vSnap = await transaction.get(doc(db, 'vouchers', payload.voucherCode));
-        if (vSnap.exists()) {
-            const v = vSnap.data() as Voucher;
-            const usage = userData?.usedVouchers?.[v.code] || 0;
-            const withinLimit = !v.usageLimit || usage < v.usageLimit;
-            
-            if (withinLimit) {
-                const relevantItems = v.applicableCategory 
-                    ? payload.items.filter(item => isItemValidForVoucher(item.category, v.applicableCategory!))
-                    : payload.items;
-                
-                const relevantSubtotal = relevantItems.reduce((acc, item) => acc + (roundMoney(item.price) * item.quantity), 0);
-                
-                if (!v.minSpend || relevantSubtotal >= v.minSpend) {
-                    if (relevantItems.length > 0) {
-                        usedVoucherCode = v.code;
-                        if (v.discountType !== 'shipping') {
-                            voucherDiscount = v.type === 'fixed' ? v.discount : (relevantSubtotal * v.discount) / 100;
-                            voucherDiscount = roundMoney(voucherDiscount);
-                        }
-                        transaction.update(doc(db, 'users', payload.userId), { [`usedVouchers.${usedVoucherCode}`]: increment(1) });
-                    }
-                }
-            }
-        }
-      }
-      
-      let coinDiscount = 0;
-      let coinsToUse = 0;
-      if (payload.useCoins && !isGuest && userData) {
-          const userCoins = userData.coins || 0;
-          const maxCoinsAvailable = (settings.maxCoinsPerOrder / settings.takaPer100Coins) * 100;
-          coinsToUse = Math.min(userCoins, Math.floor(maxCoinsAvailable));
+      // Update User Data
+      if (!isGuest) {
+          const userUpdates: any = {};
+          if (usedVoucherCode) {
+              userUpdates[`usedVouchers.${usedVoucherCode}`] = increment(1);
+          }
           if (coinsToUse > 0) {
-              coinDiscount = (coinsToUse / 100) * settings.takaPer100Coins;
-              coinDiscount = roundMoney(coinDiscount);
-              transaction.update(doc(db, 'users', payload.userId), {
-                  coins: increment(-coinsToUse)
-              });
+              userUpdates.coins = increment(-coinsToUse);
               const coinHistoryRef = doc(collection(db, `users/${payload.userId}/coinHistory`));
               transaction.set(coinHistoryRef, {
                   id: coinHistoryRef.id,
@@ -168,30 +200,33 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
                   date: new Date().toISOString()
               });
           }
-      }
+          if (spinPercentageUsed > 0) {
+              userUpdates.activeSpinDiscount = deleteField();
+              userUpdates.spinDiscountExpiry = deleteField();
+          }
 
-      let spinDiscount = 0;
-      let spinPercentageUsed = 0;
-      if (payload.useSpinDiscount && !isGuest && userData && userData.activeSpinDiscount && userData.spinDiscountExpiry) {
-          const now = new Date();
-          const expiry = new Date(userData.spinDiscountExpiry);
-          if (now < expiry) {
-              spinPercentageUsed = userData.activeSpinDiscount;
-              const baseForSpin = totalOfferSubtotal - voucherDiscount - coinDiscount;
-              spinDiscount = roundMoney((baseForSpin * spinPercentageUsed) / 100);
-              transaction.update(doc(db, 'users', payload.userId), { 
-                  activeSpinDiscount: deleteField(),
-                  spinDiscountExpiry: deleteField()
+          // Earn coins logic
+          const earnedCoins = Math.floor((totalOfferSubtotal / 100) * settings.pointsPer100Taka);
+          if (earnedCoins > 0) {
+              userUpdates.coins = increment((userUpdates.coins ? -coinsToUse : 0) + earnedCoins);
+              const earnHistoryRef = doc(collection(db, `users/${payload.userId}/coinHistory`));
+              transaction.set(earnHistoryRef, {
+                id: earnHistoryRef.id,
+                amount: earnedCoins,
+                type: 'earn',
+                reason: `Earned from Order #${nowToOrderNumber()}`, // Placeholder since number isn't fixed yet
+                date: new Date().toISOString()
               });
+          }
+
+          if (Object.keys(userUpdates).length > 0) {
+              transaction.update(userRef, userUpdates);
           }
       }
 
-      const codFee = payload.paymentMethod === 'cash-on-delivery' ? roundMoney(payload.cashOnDeliveryFee || 0) : 0;
-      const total = roundMoney((totalOfferSubtotal - voucherDiscount - coinDiscount - spinDiscount) + payload.shippingFee + codFee);
-
+      // Save the Order
       const orderRef = doc(collection(db, 'orders'));
       const orderNumber = nowToOrderNumber();
-      
       const orderData = {
         userId: payload.userId,
         items: itemsForOrder,
@@ -214,21 +249,6 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
       };
 
       transaction.set(orderRef, sanitize(orderData));
-
-      if (!isGuest) {
-          const coinsEarned = Math.floor((totalOfferSubtotal / 100) * settings.pointsPer100Taka);
-          if (coinsEarned > 0) {
-              transaction.update(doc(db, 'users', payload.userId), { coins: increment(coinsEarned) });
-              const earnHistoryRef = doc(collection(db, `users/${payload.userId}/coinHistory`));
-              transaction.set(earnHistoryRef, {
-                id: earnHistoryRef.id,
-                amount: coinsEarned,
-                type: 'earn',
-                reason: `Earned from Order #${orderNumber}`,
-                date: new Date().toISOString()
-              });
-          }
-      }
 
       return { orderId: orderRef.id, orderNumber };
     });
