@@ -33,12 +33,8 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const roundPrice = (price: number): number => {
-    const decimalPart = price - Math.floor(price);
-    if (decimalPart > 0 && decimalPart <= 0.50) {
-        return Math.floor(price);
-    }
-    return Math.round(price);
+const formatValue = (val: number): number => {
+    return parseFloat(val.toFixed(3));
 };
 
 const convertUndefinedToNull = (obj: any): any => {
@@ -157,8 +153,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
 
-    // Determine final price based on context
-    // User requested original price for B1G1 products
     let price;
     if (isB1G1Context) {
         price = product.originalPrice || product.price;
@@ -189,8 +183,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             cartItemId: newCartItemId,
             id: product.id,
             name: product.name,
-            price: roundPrice(price),
-            originalPrice: product.originalPrice ? roundPrice(product.originalPrice) : undefined,
+            price: price,
+            originalPrice: product.originalPrice || undefined,
             images: product.images,
             stock: product.stock,
             freeShipping: product.freeShipping,
@@ -214,7 +208,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     toast({
       title: "Added to cart",
-      description: `${quantity} ${product.unit || 'Pcs'} of ${product.name} has been added to your cart.`,
+      description: `${quantity.toFixed(3)} ${product.unit || 'Pcs'} of ${product.name} has been added to your cart.`,
     });
 }, [user, toast, router, getFlashSalePrice]);
 

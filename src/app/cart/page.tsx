@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -31,19 +32,16 @@ export default function CartPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  // Local state to manage input display smoothly
   const [localQtys, setLocalQtys] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Sync local display value when cart items change (e.g. from buttons)
   useEffect(() => {
     const newLocalQtys: Record<string, string> = {};
     cartItems.forEach(item => {
-      const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
-      newLocalQtys[item.cartItemId] = isDecimalUnit ? item.quantity.toFixed(3) : item.quantity.toString();
+      newLocalQtys[item.cartItemId] = item.quantity.toFixed(3);
     });
     setLocalQtys(newLocalQtys);
   }, [cartItems]);
@@ -57,9 +55,7 @@ export default function CartPage() {
   };
 
   const handleBlur = (cartItemId: string, item: any) => {
-    const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
-    const minQuantity = isDecimalUnit ? 0.250 : 1;
-    
+    const minQuantity = 0.250;
     let num = parseFloat(localQtys[cartItemId]);
     if (isNaN(num) || num < minQuantity) {
       num = minQuantity;
@@ -68,7 +64,7 @@ export default function CartPage() {
     updateQuantity(cartItemId, num);
     setLocalQtys(prev => ({ 
       ...prev, 
-      [cartItemId]: isDecimalUnit ? num.toFixed(3) : num.toString() 
+      [cartItemId]: num.toFixed(3) 
     }));
   };
 
@@ -108,8 +104,7 @@ export default function CartPage() {
                     <CardContent className="p-0">
                         <div className="divide-y">
                         {cartItems.map((item) => {
-                            const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
-                            const minQuantity = isDecimalUnit ? 0.250 : 1;
+                            const minQuantity = 0.250;
                             return (
                                 <div key={item.cartItemId} className="flex items-start gap-4 p-4">
                                     <Checkbox 
@@ -135,13 +130,13 @@ export default function CartPage() {
                                         {item.color && <p className="text-sm text-muted-foreground">Color: {item.color}</p>}
                                         {item.size && <p className="text-sm text-muted-foreground">Size: {item.size}</p>}
                                         <p className="text-sm text-muted-foreground">
-                                        Price: ৳{item.price} per {item.unit || 'Pcs'}
+                                        Price: ৳{item.price.toFixed(3)} per {item.unit || 'Pcs'}
                                         </p>
                                         <div className="mt-2 flex items-center gap-2">
                                             <Button 
                                                 variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
                                                 onClick={() => {
-                                                    const next = isDecimalUnit ? item.quantity - 0.1 : item.quantity - 1;
+                                                    const next = item.quantity - 0.1;
                                                     updateQuantity(item.cartItemId, Math.max(next, minQuantity));
                                                 }}
                                                 disabled={item.quantity <= minQuantity}
@@ -150,7 +145,7 @@ export default function CartPage() {
                                             </Button>
                                             <Input
                                                 type="text"
-                                                value={localQtys[item.cartItemId] || (isDecimalUnit ? item.quantity.toFixed(3) : item.quantity.toString())}
+                                                value={localQtys[item.cartItemId] || item.quantity.toFixed(3)}
                                                 onChange={(e) => handleManualInput(item.cartItemId, e.target.value)}
                                                 onBlur={() => handleBlur(item.cartItemId, item)}
                                                 className="h-8 w-24 text-center px-1 font-bold"
@@ -158,7 +153,7 @@ export default function CartPage() {
                                             />
                                             <Button 
                                                 variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
-                                                onClick={() => updateQuantity(item.cartItemId, isDecimalUnit ? item.quantity + 0.1 : item.quantity + 1)}
+                                                onClick={() => updateQuantity(item.cartItemId, item.quantity + 0.1)}
                                             >
                                                 <Plus className="h-4 w-4" />
                                             </Button>
@@ -167,7 +162,7 @@ export default function CartPage() {
                                     </div>
                                     <div className="text-right flex flex-col items-end">
                                         <p className="font-semibold text-lg whitespace-nowrap">
-                                            ৳{(item.price * item.quantity).toFixed(0)}
+                                            ৳{(item.price * item.quantity).toFixed(3)}
                                         </p>
                                         <Button
                                             variant="ghost"
@@ -195,7 +190,7 @@ export default function CartPage() {
                 <CardContent className="space-y-4">
                     <div className="flex justify-between">
                     <span>Subtotal ({selectedCartCount} items)</span>
-                    <span>৳{selectedCartTotal.toFixed(0)}</span>
+                    <span>৳{selectedCartTotal.toFixed(3)}</span>
                     </div>
                     <div className="flex justify-between">
                         <div>
@@ -206,7 +201,7 @@ export default function CartPage() {
                             shippingFee === 0 && selectedCartCount > 0 ? (
                                 <Badge className="bg-green-100 text-green-800">Free Delivery</Badge>
                             ) : (
-                                <span>৳{shippingFee || 0}</span>
+                                <span>৳{(shippingFee || 0).toFixed(3)}</span>
                             )
                         ) : (
                             <span>...</span>
@@ -215,7 +210,7 @@ export default function CartPage() {
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                     <span>Total Amount</span>
-                    <span>{isClient ? `৳${finalTotal.toFixed(0)}` : '...'}</span>
+                    <span>{isClient ? `৳${finalTotal.toFixed(3)}` : '...'}</span>
                     </div>
                 </CardContent>
                 <CardFooter>

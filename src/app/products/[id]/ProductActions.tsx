@@ -45,19 +45,17 @@ export default function ProductActions({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   
-  const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(product.unit || '');
-  const minQuantity = isDecimalUnit ? 0.250 : 1;
+  const minQuantity = 0.250;
 
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(minQuantity);
-  // Separate string state for smooth typing experience
-  const [displayQty, setDisplayQty] = useState(minQuantity.toString());
+  const [displayQty, setDisplayQty] = useState(minQuantity.toFixed(3));
   
   useEffect(() => {
     setQuantity(minQuantity);
-    setDisplayQty(isDecimalUnit ? minQuantity.toFixed(3) : minQuantity.toString());
-  }, [minQuantity, isDecimalUnit]);
+    setDisplayQty(minQuantity.toFixed(3));
+  }, [minQuantity]);
 
   const uniqueColors = useMemo(() => aggregateVariants(product.colors), [product.colors]);
   const uniqueSizes = useMemo(() => aggregateVariants(product.sizes), [product.sizes]);
@@ -114,20 +112,20 @@ export default function ProductActions({
       num = minQuantity;
     }
     setQuantity(num);
-    setDisplayQty(isDecimalUnit ? num.toFixed(3) : num.toString());
+    setDisplayQty(num.toFixed(3));
   }
 
   const handleIncrement = () => {
-    const next = isDecimalUnit ? quantity + 0.1 : quantity + 1;
+    const next = quantity + 0.1;
     setQuantity(next);
-    setDisplayQty(isDecimalUnit ? next.toFixed(3) : next.toString());
+    setDisplayQty(next.toFixed(3));
   }
 
   const handleDecrement = () => {
-    const next = isDecimalUnit ? quantity - 0.1 : quantity - 1;
+    const next = quantity - 0.1;
     const final = Math.max(next, minQuantity);
     setQuantity(final);
-    setDisplayQty(isDecimalUnit ? final.toFixed(3) : final.toString());
+    setDisplayQty(final.toFixed(3));
   }
 
   if (isSoldOut) {
@@ -161,7 +159,7 @@ export default function ProductActions({
                             <span className={cn(isOutOfStock && "line-through")}>{color.name}</span>
                             {isOutOfStock ? 
                                 <span className="text-xs text-destructive ml-2">(Out of Stock)</span> :
-                                <span className="text-xs text-muted-foreground ml-2">({color.stock})</span>
+                                <span className="text-xs text-muted-foreground ml-2">({color.stock.toFixed(3)})</span>
                             }
                         </Label>
                     )
@@ -190,7 +188,7 @@ export default function ProductActions({
                             <span className={cn(isOutOfStock && "line-through")}>{size.name}</span>
                              {isOutOfStock ? 
                                 <span className="text-xs text-destructive ml-2">(Out of Stock)</span> :
-                                <span className="text-xs text-muted-foreground ml-2">({size.stock})</span>
+                                <span className="text-xs text-muted-foreground ml-2">({size.stock.toFixed(3)})</span>
                             }
                         </Label>
                     )
@@ -232,9 +230,9 @@ export default function ProductActions({
             </div>
             <span className="text-xs text-muted-foreground font-medium">
                 {user ? (
-                    `Min order ${isDecimalUnit ? "0.250" : "1"} ${product.unit || 'Pcs'}`
+                    `Min order 0.250 ${product.unit || 'Pcs'}`
                 ) : (
-                    `সর্বনিম্ন অর্ডার ${isDecimalUnit ? "০.২৫০" : "১"} ${product.unit || 'Pcs'}`
+                    `সর্বনিম্ন অর্ডার ০.২৫০ ${product.unit || 'Pcs'}`
                 )}
             </span>
         </div>

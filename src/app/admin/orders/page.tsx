@@ -44,7 +44,6 @@ export default function AdminOrderManagement() {
     const { toast } = useToast();
     const router = useRouter();
 
-    // Delete States
     const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -53,13 +52,11 @@ export default function AdminOrderManagement() {
         const ordersQuery = query(collection(db, 'orders'), orderBy('date', 'desc'));
         const ordersUnsubscribe = onSnapshot(ordersQuery, (snapshot) => {
             const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
-            // Filter out guest orders
             const registeredUserOrders = ordersData.filter(order => !order.userId.startsWith('guest_'));
             
             setOrders(registeredUserOrders);
             setLoading(false);
 
-            // Fetch users for the new orders
             const userIds = new Set(registeredUserOrders.map(order => order.userId));
             userIds.forEach(userId => {
                 if (!users[userId]) {
@@ -91,7 +88,7 @@ export default function AdminOrderManagement() {
             case 'delivered':
                 return ['returned'];
             default:
-                return []; // No forward transitions for cancelled, returned, or return-related states
+                return [];
         }
     };
 
@@ -121,7 +118,6 @@ export default function AdminOrderManagement() {
         setIsDeleting(true);
         try {
             await runTransaction(db, async (transaction) => {
-                // Restore stock if the order was not already cancelled or returned
                 if (!['cancelled', 'returned', 'return-denied'].includes(orderToDelete.status)) {
                     for (const item of orderToDelete.items) {
                         const productRef = doc(db, 'products', item.id.toString());
@@ -150,7 +146,6 @@ export default function AdminOrderManagement() {
                         }
                     }
                 }
-                // Finally delete the order document
                 transaction.delete(doc(db, 'orders', orderToDelete.id));
             });
 
@@ -272,9 +267,7 @@ export default function AdminOrderManagement() {
                                                     </div>
                                                 </CardHeader>
                                                 <CardContent className="space-y-2">
-                                                    {order.items.map((item, index) => {
-                                                        const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
-                                                        return (
+                                                    {order.items.map((item, index) => (
                                                         <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-2">
                                                             <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
                                                             <div className="flex-grow">
@@ -284,17 +277,17 @@ export default function AdminOrderManagement() {
                                                                         {item.color}{item.color && item.size ? ', ' : ''}{item.size}
                                                                     </p>
                                                                 )}
-                                                                <p className="text-xs text-muted-foreground">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
+                                                                <p className="text-xs text-muted-foreground">Qty: {item.quantity.toFixed(3)} {item.unit || 'Pcs'}</p>
                                                             </div>
-                                                            <p className="font-semibold text-sm">৳{(item.price * item.quantity).toFixed(0)}</p>
+                                                            <p className="font-semibold text-sm">৳{(item.price * item.quantity).toFixed(3)}</p>
                                                         </div>
-                                                    )})}
+                                                    ))}
                                                 </CardContent>
                                                 <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
                                                     <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
                                                     <div className="text-right">
                                                         <p className="text-sm text-muted-foreground">Total Amount</p>
-                                                        <p className="text-xl font-bold">৳{order.total.toFixed(0)}</p>
+                                                        <p className="text-xl font-bold">৳{order.total.toFixed(3)}</p>
                                                     </div>
                                                 </CardFooter>
                                             </Card>

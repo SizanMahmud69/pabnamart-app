@@ -37,7 +37,6 @@ function sanitize(obj: any): any {
 
 export async function placeOrder(payload: OrderPayload): Promise<{ success: boolean; orderId?: string; orderNumber?: string; message?: string }> {
   try {
-    // Fetch categories for hierarchical voucher support
     const categoriesSnap = await getDocs(collection(db, 'categories'));
     const allCategories = categoriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
 
@@ -184,7 +183,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
       }
 
       const codFee = payload.paymentMethod === 'cash-on-delivery' ? payload.cashOnDeliveryFee || 0 : 0;
-      const total = Math.round((totalOfferSubtotal - voucherDiscount - coinDiscount - spinDiscount) + payload.shippingFee + codFee);
+      const total = (totalOfferSubtotal - voucherDiscount - coinDiscount - spinDiscount) + payload.shippingFee + codFee;
 
       const orderRef = doc(collection(db, 'orders'));
       const orderNumber = nowToOrderNumber();

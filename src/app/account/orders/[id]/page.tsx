@@ -107,9 +107,7 @@ function OrderDetailsPage() {
                         
                         <div>
                             <h3 className="text-lg font-semibold mb-2">Order Summary</h3>
-                            {order.items.map((item, index) => {
-                                const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
-                                return (
+                            {order.items.map((item, index) => (
                                 <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-3">
                                     <img src={item.image} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                     <div className="flex-grow">
@@ -124,11 +122,11 @@ function OrderDetailsPage() {
                                                 {item.color}{item.color && item.size ? ', ' : ''}{item.size}
                                             </p>
                                         )}
-                                        <p className="text-sm text-muted-foreground">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
+                                        <p className="text-sm text-muted-foreground">Qty: {item.quantity.toFixed(3)} {item.unit || 'Pcs'}</p>
                                     </div>
-                                    <p className="font-semibold">৳{item.price * item.quantity}</p>
+                                    <p className="font-semibold">৳{(item.price * item.quantity).toFixed(3)}</p>
                                 </div>
-                            )})}
+                            ))}
                         </div>
 
                         <Separator />
@@ -136,7 +134,7 @@ function OrderDetailsPage() {
                         <div className="space-y-4">
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">Subtotal</span>
-                                <span>৳{subtotal.toFixed(2)}</span>
+                                <span>৳{subtotal.toFixed(3)}</span>
                             </div>
                             {voucherDiscount > 0 && (
                                 <div className="flex justify-between text-green-600">
@@ -144,7 +142,7 @@ function OrderDetailsPage() {
                                         <Ticket className="h-4 w-4" />
                                         <span className="text-muted-foreground">Voucher Discount</span>
                                     </div>
-                                    <span>- ৳{voucherDiscount.toFixed(2)}</span>
+                                    <span>- ৳{voucherDiscount.toFixed(3)}</span>
                                 </div>
                             )}
                             {coinDiscount > 0 && (
@@ -153,7 +151,7 @@ function OrderDetailsPage() {
                                         <Coins className="h-4 w-4" />
                                         <span className="text-muted-foreground">Coin Discount</span>
                                     </div>
-                                    <span>- ৳{coinDiscount.toFixed(2)}</span>
+                                    <span>- ৳{coinDiscount.toFixed(3)}</span>
                                 </div>
                             )}
                             {spinDiscount > 0 && (
@@ -162,23 +160,23 @@ function OrderDetailsPage() {
                                         <Sparkles className="h-4 w-4" />
                                         <span className="text-muted-foreground">Lucky Spin ({order.spinDiscountPercentage}%)</span>
                                     </div>
-                                    <span>- ৳{spinDiscount.toFixed(2)}</span>
+                                    <span>- ৳{spinDiscount.toFixed(3)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Shipping Fee</span>
-                                <span>৳{order.shippingFee.toFixed(2)}</span>
+                                <span>৳{order.shippingFee.toFixed(3)}</span>
                             </div>
                             {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Cash on Delivery Fee</span>
-                                    <span>৳{order.cashOnDeliveryFee.toFixed(2)}</span>
+                                    <span>৳{order.cashOnDeliveryFee.toFixed(3)}</span>
                                 </div>
                             )}
                             <Separator />
                             <div className="flex justify-between font-bold text-xl">
                                 <span>Total</span>
-                                <span>৳{order.total}</span>
+                                <span>৳{order.total.toFixed(3)}</span>
                             </div>
                         </div>
 

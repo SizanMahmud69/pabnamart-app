@@ -144,7 +144,6 @@ function CheckoutPage() {
         if (!voucherCategory) return true;
         if (itemCategory === voucherCategory) return true;
         
-        // Check if item's category is a subcategory of the voucher's category
         const cat = categories.find(c => c.name === itemCategory);
         if (cat && cat.parentId && cat.parentId !== 'none') {
             const parent = categories.find(c => c.id === cat.parentId);
@@ -182,7 +181,7 @@ function CheckoutPage() {
 
         if (voucher.minSpend && relevantSubtotal < voucher.minSpend) {
             const prefix = voucher.applicableCategory ? `"${voucher.applicableCategory}" items total` : "Order subtotal";
-            setVoucherError(`${prefix} must be at least ৳${voucher.minSpend}.`);
+            setVoucherError(`${prefix} must be at least ৳${voucher.minSpend.toFixed(3)}.`);
             return;
         }
         
@@ -231,7 +230,7 @@ function CheckoutPage() {
         return shippingFee;
     }, [shippingFee, appliedVoucher]);
 
-    const finalTotal = Math.round(selectedCartTotal - voucherDiscountAmount - coinDiscount - spinDiscountAmount + shippingFeeWithDiscount);
+    const finalTotal = selectedCartTotal - voucherDiscountAmount - coinDiscount - spinDiscountAmount + shippingFeeWithDiscount;
     
     const handleAddressChange = (addressId: string) => {
         const address = addresses.find(a => a.id === addressId);
@@ -332,9 +331,7 @@ function CheckoutPage() {
                                 </CardHeader>
                                 <CardContent>
                                      <div className="space-y-4">
-                                        {cartItems.map(item => {
-                                            const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
-                                            return (
+                                        {cartItems.map(item => (
                                             <div key={item.cartItemId} className="flex items-center gap-4">
                                                 <img src={item.images[0]} alt={item.name} className="h-16 w-16 rounded-md object-cover border" />
                                                 <div className="flex-grow">
@@ -354,11 +351,11 @@ function CheckoutPage() {
                                                             <Tag className="h-2 w-2 mr-1" /> {item.category}
                                                         </Badge>
                                                     </div>
-                                                    <p className="text-xs text-muted-foreground mt-1">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">Qty: {item.quantity.toFixed(3)} {item.unit || 'Pcs'}</p>
                                                 </div>
-                                                <p className="font-semibold">৳{item.price * item.quantity}</p>
+                                                <p className="font-semibold">৳{(item.price * item.quantity).toFixed(3)}</p>
                                             </div>
-                                        )})}
+                                        ))}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -445,7 +442,7 @@ function CheckoutPage() {
                                     {useCoins && appUser?.coins && (
                                         <div className="mt-3 p-2 bg-yellow-100/50 rounded-md border border-yellow-200 text-xs flex justify-between">
                                             <span>Applying {Math.min(appUser.coins, (coinSettings.maxCoinsPerOrder / coinSettings.takaPer100Coins) * 100)} coins discount</span>
-                                            <span className="font-bold">- ৳{coinDiscount.toFixed(2)}</span>
+                                            <span className="font-bold">- ৳{coinDiscount.toFixed(3)}</span>
                                         </div>
                                     )}
                                 </CardContent>
@@ -456,7 +453,7 @@ function CheckoutPage() {
                                     <CardTitle>Order Summary</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
-                                    <div className="flex justify-between"><span>Subtotal</span><span>৳{selectedCartTotal}</span></div>
+                                    <div className="flex justify-between"><span>Subtotal</span><span>৳{selectedCartTotal.toFixed(3)}</span></div>
                                     {voucherDiscountAmount > 0 && (
                                         <div className="flex justify-between text-green-600 text-sm">
                                             <div className="flex flex-col">
@@ -465,30 +462,30 @@ function CheckoutPage() {
                                                     <span className="text-[10px] text-muted-foreground uppercase tracking-tighter">(Only on {appliedVoucher.applicableCategory})</span>
                                                 )}
                                             </div>
-                                            <span>- ৳{voucherDiscountAmount.toFixed(2)}</span>
+                                            <span>- ৳{voucherDiscountAmount.toFixed(3)}</span>
                                         </div>
                                     )}
                                     {coinDiscount > 0 && (
                                         <div className="flex justify-between text-yellow-600 text-sm">
                                             <span>Coin Discount</span>
-                                            <span>- ৳{coinDiscount.toFixed(2)}</span>
+                                            <span>- ৳{coinDiscount.toFixed(3)}</span>
                                         </div>
                                     )}
                                     {spinDiscountAmount > 0 && (
                                         <div className="flex justify-between text-indigo-600 font-bold text-sm">
                                             <span>Lucky Spin ({appUser?.activeSpinDiscount}%)</span>
-                                            <span>- ৳{spinDiscountAmount.toFixed(2)}</span>
+                                            <span>- ৳{spinDiscountAmount.toFixed(3)}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between"><span>Shipping Fee</span>
                                         {appliedVoucher?.discountType === 'shipping' ? (
                                             <Badge className="bg-green-100 text-green-800">Free</Badge>
                                         ) : (
-                                            <span>৳{shippingFee}</span>
+                                            <span>৳{shippingFee.toFixed(3)}</span>
                                         )}
                                     </div>
                                     <Separator />
-                                    <div className="flex justify-between font-bold text-lg"><span>Total</span><span>৳{finalTotal}</span></div>
+                                    <div className="flex justify-between font-bold text-lg"><span>Total</span><span>৳{finalTotal.toFixed(3)}</span></div>
                                 </CardContent>
                                 <CardFooter>
                                     <Button size="lg" className="w-full" onClick={handleProceedToPayment} disabled={!selectedShippingAddress || isProceeding}>

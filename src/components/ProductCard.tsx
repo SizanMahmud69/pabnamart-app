@@ -41,7 +41,6 @@ export default function ProductCard({
     setBaseUrl(window.location.origin);
   }, []);
 
-  // For B1G1 Context, we always use the original price and ignore discounts
   const price = isB1G1Context ? (product.originalPrice || product.price) : product.price;
   const originalPrice = isB1G1Context ? undefined : product.originalPrice;
   const hasDiscount = !isB1G1Context && originalPrice && originalPrice > price;
@@ -149,15 +148,15 @@ export default function ProductCard({
                   <Star className="w-3.5 h-3.5 fill-accent text-accent" />
                   <span>{product.rating.toFixed(1)}</span>
                   <span className="mx-0.5">|</span>
-                  <span>Sold {product.sold || 0}</span>
+                  <span>Sold {product.sold.toFixed(3)}</span>
               </div>
 
               <div className="flex justify-between items-center mt-auto">
                   <div>
-                      <p className="text-sm font-bold text-primary">৳{price}</p>
+                      <p className="text-sm font-bold text-primary">৳{price.toFixed(3)}</p>
                       {hasDiscount && (
                           <p className="text-xs text-muted-foreground line-through">
-                              ৳{originalPrice}
+                              ৳{originalPrice?.toFixed(3)}
                           </p>
                       )}
                   </div>
@@ -207,7 +206,7 @@ export default function ProductCard({
           />
            {hasDiscount && !isSoldOut && discountAmount > 0 && (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
-              - ৳{discountAmount.toFixed(0)}
+              - ৳{discountAmount.toFixed(3)}
             </div>
           )}
           {product.isB1G1 && isB1G1Context && !isSoldOut && (
@@ -239,14 +238,14 @@ export default function ProductCard({
             <Star className="w-4 h-4 fill-accent text-accent" />
             <span>{product.rating.toFixed(1)}</span>
             <span>|</span>
-            <span>Sold {product.sold || 0}</span>
+            <span>Sold {product.sold.toFixed(3)}</span>
         </div>
         <div className="flex justify-between items-center mt-auto">
           <div>
-            <p className="text-lg font-bold text-primary">৳{price}</p>
+            <p className="text-lg font-bold text-primary">৳{price.toFixed(3)}</p>
             {hasDiscount && (
               <p className="text-xs text-muted-foreground line-through">
-                ৳{originalPrice}
+                ৳{originalPrice?.toFixed(3)}
               </p>
             )}
           </div>
@@ -278,7 +277,7 @@ export default function ProductCard({
                     <span className="text-xs font-semibold border border-orange-400 text-orange-500 rounded px-1.5 py-0.5 whitespace-nowrap">
                         Comm. {product.affiliateCommission}%
                     </span>
-                    <p className="text-orange-500 font-bold text-sm mt-1">৳{commissionAmount.toFixed(2)}</p>
+                    <p className="text-orange-500 font-bold text-sm mt-1">৳{commissionAmount.toFixed(3)}</p>
                 </div>
                 <Button onClick={handleEarnClick} className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white h-7 px-3 text-xs self-end">Earn</Button>
             </div>
