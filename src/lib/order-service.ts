@@ -134,8 +134,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
       let coinsToUse = 0;
       if (payload.useCoins && !isGuest && userData) {
           const userCoins = userData.coins || 0;
-          const maxCoinsAvailable = (settings.maxCoinsPerOrder / settings.takaPer100Coins) * 100;
-          coinsToUse = Math.min(userCoins, Math.floor(maxCoinsAvailable));
+          coinsToUse = Math.min(userCoins, settings.maxCoinsPerOrder);
           if (coinsToUse > 0) {
               coinDiscount = roundMoney((coinsToUse / 100) * settings.takaPer100Coins);
           }
@@ -214,7 +213,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
                 id: earnHistoryRef.id,
                 amount: earnedCoins,
                 type: 'earn',
-                reason: `Earned from Order #${nowToOrderNumber()}`, // Placeholder since number isn't fixed yet
+                reason: `Earned from Order #${nowToOrderNumber()}`, 
                 date: new Date().toISOString()
               });
           }

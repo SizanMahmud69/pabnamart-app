@@ -211,8 +211,7 @@ function CheckoutPage() {
 
     const coinDiscount = useMemo(() => {
         if (!useCoins || !appUser?.coins) return 0;
-        const maxCoinsAvailable = (coinSettings.maxCoinsPerOrder / coinSettings.takaPer100Coins) * 100;
-        const coinsToUse = Math.min(appUser.coins, Math.floor(maxCoinsAvailable));
+        const coinsToUse = Math.min(appUser.coins, coinSettings.maxCoinsPerOrder);
         return roundMoney((coinsToUse / 100) * coinSettings.takaPer100Coins);
     }, [useCoins, appUser, coinSettings]);
 
