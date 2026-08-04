@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
 import { ShoppingCart, Star, Truck, Heart, DollarSign, Gift } from 'lucide-react';
-import { cn, rgbToHsl } from '@/lib/utils';
+import { cn, rgbToHsl, formatQuantity, formatMoney } from '@/lib/utils';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -40,8 +40,6 @@ export default function ProductCard({
   useEffect(() => {
     setBaseUrl(window.location.origin);
   }, []);
-
-  const format = (val: number) => Number(val.toFixed(3));
 
   const price = isB1G1Context ? (product.originalPrice || product.price) : product.price;
   const originalPrice = isB1G1Context ? undefined : product.originalPrice;
@@ -125,7 +123,6 @@ export default function ProductCard({
                           "object-cover w-full h-full transition-transform duration-300 group-hover:scale-105",
                            isSoldOut && "filter grayscale"
                       )}
-                      data-ai-hint="product lifestyle"
                       loading="lazy"
                   />
                   {isSoldOut && (
@@ -150,15 +147,15 @@ export default function ProductCard({
                   <Star className="w-3.5 h-3.5 fill-accent text-accent" />
                   <span>{product.rating.toFixed(1)}</span>
                   <span className="mx-0.5">|</span>
-                  <span>Sold {format(product.sold)}</span>
+                  <span>Sold {formatQuantity(product.sold)}</span>
               </div>
 
               <div className="flex justify-between items-center mt-auto">
                   <div>
-                      <p className="text-sm font-bold text-primary">৳{format(price)}</p>
+                      <p className="text-sm font-bold text-primary">৳{formatMoney(price)}</p>
                       {hasDiscount && (
                           <p className="text-xs text-muted-foreground line-through">
-                              ৳{format(originalPrice || 0)}
+                              ৳{formatMoney(originalPrice || 0)}
                           </p>
                       )}
                   </div>
@@ -203,12 +200,11 @@ export default function ProductCard({
               "object-cover w-full h-full transition-transform duration-300 group-hover:scale-105",
               isSoldOut && "filter grayscale"
             )}
-            data-ai-hint="product lifestyle"
             loading="lazy"
           />
            {hasDiscount && !isSoldOut && discountAmount > 0 && (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
-              - ৳{format(discountAmount)}
+              - ৳{formatMoney(discountAmount)}
             </div>
           )}
           {product.isB1G1 && isB1G1Context && !isSoldOut && (
@@ -240,14 +236,14 @@ export default function ProductCard({
             <Star className="w-4 h-4 fill-accent text-accent" />
             <span>{product.rating.toFixed(1)}</span>
             <span>|</span>
-            <span>Sold {format(product.sold)}</span>
+            <span>Sold {formatQuantity(product.sold)}</span>
         </div>
         <div className="flex justify-between items-center mt-auto">
           <div>
-            <p className="text-lg font-bold text-primary">৳{format(price)}</p>
+            <p className="text-lg font-bold text-primary">৳{formatMoney(price)}</p>
             {hasDiscount && (
               <p className="text-xs text-muted-foreground line-through">
-                ৳{format(originalPrice || 0)}
+                ৳{formatMoney(originalPrice || 0)}
               </p>
             )}
           </div>
@@ -279,7 +275,7 @@ export default function ProductCard({
                     <span className="text-xs font-semibold border border-orange-400 text-orange-500 rounded px-1.5 py-0.5 whitespace-nowrap">
                         Comm. {product.affiliateCommission}%
                     </span>
-                    <p className="text-orange-500 font-bold text-sm mt-1">৳{format(commissionAmount)}</p>
+                    <p className="text-orange-500 font-bold text-sm mt-1">৳{formatMoney(commissionAmount)}</p>
                 </div>
                 <Button onClick={handleEarnClick} className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white h-7 px-3 text-xs self-end">Earn</Button>
             </div>

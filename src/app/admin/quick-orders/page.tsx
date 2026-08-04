@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { updateOrderStatus } from '@/app/actions';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { formatQuantity, formatMoney } from '@/lib/utils';
 
 
 const db = getFirestore(app);
@@ -260,7 +261,6 @@ export default function AdminQuickOrderManagement() {
                                                 </CardHeader>
                                                 <CardContent className="space-y-2">
                                                     {order.items.map((item, index) => {
-                                                        const isDecimalUnit = ['KG', 'Meter', 'Litre'].includes(item.unit || '');
                                                         return (
                                                         <div key={`${item.id}-${index}`} className="flex items-center gap-4 py-2">
                                                             <img src={item.image} alt={item.name} className="h-12 w-12 rounded-md object-cover border" />
@@ -271,9 +271,9 @@ export default function AdminQuickOrderManagement() {
                                                                         {item.color}{item.color && item.size ? ', ' : ''}{item.size}
                                                                     </p>
                                                                 )}
-                                                                <p className="text-xs text-muted-foreground">Qty: {isDecimalUnit ? item.quantity.toFixed(3) : item.quantity} {item.unit || 'Pcs'}</p>
+                                                                <p className="text-xs text-muted-foreground">Qty: {formatQuantity(item.quantity)} {item.unit || 'Pcs'}</p>
                                                             </div>
-                                                            <p className="font-semibold text-sm">৳{(item.price * item.quantity).toFixed(0)}</p>
+                                                            <p className="font-semibold text-sm">৳{formatMoney(item.price * item.quantity)}</p>
                                                         </div>
                                                     )})}
                                                     <div className="bg-muted/30 p-2 rounded-md mt-2 text-xs">
@@ -285,7 +285,7 @@ export default function AdminQuickOrderManagement() {
                                                     <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
                                                     <div className="text-right">
                                                         <p className="text-sm text-muted-foreground">Total Amount</p>
-                                                        <p className="text-xl font-bold">৳{order.total.toFixed(0)}</p>
+                                                        <p className="text-xl font-bold">৳{formatMoney(order.total)}</p>
                                                     </div>
                                                 </CardFooter>
                                             </Card>

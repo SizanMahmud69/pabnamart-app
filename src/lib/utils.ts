@@ -23,3 +23,33 @@ export function rgbToHsl(r: number, g: number, b: number): [number, number, numb
     }
     return [h * 360, s * 100, l * 100];
 }
+
+/**
+ * Formats quantity to show up to 3 decimal places ONLY if it's a decimal.
+ * Removes unnecessary trailing zeros.
+ */
+export function formatQuantity(val: number): string {
+    if (isNaN(val)) return '0';
+    return Number(val.toFixed(3)).toString();
+}
+
+/**
+ * Custom money rounding: If decimal part > 0.55, round up. Otherwise, round down.
+ * Returns only integer values as requested.
+ */
+export function formatMoney(val: number): string {
+    if (isNaN(val)) return '0';
+    const integerPart = Math.floor(val);
+    const decimalPart = val - integerPart;
+    if (decimalPart > 0.55) {
+        return (integerPart + 1).toString();
+    }
+    return integerPart.toString();
+}
+
+/**
+ * Returns the numeric version of formatMoney for internal calculations.
+ */
+export function roundMoney(val: number): number {
+    return parseInt(formatMoney(val), 10);
+}

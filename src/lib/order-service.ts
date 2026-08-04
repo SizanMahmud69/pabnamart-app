@@ -4,6 +4,7 @@
 import { getFirestore, doc, runTransaction, collection, increment, deleteField, getDocs } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { OrderPayload, Product, User, Voucher, OrderItem, CoinSettings, Category } from '@/types';
+import { roundMoney } from '@/lib/utils';
 
 const db = getFirestore(app);
 
@@ -97,13 +98,14 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
         });
         
         const origPrice = cartItem.originalPrice ?? cartItem.price;
-        totalOfferSubtotal += cartItem.price * cartItem.quantity;
+        const itemPrice = roundMoney(cartItem.price);
+        totalOfferSubtotal += itemPrice * cartItem.quantity;
 
         itemsForOrder.push({
           id: productData.id,
           name: productData.name,
-          price: cartItem.price,
-          originalPrice: origPrice,
+          price: itemPrice,
+          originalPrice: roundMoney(origPrice),
           quantity: cartItem.quantity,
           image: productData.images[0] || '',
           returnPolicy: productData.returnPolicy || 0,
@@ -129,13 +131,14 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
                     ? payload.items.filter(item => isItemValidForVoucher(item.category, v.applicableCategory!))
                     : payload.items;
                 
-                const relevantSubtotal = relevantItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+                const relevantSubtotal = relevantItems.reduce((acc, item) => acc + (roundMoney(item.price) * item.quantity), 0);
                 
                 if (!v.minSpend || relevantSubtotal >= v.minSpend) {
                     if (relevantItems.length > 0) {
                         usedVoucherCode = v.code;
                         if (v.discountType !== 'shipping') {
                             voucherDiscount = v.type === 'fixed' ? v.discount : (relevantSubtotal * v.discount) / 100;
+                            voucherDiscount = roundMoney(voucherDiscount);
                         }
                         transaction.update(doc(db, 'users', payload.userId), { [`usedVouchers.${usedVoucherCode}`]: increment(1) });
                     }
@@ -152,6 +155,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
           coinsToUse = Math.min(userCoins, Math.floor(maxCoinsAvailable));
           if (coinsToUse > 0) {
               coinDiscount = (coinsToUse / 100) * settings.takaPer100Coins;
+              coinDiscount = roundMoney(coinDiscount);
               transaction.update(doc(db, 'users', payload.userId), {
                   coins: increment(-coinsToUse)
               });
@@ -174,7 +178,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
           if (now < expiry) {
               spinPercentageUsed = userData.activeSpinDiscount;
               const baseForSpin = totalOfferSubtotal - voucherDiscount - coinDiscount;
-              spinDiscount = (baseForSpin * spinPercentageUsed) / 100;
+              spinDiscount = roundMoney((baseForSpin * spinPercentageUsed) / 100);
               transaction.update(doc(db, 'users', payload.userId), { 
                   activeSpinDiscount: deleteField(),
                   spinDiscountExpiry: deleteField()
@@ -182,8 +186,8 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
           }
       }
 
-      const codFee = payload.paymentMethod === 'cash-on-delivery' ? payload.cashOnDeliveryFee || 0 : 0;
-      const total = (totalOfferSubtotal - voucherDiscount - coinDiscount - spinDiscount) + payload.shippingFee + codFee;
+      const codFee = payload.paymentMethod === 'cash-on-delivery' ? roundMoney(payload.cashOnDeliveryFee || 0) : 0;
+      const total = roundMoney((totalOfferSubtotal - voucherDiscount - coinDiscount - spinDiscount) + payload.shippingFee + codFee);
 
       const orderRef = doc(collection(db, 'orders'));
       const orderNumber = nowToOrderNumber();
@@ -199,7 +203,7 @@ export async function placeOrder(payload: OrderPayload): Promise<{ success: bool
         paymentMethod: payload.paymentMethod,
         transactionId: payload.transactionId || '',
         paymentAccountNumber: payload.paymentAccountNumber || '',
-        shippingFee: payload.shippingFee,
+        shippingFee: roundMoney(payload.shippingFee),
         voucherCode: usedVoucherCode,
         voucherDiscount,
         coinDiscount,

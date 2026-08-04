@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { formatQuantity, formatMoney, roundMoney } from "@/lib/utils";
 
 export default function CartPage() {
   const { 
@@ -41,7 +42,7 @@ export default function CartPage() {
   useEffect(() => {
     const newLocalQtys: Record<string, string> = {};
     cartItems.forEach(item => {
-      newLocalQtys[item.cartItemId] = Number(item.quantity.toFixed(3)).toString();
+      newLocalQtys[item.cartItemId] = formatQuantity(item.quantity);
     });
     setLocalQtys(newLocalQtys);
   }, [cartItems]);
@@ -54,7 +55,7 @@ export default function CartPage() {
     }
   };
 
-  const handleBlur = (cartItemId: string, item: any) => {
+  const handleBlur = (cartItemId: string) => {
     const minQuantity = 0.250;
     let num = parseFloat(localQtys[cartItemId]);
     if (isNaN(num) || num < minQuantity) {
@@ -64,7 +65,7 @@ export default function CartPage() {
     updateQuantity(cartItemId, num);
     setLocalQtys(prev => ({ 
       ...prev, 
-      [cartItemId]: Number(num.toFixed(3)).toString()
+      [cartItemId]: formatQuantity(num)
     }));
   };
 
@@ -80,9 +81,7 @@ export default function CartPage() {
     }
   };
 
-  const finalTotal = selectedCartTotal + (shippingFee || 0);
-
-  const format = (val: number) => Number(val.toFixed(3));
+  const finalTotal = roundMoney(selectedCartTotal + (shippingFee || 0));
 
   return (
     <div className="bg-purple-50/30 min-h-screen">
@@ -119,7 +118,6 @@ export default function CartPage() {
                                         src={item.images[0]}
                                         alt={item.name}
                                         className="object-cover w-full h-full"
-                                        data-ai-hint="product image"
                                         />
                                     </div>
                                     <div className="flex-grow min-w-0">
@@ -132,7 +130,7 @@ export default function CartPage() {
                                         {item.color && <p className="text-sm text-muted-foreground">Color: {item.color}</p>}
                                         {item.size && <p className="text-sm text-muted-foreground">Size: {item.size}</p>}
                                         <p className="text-sm text-muted-foreground">
-                                        Price: ৳{format(item.price)} per {item.unit || 'Pcs'}
+                                        Price: ৳{formatMoney(item.price)} per {item.unit || 'Pcs'}
                                         </p>
                                         <div className="mt-2 flex items-center gap-2">
                                             <Button 
@@ -147,9 +145,9 @@ export default function CartPage() {
                                             </Button>
                                             <Input
                                                 type="text"
-                                                value={localQtys[item.cartItemId] || format(item.quantity).toString()}
+                                                value={localQtys[item.cartItemId] || formatQuantity(item.quantity)}
                                                 onChange={(e) => handleManualInput(item.cartItemId, e.target.value)}
-                                                onBlur={() => handleBlur(item.cartItemId, item)}
+                                                onBlur={() => handleBlur(item.cartItemId)}
                                                 className="h-8 w-24 text-center px-1 font-bold"
                                                 aria-label={`Quantity for ${item.name}`}
                                             />
@@ -164,7 +162,7 @@ export default function CartPage() {
                                     </div>
                                     <div className="text-right flex flex-col items-end">
                                         <p className="font-semibold text-lg whitespace-nowrap">
-                                            ৳{format(item.price * item.quantity)}
+                                            ৳{formatMoney(item.price * item.quantity)}
                                         </p>
                                         <Button
                                             variant="ghost"
@@ -192,7 +190,7 @@ export default function CartPage() {
                 <CardContent className="space-y-4">
                     <div className="flex justify-between">
                     <span>Subtotal ({selectedCartCount} items)</span>
-                    <span>৳{format(selectedCartTotal)}</span>
+                    <span>৳{formatMoney(selectedCartTotal)}</span>
                     </div>
                     <div className="flex justify-between">
                         <div>
@@ -203,7 +201,7 @@ export default function CartPage() {
                             shippingFee === 0 && selectedCartCount > 0 ? (
                                 <Badge className="bg-green-100 text-green-800">Free Delivery</Badge>
                             ) : (
-                                <span>৳{format(shippingFee || 0)}</span>
+                                <span>৳{formatMoney(shippingFee || 0)}</span>
                             )
                         ) : (
                             <span>...</span>
@@ -212,7 +210,7 @@ export default function CartPage() {
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                     <span>Total Amount</span>
-                    <span>{isClient ? `৳${format(finalTotal)}` : '...'}</span>
+                    <span>{isClient ? `৳${formatMoney(finalTotal)}` : '...'}</span>
                     </div>
                 </CardContent>
                 <CardFooter>

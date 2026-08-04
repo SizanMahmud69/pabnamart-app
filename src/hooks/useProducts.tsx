@@ -8,6 +8,7 @@ import app from '@/lib/firebase';
 import { useOffers } from './useOffers';
 import { createAndSendNotification } from '@/app/actions';
 import { useAuth } from './useAuth';
+import { roundMoney } from '@/lib/utils';
 
 interface ProductContextType {
   products: Product[];
@@ -22,14 +23,6 @@ interface ProductContextType {
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
-
-const roundPrice = (price: number): number => {
-    const decimalPart = price - Math.floor(price);
-    if (decimalPart > 0 && decimalPart <= 0.50) {
-        return Math.floor(price);
-    }
-    return Math.round(price);
-};
 
 const convertUndefinedToNull = (obj: any) => {
     if (obj === null || obj === undefined) {
@@ -115,12 +108,12 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         const basePriceForOffer = product.originalPrice || product.price;
         return {
           ...product,
-          originalPrice: roundPrice(basePriceForOffer),
-          price: roundPrice(basePriceForOffer - (basePriceForOffer * applicableOffer.discount) / 100),
+          originalPrice: roundMoney(basePriceForOffer),
+          price: roundMoney(basePriceForOffer - (basePriceForOffer * applicableOffer.discount) / 100),
           hasOffer: true,
         };
       }
-      return { ...product, price: roundPrice(product.price), originalPrice: product.originalPrice ? roundPrice(product.originalPrice) : undefined };
+      return { ...product, price: roundMoney(product.price), originalPrice: product.originalPrice ? roundMoney(product.originalPrice) : undefined };
     });
   }, [productsWithCalculatedRatings, activeOffers]);
   
@@ -137,11 +130,11 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     ) {
         const originalPriceForFlashSale = baseProduct.originalPrice ?? baseProduct.price;
         const discountAmount = (originalPriceForFlashSale * baseProduct.flashSaleDiscount) / 100;
-        return roundPrice(originalPriceForFlashSale - discountAmount);
+        return roundMoney(originalPriceForFlashSale - discountAmount);
     }
     
     const productWithCategoryOffer = productsWithOffers.find(p => p.id === product.id);
-    return productWithCategoryOffer ? productWithCategoryOffer.price : roundPrice(product.price);
+    return productWithCategoryOffer ? productWithCategoryOffer.price : roundMoney(product.price);
   }, [productsWithCalculatedRatings, productsWithOffers]);
 
   const getFlashSaleProducts = useCallback(() => {
@@ -156,7 +149,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         
         return {
           ...p,
-          originalPrice: roundPrice(originalPrice),
+          originalPrice: roundMoney(originalPrice),
           price: flashPrice,
         };
       });
@@ -289,5 +282,3 @@ export const useProducts = () => {
   }
   return context;
 };
-
-    

@@ -19,6 +19,7 @@ import Link from "next/link";
 import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 import app from "@/lib/firebase";
 import { Separator } from "@/components/ui/separator";
+import { formatMoney, roundMoney } from "@/lib/utils";
 
 interface CheckoutData {
     items: CartItem[];
@@ -123,7 +124,6 @@ function OnlinePaymentPage() {
         return <LoadingSpinner />;
     }
 
-    const format = (val: number) => Number(val.toFixed(3));
     const { total } = checkoutData;
     const selectedMethod = paymentSettings.methods.find(m => m.name === paymentMethod);
     const merchantNumber = selectedMethod ? selectedMethod.merchantNumber : '';
@@ -146,7 +146,7 @@ function OnlinePaymentPage() {
                         <CardContent className="space-y-3">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Subtotal</span>
-                                <span>৳{format(checkoutData.subtotal)}</span>
+                                <span>৳{formatMoney(checkoutData.subtotal)}</span>
                             </div>
                             {checkoutData.voucherDiscount && checkoutData.voucherDiscount > 0 ? (
                                 <div className="flex justify-between text-sm text-green-600 font-medium">
@@ -154,7 +154,7 @@ function OnlinePaymentPage() {
                                         <Ticket className="h-3.5 w-3.5" />
                                         <span>Voucher Discount</span>
                                     </div>
-                                    <span>- ৳{format(checkoutData.voucherDiscount)}</span>
+                                    <span>- ৳{formatMoney(checkoutData.voucherDiscount)}</span>
                                 </div>
                             ) : null}
                             {checkoutData.coinDiscount && checkoutData.coinDiscount > 0 ? (
@@ -163,7 +163,7 @@ function OnlinePaymentPage() {
                                         <Coins className="h-3.5 w-3.5" />
                                         <span>Coin Discount</span>
                                     </div>
-                                    <span>- ৳{format(checkoutData.coinDiscount)}</span>
+                                    <span>- ৳{formatMoney(checkoutData.coinDiscount)}</span>
                                 </div>
                             ) : null}
                             {checkoutData.spinDiscount && checkoutData.spinDiscount > 0 ? (
@@ -172,17 +172,17 @@ function OnlinePaymentPage() {
                                         <Sparkles className="h-3.5 w-3.5" />
                                         <span>Lucky Spin ({checkoutData.spinDiscountPercentage}%)</span>
                                     </div>
-                                    <span>- ৳{format(checkoutData.spinDiscount)}</span>
+                                    <span>- ৳{formatMoney(checkoutData.spinDiscount)}</span>
                                 </div>
                             ) : null}
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Shipping Fee</span>
-                                <span>৳{format(checkoutData.shippingFee)}</span>
+                                <span>৳{formatMoney(checkoutData.shippingFee)}</span>
                             </div>
                             <Separator />
                             <div className="flex justify-between font-black text-xl text-primary">
                                 <span>Payable Amount</span>
-                                <span>৳{format(total)}</span>
+                                <span>৳{formatMoney(total)}</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -209,7 +209,7 @@ function OnlinePaymentPage() {
                             {paymentMethod && (
                                 <div className="space-y-4 pt-4 border-t animate-in fade-in slide-in-from-top-2">
                                     <div className="bg-muted/50 p-4 rounded-lg border border-dashed text-center space-y-2">
-                                        <p className="text-sm">Please send <span className="font-black text-primary">৳{format(total)}</span> to this {paymentMethod} number:</p>
+                                        <p className="text-sm">Please send <span className="font-black text-primary">৳{formatMoney(total)}</span> to this {paymentMethod} number:</p>
                                         <div className="flex items-center justify-center gap-2">
                                             <span className="font-mono text-2xl font-black tracking-tighter text-foreground">
                                                 {merchantNumber}
@@ -240,7 +240,7 @@ function OnlinePaymentPage() {
                                 {isPlacingOrder ? (
                                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Placing Order...</>
                                 ) : (
-                                    `Confirm Payment (৳${format(total)})`
+                                    `Confirm Payment (৳${formatMoney(total)})`
                                 )}
                             </Button>
                         </CardFooter>

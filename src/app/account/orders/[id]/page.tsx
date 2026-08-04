@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import OrderStatusStepper from '@/components/OrderStatusStepper';
+import { formatQuantity, formatMoney } from '@/lib/utils';
 
 const getStatusVariant = (status: Order['status']) => {
     switch (status) {
@@ -76,7 +77,6 @@ function OrderDetailsPage() {
         );
     }
     
-    const format = (val: number) => Number(val.toFixed(3));
     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const voucherDiscount = order.voucherDiscount || 0;
     const coinDiscount = order.coinDiscount || 0;
@@ -123,9 +123,9 @@ function OrderDetailsPage() {
                                                 {item.color}{item.color && item.size ? ', ' : ''}{item.size}
                                             </p>
                                         )}
-                                        <p className="text-sm text-muted-foreground">Qty: {format(item.quantity)} {item.unit || 'Pcs'}</p>
+                                        <p className="text-sm text-muted-foreground">Qty: {formatQuantity(item.quantity)} {item.unit || 'Pcs'}</p>
                                     </div>
-                                    <p className="font-semibold">৳{format(item.price * item.quantity)}</p>
+                                    <p className="font-semibold">৳{formatMoney(item.price * item.quantity)}</p>
                                 </div>
                             ))}
                         </div>
@@ -135,7 +135,7 @@ function OrderDetailsPage() {
                         <div className="space-y-4">
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">Subtotal</span>
-                                <span>৳{format(subtotal)}</span>
+                                <span>৳{formatMoney(subtotal)}</span>
                             </div>
                             {voucherDiscount > 0 && (
                                 <div className="flex justify-between text-green-600">
@@ -143,7 +143,7 @@ function OrderDetailsPage() {
                                         <Ticket className="h-4 w-4" />
                                         <span className="text-muted-foreground">Voucher Discount</span>
                                     </div>
-                                    <span>- ৳{format(voucherDiscount)}</span>
+                                    <span>- ৳{formatMoney(voucherDiscount)}</span>
                                 </div>
                             )}
                             {coinDiscount > 0 && (
@@ -152,7 +152,7 @@ function OrderDetailsPage() {
                                         <Coins className="h-4 w-4" />
                                         <span className="text-muted-foreground">Coin Discount</span>
                                     </div>
-                                    <span>- ৳{format(coinDiscount)}</span>
+                                    <span>- ৳{formatMoney(coinDiscount)}</span>
                                 </div>
                             )}
                             {spinDiscount > 0 && (
@@ -161,23 +161,23 @@ function OrderDetailsPage() {
                                         <Sparkles className="h-4 w-4" />
                                         <span className="text-muted-foreground">Lucky Spin ({order.spinDiscountPercentage}%)</span>
                                     </div>
-                                    <span>- ৳{format(spinDiscount)}</span>
+                                    <span>- ৳{formatMoney(spinDiscount)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Shipping Fee</span>
-                                <span>৳{format(order.shippingFee)}</span>
+                                <span>৳{formatMoney(order.shippingFee)}</span>
                             </div>
                             {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Cash on Delivery Fee</span>
-                                    <span>৳{format(order.cashOnDeliveryFee)}</span>
+                                    <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
                                 </div>
                             )}
                             <Separator />
                             <div className="flex justify-between font-bold text-xl">
                                 <span>Total</span>
-                                <span>৳{format(order.total)}</span>
+                                <span>৳{formatMoney(order.total)}</span>
                             </div>
                         </div>
 

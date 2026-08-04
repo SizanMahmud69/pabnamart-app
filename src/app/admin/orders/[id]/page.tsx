@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import OrderStatusStepper from '@/components/OrderStatusStepper';
+import { formatQuantity, formatMoney } from '@/lib/utils';
 
 const getStatusVariant = (status: Order['status']) => {
     switch (status) {
@@ -30,8 +31,6 @@ const getStatusVariant = (status: Order['status']) => {
         default: return 'outline';
     }
 };
-
-const format = (val: number) => Number(val.toFixed(3));
 
 const PrintableInvoice = ({ 
     order, 
@@ -101,9 +100,9 @@ const PrintableInvoice = ({
                                     </div>
                                 )}
                             </td>
-                            <td className="text-center">{format(item.quantity)} {item.unit || 'Pcs'}</td>
-                            <td className="text-right">৳{format(item.price)}</td>
-                            <td className="text-right">৳{format(item.price * item.quantity)}</td>
+                            <td className="text-center">{formatQuantity(item.quantity)} {item.unit || 'Pcs'}</td>
+                            <td className="text-right">৳{formatMoney(item.price)}</td>
+                            <td className="text-right">৳{formatMoney(item.price * item.quantity)}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -113,15 +112,15 @@ const PrintableInvoice = ({
                 <div className={`stamp ${stampClass}`}>{stampText}</div>
                 <table className="totals-table">
                     <tbody>
-                        <tr><td>Subtotal:</td><td className="text-right">৳{format(subtotal)}</td></tr>
-                        {voucherDiscount > 0 && <tr><td>Voucher Discount:</td><td className="text-right">- ৳{format(voucherDiscount)}</td></tr>}
-                        {coinDiscount > 0 && <tr><td>Coin Discount:</td><td className="text-right">- ৳{format(coinDiscount)}</td></tr>}
-                        {spinDiscount > 0 && <tr><td>Lucky Spin ({order.spinDiscountPercentage}%):</td><td className="text-right">- ৳{format(spinDiscount)}</td></tr>}
-                        <tr><td>Shipping Fee:</td><td className="text-right">৳{format(order.shippingFee)}</td></tr>
+                        <tr><td>Subtotal:</td><td className="text-right">৳{formatMoney(subtotal)}</td></tr>
+                        {voucherDiscount > 0 && <tr><td>Voucher Discount:</td><td className="text-right">- ৳{formatMoney(voucherDiscount)}</td></tr>}
+                        {coinDiscount > 0 && <tr><td>Coin Discount:</td><td className="text-right">- ৳{formatMoney(coinDiscount)}</td></tr>}
+                        {spinDiscount > 0 && <tr><td>Lucky Spin ({order.spinDiscountPercentage}%):</td><td className="text-right">- ৳{formatMoney(spinDiscount)}</td></tr>}
+                        <tr><td>Shipping Fee:</td><td className="text-right">৳{formatMoney(order.shippingFee)}</td></tr>
                         {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
-                            <tr><td>COD Fee:</td><td className="text-right">৳{format(order.cashOnDeliveryFee)}</td></tr>
+                            <tr><td>COD Fee:</td><td className="text-right">৳{formatMoney(order.cashOnDeliveryFee)}</td></tr>
                         )}
-                        <tr className="grand-total"><td>Grand Total:</td><td className="text-right">৳{format(order.total)}</td></tr>
+                        <tr className="grand-total"><td>Grand Total:</td><td className="text-right">৳{formatMoney(order.total)}</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -288,9 +287,9 @@ export default function AdminOrderDetailsPage() {
                                                     {item.color}{item.color && item.size ? ', ' : ''}{item.size}
                                                 </p>
                                             )}
-                                            <p className="text-sm text-muted-foreground">Qty: {format(item.quantity)} {item.unit || 'Pcs'}</p>
+                                            <p className="text-sm text-muted-foreground">Qty: {formatQuantity(item.quantity)} {item.unit || 'Pcs'}</p>
                                         </div>
-                                        <p className="font-semibold">৳{format(item.price * item.quantity)}</p>
+                                        <p className="font-semibold">৳{formatMoney(item.price * item.quantity)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -298,40 +297,40 @@ export default function AdminOrderDetailsPage() {
                             <div className="space-y-4">
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Subtotal</span>
-                                    <span>৳{format(subtotal)}</span>
+                                    <span>৳{formatMoney(subtotal)}</span>
                                 </div>
                                 {voucherDiscount > 0 && (
                                     <div className="flex justify-between text-green-600 text-sm">
                                         <span>Voucher Discount</span>
-                                        <span>- ৳{format(voucherDiscount)}</span>
+                                        <span>- ৳{formatMoney(voucherDiscount)}</span>
                                     </div>
                                 )}
                                 {coinDiscount > 0 && (
                                     <div className="flex justify-between text-yellow-600 text-sm">
                                         <span>Coin Discount</span>
-                                        <span>- ৳{format(coinDiscount)}</span>
+                                        <span>- ৳{formatMoney(coinDiscount)}</span>
                                     </div>
                                 )}
                                 {spinDiscount > 0 && (
                                     <div className="flex justify-between text-indigo-600 text-sm font-semibold">
                                         <span>Lucky Spin ({order.spinDiscountPercentage}%)</span>
-                                        <span>- ৳{format(spinDiscount)}</span>
+                                        <span>- ৳{formatMoney(spinDiscount)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Shipping Fee</span>
-                                    <span>৳{format(order.shippingFee)}</span>
+                                    <span>৳{formatMoney(order.shippingFee)}</span>
                                 </div>
                                 {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Cash on Delivery Fee</span>
-                                        <span>৳{format(order.cashOnDeliveryFee)}</span>
+                                        <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
                                     </div>
                                 )}
                                 <Separator />
                                 <div className="flex justify-between font-bold text-xl">
                                     <span>Total</span>
-                                    <span>৳{format(order.total)}</span>
+                                    <span>৳{formatMoney(order.total)}</span>
                                 </div>
                             </div>
                             <Separator />

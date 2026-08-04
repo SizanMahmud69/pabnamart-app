@@ -10,6 +10,7 @@ import app from '@/lib/firebase';
 import { useDeliveryCharge } from './useDeliveryCharge';
 import { useProducts } from './useProducts';
 import { useRouter, usePathname } from 'next/navigation';
+import { roundMoney } from '@/lib/utils';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -32,10 +33,6 @@ interface CartContextType {
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
-
-const formatValue = (val: number): number => {
-    return parseFloat(val.toFixed(3));
-};
 
 const convertUndefinedToNull = (obj: any): any => {
     if (obj === null || obj === undefined) {
@@ -161,6 +158,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } else {
         price = product.price;
     }
+    
+    price = roundMoney(price);
 
     setCartItems(prevCartItems => {
         const existingItem = prevCartItems.find(item => 
@@ -184,7 +183,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             id: product.id,
             name: product.name,
             price: price,
-            originalPrice: product.originalPrice || undefined,
+            originalPrice: product.originalPrice ? roundMoney(product.originalPrice) : undefined,
             images: product.images,
             stock: product.stock,
             freeShipping: product.freeShipping,
@@ -208,7 +207,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     toast({
       title: "Added to cart",
-      description: `${quantity.toFixed(3)} ${product.unit || 'Pcs'} of ${product.name} has been added to your cart.`,
+      description: `Item added to your cart.`,
     });
 }, [user, toast, router, getFlashSalePrice]);
 
@@ -270,16 +269,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const selectedCartItems = useMemo(() => cartItems.filter(item => selectedItemIds.includes(item.cartItemId)), [cartItems, selectedItemIds]);
   
   const cartCount = cartItems.length;
-  const cartTotal = cartItems.reduce(
+  const cartTotal = roundMoney(cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
-  );
+  ));
 
   const selectedCartCount = selectedCartItems.length;
-  const selectedCartTotal = selectedCartItems.reduce(
+  const selectedCartTotal = roundMoney(selectedCartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
-  );
+  ));
 
   const shippingFee = useMemo(() => {
     if (selectedCartCount === 0) return 0;
@@ -292,12 +291,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const itemCount = selectedCartItems.length;
     const isInsidePabna = !!selectedShippingAddress && selectedShippingAddress.city.toLowerCase().trim() === 'pabna';
 
+    let charge = 0;
     if (isInsidePabna) {
-      return itemCount <= 5 ? chargeInsidePabnaSmall : chargeInsidePabnaLarge;
+      charge = itemCount <= 5 ? chargeInsidePabnaSmall : chargeInsidePabnaLarge;
     } else {
-      return itemCount <= 5 ? chargeOutsidePabnaSmall : chargeOutsidePabnaLarge;
+      charge = itemCount <= 5 ? chargeOutsidePabnaSmall : chargeOutsidePabnaLarge;
     }
 
+    return roundMoney(charge);
   }, [selectedCartItems, selectedCartCount, selectedShippingAddress, chargeInsidePabnaSmall, chargeInsidePabnaLarge, chargeOutsidePabnaSmall, chargeOutsidePabnaLarge]);
 
   useEffect(() => {
