@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { Order } from '@/types';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
@@ -46,7 +46,7 @@ const PrintableInvoice = ({
     spinDiscount: number
 }) => {
     const isPaid = order.paymentMethod !== 'cash-on-delivery';
-    const stampText = isPaid ? 'Paid' : 'Unpaid';
+    const stampText = isPaid ? 'PAID' : 'UNPAID';
     const stampClass = isPaid ? 'paid' : 'unpaid';
     
     return (
@@ -55,7 +55,7 @@ const PrintableInvoice = ({
                 .invoice-container-pdf {
                     width: 210mm;
                     min-height: 297mm;
-                    padding: 20mm;
+                    padding: 25mm;
                     margin: 0;
                     background: white;
                     position: relative;
@@ -65,114 +65,142 @@ const PrintableInvoice = ({
                 }
                 .brand-border {
                     position: absolute;
-                    inset: 10px;
-                    border: 2px solid hsl(262 84% 59% / 0.15);
+                    inset: 15px;
+                    border: 1px solid hsl(262 84% 59% / 0.15);
                     pointer-events: none;
                 }
                 .brand-border::before {
-                    content: 'pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart';
+                    content: 'pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart';
                     position: absolute;
-                    top: -8px;
-                    left: 20px;
+                    top: -6px;
+                    left: 50%;
+                    transform: translateX(-50%);
                     font-size: 8px;
                     font-weight: 900;
                     color: hsl(262 84% 59%);
                     text-transform: uppercase;
                     background: white;
-                    padding: 0 5px;
-                    letter-spacing: 2px;
+                    padding: 0 10px;
+                    letter-spacing: 3px;
+                    white-space: nowrap;
+                    opacity: 0.6;
                 }
                 .brand-border::after {
-                    content: 'pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart';
+                    content: 'pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart';
                     position: absolute;
-                    bottom: -8px;
-                    right: 20px;
+                    bottom: -6px;
+                    left: 50%;
+                    transform: translateX(-50%);
                     font-size: 8px;
                     font-weight: 900;
                     color: hsl(262 84% 59%);
                     text-transform: uppercase;
                     background: white;
-                    padding: 0 5px;
-                    letter-spacing: 2px;
+                    padding: 0 10px;
+                    letter-spacing: 3px;
+                    white-space: nowrap;
+                    opacity: 0.6;
                 }
-                .header { text-align: center; margin-bottom: 30px; }
-                .header h1 { font-size: 40px; font-weight: 900; color: hsl(262 84% 59%); margin: 0; letter-spacing: -2px; }
-                .header p { font-size: 14px; color: #6b7280; text-transform: uppercase; font-weight: 700; letter-spacing: 4px; margin-top: 5px; }
+                .header { text-align: center; margin-bottom: 40px; }
+                .header h1 { font-size: 44px; font-weight: 900; color: hsl(262 84% 59%); margin: 0; letter-spacing: -2px; }
+                .header p { font-size: 12px; color: #9ca3af; text-transform: uppercase; font-weight: 800; letter-spacing: 5px; margin-top: 8px; }
                 
                 .info-grid { display: flex; justify-content: space-between; margin-bottom: 40px; }
                 .info-section { width: 45%; }
-                .info-section h3 { font-size: 10px; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px; font-weight: 800; }
-                .info-section p { margin: 2px 0; font-size: 12px; line-height: 1.5; }
+                .info-section h3 { font-size: 11px; text-transform: uppercase; color: #9ca3af; margin-bottom: 10px; font-weight: 800; border-bottom: 1px solid #f3f4f6; padding-bottom: 5px; }
+                .info-section p { margin: 3px 0; font-size: 13px; line-height: 1.4; color: #374151; }
                 .text-right { text-align: right; }
                 
-                .payment-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin-bottom: 30px; }
-                .payment-box h4 { font-size: 12px; font-weight: 800; margin: 0 0 10px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
-                .payment-flex { display: flex; gap: 40px; }
-                .payment-flex p { margin: 0; font-size: 11px; }
+                .payment-info-banner { 
+                    background: #f8fafc; 
+                    border: 1px solid #e2e8f0; 
+                    padding: 12px 20px; 
+                    border-radius: 12px; 
+                    margin-bottom: 35px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .payment-info-banner div { font-size: 12px; font-weight: 700; color: #475569; }
+                .payment-info-banner span { color: #1e293b; font-family: monospace; font-size: 13px; margin-left: 5px; }
 
-                .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                .table th { background: #f3f4f6; padding: 12px 15px; text-align: left; font-size: 10px; text-transform: uppercase; font-weight: 800; color: #4b5563; border-bottom: 2px solid #e5e7eb; }
-                .table td { padding: 15px; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
-                .item-name { font-weight: 700; color: #111827; }
-                .item-meta { font-size: 10px; color: #6b7280; margin-top: 4px; font-weight: 600; }
-                .b1g1-badge { font-size: 8px; font-weight: 900; background: #fdf2f8; color: #db2777; padding: 2px 6px; border-radius: 4px; border: 1px solid #fbcfe8; margin-left: 8px; }
+                .table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+                .table th { background: #f9fafb; padding: 14px 15px; text-align: left; font-size: 10px; text-transform: uppercase; font-weight: 800; color: #64748b; border-bottom: 2px solid #f1f5f9; }
+                .table td { padding: 18px 15px; border-bottom: 1px solid #f1f5f9; font-size: 13px; vertical-align: middle; }
+                .item-name { font-weight: 800; color: #1e293b; display: block; }
+                .item-meta { font-size: 10px; color: #94a3b8; margin-top: 5px; font-weight: 700; text-transform: uppercase; }
+                .b1g1-badge { font-size: 9px; font-weight: 900; background: #fff1f2; color: #e11d48; padding: 3px 8px; border-radius: 6px; border: 1px solid #fecdd3; margin-left: 10px; }
                 
-                .footer-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px; }
-                .stamp { border: 4px double; padding: 10px 20px; text-align: center; text-transform: uppercase; transform: rotate(-12deg); opacity: 0.2; border-radius: 12px; margin-top: 20px; }
-                .stamp-main { font-size: 36px; font-weight: 900; }
-                .stamp-sub { font-size: 8px; font-weight: 800; margin-top: 5px; }
+                .footer-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; }
+                .stamp { 
+                    border: 5px double; 
+                    padding: 12px 25px; 
+                    text-align: center; 
+                    transform: rotate(-15deg); 
+                    opacity: 0.15; 
+                    border-radius: 15px; 
+                    margin-top: 30px;
+                    margin-left: 20px;
+                }
+                .stamp-main { font-size: 42px; font-weight: 900; letter-spacing: 2px; }
+                .stamp-sub { font-size: 9px; font-weight: 800; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
                 .stamp.paid { color: #059669; border-color: #059669; }
-                .stamp.unpaid { color: #dc2626; border-color: #dc2626; }
+                .stamp.unpaid { color: #e11d48; border-color: #e11d48; }
                 
-                .totals { width: 280px; }
-                .totals-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; font-weight: 600; }
-                .totals-row.discount { color: #059669; }
-                .totals-row.grand { font-size: 22px; font-weight: 900; color: #111827; border-top: 3px solid #111827; margin-top: 15px; padding-top: 15px; }
+                .totals { width: 320px; background: #fdfdfd; padding: 15px; border-radius: 15px; }
+                .totals-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; font-weight: 600; color: #475569; }
+                .totals-row.discount { color: #059669; font-weight: 700; }
+                .totals-row.grand { 
+                    font-size: 26px; 
+                    font-weight: 900; 
+                    color: #0f172a; 
+                    border-top: 2px solid #0f172a; 
+                    margin-top: 15px; 
+                    padding-top: 15px; 
+                    letter-spacing: -1px;
+                }
                 
-                .note { margin-top: 60px; text-align: center; border-top: 1px solid #f3f4f6; padding-top: 20px; }
-                .note p { margin: 2px 0; font-size: 12px; color: #9ca3af; }
-                .note .thanks { font-weight: 800; color: #4b5563; font-size: 14px; margin-bottom: 5px; }
+                .note { margin-top: 80px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 25px; }
+                .note p { margin: 4px 0; font-size: 11px; color: #94a3b8; font-weight: 500; }
+                .note .thanks { font-weight: 900; color: #1e293b; font-size: 15px; margin-bottom: 8px; letter-spacing: -0.5px; }
             `}</style>
 
             <div className="brand-border"></div>
 
             <div className="header">
                 <h1>PabnaMart</h1>
-                <p>Official Order Invoice</p>
+                <p>Official Purchase Receipt</p>
             </div>
 
             <div className="info-grid">
                 <div className="info-section">
-                    <h3>Order Information</h3>
-                    <p><strong>Order ID:</strong> #{order.orderNumber}</p>
-                    <p><strong>Date:</strong> {new Date(order.date).toLocaleDateString()}</p>
-                    <p><strong>Status:</strong> <span style={{ textTransform: 'capitalize' }}>{order.status.replace('-', ' ')}</span></p>
+                    <h3>Order Record</h3>
+                    <p><strong>Invoice ID:</strong> #{order.orderNumber}</p>
+                    <p><strong>Date Issued:</strong> {new Date(order.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    <p><strong>Status:</strong> <span style={{ textTransform: 'uppercase', fontWeight: 800 }}>{order.status.replace('-', ' ')}</span></p>
                 </div>
                 <div className="info-section text-right">
-                    <h3>Billed To</h3>
+                    <h3>Delivery To</h3>
                     <p><strong>{order.shippingAddress.fullName}</strong></p>
-                    <p>{order.shippingAddress.address}, {order.shippingAddress.area}</p>
-                    <p>{order.shippingAddress.city}</p>
-                    <p>Phone: {order.shippingAddress.phone}</p>
+                    <p>{order.shippingAddress.address}</p>
+                    <p>{order.shippingAddress.area}, {order.shippingAddress.city}</p>
+                    <p>Contact: {order.shippingAddress.phone}</p>
                 </div>
             </div>
 
-            <div className="payment-box">
-                <h4>Payment Details</h4>
-                <div className="payment-flex">
-                    <p><strong>Method:</strong> {order.paymentMethod.replace('-', ' ').toUpperCase()}</p>
-                    {isPaid && order.transactionId && <p><strong>Trx ID:</strong> {order.transactionId}</p>}
-                    {isPaid && order.paymentAccountNumber && <p><strong>From:</strong> {order.paymentAccountNumber}</p>}
-                </div>
+            <div className="payment-info-banner">
+                <div>METHOD: <span>{order.paymentMethod.replace('-', ' ').toUpperCase()}</span></div>
+                {isPaid && order.transactionId && <div>TRX ID: <span>{order.transactionId}</span></div>}
+                {isPaid && order.paymentAccountNumber && <div>SOURCE: <span>{order.paymentAccountNumber}</span></div>}
             </div>
 
             <table className="table">
                 <thead>
                     <tr>
-                        <th style={{ width: '60%' }}>Description</th>
-                        <th style={{ textAlign: 'center' }}>Qty</th>
-                        <th style={{ textAlign: 'right' }}>Price</th>
-                        <th style={{ textAlign: 'right' }}>Total</th>
+                        <th style={{ width: '55%' }}>Item Description</th>
+                        <th style={{ textAlign: 'center' }}>Quantity</th>
+                        <th style={{ textAlign: 'right' }}>Unit Price</th>
+                        <th style={{ textAlign: 'right' }}>Amount</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -180,16 +208,16 @@ const PrintableInvoice = ({
                         <tr key={index}>
                             <td>
                                 <span className="item-name">{item.name}</span>
-                                {item.isB1G1 && <span className="b1g1-badge">B1G1</span>}
-                                {(item.color || item.size) && (
-                                    <div className="item-meta">
-                                        {item.color}{item.color && item.size ? ', ' : ''}{item.size}
-                                    </div>
-                                )}
+                                <div className="flex items-center">
+                                    <span className="item-meta">
+                                        {item.color || item.size ? `${item.color || ''} ${item.size || ''}` : 'Standard Variant'}
+                                    </span>
+                                    {item.isB1G1 && <span className="b1g1-badge">B1G1 OFFER</span>}
+                                </div>
                             </td>
-                            <td style={{ textAlign: 'center' }}>{formatQuantity(item.quantity)} {item.unit}</td>
+                            <td style={{ textAlign: 'center', fontWeight: 700 }}>{formatQuantity(item.quantity)} {item.unit}</td>
                             <td style={{ textAlign: 'right' }}>৳{formatMoney(item.price)}</td>
-                            <td style={{ textAlign: 'right' }}>৳{formatMoney(item.price * item.quantity)}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 800 }}>৳{formatMoney(item.price * item.quantity)}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -198,53 +226,53 @@ const PrintableInvoice = ({
             <div className="footer-flex">
                 <div className={`stamp ${stampClass}`}>
                     <div className="stamp-main">{stampText}</div>
-                    <div className="stamp-sub">Verified by PabnaMart</div>
+                    <div className="stamp-sub">Verified Authenticity</div>
                 </div>
                 
                 <div className="totals">
                     <div className="totals-row">
-                        <span>Subtotal:</span>
+                        <span>Items Subtotal:</span>
                         <span>৳{formatMoney(subtotal)}</span>
                     </div>
                     {voucherDiscount > 0 && (
                         <div className="totals-row discount">
-                            <span>Voucher Discount:</span>
+                            <span>Voucher Applied:</span>
                             <span>- ৳{formatMoney(voucherDiscount)}</span>
                         </div>
                     )}
                     {coinDiscount > 0 && (
                         <div className="totals-row discount">
-                            <span>Coin Discount:</span>
+                            <span>Rewards Used:</span>
                             <span>- ৳{formatMoney(coinDiscount)}</span>
                         </div>
                     )}
                     {spinDiscount > 0 && (
                         <div className="totals-row discount">
-                            <span>Spin Discount ({order.spinDiscountPercentage}%):</span>
+                            <span>Lucky Spin ({order.spinDiscountPercentage}%):</span>
                             <span>- ৳{formatMoney(spinDiscount)}</span>
                         </div>
                     )}
                     <div className="totals-row">
-                        <span>Shipping Fee:</span>
+                        <span>Logistic Fee:</span>
                         <span>৳{formatMoney(order.shippingFee)}</span>
                     </div>
                     {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
                         <div className="totals-row">
-                            <span>COD Surcharge:</span>
+                            <span>Service Surcharge:</span>
                             <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
                         </div>
                     )}
                     <div className="totals-row grand">
-                        <span>Grand Total:</span>
+                        <span>Total Due:</span>
                         <span>৳{formatMoney(order.total)}</span>
                     </div>
                 </div>
             </div>
 
             <div className="note">
-                <p className="thanks">Thank you for shopping with PabnaMart!</p>
-                <p>For any queries, please email us at support@pabnamart.com</p>
-                <p>www.pabnamart.com</p>
+                <p className="thanks">Elite Shopping Experience with PabnaMart</p>
+                <p>For support, please contact us at support@pabnamart.com</p>
+                <p>Authorized Digital Invoice • www.pabnamart.com</p>
             </div>
         </div>
     );
@@ -293,10 +321,11 @@ export default function AdminOrderDetailsPage() {
                 filename: `Invoice_#${order.orderNumber}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { 
-                    scale: 2, 
+                    scale: 3, // Higher scale for better text clarity
                     useCORS: true, 
                     letterRendering: true,
-                    logging: false
+                    logging: false,
+                    backgroundColor: '#ffffff'
                 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
