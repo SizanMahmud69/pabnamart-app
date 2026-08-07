@@ -122,7 +122,6 @@ export default function AdminProductManagement() {
                       <CardDescription>View, edit, or delete your store products with full details.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Main Categories Filter */}
                     <div className="space-y-4">
                         <ScrollArea className="w-full whitespace-nowrap rounded-md border p-2">
                             <div className="flex w-max space-x-2">
@@ -149,7 +148,6 @@ export default function AdminProductManagement() {
                             <ScrollBar orientation="horizontal" />
                         </ScrollArea>
 
-                        {/* Sub-categories Filter Row */}
                         {selectedParentId !== 'All' && subCategories.length > 0 && (
                             <div className="animate-in slide-in-from-top-2 duration-300">
                                 <ScrollArea className="w-full whitespace-nowrap rounded-md border p-2 bg-muted/20">
@@ -276,7 +274,7 @@ export default function AdminProductManagement() {
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
                                                         <span className="sr-only">Open menu</span>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>

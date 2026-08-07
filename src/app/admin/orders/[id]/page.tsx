@@ -63,7 +63,7 @@ const PrintableInvoice = ({
                     margin: 0;
                     background: white;
                     position: relative;
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+                    font-family: 'Inter', sans-serif !important;
                     box-sizing: border-box;
                     color: #0f172a;
                     display: flex;
@@ -558,9 +558,8 @@ export default function AdminOrderDetailsPage() {
                         </div>
                     </DialogHeader>
                     <ScrollArea className="flex-grow bg-slate-100 p-0">
-                         <div className="relative w-full min-h-full py-8 flex flex-col items-center overflow-x-hidden">
-                            {/* Perfectly centered wrapper */}
-                            <div className="relative shadow-2xl bg-white scale-[0.4] xs:scale-[0.45] sm:scale-[0.7] md:scale-100 origin-top transform-gpu rounded-sm mb-4 mx-auto"
+                         <div className="relative w-full min-h-full py-8 flex justify-center overflow-x-hidden">
+                            <div className="relative shadow-2xl bg-white scale-[0.38] xs:scale-[0.42] sm:scale-[0.65] md:scale-100 origin-top transform-gpu rounded-sm mb-4"
                                  style={{ width: '210mm', height: '297mm' }}>
                                 <PrintableInvoice 
                                     order={order} 
