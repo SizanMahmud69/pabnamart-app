@@ -35,9 +35,9 @@ const getStatusVariant = (status: Order['status']) => {
 const PrintableInvoice = ({ 
     order, 
     subtotal, 
-    voucherDiscount,
-    coinDiscount,
-    spinDiscount
+    voucherDiscount, 
+    coinDiscount, 
+    spinDiscount 
 }: { 
     order: Order, 
     subtotal: number, 
@@ -156,7 +156,9 @@ const PrintableInvoice = ({
                 
                 .totals-card { width: 280px; background: #fdfdfd; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; }
                 .totals-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; font-weight: 500; color: #475569; }
-                .totals-row.discount { color: #059669; font-weight: 600; }
+                .totals-row.voucher-discount { color: #059669; font-weight: 700; }
+                .totals-row.coin-discount { color: #ca8a04; font-weight: 700; }
+                .totals-row.spin-discount { color: #4f46e5; font-weight: 700; }
                 .totals-row.grand { 
                     font-size: 24px; 
                     font-weight: 900; 
@@ -240,19 +242,19 @@ const PrintableInvoice = ({
                         <span>৳{formatMoney(subtotal)}</span>
                     </div>
                     {voucherDiscount > 0 && (
-                        <div className="totals-row discount">
+                        <div className="totals-row voucher-discount">
                             <span>Voucher Applied:</span>
                             <span>- ৳{formatMoney(voucherDiscount)}</span>
                         </div>
                     )}
                     {coinDiscount > 0 && (
-                        <div className="totals-row discount">
+                        <div className="totals-row coin-discount">
                             <span>Coins Used:</span>
                             <span>- ৳{formatMoney(coinDiscount)}</span>
                         </div>
                     )}
                     {spinDiscount > 0 && (
-                        <div className="totals-row discount">
+                        <div className="totals-row spin-discount">
                             <span>Lucky Spin ({order.spinDiscountPercentage}%):</span>
                             <span>- ৳{formatMoney(spinDiscount)}</span>
                         </div>
@@ -276,7 +278,7 @@ const PrintableInvoice = ({
 
             <div className="footer">
                 <p className="tagline">Premium Shopping Experience</p>
-                <p>pabnamart.comtact@gmail.com • www.pabna-mart.shop</p>
+                <p>pabnamart.contact@gmail.com • www.pabna-mart.shop</p>
                 <p>Authorized Digital Copy • Issued via PabnaMart Platform</p>
             </div>
         </div>

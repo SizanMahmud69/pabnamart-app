@@ -133,50 +133,50 @@ function OrderDetailsPage() {
                         <Separator />
 
                         <div className="space-y-4">
-                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Subtotal</span>
-                                <span>৳{formatMoney(subtotal)}</span>
+                             <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground font-medium">Subtotal</span>
+                                <span className="font-semibold">৳{formatMoney(subtotal)}</span>
                             </div>
                             {voucherDiscount > 0 && (
-                                <div className="flex justify-between text-green-600">
+                                <div className="flex justify-between items-center text-green-600">
                                     <div className="flex items-center gap-1.5">
                                         <Ticket className="h-4 w-4" />
-                                        <span className="text-muted-foreground">Voucher Discount</span>
+                                        <span className="text-sm font-bold">Voucher Applied</span>
                                     </div>
-                                    <span>- ৳{formatMoney(voucherDiscount)}</span>
+                                    <span className="font-black">- ৳{formatMoney(voucherDiscount)}</span>
                                 </div>
                             )}
                             {coinDiscount > 0 && (
-                                <div className="flex justify-between text-yellow-600">
+                                <div className="flex justify-between items-center text-yellow-600">
                                     <div className="flex items-center gap-1.5">
                                         <Coins className="h-4 w-4" />
-                                        <span className="text-muted-foreground">Coin Discount</span>
+                                        <span className="text-sm font-bold">Coins Used</span>
                                     </div>
-                                    <span>- ৳{formatMoney(coinDiscount)}</span>
+                                    <span className="font-black">- ৳{formatMoney(coinDiscount)}</span>
                                 </div>
                             )}
                             {spinDiscount > 0 && (
-                                <div className="flex justify-between text-indigo-600">
+                                <div className="flex justify-between items-center text-indigo-600">
                                     <div className="flex items-center gap-1.5">
                                         <Sparkles className="h-4 w-4" />
-                                        <span className="text-muted-foreground">Lucky Spin ({order.spinDiscountPercentage}%)</span>
+                                        <span className="text-sm font-bold">Lucky Spin ({order.spinDiscountPercentage}%)</span>
                                     </div>
-                                    <span>- ৳{formatMoney(spinDiscount)}</span>
+                                    <span className="font-black">- ৳{formatMoney(spinDiscount)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Shipping Fee</span>
-                                <span>৳{formatMoney(order.shippingFee)}</span>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground font-medium">Delivery Charge</span>
+                                <span className="font-semibold">৳{formatMoney(order.shippingFee)}</span>
                             </div>
                             {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Cash on Delivery Fee</span>
-                                    <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground font-medium">COD Surcharge</span>
+                                    <span className="font-semibold">৳{formatMoney(order.cashOnDeliveryFee)}</span>
                                 </div>
                             )}
-                            <Separator />
-                            <div className="flex justify-between font-bold text-xl">
-                                <span>Total</span>
+                            <Separator className="my-2" />
+                            <div className="flex justify-between font-black text-2xl text-primary tracking-tighter">
+                                <span>Amount Due</span>
                                 <span>৳{formatMoney(order.total)}</span>
                             </div>
                         </div>
