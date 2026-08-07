@@ -315,7 +315,6 @@ export default function AdminOrderDetailsPage() {
     const isAppEnvironment = () => {
         if (typeof window === 'undefined') return false;
         const ua = window.navigator.userAgent.toLowerCase();
-        // Check for common WebView markers or if the user is on mobile
         const isMobile = /iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i.test(ua);
         const isWebView = ua.includes('wv') || (ua.includes('android') && ua.includes('version/'));
         return isWebView || isMobile;
@@ -335,7 +334,6 @@ export default function AdminOrderDetailsPage() {
         
         try {
             const html2pdf = (await import('html2pdf.js' as any)).default;
-            // Use the hidden element for high-quality rendering
             const element = document.getElementById('printable-invoice');
             
             if (!element) throw new Error("Invoice element not found");
@@ -559,16 +557,21 @@ export default function AdminOrderDetailsPage() {
                             </DialogClose>
                         </div>
                     </DialogHeader>
-                    <ScrollArea className="flex-grow bg-slate-100 p-2 sm:p-8">
-                         <div className="mx-auto shadow-2xl bg-white scale-[0.6] sm:scale-100 origin-top transform-gpu rounded-sm">
-                            <PrintableInvoice 
-                                order={order} 
-                                subtotal={subtotal} 
-                                voucherDiscount={voucherDiscount} 
-                                coinDiscount={coinDiscount} 
-                                spinDiscount={spinDiscount} 
-                            />
+                    <ScrollArea className="flex-grow bg-slate-100 p-0">
+                         <div className="flex justify-center p-4 sm:p-8 min-h-full items-start">
+                            <div className="shadow-2xl bg-white scale-[0.42] xs:scale-[0.45] sm:scale-[0.75] md:scale-100 origin-top transform-gpu rounded-sm flex-shrink-0"
+                                 style={{ width: '210mm', height: '297mm' }}>
+                                <PrintableInvoice 
+                                    order={order} 
+                                    subtotal={subtotal} 
+                                    voucherDiscount={voucherDiscount} 
+                                    coinDiscount={coinDiscount} 
+                                    spinDiscount={spinDiscount} 
+                                />
+                            </div>
                          </div>
+                         {/* Extra space for scrolling visibility on mobile */}
+                         <div className="h-[450px] sm:hidden" />
                     </ScrollArea>
                     <div className="p-4 border-t bg-background text-center text-[10px] text-muted-foreground uppercase font-black tracking-widest">
                         PabnaMart Digital Invoice System
