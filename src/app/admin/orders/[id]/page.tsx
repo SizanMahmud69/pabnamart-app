@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
@@ -546,7 +547,7 @@ export default function AdminOrderDetailsPage() {
                         </div>
                         <div className="flex gap-2">
                              <Button size="sm" variant="default" onClick={handleDownloadPDF} disabled={isDownloading} className="font-bold bg-primary h-9">
-                                {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
+                                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
                                 Download
                             </Button>
                             <DialogClose asChild>
