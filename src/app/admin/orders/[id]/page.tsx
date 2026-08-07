@@ -558,8 +558,9 @@ export default function AdminOrderDetailsPage() {
                         </div>
                     </DialogHeader>
                     <ScrollArea className="flex-grow bg-slate-100 p-0">
-                         <div className="relative w-full min-h-full p-4 sm:p-8 flex justify-center items-start overflow-hidden">
-                            <div className="shadow-2xl bg-white scale-[0.42] xs:scale-[0.45] sm:scale-[0.75] md:scale-100 origin-top transform-gpu rounded-sm"
+                         <div className="relative w-full min-h-full py-8 flex flex-col items-center">
+                            {/* Scaled centered wrapper */}
+                            <div className="relative shadow-2xl bg-white scale-[0.4] xs:scale-[0.45] sm:scale-[0.7] md:scale-100 origin-top transform-gpu rounded-sm mb-4"
                                  style={{ width: '210mm', height: '297mm' }}>
                                 <PrintableInvoice 
                                     order={order} 
@@ -570,8 +571,6 @@ export default function AdminOrderDetailsPage() {
                                 />
                             </div>
                          </div>
-                         {/* Extra space for scrolling visibility on mobile */}
-                         <div className="h-[450px] sm:hidden" />
                     </ScrollArea>
                     <div className="p-4 border-t bg-background text-center text-[10px] text-muted-foreground uppercase font-black tracking-widest">
                         PabnaMart Digital Invoice System
@@ -581,3 +580,4 @@ export default function AdminOrderDetailsPage() {
         </div>
     );
 }
+
