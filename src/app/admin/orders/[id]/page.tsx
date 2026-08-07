@@ -558,12 +558,11 @@ export default function AdminOrderDetailsPage() {
                         </div>
                     </DialogHeader>
                     <ScrollArea className="flex-grow bg-slate-100 p-0">
-                         <div className="w-full flex flex-col items-center py-10 overflow-hidden">
-                            <div className="relative shadow-2xl bg-white scale-[0.4] xs:scale-[0.45] sm:scale-[0.6] md:scale-[0.8] lg:scale-100 transform-gpu rounded-sm"
+                         <div className="w-full flex flex-col items-center py-10 overflow-hidden relative">
+                            <div className="relative shadow-2xl bg-white scale-[0.42] transform-gpu rounded-sm origin-top mx-auto"
                                  style={{ 
                                      width: '210mm', 
-                                     height: '297mm', 
-                                     transformOrigin: 'top center',
+                                     height: '297mm',
                                      marginBottom: '-160mm'
                                  }}>
                                 <PrintableInvoice 
@@ -584,4 +583,3 @@ export default function AdminOrderDetailsPage() {
         </div>
     );
 }
-
