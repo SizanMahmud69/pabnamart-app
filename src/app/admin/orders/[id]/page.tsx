@@ -258,7 +258,7 @@ const PrintableInvoice = ({
                         </div>
                     )}
                     <div className="totals-row">
-                        <span>Logistic Fee:</span>
+                        <span>Delivery Charge:</span>
                         <span>৳{formatMoney(order.shippingFee)}</span>
                     </div>
                     {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
@@ -482,7 +482,7 @@ export default function AdminOrderDetailsPage() {
                             </div>
                         )}
                         <div className="flex justify-between text-sm opacity-70">
-                            <span>Logistic Fee</span>
+                            <span>Delivery Charge</span>
                             <span>৳{formatMoney(order.shippingFee)}</span>
                         </div>
                         {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
