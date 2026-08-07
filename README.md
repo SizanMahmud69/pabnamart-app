@@ -2,6 +2,7 @@
 # PabnaMart E-commerce App
 
 This is a Next.js e-commerce application built with Firebase.
+**Live Domain:** https://pabna-mart.shop
 
 ## Getting Started
 
@@ -13,6 +14,12 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## 🌐 Custom Domain & Hosting Info
+- **Domain:** pabna-mart.shop
+- **Server IP:** 122.173.84.249
+- **cPanel URL:** https://server.shodns.in:2083/
+- **Nameservers:** ns1.shodns.in, ns2.shodns.in
+
 ## 🛠 Backend Configuration (Important)
 
 If you see errors like "Server not configured" during checkout or admin tasks, it's because the Firebase Admin SDK needs a service account key.
@@ -23,98 +30,41 @@ If you see errors like "Server not configured" during checkout or admin tasks, i
 3.  Click the gear icon (Project Settings) > **Service Accounts**.
 4.  Click **"Generate new private key"**.
 5.  A JSON file will download. Open it and copy everything.
-6.  In your local `.env` file or hosting environment (like Vercel), add a new variable:
+6.  In your local `.env` file or hosting environment (like cPanel or Vercel), add a new variable:
     - **Name:** `FIREBASE_SERVICE_ACCOUNT_JSON`
     - **Value:** (Paste the entire JSON content here)
 
 ---
 
-## Git Authentication (Personal Access Token)
+## cPanel Deployment Guide (Self-Hosting)
 
-If you get an error like "Invalid username or token" while pushing to GitHub, follow these steps:
+1.  **Build the app:** Run `npm run build` locally.
+2.  **Standalone Files:** Next.js creates a `.next/standalone` folder.
+3.  **Upload:** Upload the contents of `.next/standalone` to your cPanel application root.
+4.  **Static Files:** Copy `.next/static` to `.next/standalone/.next/static`.
+5.  **Public Files:** Copy `public` folder contents to `.next/standalone/public`.
+6.  **Node.js App:** In cPanel "Setup Node.js App", set the startup file to `server.js`.
+7.  **Environment Variables:** Make sure to add all `NEXT_PUBLIC_FIREBASE_*` and `FIREBASE_SERVICE_ACCOUNT_JSON` in the cPanel Node.js app configuration.
 
-1.  **Generate a Token:** 
-    - Go to GitHub **Settings** -> **Developer settings** -> **Personal access tokens** -> **Tokens (classic)**.
-    - Click **Generate new token**.
-    - Select scopes (at least 'repo').
-    - Copy the generated token.
-2.  **Use the Token (If prompted for password):**
-    - Run `git push`.
-    - Use your GitHub username.
-    - Use the **Token** you copied instead of your account password.
+---
 
-### 🚀 Pro Tip: If Git doesn't ask for Password and directly shows Error
-If your computer has cached old credentials and won't let you login, use this command to embed your token:
-
-```bash
-git remote set-url origin https://YOUR_TOKEN_HERE@github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-```
-*(Replace `YOUR_TOKEN_HERE`, `YOUR_USERNAME`, and `YOUR_REPO_NAME` with your actual info. Then just run `git push origin main`)*
-
-## Deployment Guide for Vercel
+## Deployment Guide for Vercel (Alternative - Recommended)
 
 Follow these simple steps to deploy your application to Vercel.
 
 ### Step 1: Push Your Code to GitHub
+1. Create a new repository on GitHub and push this code.
 
-First, you need to have your project on GitHub.
+### Step 2: Deploy to Vercel
+1. Import the repository in Vercel.
+2. Add all Environment Variables listed below.
 
-1.  **Create a New GitHub Repository:**
-    Go to your GitHub account and create a new, empty repository.
-
-2.  **Connect Your Project to GitHub:**
-    In your project's terminal, run these commands one by one:
-    ```bash
-    git init -b main
-    git add .
-    git commit -m "Initial commit"
-    git remote add origin <your-repo-url>
-    git push -u origin main
-    ```
-    *(Replace `<your-repo-url>` with your new repository's URL)*
-
-### Step 2: Deploy to Vercel & Set Environment Variables
-
-This is the most important step. Vercel needs access to your Firebase and other services to work correctly.
-
-1.  **Sign Up & Import Project:**
-    - Go to [vercel.com](https://vercel.com) and sign up with your GitHub account.
-    - From your dashboard, click **"Add New..."** -> **"Project"**.
-    - Import the GitHub repository you just created.
-
-2.  **Add Public Firebase Variables:**
-    - In Vercel's "Configure Project" screen, find the **Environment Variables** section.
-    - Add the following variables one by one. The **Name** and **Value** must be exact.
-
-    | Name                                      | Value                                          |
-    | ----------------------------------------- | ---------------------------------------------- |
-    | `NEXT_PUBLIC_FIREBASE_API_KEY`            | `AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk`        |
-    | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`        | `pabnamart.firebaseapp.com`                    |
-    | `NEXT_PUBLIC_FIREBASE_PROJECT_ID`         | `pabnamart`                                    |
-    | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`     | `pabnamart.appspot.com`                        |
-    | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`| `600614180848`                                 |
-    | `NEXT_PUBLIC_FIREBASE_APP_ID`             | `1:600614180848:web:6f4e21fb4f5b6cd42a6f35`   |
-
-3.  **Add Firebase Service Account (CRITICAL):**
-    This allows your server to perform actions like placing orders.
-
-    - In your [Firebase project settings](https://console.firebase.google.com/u/0/project/pabnamart/settings/serviceaccounts/adminsdk), click **"Generate new private key"**. A JSON file will download.
-    - Open the downloaded JSON file with a simple text editor (like Notepad on Windows or TextEdit on Mac).
-    - **CRITICAL:** Select **ALL** the text in the file (`Ctrl+A` or `Cmd+A`) and copy it (`Ctrl+C` or `Cmd+C`). The text must start with `{` and end with `}`. Do not miss anything.
-    - In Vercel, add a **new** environment variable:
-        - **Name:** `FIREBASE_SERVICE_ACCOUNT_JSON`
-        - **Value:** Paste the **entire JSON content** you just copied. Ensure there are no extra spaces or line breaks before or after what you paste.
-    - **IMPORTANT:** Make sure all three environment boxes (Production, Preview, Development) are checked for this variable.
-
-4.  **Add Vercel Blob Storage Token (for Image Uploads):**
-
-    - In your Vercel dashboard, go to the **Storage** tab and create a new **Blob** store.
-    - Vercel will give you a token named `BLOB_READ_WRITE_TOKEN`. Copy the value.
-    - In Vercel, add another new environment variable:
-        - **Name:** `BLOB_READ_WRITE_TOKEN`
-        - **Value:** Paste the token value.
-    - Again, make sure all three environment boxes are checked.
-
-5.  **Deploy:**
-    - Click the **"Deploy"** button.
-    - If the deployment fails, go to the **"Deployments"** tab and redeploy the latest version to apply the environment variable changes.
+| Name                                      | Value                                          |
+| ----------------------------------------- | ---------------------------------------------- |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`            | `AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk`        |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`        | `pabnamart.firebaseapp.com`                    |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`         | `pabnamart`                                    |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`     | `pabnamart.appspot.com`                        |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`| `600614180848`                                 |
+| `NEXT_PUBLIC_FIREBASE_APP_ID`             | `1:600614180848:web:6f4e21fb4f5b6cd42a6f35`   |
+| `FIREBASE_SERVICE_ACCOUNT_JSON`           | (Full JSON from Firebase Console)              |
