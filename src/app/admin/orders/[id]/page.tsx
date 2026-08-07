@@ -276,7 +276,7 @@ const PrintableInvoice = ({
 
             <div className="footer">
                 <p className="tagline">Premium Shopping Experience</p>
-                <p>support@pabnamart.com • www.pabnamart.com</p>
+                <p>pabnamart.comtact@gmail.com • www.pabna-mart.shop</p>
                 <p>Authorized Digital Copy • Issued via PabnaMart Platform</p>
             </div>
         </div>
