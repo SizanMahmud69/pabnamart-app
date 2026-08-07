@@ -50,116 +50,121 @@ const PrintableInvoice = ({
     const stampClass = isPaid ? 'paid' : 'unpaid';
     
     return (
-        <div className="invoice-box">
-            <div className="header">
-                <h1 className="site-title">PabnaMart</h1>
-                <p className="invoice-subtitle">Order Invoice</p>
-            </div>
-
-            <div className="details-grid">
-                <div className="order-info">
-                    <p><strong>Order ID:</strong> <span className="text-primary">#{order.orderNumber}</span></p>
-                    <p><strong>Date:</strong> {new Date(order.date).toLocaleDateString()}</p>
-                    <p><strong>Status:</strong> <span className="capitalize">{order.status.replace('-', ' ')}</span></p>
+        <div className="invoice-outer-frame">
+            <div className="invoice-box">
+                <div className="header">
+                    <h1 className="site-title">PabnaMart</h1>
+                    <p className="invoice-subtitle">Order Invoice</p>
                 </div>
-                <div className="billing-info text-right">
-                    <p className="section-header">Billed To:</p>
-                    <p className="font-bold">{order.shippingAddress.fullName}</p>
-                    <p>{order.shippingAddress.address}, {order.shippingAddress.area}</p>
-                    <p>{order.shippingAddress.city}</p>
-                    <p>Phone: {order.shippingAddress.phone}</p>
-                </div>
-            </div>
 
-            <div className="payment-summary">
-                <h3 className="section-title">Payment Details</h3>
-                <div className="payment-grid">
-                    <p><strong>Method:</strong> <span className="capitalize">{order.paymentMethod.replace('-', ' ')}</span></p>
-                    {isPaid && order.transactionId && <p><strong>Trx ID:</strong> {order.transactionId}</p>}
-                    {isPaid && order.paymentAccountNumber && <p><strong>From:</strong> {order.paymentAccountNumber}</p>}
+                <div className="details-grid">
+                    <div className="order-info">
+                        <p><strong>Order ID:</strong> <span className="text-primary">#{order.orderNumber}</span></p>
+                        <p><strong>Date:</strong> {new Date(order.date).toLocaleDateString()}</p>
+                        <p><strong>Status:</strong> <span className="capitalize">{order.status.replace('-', ' ')}</span></p>
+                    </div>
+                    <div className="billing-info text-right">
+                        <p className="section-header">Billed To:</p>
+                        <p className="font-bold">{order.shippingAddress.fullName}</p>
+                        <p>{order.shippingAddress.address}, {order.shippingAddress.area}</p>
+                        <p>{order.shippingAddress.city}</p>
+                        <p>Phone: {order.shippingAddress.phone}</p>
+                    </div>
                 </div>
-            </div>
 
-            <table className="items-table">
-                <thead>
-                    <tr>
-                        <th>Item Description</th>
-                        <th className="text-center">Qty</th>
-                        <th className="text-right">Price</th>
-                        <th className="text-right">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {order.items.map((item, index) => (
-                        <tr key={`${item.id}-${index}`}>
-                            <td>
-                                <div className="item-name">{item.name}</div>
-                                {item.isB1G1 && <span className="b1g1-tag">B1G1</span>}
-                                {(item.color || item.size) && (
-                                    <div className="item-variants">
-                                        {item.color}{item.color && item.size ? ', ' : ''}{item.size}
-                                    </div>
-                                )}
-                            </td>
-                            <td className="text-center">{formatQuantity(item.quantity)} {item.unit || 'Pcs'}</td>
-                            <td className="text-right">৳{formatMoney(item.price)}</td>
-                            <td className="text-right">৳{formatMoney(item.price * item.quantity)}</td>
+                <div className="payment-summary">
+                    <h3 className="section-title">Payment Details</h3>
+                    <div className="payment-grid">
+                        <p><strong>Method:</strong> <span className="capitalize">{order.paymentMethod.replace('-', ' ')}</span></p>
+                        {isPaid && order.transactionId && <p><strong>Trx ID:</strong> {order.transactionId}</p>}
+                        {isPaid && order.paymentAccountNumber && <p><strong>From:</strong> {order.paymentAccountNumber}</p>}
+                    </div>
+                </div>
+
+                <table className="items-table">
+                    <thead>
+                        <tr>
+                            <th>Item Description</th>
+                            <th className="text-center">Qty</th>
+                            <th className="text-right">Price</th>
+                            <th className="text-right">Total</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
-            
-            <div className="bottom-section">
-                <div className="stamp-container">
-                    <div className={`stamp ${stampClass}`}>{stampText}</div>
-                </div>
-                <div className="totals-container">
-                    <table className="totals-table">
-                        <tbody>
-                            <tr>
-                                <td>Subtotal:</td>
-                                <td className="text-right">৳{formatMoney(subtotal)}</td>
+                    </thead>
+                    <tbody>
+                        {order.items.map((item, index) => (
+                            <tr key={`${item.id}-${index}`}>
+                                <td>
+                                    <div className="item-name">{item.name}</div>
+                                    {item.isB1G1 && <span className="b1g1-tag">B1G1</span>}
+                                    {(item.color || item.size) && (
+                                        <div className="item-variants">
+                                            {item.color}{item.color && item.size ? ', ' : ''}{item.size}
+                                        </div>
+                                    )}
+                                </td>
+                                <td className="text-center">{formatQuantity(item.quantity)} {item.unit || 'Pcs'}</td>
+                                <td className="text-right">৳{formatMoney(item.price)}</td>
+                                <td className="text-right">৳{formatMoney(item.price * item.quantity)}</td>
                             </tr>
-                            {voucherDiscount > 0 && (
-                                <tr className="discount-row">
-                                    <td>Voucher Discount:</td>
-                                    <td className="text-right">- ৳{formatMoney(voucherDiscount)}</td>
-                                </tr>
-                            )}
-                            {coinDiscount > 0 && (
-                                <tr className="discount-row">
-                                    <td>Coin Discount:</td>
-                                    <td className="text-right">- ৳{formatMoney(coinDiscount)}</td>
-                                </tr>
-                            )}
-                            {spinDiscount > 0 && (
-                                <tr className="discount-row">
-                                    <td>Spin Discount ({order.spinDiscountPercentage}%):</td>
-                                    <td className="text-right">- ৳{formatMoney(spinDiscount)}</td>
-                                </tr>
-                            )}
-                            <tr>
-                                <td>Shipping Fee:</td>
-                                <td className="text-right">৳{formatMoney(order.shippingFee)}</td>
-                            </tr>
-                            {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                        ))}
+                    </tbody>
+                </table>
+                
+                <div className="bottom-section">
+                    <div className="stamp-container">
+                        <div className={`stamp ${stampClass}`}>
+                            <div className="stamp-main">{stampText}</div>
+                            <div className="stamp-small">Verified by PabnaMart</div>
+                        </div>
+                    </div>
+                    <div className="totals-container">
+                        <table className="totals-table">
+                            <tbody>
                                 <tr>
-                                    <td>COD Fee:</td>
-                                    <td className="text-right">৳{formatMoney(order.cashOnDeliveryFee)}</td>
+                                    <td>Subtotal:</td>
+                                    <td className="text-right">৳{formatMoney(subtotal)}</td>
                                 </tr>
-                            )}
-                            <tr className="grand-total-row">
-                                <td>Grand Total:</td>
-                                <td className="text-right">৳{formatMoney(order.total)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                {voucherDiscount > 0 && (
+                                    <tr className="discount-row">
+                                        <td>Voucher Discount:</td>
+                                        <td className="text-right">- ৳{formatMoney(voucherDiscount)}</td>
+                                    </tr>
+                                )}
+                                {coinDiscount > 0 && (
+                                    <tr className="discount-row">
+                                        <td>Coin Discount:</td>
+                                        <td className="text-right">- ৳{formatMoney(coinDiscount)}</td>
+                                    </tr>
+                                )}
+                                {spinDiscount > 0 && (
+                                    <tr className="discount-row">
+                                        <td>Spin Discount ({order.spinDiscountPercentage}%):</td>
+                                        <td className="text-right">- ৳{formatMoney(spinDiscount)}</td>
+                                    </tr>
+                                )}
+                                <tr>
+                                    <td>Shipping Fee:</td>
+                                    <td className="text-right">৳{formatMoney(order.shippingFee)}</td>
+                                </tr>
+                                {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                                    <tr>
+                                        <td>COD Fee:</td>
+                                        <td className="text-right">৳{formatMoney(order.cashOnDeliveryFee)}</td>
+                                    </tr>
+                                )}
+                                <tr className="grand-total-row">
+                                    <td>Grand Total:</td>
+                                    <td className="text-right">৳{formatMoney(order.total)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            
-            <div className="invoice-footer">
-                <p className="thank-you">Thank you for shopping with PabnaMart!</p>
-                <p className="contact-info">support@pabnamart.com | www.pabnamart.com</p>
+                
+                <div className="invoice-footer">
+                    <p className="thank-you">Thank you for shopping with PabnaMart!</p>
+                    <p className="contact-info">support@pabnamart.com | www.pabnamart.com</p>
+                </div>
             </div>
         </div>
     )
@@ -198,42 +203,71 @@ export default function AdminOrderDetailsPage() {
                     <html>
                         <head>
                             <title>Invoice_#${order?.orderNumber}</title>
-                            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+                            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
                             <style>
-                                @page { size: auto; margin: 15mm; }
+                                @page { size: auto; margin: 10mm; }
                                 body { font-family: 'Inter', sans-serif; font-size: 11px; color: #1f2937; margin: 0; padding: 0; background: #fff; }
-                                .invoice-box { max-width: 100%; margin: auto; padding: 0; border: none; }
+                                
+                                .invoice-outer-frame {
+                                    border: 20px solid transparent;
+                                    border-image: repeating-linear-gradient(45deg, hsl(262 84% 59%) 0, hsl(262 84% 59%) 2px, transparent 2px, transparent 15px);
+                                    padding: 20px;
+                                    position: relative;
+                                    min-height: 98vh;
+                                }
+
+                                .invoice-outer-frame::after {
+                                    content: 'pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart';
+                                    position: absolute;
+                                    top: -15px;
+                                    left: 10px;
+                                    font-size: 8px;
+                                    color: hsl(262 84% 59%);
+                                    font-weight: 900;
+                                    text-transform: uppercase;
+                                    opacity: 0.3;
+                                    letter-spacing: 5px;
+                                }
+
+                                .invoice-box { max-width: 100%; margin: auto; padding: 0 15px; border: none; }
                                 .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f3f4f6; padding-bottom: 15px; }
-                                .header .site-title { font-size: 28px; font-weight: 800; color: hsl(262 84% 59%); margin: 0; letter-spacing: -1px; }
-                                .header .invoice-subtitle { font-size: 12px; color: #6b7280; margin: 3px 0 0; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
-                                .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 25px; }
+                                .header .site-title { font-size: 32px; font-weight: 900; color: hsl(262 84% 59%); margin: 0; letter-spacing: -1.5px; }
+                                .header .invoice-subtitle { font-size: 12px; color: #6b7280; margin: 3px 0 0; text-transform: uppercase; font-weight: 700; letter-spacing: 2px; }
+                                .details-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; margin-bottom: 25px; }
                                 .billing-info .section-header { font-size: 10px; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin-bottom: 4px; }
-                                .billing-info p { margin: 1px 0; }
-                                .order-info p { margin: 3px 0; font-size: 11px; }
-                                .text-primary { color: hsl(262 84% 59%); font-weight: 700; }
+                                .billing-info p { margin: 1px 0; line-height: 1.4; }
+                                .order-info p { margin: 4px 0; font-size: 11px; }
+                                .text-primary { color: hsl(262 84% 59%); font-weight: 800; }
                                 .payment-summary { background: #f9fafb; padding: 12px; border-radius: 6px; margin-bottom: 25px; border: 1px solid #f3f4f6; }
                                 .payment-summary .section-title { font-size: 12px; font-weight: 700; margin: 0 0 8px; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
-                                .payment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+                                .payment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
                                 .payment-grid p { margin: 0; font-size: 10px; }
+                                
                                 .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                                .items-table th { background: #f3f4f6; padding: 8px 12px; text-align: left; font-size: 10px; text-transform: uppercase; font-weight: 700; color: #4b5563; border-bottom: 2px solid #e5e7eb; }
-                                .items-table td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; }
-                                .item-name { font-weight: 600; font-size: 11px; color: #111827; }
-                                .item-variants { font-size: 9px; color: #6b7280; margin-top: 2px; }
-                                .b1g1-tag { font-size: 8px; font-weight: 800; background: #fdf2f8; color: #db2777; padding: 1px 4px; border-radius: 3px; border: 1px solid #fbcfe8; margin-left: 5px; }
-                                .bottom-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
+                                .items-table th { background: #f3f4f6; padding: 10px 15px; text-align: left; font-size: 10px; text-transform: uppercase; font-weight: 700; color: #4b5563; border-bottom: 2px solid #e5e7eb; }
+                                .items-table td { padding: 12px 15px; border-bottom: 1px solid #f3f4f6; }
+                                .item-name { font-weight: 700; font-size: 11px; color: #111827; }
+                                .item-variants { font-size: 9px; color: #6b7280; margin-top: 3px; font-weight: 600; }
+                                .b1g1-tag { font-size: 8px; font-weight: 900; background: #fdf2f8; color: #db2777; padding: 2px 5px; border-radius: 4px; border: 1px solid #fbcfe8; margin-left: 6px; text-transform: uppercase; }
+                                
+                                .bottom-section { display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; margin-top: 15px; padding-right: 10px; }
                                 .stamp-container { position: relative; display: flex; align-items: center; justify-content: center; }
-                                .stamp { border: 4px double; padding: 10px 20px; font-size: 28px; font-weight: 800; text-transform: uppercase; transform: rotate(-12deg); opacity: 0.2; border-radius: 8px; }
+                                .stamp { border: 4px double; padding: 8px 15px; text-align: center; text-transform: uppercase; transform: rotate(-10deg); opacity: 0.15; border-radius: 10px; line-height: 1; }
+                                .stamp-main { font-size: 32px; font-weight: 900; }
+                                .stamp-small { font-size: 7px; font-weight: 800; margin-top: 4px; }
                                 .stamp.paid { color: #059669; border-color: #059669; }
                                 .stamp.unpaid { color: #dc2626; border-color: #dc2626; }
-                                .totals-table { width: 100%; max-width: 250px; margin-left: auto; }
-                                .totals-table td { padding: 4px 0; font-size: 11px; }
-                                .discount-row { color: #059669; font-weight: 500; }
-                                .grand-total-row td { font-size: 16px; font-weight: 800; padding-top: 10px; border-top: 2px solid #111827; color: #111827; }
-                                .invoice-footer { margin-top: 40px; text-align: center; border-top: 1px solid #f3f4f6; padding-top: 20px; color: #9ca3af; }
-                                .thank-you { font-weight: 700; color: #4b5563; margin-bottom: 4px; font-size: 12px; }
-                                .contact-info { font-size: 9px; }
-                                .text-right { text-align: right; }
+                                
+                                .totals-table { width: 100%; max-width: 280px; margin-left: auto; border-collapse: collapse; }
+                                .totals-table td { padding: 6px 0; font-size: 11px; font-weight: 600; }
+                                .discount-row { color: #059669; }
+                                .grand-total-row td { font-size: 18px; font-weight: 900; padding-top: 12px; border-top: 3px solid #111827; color: #111827; }
+                                
+                                .invoice-footer { margin-top: 50px; text-align: center; border-top: 2px solid #f3f4f6; padding-top: 20px; color: #9ca3af; }
+                                .thank-you { font-weight: 800; color: #4b5563; margin-bottom: 5px; font-size: 13px; }
+                                .contact-info { font-size: 10px; font-weight: 500; }
+                                
+                                .text-right { text-align: right; padding-right: 5px; }
                                 .text-center { text-align: center; }
                                 .capitalize { text-transform: capitalize; }
                             </style>
@@ -244,7 +278,6 @@ export default function AdminOrderDetailsPage() {
                                 window.onload = function() {
                                     window.print();
                                     window.onafterprint = function() { window.close(); };
-                                    // Fallback for some browsers
                                     setTimeout(function() {
                                         window.onfocus = function() { window.close(); }
                                     }, 500);
