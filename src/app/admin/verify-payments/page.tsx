@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -15,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
 import { createAndSendNotification } from '@/app/actions';
+import { formatMoney } from '@/lib/utils';
 
 const db = getFirestore(app);
 
@@ -188,7 +190,7 @@ export default function VerifyPaymentsPage() {
                                                 <p className="font-semibold text-sm">{item.name}</p>
                                                 <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                                             </div>
-                                            <p className="font-semibold text-sm">৳{item.price * item.quantity}</p>
+                                            <p className="font-semibold text-sm">৳{formatMoney(item.price * item.quantity)}</p>
                                         </div>
                                     ))}
                                 </CardContent>
@@ -196,7 +198,7 @@ export default function VerifyPaymentsPage() {
                                  <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
                                     <div className="text-left">
                                         <p className="text-sm text-muted-foreground">Total Amount</p>
-                                        <p className="text-xl font-bold">৳{order.total.toFixed(2)}</p>
+                                        <p className="text-xl font-bold">৳{formatMoney(order.total)}</p>
                                     </div>
                                 </CardFooter>
                             </Card>

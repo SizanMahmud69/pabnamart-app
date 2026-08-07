@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { updateOrderStatus } from '@/app/actions';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { formatQuantity, formatMoney } from '@/lib/utils';
 
 
 const db = getFirestore(app);
@@ -226,7 +227,7 @@ export default function AdminOrderManagement() {
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild onPointerDown={(e) => e.preventDefault()}>
+                                                            <DropdownMenuTrigger asChild>
                                                                 <Button variant="ghost" className="h-8 w-8 p-0">
                                                                     <span className="sr-only">Open menu</span>
                                                                     <MoreHorizontal className="h-4 w-4" />
@@ -277,9 +278,9 @@ export default function AdminOrderManagement() {
                                                                         {item.color}{item.color && item.size ? ', ' : ''}{item.size}
                                                                     </p>
                                                                 )}
-                                                                <p className="text-xs text-muted-foreground">Qty: {item.quantity.toFixed(3)} {item.unit || 'Pcs'}</p>
+                                                                <p className="text-xs text-muted-foreground">Qty: {formatQuantity(item.quantity)} {item.unit || 'Pcs'}</p>
                                                             </div>
-                                                            <p className="font-semibold text-sm">৳{(item.price * item.quantity).toFixed(3)}</p>
+                                                            <p className="font-semibold text-sm">৳{formatMoney(item.price * item.quantity)}</p>
                                                         </div>
                                                     ))}
                                                 </CardContent>
@@ -287,7 +288,7 @@ export default function AdminOrderManagement() {
                                                     <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
                                                     <div className="text-right">
                                                         <p className="text-sm text-muted-foreground">Total Amount</p>
-                                                        <p className="text-xl font-bold">৳{order.total.toFixed(3)}</p>
+                                                        <p className="text-xl font-bold">৳{formatMoney(order.total)}</p>
                                                     </div>
                                                 </CardFooter>
                                             </Card>

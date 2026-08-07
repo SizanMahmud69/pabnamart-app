@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import { cn } from '@/lib/utils';
+import { cn, formatMoney, formatQuantity } from '@/lib/utils';
 
 const db = getFirestore(app);
 
@@ -219,9 +219,9 @@ export default function AdminProductManagement() {
                                             {getProductCategoryDisplay(product.category)}
                                         </TableCell>
                                         <TableCell>
-                                            <div className="font-bold text-sm">৳{product.price}</div>
+                                            <div className="font-bold text-sm">৳{formatMoney(product.price)}</div>
                                             {product.originalPrice && product.originalPrice > product.price && (
-                                                <div className="text-[10px] text-muted-foreground line-through">৳{product.originalPrice}</div>
+                                                <div className="text-[10px] text-muted-foreground line-through">৳{formatMoney(product.originalPrice)}</div>
                                             )}
                                         </TableCell>
                                         <TableCell>
@@ -229,11 +229,11 @@ export default function AdminProductManagement() {
                                                 variant={product.stock > 10 ? 'default' : product.stock > 0 ? 'secondary' : 'destructive'}
                                                 className="h-5 px-2 text-[10px]"
                                             >
-                                                {product.stock}
+                                                {formatQuantity(product.stock)}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-center">
-                                            <span className="text-sm font-medium">{product.sold || 0}</span>
+                                            <span className="text-sm font-medium">{formatQuantity(product.sold || 0)}</span>
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <div className="flex items-center justify-center gap-1">
@@ -275,7 +275,7 @@ export default function AdminProductManagement() {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
-                                                <DropdownMenuTrigger asChild onPointerDown={(e) => e.preventDefault()}>
+                                                <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
                                                         <span className="sr-only">Open menu</span>
                                                         <MoreHorizontal className="h-4 w-4" />

@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { createAndSendNotification, updateOrderStatus } from '@/app/actions';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { formatMoney } from '@/lib/utils';
 
 const db = getFirestore(app);
 
@@ -221,7 +222,7 @@ export default function AdminReturnManagement() {
                                                 </div>
                                             </CardHeader>
                                             <CardContent>
-                                                <p className="text-sm font-semibold">Total Amount: <span className="font-bold text-lg">৳{order.total.toFixed(2)}</span></p>
+                                                <p className="text-sm font-semibold">Total Amount: <span className="font-bold text-lg">৳{formatMoney(order.total)}</span></p>
                                             </CardContent>
                                         </Card>
                                     ))}
