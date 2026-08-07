@@ -4,67 +4,47 @@
 This is a Next.js e-commerce application built with Firebase.
 **Live Domain:** https://pabna-mart.shop
 
-## Getting Started
+---
 
-First, run the development server:
+## 🌐 Domain & Hosting Setup Guide (Mobile Friendly)
 
-```bash
-npm run dev
-```
+আপনার কেনা ডোমেইন এবং হোস্টিং সেটআপ করার জন্য নিচের ধাপগুলো অনুসরণ করুন:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### ১. Vercel-এ ডোমেইন কানেক্ট করা (সুপার ফাস্ট পারফরম্যান্স)
+আপনার ওয়েবসাইটটি ইতিমধ্যে Vercel-এ লাইভ আছে। ডোমেইনটি কানেক্ট করতে:
+১. আপনার ফোনের ব্রাউজার থেকে `vercel.com` এ লগইন করুন।
+২. আপনার প্রজেক্টটি সিলেক্ট করে **Settings > Domains** এ যান।
+৩. `pabna-mart.shop` লিখে **Add** বাটনে ক্লিক করুন।
+৪. Vercel আপনাকে দুটি **Nameservers** দিবে (যেমন: `ns1.vercel-dns.com`)। এগুলো কপি করুন।
+৫. আপনার ডোমেইন প্যানেলে (`shodns.in`) লগইন করে Nameservers পরিবর্তন করে Vercel-এর দেওয়া নামগুলো বসিয়ে দিন।
 
-## 🌐 Custom Domain & Hosting Info
-- **Domain:** pabna-mart.shop
-- **Server IP:** 122.173.84.249
-- **cPanel URL:** https://server.shodns.in:2083/
-- **Nameservers:** ns1.shodns.in, ns2.shodns.in
+### ২. কেনা হোস্টিং (cPanel) ব্যবহার করা
+আপনি যদি কেনা ৫ জিবি হোস্টিংয়ে ওয়েবসাইটটি শিফট করতে চান:
+১. **cPanel লগইন**: আপনার দেওয়া লিংকে গিয়ে ইউজারনেম ও পাসওয়ার্ড দিয়ে লগইন করুন।
+২. **Node.js App**: cPanel-এ "Setup Node.js App" অপশনে যান। 
+৩. **Create Application**: সেখানে আপনার ডোমেইন সিলেক্ট করুন এবং "Application Startup File" হিসেবে `server.js` দিন।
+৪. **Env Variables**: "Environment Variables" সেকশনে আপনার Firebase API Keys গুলো এক এক করে যোগ করুন।
+৫. **Upload**: আপনার প্রোজেক্টটি বিল্ড করে `.next/standalone` ফোল্ডারের ফাইলগুলো cPanel-এর File Manager-এ আপলোড করুন।
+
+---
 
 ## 🛠 Backend Configuration (Important)
 
 If you see errors like "Server not configured" during checkout or admin tasks, it's because the Firebase Admin SDK needs a service account key.
 
 ### How to get your Service Account Key:
-1.  Go to the [Firebase Console](https://console.firebase.google.com/).
-2.  Select your project: **PabnaMart**.
-3.  Click the gear icon (Project Settings) > **Service Accounts**.
-4.  Click **"Generate new private key"**.
-5.  A JSON file will download. Open it and copy everything.
-6.  In your local `.env` file or hosting environment (like cPanel or Vercel), add a new variable:
-    - **Name:** `FIREBASE_SERVICE_ACCOUNT_JSON`
-    - **Value:** (Paste the entire JSON content here)
+1. Go to the [Firebase Console](https://console.firebase.google.com/).
+2. Select your project: **PabnaMart**.
+3. Click the gear icon (Project Settings) > **Service Accounts**.
+4. Click **"Generate new private key"**.
+5. A JSON file will download. Open it and copy everything.
+6. In your project's **Environment Variables** (in Vercel or cPanel), add a new variable:
+   - **Name:** `FIREBASE_SERVICE_ACCOUNT_JSON`
+   - **Value:** (Paste the entire JSON content here)
 
 ---
 
-## cPanel Deployment Guide (Self-Hosting)
-
-1.  **Build the app:** Run `npm run build` locally.
-2.  **Standalone Files:** Next.js creates a `.next/standalone` folder.
-3.  **Upload:** Upload the contents of `.next/standalone` to your cPanel application root.
-4.  **Static Files:** Copy `.next/static` to `.next/standalone/.next/static`.
-5.  **Public Files:** Copy `public` folder contents to `.next/standalone/public`.
-6.  **Node.js App:** In cPanel "Setup Node.js App", set the startup file to `server.js`.
-7.  **Environment Variables:** Make sure to add all `NEXT_PUBLIC_FIREBASE_*` and `FIREBASE_SERVICE_ACCOUNT_JSON` in the cPanel Node.js app configuration.
-
----
-
-## Deployment Guide for Vercel (Alternative - Recommended)
-
-Follow these simple steps to deploy your application to Vercel.
-
-### Step 1: Push Your Code to GitHub
-1. Create a new repository on GitHub and push this code.
-
-### Step 2: Deploy to Vercel
-1. Import the repository in Vercel.
-2. Add all Environment Variables listed below.
-
-| Name                                      | Value                                          |
-| ----------------------------------------- | ---------------------------------------------- |
-| `NEXT_PUBLIC_FIREBASE_API_KEY`            | `AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk`        |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`        | `pabnamart.firebaseapp.com`                    |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`         | `pabnamart`                                    |
-| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`     | `pabnamart.appspot.com`                        |
-| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`| `600614180848`                                 |
-| `NEXT_PUBLIC_FIREBASE_APP_ID`             | `1:600614180848:web:6f4e21fb4f5b6cd42a6f35`   |
-| `FIREBASE_SERVICE_ACCOUNT_JSON`           | (Full JSON from Firebase Console)              |
+## 📜 Pricing & Rounding Policy
+To ensure clarity in pricing, all final product prices are rounded:
+- If the decimal part is **> 0.55**, the price is rounded **UP** (e.g., ৳100.56 -> ৳101).
+- If the decimal part is **<= 0.55**, the price is rounded **DOWN** (e.g., ৳100.55 -> ৳100).

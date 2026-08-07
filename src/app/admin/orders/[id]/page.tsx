@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
@@ -532,7 +531,7 @@ export default function AdminOrderDetailsPage() {
               />}
             </div>
 
-            {/* App Preview Dialog (Review Mode) */}
+            {/* App Preview Dialog (Review Mode) - Fixed Centering */}
             <Dialog open={showPreview} onOpenChange={setShowPreview}>
                 <DialogContent className="max-w-[95vw] sm:max-w-[800px] p-0 overflow-hidden h-[90vh] flex flex-col rounded-t-xl sm:rounded-xl">
                     <DialogHeader className="p-4 border-b bg-background sticky top-0 z-20 flex flex-row items-center justify-between space-y-0">
@@ -558,9 +557,9 @@ export default function AdminOrderDetailsPage() {
                         </div>
                     </DialogHeader>
                     <ScrollArea className="flex-grow bg-slate-100 p-0">
-                         <div className="relative w-full min-h-full py-8 flex justify-center overflow-x-hidden">
-                            <div className="relative shadow-2xl bg-white scale-[0.38] xs:scale-[0.42] sm:scale-[0.65] md:scale-100 origin-top transform-gpu rounded-sm mb-4"
-                                 style={{ width: '210mm', height: '297mm' }}>
+                         <div className="relative w-full h-fit flex justify-center py-10">
+                            <div className="relative shadow-2xl bg-white scale-[0.4] xs:scale-[0.45] sm:scale-[0.7] md:scale-100 transform-gpu rounded-sm"
+                                 style={{ width: '210mm', height: '297mm', transformOrigin: 'top center' }}>
                                 <PrintableInvoice 
                                     order={order} 
                                     subtotal={subtotal} 
