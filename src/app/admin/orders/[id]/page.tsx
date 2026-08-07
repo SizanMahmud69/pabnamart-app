@@ -9,12 +9,14 @@ import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, CreditCard, Download, Smartphone, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Download, Smartphone, Loader2, X, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import OrderStatusStepper from '@/components/OrderStatusStepper';
 import { formatQuantity, formatMoney } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const getStatusVariant = (status: Order['status']) => {
     switch (status) {
@@ -292,6 +294,7 @@ export default function AdminOrderDetailsPage() {
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
 
     useEffect(() => {
         if (!orderId) return;
@@ -309,12 +312,30 @@ export default function AdminOrderDetailsPage() {
         return () => unsubscribe();
     }, [orderId, router]);
 
+    const isAppEnvironment = () => {
+        if (typeof window === 'undefined') return false;
+        const ua = window.navigator.userAgent.toLowerCase();
+        // Check for common WebView markers or if the user is on mobile
+        const isMobile = /iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i.test(ua);
+        const isWebView = ua.includes('wv') || (ua.includes('android') && ua.includes('version/'));
+        return isWebView || isMobile;
+    };
+
+    const handleActionClick = () => {
+        if (isAppEnvironment()) {
+            setShowPreview(true);
+        } else {
+            handleDownloadPDF();
+        }
+    };
+
     const handleDownloadPDF = async () => {
         if (!order) return;
         setIsDownloading(true);
         
         try {
             const html2pdf = (await import('html2pdf.js' as any)).default;
+            // Use the hidden element for high-quality rendering
             const element = document.getElementById('printable-invoice');
             
             if (!element) throw new Error("Invoice element not found");
@@ -375,7 +396,7 @@ export default function AdminOrderDetailsPage() {
                 <Button 
                     variant="default" 
                     size="sm" 
-                    onClick={handleDownloadPDF} 
+                    onClick={handleActionClick} 
                     disabled={isDownloading}
                     className="bg-primary hover:bg-primary/90 shadow-md font-bold"
                 >
@@ -502,6 +523,7 @@ export default function AdminOrderDetailsPage() {
                 </CardContent>
             </Card>
 
+            {/* Hidden High-Quality Invoice for PDF Generation */}
             <div id="printable-invoice" className="hidden">
               {order && <PrintableInvoice 
                 order={order} 
@@ -511,6 +533,48 @@ export default function AdminOrderDetailsPage() {
                 spinDiscount={spinDiscount} 
               />}
             </div>
+
+            {/* App Preview Dialog (Review Mode) */}
+            <Dialog open={showPreview} onOpenChange={setShowPreview}>
+                <DialogContent className="max-w-[95vw] sm:max-w-[800px] p-0 overflow-hidden h-[90vh] flex flex-col rounded-t-xl sm:rounded-xl">
+                    <DialogHeader className="p-4 border-b bg-background sticky top-0 z-20 flex flex-row items-center justify-between space-y-0">
+                        <div className="flex items-center gap-3">
+                             <div className="bg-primary/10 p-2 rounded-lg">
+                                <Eye className="h-5 w-5 text-primary" />
+                             </div>
+                             <div>
+                                <DialogTitle className="text-lg">Invoice Review</DialogTitle>
+                                <DialogDescription className="text-xs">Preview of Order #{order.orderNumber}</DialogDescription>
+                             </div>
+                        </div>
+                        <div className="flex gap-2">
+                             <Button size="sm" variant="default" onClick={handleDownloadPDF} disabled={isDownloading} className="font-bold bg-primary h-9">
+                                {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
+                                Download
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="outline" size="icon" className="h-9 w-9">
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </DialogClose>
+                        </div>
+                    </DialogHeader>
+                    <ScrollArea className="flex-grow bg-slate-100 p-2 sm:p-8">
+                         <div className="mx-auto shadow-2xl bg-white scale-[0.6] sm:scale-100 origin-top transform-gpu rounded-sm">
+                            <PrintableInvoice 
+                                order={order} 
+                                subtotal={subtotal} 
+                                voucherDiscount={voucherDiscount} 
+                                coinDiscount={coinDiscount} 
+                                spinDiscount={spinDiscount} 
+                            />
+                         </div>
+                    </ScrollArea>
+                    <div className="p-4 border-t bg-background text-center text-[10px] text-muted-foreground uppercase font-black tracking-widest">
+                        PabnaMart Digital Invoice System
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
