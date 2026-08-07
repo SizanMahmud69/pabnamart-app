@@ -558,8 +558,8 @@ export default function AdminOrderDetailsPage() {
                         </div>
                     </DialogHeader>
                     <ScrollArea className="flex-grow bg-slate-100 p-0">
-                         <div className="flex justify-center p-4 sm:p-8 min-h-full items-start">
-                            <div className="shadow-2xl bg-white scale-[0.42] xs:scale-[0.45] sm:scale-[0.75] md:scale-100 origin-top transform-gpu rounded-sm flex-shrink-0"
+                         <div className="relative w-full min-h-full p-4 sm:p-8 flex justify-center items-start overflow-hidden">
+                            <div className="shadow-2xl bg-white scale-[0.42] xs:scale-[0.45] sm:scale-[0.75] md:scale-100 origin-top transform-gpu rounded-sm"
                                  style={{ width: '210mm', height: '297mm' }}>
                                 <PrintableInvoice 
                                     order={order} 

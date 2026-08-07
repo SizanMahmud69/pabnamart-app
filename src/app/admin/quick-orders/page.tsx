@@ -226,7 +226,6 @@ export default function AdminQuickOrderManagement() {
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
-                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                                 <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
                                                                     <Eye className="mr-2 h-4 w-4" />
                                                                     <span>View Details</span>
