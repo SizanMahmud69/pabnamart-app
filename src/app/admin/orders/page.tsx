@@ -227,7 +227,7 @@ export default function AdminOrderManagement() {
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild onPointerDown={(e) => e.preventDefault()}>
+                                                            <DropdownMenuTrigger asChild>
                                                                 <Button variant="ghost" className="h-8 w-8 p-0">
                                                                     <span className="sr-only">Open menu</span>
                                                                     <MoreHorizontal className="h-4 w-4" />

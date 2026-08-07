@@ -558,9 +558,9 @@ export default function AdminOrderDetailsPage() {
                         </div>
                     </DialogHeader>
                     <ScrollArea className="flex-grow bg-slate-100 p-0">
-                         <div className="relative w-full min-h-full py-8 flex flex-col items-center">
-                            {/* Scaled centered wrapper */}
-                            <div className="relative shadow-2xl bg-white scale-[0.4] xs:scale-[0.45] sm:scale-[0.7] md:scale-100 origin-top transform-gpu rounded-sm mb-4"
+                         <div className="relative w-full min-h-full py-8 flex flex-col items-center overflow-x-hidden">
+                            {/* Perfectly centered wrapper */}
+                            <div className="relative shadow-2xl bg-white scale-[0.4] xs:scale-[0.45] sm:scale-[0.7] md:scale-100 origin-top transform-gpu rounded-sm mb-4 mx-auto"
                                  style={{ width: '210mm', height: '297mm' }}>
                                 <PrintableInvoice 
                                     order={order} 
@@ -580,4 +580,3 @@ export default function AdminOrderDetailsPage() {
         </div>
     );
 }
-
