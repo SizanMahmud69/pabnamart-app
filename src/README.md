@@ -1,114 +1,40 @@
 
-# PabnaMart E-commerce App
+# পাবনা মার্ট - মোবাইল দিয়ে ওয়েবসাইট লাইভ করার গাইড 🚀
 
-This is a Next.js e-commerce application built with Firebase.
+আপনার কাছে কম্পিউটার না থাকলেও আপনি আপনার ফোন দিয়ে এই ওয়েবসাইটটি লাইভ করতে পারবেন। নিচে ধাপগুলো অনুসরণ করুন:
 
-## Getting Started
+### ধাপ ১: GitHub অ্যাকাউন্ট তৈরি করুন
+১. আপনার ফোনের ব্রাউজার থেকে [github.com](https://github.com) এ যান।
+২. একটি ফ্রি অ্যাকাউন্ট খুলুন (যদি না থাকে)।
+৩. একটি নতুন **Repository** তৈরি করুন যার নাম দিন `pabna-mart` এবং এটি `Private` রাখুন।
 
-First, run the development server:
+### ধাপ ২: কোড আপলোড করুন
+১. এই এডিটরে (Firebase Studio) আপনি আপনার কোডটি সরাসরি GitHub-এ পুশ করার অপশন পাবেন। সেটি ব্যবহার করে আপনার তৈরি করা Repository-তে কোড পাঠিয়ে দিন।
 
-```bash
-npm run dev
-```
+### ধাপ ৩: Vercel-এ অ্যাকাউন্ট খুলুন
+১. [vercel.com](https://vercel.com) এ যান এবং আপনার **GitHub** অ্যাকাউন্ট দিয়ে লগইন করুন।
+২. **Add New Project** এ ক্লিক করুন।
+৩. GitHub থেকে আপনার `pabna-mart` রিপোজিটরি সিলেক্ট করুন।
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### ধাপ ৪: Environment Variables সেট করা (খুবই গুরুত্বপূর্ণ)
+Vercel-এ প্রোজেক্ট ইমপোর্ট করার সময় **Environment Variables** সেকশনে নিচের তথ্যগুলো দিন (আপনার Firebase কনফিগারেশন থেকে):
+- `NEXT_PUBLIC_FIREBASE_API_KEY`
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `NEXT_PUBLIC_FIREBASE_APP_ID`
+- `FIREBASE_SERVICE_ACCOUNT_JSON` (আপনার Firebase কনসোল থেকে ডাউনলোড করা পুরো JSON টেক্সটটি এখানে পেস্ট করুন)
 
-## Git Authentication (Personal Access Token)
+এরপর **Deploy** বাটনে ক্লিক করুন। কিছুক্ষণ পর আপনার ওয়েবসাইটটি একটি অস্থায়ী লিংকে লাইভ হয়ে যাবে।
 
-If you get an error like "Invalid username or token" while pushing to GitHub, follow these steps:
+### ধাপ ৫: আপনার ডোমেইন (`pabna-mart.shop`) কানেক্ট করা
+১. Vercel ড্যাশবোর্ডে গিয়ে আপনার প্রোজেক্টের **Settings > Domains** এ যান।
+২. আপনার ডোমেইন নাম `pabna-mart.shop` লিখুন এবং **Add** দিন।
+৩. Vercel আপনাকে কিছু **DNS Records** (A record এবং CNAME) দিবে।
+৪. আপনার ডোমেইন যেখান থেকে কিনেছেন (যেমন shodns.in), তাদের ক্লায়েন্ট এরিয়ায় গিয়ে **DNS Management** বা **Nameservers** অপশনে যান।
+৫. Vercel-এর দেওয়া তথ্য অনুযায়ী DNS রেকর্ডগুলো আপডেট করে দিন।
+৬. সর্বোচ্চ ২৪ ঘণ্টার মধ্যে আপনার ডোমেইনে ওয়েবসাইটটি চালু হয়ে যাবে।
 
-1.  **Generate a Token:** 
-    - Go to GitHub **Settings** -> **Developer settings** -> **Personal access tokens** -> **Tokens (classic)**.
-    - Click **Generate new token**.
-    - Select scopes (at least 'repo').
-    - Copy the generated token.
-2.  **Use the Token (If prompted for password):**
-    - Run `git push`.
-    - Use your GitHub username.
-    - Use the **Token** you copied instead of your account password.
-
-### 🚀 Pro Tip: If Git doesn't ask for Password and directly shows Error
-If your computer has cached old credentials and won't let you login, use this command to embed your token:
-
-```bash
-git remote set-url origin https://YOUR_TOKEN_HERE@github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-```
-*(Replace `YOUR_TOKEN_HERE`, `YOUR_USERNAME`, and `YOUR_REPO_NAME` with your actual info. Then just run `git push origin main`)*
-
-## Common Git Errors & Solutions
-
-### 1. Updates were rejected (Remote contains work you do not have locally)
-**Cause:** Remote repo has commits you don't have. Often happens when repo is created with a README on GitHub.
-**Solution:**
-```bash
-git pull origin main --rebase
-git push origin main
-```
-
-## Deployment Guide for Vercel
-
-Follow these simple steps to deploy your application to Vercel.
-
-### Step 1: Push Your Code to GitHub
-
-First, you need to have your project on GitHub.
-
-1.  **Create a New GitHub Repository:**
-    Go to your GitHub account and create a new, empty repository.
-
-2.  **Connect Your Project to GitHub:**
-    In your project's terminal, run these commands one by one:
-    ```bash
-    git init -b main
-    git add .
-    git commit -m "Initial commit"
-    git remote add origin <your-repo-url>
-    git push -u origin main
-    ```
-    *(Replace `<your-repo-url>` with your new repository's URL)*
-
-### Step 2: Deploy to Vercel & Set Environment Variables
-
-This is the most important step. Vercel needs access to your Firebase and other services to work correctly.
-
-1.  **Sign Up & Import Project:**
-    - Go to [vercel.com](https://vercel.com) and sign up with your GitHub account.
-    - From your dashboard, click **"Add New..."** -> **"Project"**.
-    - Import the GitHub repository you just created.
-
-2.  **Add Public Firebase Variables:**
-    - In Vercel's "Configure Project" screen, find the **Environment Variables** section.
-    - Add the following variables one by one. The **Name** and **Value** must be exact.
-
-    | Name                                      | Value                                          |
-    | ----------------------------------------- | ---------------------------------------------- |
-    | `NEXT_PUBLIC_FIREBASE_API_KEY`            | `AIzaSyDlDx1lFR_B5M2mq_sLTZCfjrDLxY5pInk`        |
-    | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`        | `pabnamart.firebaseapp.com`                    |
-    | `NEXT_PUBLIC_FIREBASE_PROJECT_ID`         | `pabnamart`                                    |
-    | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`     | `pabnamart.appspot.com`                        |
-    | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`| `600614180848`                                 |
-    | `NEXT_PUBLIC_FIREBASE_APP_ID`             | `1:600614180848:web:6f4e21fb4f5b6cd42a6f35`   |
-
-3.  **Add Firebase Service Account (CRITICAL):**
-    This allows your server to perform actions like placing orders.
-
-    - In your [Firebase project settings](https://console.firebase.google.com/u/0/project/pabnamart/settings/serviceaccounts/adminsdk), click **"Generate new private key"**. A JSON file will download.
-    - Open the downloaded JSON file with a simple text editor (like Notepad on Windows or TextEdit on Mac).
-    - **CRITICAL:** Select **ALL** the text in the file (`Ctrl+A` or `Cmd+A`) and copy it (`Ctrl+C` or `Cmd+C`). The text must start with `{` and end with `}`. Do not miss anything.
-    - In Vercel, add a **new** environment variable:
-        - **Name:** `FIREBASE_SERVICE_ACCOUNT_JSON`
-        - **Value:** Paste the **entire JSON content** you just copied. Ensure there are no extra spaces or line breaks before or after what you paste.
-    - **IMPORTANT:** Make sure all three environment boxes (Production, Preview, Development) are checked for this variable.
-
-4.  **Add Vercel Blob Storage Token (for Image Uploads):**
-
-    - In your Vercel dashboard, go to the **Storage** tab and create a new **Blob** store.
-    - Vercel will give you a token named `BLOB_READ_WRITE_TOKEN`. Copy the value.
-    - In Vercel, add another new environment variable:
-        - **Name:** `BLOB_READ_WRITE_TOKEN`
-        - **Value:** Paste the token value.
-    - Again, make sure all three environment boxes are checked.
-
-5.  **Deploy:**
-    - Click the **"Deploy"** button.
-    - If the deployment fails, go to the **"Deployments"** tab and redeploy the latest version to apply the environment variable changes.
+---
+**নোট:** আপনার কেনা cPanel হোস্টিংটি আপনি শুধুমাত্র অফিসিয়াল ইমেইল (যেমন: info@pabna-mart.shop) তৈরি করার জন্য ব্যবহার করতে পারেন। ওয়েবসাইটটি Vercel-এ থাকাই আপনার জন্য সবচেয়ে ভালো হবে কারণ এতে কোড ম্যানেজ করা সহজ।
