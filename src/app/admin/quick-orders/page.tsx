@@ -117,11 +117,11 @@ export default function AdminQuickOrderManagement() {
 
                             if (item.color) {
                                 const idx = newColors.findIndex(c => c.name === item.color);
-                                if (idx !== -1) newColors[idx].stock += item.quantity;
+                                if (idx !== -1) newColors[idx].stock -= item.quantity;
                             }
                             if (item.size) {
                                 const idx = newSizes.findIndex(s => s.name === item.size);
-                                if (idx !== -1) newSizes[idx].stock += item.quantity;
+                                if (idx !== -1) newSizes[idx].stock -= item.quantity;
                             }
 
                             transaction.update(productRef, {
@@ -220,7 +220,7 @@ export default function AdminQuickOrderManagement() {
                                                     <div className="flex items-center gap-2">
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <Button variant="ghost" className="h-8 w-8 p-0" onPointerDown={(e) => e.preventDefault()}>
                                                                     <span className="sr-only">Open menu</span>
                                                                     <MoreHorizontal className="h-4 w-4" />
                                                                 </Button>
