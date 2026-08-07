@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { Order } from '@/types';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
@@ -9,7 +9,7 @@ import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, CreditCard, CheckCircle, Printer, Smartphone, X } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Download, Smartphone, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -50,126 +50,205 @@ const PrintableInvoice = ({
     const stampClass = isPaid ? 'paid' : 'unpaid';
     
     return (
-        <div className="invoice-outer-frame">
-            <div className="invoice-box">
-                <div className="header">
-                    <h1 className="site-title">PabnaMart</h1>
-                    <p className="invoice-subtitle">Order Invoice</p>
-                </div>
-
-                <div className="details-grid">
-                    <div className="order-info">
-                        <p><strong>Order ID:</strong> <span className="text-primary">#{order.orderNumber}</span></p>
-                        <p><strong>Date:</strong> {new Date(order.date).toLocaleDateString()}</p>
-                        <p><strong>Status:</strong> <span className="capitalize">{order.status.replace('-', ' ')}</span></p>
-                    </div>
-                    <div className="billing-info text-right">
-                        <p className="section-header">Billed To:</p>
-                        <p className="font-bold">{order.shippingAddress.fullName}</p>
-                        <p>{order.shippingAddress.address}, {order.shippingAddress.area}</p>
-                        <p>{order.shippingAddress.city}</p>
-                        <p>Phone: {order.shippingAddress.phone}</p>
-                    </div>
-                </div>
-
-                <div className="payment-summary">
-                    <h3 className="section-title">Payment Details</h3>
-                    <div className="payment-grid">
-                        <p><strong>Method:</strong> <span className="capitalize">{order.paymentMethod.replace('-', ' ')}</span></p>
-                        {isPaid && order.transactionId && <p><strong>Trx ID:</strong> {order.transactionId}</p>}
-                        {isPaid && order.paymentAccountNumber && <p><strong>From:</strong> {order.paymentAccountNumber}</p>}
-                    </div>
-                </div>
-
-                <table className="items-table">
-                    <thead>
-                        <tr>
-                            <th>Item Description</th>
-                            <th className="text-center">Qty</th>
-                            <th className="text-right">Price</th>
-                            <th className="text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {order.items.map((item, index) => (
-                            <tr key={`${item.id}-${index}`}>
-                                <td>
-                                    <div className="item-name">{item.name}</div>
-                                    {item.isB1G1 && <span className="b1g1-tag">B1G1</span>}
-                                    {(item.color || item.size) && (
-                                        <div className="item-variants">
-                                            {item.color}{item.color && item.size ? ', ' : ''}{item.size}
-                                        </div>
-                                    )}
-                                </td>
-                                <td className="text-center">{formatQuantity(item.quantity)} {item.unit || 'Pcs'}</td>
-                                <td className="text-right">৳{formatMoney(item.price)}</td>
-                                <td className="text-right">৳{formatMoney(item.price * item.quantity)}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+        <div className="invoice-container-pdf">
+            <style>{`
+                .invoice-container-pdf {
+                    width: 210mm;
+                    min-height: 297mm;
+                    padding: 20mm;
+                    margin: 0;
+                    background: white;
+                    position: relative;
+                    font-family: 'Inter', sans-serif;
+                    box-sizing: border-box;
+                    color: #1f2937;
+                }
+                .brand-border {
+                    position: absolute;
+                    inset: 10px;
+                    border: 2px solid hsl(262 84% 59% / 0.15);
+                    pointer-events: none;
+                }
+                .brand-border::before {
+                    content: 'pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart';
+                    position: absolute;
+                    top: -8px;
+                    left: 20px;
+                    font-size: 8px;
+                    font-weight: 900;
+                    color: hsl(262 84% 59%);
+                    text-transform: uppercase;
+                    background: white;
+                    padding: 0 5px;
+                    letter-spacing: 2px;
+                }
+                .brand-border::after {
+                    content: 'pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart';
+                    position: absolute;
+                    bottom: -8px;
+                    right: 20px;
+                    font-size: 8px;
+                    font-weight: 900;
+                    color: hsl(262 84% 59%);
+                    text-transform: uppercase;
+                    background: white;
+                    padding: 0 5px;
+                    letter-spacing: 2px;
+                }
+                .header { text-align: center; margin-bottom: 30px; }
+                .header h1 { font-size: 40px; font-weight: 900; color: hsl(262 84% 59%); margin: 0; letter-spacing: -2px; }
+                .header p { font-size: 14px; color: #6b7280; text-transform: uppercase; font-weight: 700; letter-spacing: 4px; margin-top: 5px; }
                 
-                <div className="bottom-section">
-                    <div className="stamp-container">
-                        <div className={`stamp ${stampClass}`}>
-                            <div className="stamp-main">{stampText}</div>
-                            <div className="stamp-small">Verified by PabnaMart</div>
-                        </div>
-                    </div>
-                    <div className="totals-container">
-                        <table className="totals-table">
-                            <tbody>
-                                <tr>
-                                    <td>Subtotal:</td>
-                                    <td className="text-right">৳{formatMoney(subtotal)}</td>
-                                </tr>
-                                {voucherDiscount > 0 && (
-                                    <tr className="discount-row">
-                                        <td>Voucher Discount:</td>
-                                        <td className="text-right">- ৳{formatMoney(voucherDiscount)}</td>
-                                    </tr>
-                                )}
-                                {coinDiscount > 0 && (
-                                    <tr className="discount-row">
-                                        <td>Coin Discount:</td>
-                                        <td className="text-right">- ৳{formatMoney(coinDiscount)}</td>
-                                    </tr>
-                                )}
-                                {spinDiscount > 0 && (
-                                    <tr className="discount-row">
-                                        <td>Spin Discount ({order.spinDiscountPercentage}%):</td>
-                                        <td className="text-right">- ৳{formatMoney(spinDiscount)}</td>
-                                    </tr>
-                                )}
-                                <tr>
-                                    <td>Shipping Fee:</td>
-                                    <td className="text-right">৳{formatMoney(order.shippingFee)}</td>
-                                </tr>
-                                {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
-                                    <tr>
-                                        <td>COD Fee:</td>
-                                        <td className="text-right">৳{formatMoney(order.cashOnDeliveryFee)}</td>
-                                    </tr>
-                                )}
-                                <tr className="grand-total-row">
-                                    <td>Grand Total:</td>
-                                    <td className="text-right">৳{formatMoney(order.total)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                .info-grid { display: flex; justify-content: space-between; margin-bottom: 40px; }
+                .info-section { width: 45%; }
+                .info-section h3 { font-size: 10px; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px; font-weight: 800; }
+                .info-section p { margin: 2px 0; font-size: 12px; line-height: 1.5; }
+                .text-right { text-align: right; }
                 
-                <div className="invoice-footer">
-                    <p className="thank-you">Thank you for shopping with PabnaMart!</p>
-                    <p className="contact-info">support@pabnamart.com | www.pabnamart.com</p>
+                .payment-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin-bottom: 30px; }
+                .payment-box h4 { font-size: 12px; font-weight: 800; margin: 0 0 10px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
+                .payment-flex { display: flex; gap: 40px; }
+                .payment-flex p { margin: 0; font-size: 11px; }
+
+                .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                .table th { background: #f3f4f6; padding: 12px 15px; text-align: left; font-size: 10px; text-transform: uppercase; font-weight: 800; color: #4b5563; border-bottom: 2px solid #e5e7eb; }
+                .table td { padding: 15px; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+                .item-name { font-weight: 700; color: #111827; }
+                .item-meta { font-size: 10px; color: #6b7280; margin-top: 4px; font-weight: 600; }
+                .b1g1-badge { font-size: 8px; font-weight: 900; background: #fdf2f8; color: #db2777; padding: 2px 6px; border-radius: 4px; border: 1px solid #fbcfe8; margin-left: 8px; }
+                
+                .footer-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px; }
+                .stamp { border: 4px double; padding: 10px 20px; text-align: center; text-transform: uppercase; transform: rotate(-12deg); opacity: 0.2; border-radius: 12px; margin-top: 20px; }
+                .stamp-main { font-size: 36px; font-weight: 900; }
+                .stamp-sub { font-size: 8px; font-weight: 800; margin-top: 5px; }
+                .stamp.paid { color: #059669; border-color: #059669; }
+                .stamp.unpaid { color: #dc2626; border-color: #dc2626; }
+                
+                .totals { width: 280px; }
+                .totals-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; font-weight: 600; }
+                .totals-row.discount { color: #059669; }
+                .totals-row.grand { font-size: 22px; font-weight: 900; color: #111827; border-top: 3px solid #111827; margin-top: 15px; padding-top: 15px; }
+                
+                .note { margin-top: 60px; text-align: center; border-top: 1px solid #f3f4f6; padding-top: 20px; }
+                .note p { margin: 2px 0; font-size: 12px; color: #9ca3af; }
+                .note .thanks { font-weight: 800; color: #4b5563; font-size: 14px; margin-bottom: 5px; }
+            `}</style>
+
+            <div className="brand-border"></div>
+
+            <div className="header">
+                <h1>PabnaMart</h1>
+                <p>Official Order Invoice</p>
+            </div>
+
+            <div className="info-grid">
+                <div className="info-section">
+                    <h3>Order Information</h3>
+                    <p><strong>Order ID:</strong> #{order.orderNumber}</p>
+                    <p><strong>Date:</strong> {new Date(order.date).toLocaleDateString()}</p>
+                    <p><strong>Status:</strong> <span style={{ textTransform: 'capitalize' }}>{order.status.replace('-', ' ')}</span></p>
+                </div>
+                <div className="info-section text-right">
+                    <h3>Billed To</h3>
+                    <p><strong>{order.shippingAddress.fullName}</strong></p>
+                    <p>{order.shippingAddress.address}, {order.shippingAddress.area}</p>
+                    <p>{order.shippingAddress.city}</p>
+                    <p>Phone: {order.shippingAddress.phone}</p>
                 </div>
             </div>
-        </div>
-    )
-};
 
+            <div className="payment-box">
+                <h4>Payment Details</h4>
+                <div className="payment-flex">
+                    <p><strong>Method:</strong> {order.paymentMethod.replace('-', ' ').toUpperCase()}</p>
+                    {isPaid && order.transactionId && <p><strong>Trx ID:</strong> {order.transactionId}</p>}
+                    {isPaid && order.paymentAccountNumber && <p><strong>From:</strong> {order.paymentAccountNumber}</p>}
+                </div>
+            </div>
+
+            <table className="table">
+                <thead>
+                    <tr>
+                        <th style={{ width: '60%' }}>Description</th>
+                        <th style={{ textAlign: 'center' }}>Qty</th>
+                        <th style={{ textAlign: 'right' }}>Price</th>
+                        <th style={{ textAlign: 'right' }}>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {order.items.map((item, index) => (
+                        <tr key={index}>
+                            <td>
+                                <span className="item-name">{item.name}</span>
+                                {item.isB1G1 && <span className="b1g1-badge">B1G1</span>}
+                                {(item.color || item.size) && (
+                                    <div className="item-meta">
+                                        {item.color}{item.color && item.size ? ', ' : ''}{item.size}
+                                    </div>
+                                )}
+                            </td>
+                            <td style={{ textAlign: 'center' }}>{formatQuantity(item.quantity)} {item.unit}</td>
+                            <td style={{ textAlign: 'right' }}>৳{formatMoney(item.price)}</td>
+                            <td style={{ textAlign: 'right' }}>৳{formatMoney(item.price * item.quantity)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+
+            <div className="footer-flex">
+                <div className={`stamp ${stampClass}`}>
+                    <div className="stamp-main">{stampText}</div>
+                    <div className="stamp-sub">Verified by PabnaMart</div>
+                </div>
+                
+                <div className="totals">
+                    <div className="totals-row">
+                        <span>Subtotal:</span>
+                        <span>৳{formatMoney(subtotal)}</span>
+                    </div>
+                    {voucherDiscount > 0 && (
+                        <div className="totals-row discount">
+                            <span>Voucher Discount:</span>
+                            <span>- ৳{formatMoney(voucherDiscount)}</span>
+                        </div>
+                    )}
+                    {coinDiscount > 0 && (
+                        <div className="totals-row discount">
+                            <span>Coin Discount:</span>
+                            <span>- ৳{formatMoney(coinDiscount)}</span>
+                        </div>
+                    )}
+                    {spinDiscount > 0 && (
+                        <div className="totals-row discount">
+                            <span>Spin Discount ({order.spinDiscountPercentage}%):</span>
+                            <span>- ৳{formatMoney(spinDiscount)}</span>
+                        </div>
+                    )}
+                    <div className="totals-row">
+                        <span>Shipping Fee:</span>
+                        <span>৳{formatMoney(order.shippingFee)}</span>
+                    </div>
+                    {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                        <div className="totals-row">
+                            <span>COD Surcharge:</span>
+                            <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
+                        </div>
+                    )}
+                    <div className="totals-row grand">
+                        <span>Grand Total:</span>
+                        <span>৳{formatMoney(order.total)}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="note">
+                <p className="thanks">Thank you for shopping with PabnaMart!</p>
+                <p>For any queries, please email us at support@pabnamart.com</p>
+                <p>www.pabnamart.com</p>
+            </div>
+        </div>
+    );
+};
 
 export default function AdminOrderDetailsPage() {
     const router = useRouter();
@@ -177,6 +256,7 @@ export default function AdminOrderDetailsPage() {
     const orderId = params.id as string;
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     useEffect(() => {
         if (!orderId) return;
@@ -194,100 +274,40 @@ export default function AdminOrderDetailsPage() {
         return () => unsubscribe();
     }, [orderId, router]);
 
-    const handlePrint = () => {
-        const printContent = document.getElementById('printable-invoice');
-        if (printContent) {
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-                printWindow.document.write(`
-                    <html>
-                        <head>
-                            <title>Invoice_#${order?.orderNumber}</title>
-                            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-                            <style>
-                                @page { size: auto; margin: 10mm; }
-                                body { font-family: 'Inter', sans-serif; font-size: 11px; color: #1f2937; margin: 0; padding: 0; background: #fff; }
-                                
-                                .invoice-outer-frame {
-                                    border: 20px solid transparent;
-                                    border-image: repeating-linear-gradient(45deg, hsl(262 84% 59%) 0, hsl(262 84% 59%) 2px, transparent 2px, transparent 15px);
-                                    padding: 20px;
-                                    position: relative;
-                                    min-height: 98vh;
-                                }
+    const handleDownloadPDF = async () => {
+        if (!order) return;
+        setIsDownloading(true);
+        
+        try {
+            // Import html2pdf dynamically to avoid SSR issues
+            const html2pdf = (await import('html2pdf.js' as any)).default;
+            const element = document.getElementById('printable-invoice');
+            
+            if (!element) throw new Error("Invoice element not found");
 
-                                .invoice-outer-frame::after {
-                                    content: 'pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart pabnamart';
-                                    position: absolute;
-                                    top: -15px;
-                                    left: 10px;
-                                    font-size: 8px;
-                                    color: hsl(262 84% 59%);
-                                    font-weight: 900;
-                                    text-transform: uppercase;
-                                    opacity: 0.3;
-                                    letter-spacing: 5px;
-                                }
+            // Temporary reveal for capture
+            element.classList.remove('hidden');
 
-                                .invoice-box { max-width: 100%; margin: auto; padding: 0 15px; border: none; }
-                                .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f3f4f6; padding-bottom: 15px; }
-                                .header .site-title { font-size: 32px; font-weight: 900; color: hsl(262 84% 59%); margin: 0; letter-spacing: -1.5px; }
-                                .header .invoice-subtitle { font-size: 12px; color: #6b7280; margin: 3px 0 0; text-transform: uppercase; font-weight: 700; letter-spacing: 2px; }
-                                .details-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; margin-bottom: 25px; }
-                                .billing-info .section-header { font-size: 10px; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin-bottom: 4px; }
-                                .billing-info p { margin: 1px 0; line-height: 1.4; }
-                                .order-info p { margin: 4px 0; font-size: 11px; }
-                                .text-primary { color: hsl(262 84% 59%); font-weight: 800; }
-                                .payment-summary { background: #f9fafb; padding: 12px; border-radius: 6px; margin-bottom: 25px; border: 1px solid #f3f4f6; }
-                                .payment-summary .section-title { font-size: 12px; font-weight: 700; margin: 0 0 8px; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
-                                .payment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
-                                .payment-grid p { margin: 0; font-size: 10px; }
-                                
-                                .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                                .items-table th { background: #f3f4f6; padding: 10px 15px; text-align: left; font-size: 10px; text-transform: uppercase; font-weight: 700; color: #4b5563; border-bottom: 2px solid #e5e7eb; }
-                                .items-table td { padding: 12px 15px; border-bottom: 1px solid #f3f4f6; }
-                                .item-name { font-weight: 700; font-size: 11px; color: #111827; }
-                                .item-variants { font-size: 9px; color: #6b7280; margin-top: 3px; font-weight: 600; }
-                                .b1g1-tag { font-size: 8px; font-weight: 900; background: #fdf2f8; color: #db2777; padding: 2px 5px; border-radius: 4px; border: 1px solid #fbcfe8; margin-left: 6px; text-transform: uppercase; }
-                                
-                                .bottom-section { display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; margin-top: 15px; padding-right: 10px; }
-                                .stamp-container { position: relative; display: flex; align-items: center; justify-content: center; }
-                                .stamp { border: 4px double; padding: 8px 15px; text-align: center; text-transform: uppercase; transform: rotate(-10deg); opacity: 0.15; border-radius: 10px; line-height: 1; }
-                                .stamp-main { font-size: 32px; font-weight: 900; }
-                                .stamp-small { font-size: 7px; font-weight: 800; margin-top: 4px; }
-                                .stamp.paid { color: #059669; border-color: #059669; }
-                                .stamp.unpaid { color: #dc2626; border-color: #dc2626; }
-                                
-                                .totals-table { width: 100%; max-width: 280px; margin-left: auto; border-collapse: collapse; }
-                                .totals-table td { padding: 6px 0; font-size: 11px; font-weight: 600; }
-                                .discount-row { color: #059669; }
-                                .grand-total-row td { font-size: 18px; font-weight: 900; padding-top: 12px; border-top: 3px solid #111827; color: #111827; }
-                                
-                                .invoice-footer { margin-top: 50px; text-align: center; border-top: 2px solid #f3f4f6; padding-top: 20px; color: #9ca3af; }
-                                .thank-you { font-weight: 800; color: #4b5563; margin-bottom: 5px; font-size: 13px; }
-                                .contact-info { font-size: 10px; font-weight: 500; }
-                                
-                                .text-right { text-align: right; padding-right: 5px; }
-                                .text-center { text-align: center; }
-                                .capitalize { text-transform: capitalize; }
-                            </style>
-                        </head>
-                        <body>
-                            ${printContent.innerHTML}
-                            <script>
-                                window.onload = function() {
-                                    window.print();
-                                    window.onafterprint = function() { window.close(); };
-                                    setTimeout(function() {
-                                        window.onfocus = function() { window.close(); }
-                                    }, 500);
-                                }
-                            </script>
-                        </body>
-                    </html>
-                `);
-                printWindow.document.close();
-            }
+            const opt = {
+                margin: 0,
+                filename: `Invoice_#${order.orderNumber}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true, 
+                    letterRendering: true,
+                    logging: false
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            await html2pdf().from(element).set(opt).save();
+        } catch (error) {
+            console.error("PDF Download failed:", error);
+        } finally {
+            const element = document.getElementById('printable-invoice');
+            if (element) element.classList.add('hidden');
+            setIsDownloading(false);
         }
     };
 
@@ -314,25 +334,31 @@ export default function AdminOrderDetailsPage() {
     return (
         <div className="container mx-auto max-w-2xl px-4 py-6">
             <div className="flex justify-between items-center mb-6">
-                <Button asChild variant="ghost" size="sm">
-                    <Link href="/admin/orders">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Orders
-                    </Link>
+                <Button variant="ghost" size="sm" onClick={() => router.back()}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
                 </Button>
-                <div className="flex gap-2">
-                    <Button variant="default" size="sm" onClick={handlePrint} className="bg-primary hover:bg-primary/90">
-                        <Printer className="mr-2 h-4 w-4" />
-                        Print & Save PDF
-                    </Button>
-                </div>
+                <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={handleDownloadPDF} 
+                    disabled={isDownloading}
+                    className="bg-primary hover:bg-primary/90 shadow-md"
+                >
+                    {isDownloading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Download className="mr-2 h-4 w-4" />
+                    )}
+                    {isDownloading ? "Generating PDF..." : "Download Invoice (PDF)"}
+                </Button>
             </div>
 
             <Card className="shadow-lg border-primary/10">
                 <CardHeader className="bg-primary/5 border-b">
                     <div className="flex justify-between items-start">
                         <div>
-                            <CardTitle className="text-xl">Order Details</CardTitle>
+                            <CardTitle className="text-xl">Order Review</CardTitle>
                             <CardDescription className="font-mono">#{order.orderNumber}</CardDescription>
                         </div>
                         <Badge variant={getStatusVariant(order.status)} className="capitalize px-3 py-1">
@@ -439,7 +465,7 @@ export default function AdminOrderDetailsPage() {
                 </CardContent>
             </Card>
 
-            {/* Hidden printable element */}
+            {/* Hidden container for PDF rendering */}
             <div id="printable-invoice" className="hidden">
               {order && <PrintableInvoice 
                 order={order} 
