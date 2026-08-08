@@ -184,14 +184,7 @@ const AdminDashboard = () => {
                                                 )}
                                             </div>
                                             <div>
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className="text-lg font-bold">{item.title}</h3>
-                                                    {badgeCount > 0 && (
-                                                        <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-black uppercase animate-pulse">
-                                                            {badgeCount} New
-                                                        </Badge>
-                                                    )}
-                                                </div>
+                                                <h3 className="text-lg font-bold">{item.title}</h3>
                                                 <p className="text-xs text-muted-foreground">{item.description}</p>
                                             </div>
                                         </div>
