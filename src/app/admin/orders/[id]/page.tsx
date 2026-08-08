@@ -60,7 +60,7 @@ const PrintableInvoice = ({
                     width: 210mm;
                     min-height: 297mm;
                     padding: 20mm;
-                    margin: 0;
+                    margin: 0 auto;
                     background: white;
                     position: relative;
                     font-family: 'Inter', sans-serif !important;
@@ -68,6 +68,7 @@ const PrintableInvoice = ({
                     color: #0f172a;
                     display: flex;
                     flex-direction: column;
+                    text-align: left;
                 }
                 .brand-border {
                     position: absolute;
@@ -83,10 +84,11 @@ const PrintableInvoice = ({
                 
                 .info-grid { display: flex; justify-content: space-between; margin-bottom: 35px; position: relative; z-index: 10; }
                 .info-section { width: 45%; }
-                .info-section h3 { font-size: 9px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; font-weight: 800; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; letter-spacing: 1.5px; }
-                .info-section p { margin: 2px 0; font-size: 12px; line-height: 1.5; color: #334155; }
+                .info-section h3 { font-size: 9px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; font-weight: 800; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; letter-spacing: 1.5px; text-align: left; }
+                .info-section p { margin: 2px 0; font-size: 12px; line-height: 1.5; color: #334155; text-align: left; }
                 .info-section .highlight { font-weight: 700; color: #0f172a; }
-                .text-right { text-align: right; }
+                .text-right { text-align: right !important; }
+                .text-right h3, .text-right p { text-align: right !important; }
                 
                 .payment-info-bar { 
                     background: #f8fafc; 
@@ -264,18 +266,8 @@ export default function AdminOrderDetailsPage() {
         return () => unsubscribe();
     }, [orderId, router]);
 
-    const isAppEnvironment = () => {
-        if (typeof window === 'undefined') return false;
-        const ua = window.navigator.userAgent.toLowerCase();
-        return /iphone|ipad|ipod|android/i.test(ua);
-    };
-
     const handleActionClick = () => {
-        if (isAppEnvironment()) {
-            setShowPreview(true);
-        } else {
-            handleDownloadPDF();
-        }
+        setShowPreview(true);
     };
 
     const handleDownloadPDF = async () => {
@@ -323,8 +315,8 @@ export default function AdminOrderDetailsPage() {
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back
                 </Button>
                 <Button variant="default" size="sm" onClick={handleActionClick} disabled={isDownloading}>
-                    {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                    Download Invoice
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview Invoice
                 </Button>
             </div>
 
@@ -404,7 +396,7 @@ export default function AdminOrderDetailsPage() {
             </div>
 
             <Dialog open={showPreview} onOpenChange={setShowPreview}>
-                <DialogContent className="max-w-[95vw] sm:max-w-[800px] p-0 h-[90vh] flex flex-col overflow-hidden bg-slate-100">
+                <DialogContent className="max-w-[100vw] sm:max-w-[800px] p-0 h-[100dvh] sm:h-[90vh] flex flex-col overflow-hidden bg-slate-100 border-0">
                     <DialogHeader className="p-4 border-b bg-background flex flex-row items-center justify-between space-y-0 shrink-0">
                         <DialogTitle>Invoice Review</DialogTitle>
                         <div className="flex gap-2">
@@ -417,9 +409,9 @@ export default function AdminOrderDetailsPage() {
                             </DialogClose>
                         </div>
                     </DialogHeader>
-                    <ScrollArea className="flex-1 w-full">
-                         <div className="w-full flex justify-center py-10 min-h-full">
-                            <div className="relative shadow-2xl bg-white scale-[0.42] sm:scale-[0.6] md:scale-[0.85] origin-top"
+                    <ScrollArea className="flex-1 w-full bg-slate-200">
+                         <div className="w-full flex justify-center py-6 sm:py-10 min-h-full">
+                            <div className="relative shadow-2xl bg-white scale-[0.42] sm:scale-[0.6] md:scale-[0.85] origin-top absolute left-1/2 -translate-x-1/2"
                                  style={{ 
                                      width: '210mm', 
                                      height: '297mm',

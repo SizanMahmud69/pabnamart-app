@@ -235,7 +235,7 @@ export default function AdminOrderManagement() {
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
                                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                                <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
+                                                                <DropdownMenuItem onClick={() => router.push(`/admin/orders/${order.id}`)}>
                                                                     <Eye className="mr-2 h-4 w-4" />
                                                                     <span>View Details</span>
                                                                 </DropdownMenuItem>
@@ -247,7 +247,7 @@ export default function AdminOrderManagement() {
                                                                         <DropdownMenuPortal>
                                                                             <DropdownMenuSubContent>
                                                                                 {nextStatuses.map(status => (
-                                                                                    <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order, status)} className="capitalize">
+                                                                                    <DropdownMenuItem key={status} onClick={() => handleStatusChange(order, status)} className="capitalize">
                                                                                         {status}
                                                                                     </DropdownMenuItem>
                                                                                 ))}
@@ -258,7 +258,7 @@ export default function AdminOrderManagement() {
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem 
                                                                     className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                                                    onSelect={() => setOrderToDelete(order)}
+                                                                    onClick={() => setOrderToDelete(order)}
                                                                 >
                                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                                     <span>Delete Order</span>

@@ -165,10 +165,6 @@ export default function ProductActions({
                         >
                             <RadioGroupItem value={color.name} id={`color-${color.name}`} className="sr-only" disabled={isOutOfStock} />
                             <span className={cn(isOutOfStock && "line-through")}>{color.name}</span>
-                            {isOutOfStock ? 
-                                <span className="text-xs text-destructive ml-2">(Out of Stock)</span> :
-                                <span className="text-xs text-muted-foreground ml-2">({format(color.stock)})</span>
-                            }
                         </Label>
                     )
                 })}
@@ -194,10 +190,6 @@ export default function ProductActions({
                         >
                             <RadioGroupItem value={size.name} id={`size-${size.name}`} className="sr-only" disabled={isOutOfStock} />
                             <span className={cn(isOutOfStock && "line-through")}>{size.name}</span>
-                             {isOutOfStock ? 
-                                <span className="text-xs text-destructive ml-2">(Out of Stock)</span> :
-                                <span className="text-xs text-muted-foreground ml-2">({format(size.stock)})</span>
-                            }
                         </Label>
                     )
                 })}
@@ -236,12 +228,8 @@ export default function ProductActions({
                     <Plus className="h-4 w-4" />
                 </Button>
             </div>
-            <span className="text-xs text-muted-foreground font-medium">
-                {user ? (
-                    `Min order ${format(minQuantity)} ${product.unit || 'Pcs'}`
-                ) : (
-                    `সর্বনিম্ন অর্ডার ${format(minQuantity)} ${product.unit || 'Pcs'}`
-                )}
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase">
+                Min order {format(minQuantity)} {product.unit || 'Pcs'}
             </span>
         </div>
       </div>
