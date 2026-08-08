@@ -414,19 +414,42 @@ export default function AdminOrderDetailsPage() {
                     </DialogHeader>
                     <ScrollArea className="flex-1 w-full bg-slate-200">
                          <div className="w-full flex justify-center py-6 sm:py-12 min-h-full">
-                            <div className="relative shadow-2xl bg-white scale-[0.42] sm:scale-[0.6] md:scale-[0.85] origin-top mx-auto"
-                                 style={{ 
-                                     width: '210mm', 
-                                     height: '297mm',
-                                     marginBottom: '50px'
-                                 }}>
-                                <PrintableInvoice 
-                                    order={order} 
-                                    subtotal={subtotal} 
-                                    voucherDiscount={voucherDiscount} 
-                                    coinDiscount={coinDiscount} 
-                                    spinDiscount={spinDiscount} 
-                                />
+                            {/* Scaled invoice container for proper centering */}
+                            <div 
+                                className="relative shrink-0 shadow-2xl"
+                                style={{ 
+                                    width: 'calc(210mm * var(--scale))', 
+                                    height: 'calc(297mm * var(--scale))',
+                                    '--scale': '0.42'
+                                } as any}
+                            >
+                                <div 
+                                    className="absolute top-0 left-0 origin-top-left scale-[var(--scale)] sm:scale-[0.6] md:scale-[0.85]"
+                                    style={{ 
+                                        width: '210mm', 
+                                        height: '297mm',
+                                        '--scale': '0.42'
+                                    } as any}
+                                >
+                                    <div className="bg-white h-full w-full">
+                                        <PrintableInvoice 
+                                            order={order} 
+                                            subtotal={subtotal} 
+                                            voucherDiscount={voucherDiscount} 
+                                            coinDiscount={coinDiscount} 
+                                            spinDiscount={spinDiscount} 
+                                        />
+                                    </div>
+                                </div>
+                                {/* Media queries logic for the scaling wrapper using style tags since tailwind is limited for this specific calc */}
+                                <style jsx>{`
+                                    @media (min-width: 640px) {
+                                        div { --scale: 0.6 !important; }
+                                    }
+                                    @media (min-width: 768px) {
+                                        div { --scale: 0.85 !important; }
+                                    }
+                                `}</style>
                             </div>
                          </div>
                     </ScrollArea>
