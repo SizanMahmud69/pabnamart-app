@@ -9,7 +9,7 @@ import app from '@/lib/firebase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, CreditCard, Download, Smartphone, Loader2, X, Eye } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Download, Smartphone, Loader2, X, Eye, Package } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
