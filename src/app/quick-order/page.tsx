@@ -41,7 +41,15 @@ export default function QuickOrderPage() {
     const [displayQty, setDisplayQty] = useState("1");
 
     const product: Product | null = quickOrderData?.product || null;
-    const minQuantity = 0.250;
+    
+    const isDecimal = useMemo(() => {
+        const u = product?.unit?.toLowerCase();
+        return u === 'kg' || u === 'meter' || u === 'litre';
+    }, [product?.unit]);
+
+    const minQuantity = isDecimal ? 0.250 : 1;
+    const step = isDecimal ? 0.1 : 1;
+    
     const format = (val: number) => Number(val.toFixed(3));
 
     useEffect(() => {
@@ -51,7 +59,7 @@ export default function QuickOrderPage() {
             const parsed = JSON.parse(data);
             setQuickOrderData(parsed);
             
-            const initialQty = parsed.quantity || 1;
+            const initialQty = parsed.quantity || minQuantity;
             const finalQty = initialQty < minQuantity ? minQuantity : initialQty;
             
             setQuantity(finalQty);
@@ -98,13 +106,13 @@ export default function QuickOrderPage() {
     };
 
     const handleIncrement = () => {
-        const next = quantity + 0.1;
+        const next = quantity + step;
         setQuantity(next);
         setDisplayQty(format(next).toString());
     };
 
     const handleDecrement = () => {
-        const next = quantity - 0.1;
+        const next = quantity - step;
         const final = Math.max(next, minQuantity);
         setQuantity(final);
         setDisplayQty(format(final).toString());

@@ -47,6 +47,11 @@ export default function CartPage() {
     setLocalQtys(newLocalQtys);
   }, [cartItems]);
 
+  const isDecimalUnit = (unit: string) => {
+    const u = unit?.toLowerCase();
+    return u === 'kg' || u === 'meter' || u === 'litre';
+  };
+
   const handleManualInput = (cartItemId: string, val: string) => {
     setLocalQtys(prev => ({ ...prev, [cartItemId]: val }));
     const num = parseFloat(val);
@@ -55,8 +60,8 @@ export default function CartPage() {
     }
   };
 
-  const handleBlur = (cartItemId: string) => {
-    const minQuantity = 0.250;
+  const handleBlur = (cartItemId: string, unit: string) => {
+    const minQuantity = isDecimalUnit(unit) ? 0.250 : 1;
     let num = parseFloat(localQtys[cartItemId]);
     if (isNaN(num) || num < minQuantity) {
       num = minQuantity;
@@ -105,7 +110,10 @@ export default function CartPage() {
                     <CardContent className="p-0">
                         <div className="divide-y">
                         {cartItems.map((item) => {
-                            const minQuantity = 0.250;
+                            const isDecimal = isDecimalUnit(item.unit || '');
+                            const minQuantity = isDecimal ? 0.250 : 1;
+                            const step = isDecimal ? 0.1 : 1;
+                            
                             return (
                                 <div key={item.cartItemId} className="flex items-start gap-4 p-4">
                                     <Checkbox 
@@ -136,7 +144,7 @@ export default function CartPage() {
                                             <Button 
                                                 variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
                                                 onClick={() => {
-                                                    const next = item.quantity - 0.1;
+                                                    const next = item.quantity - step;
                                                     updateQuantity(item.cartItemId, Math.max(next, minQuantity));
                                                 }}
                                                 disabled={item.quantity <= minQuantity}
@@ -147,13 +155,13 @@ export default function CartPage() {
                                                 type="text"
                                                 value={localQtys[item.cartItemId] || formatQuantity(item.quantity)}
                                                 onChange={(e) => handleManualInput(item.cartItemId, e.target.value)}
-                                                onBlur={() => handleBlur(item.cartItemId)}
+                                                onBlur={() => handleBlur(item.cartItemId, item.unit || '')}
                                                 className="h-8 w-24 text-center px-1 font-bold"
                                                 aria-label={`Quantity for ${item.name}`}
                                             />
                                             <Button 
                                                 variant="outline" size="icon" className="h-8 w-8 flex-shrink-0"
-                                                onClick={() => updateQuantity(item.cartItemId, item.quantity + 0.1)}
+                                                onClick={() => updateQuantity(item.cartItemId, item.quantity + step)}
                                             >
                                                 <Plus className="h-4 w-4" />
                                             </Button>

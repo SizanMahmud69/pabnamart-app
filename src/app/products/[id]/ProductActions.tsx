@@ -45,7 +45,14 @@ export default function ProductActions({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   
-  const minQuantity = 0.250;
+  const isDecimal = useMemo(() => {
+    const u = product.unit?.toLowerCase();
+    return u === 'kg' || u === 'meter' || u === 'litre';
+  }, [product.unit]);
+
+  const minQuantity = isDecimal ? 0.250 : 1;
+  const step = isDecimal ? 0.1 : 1;
+  
   const format = (val: number) => Number(val.toFixed(3));
 
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
@@ -117,13 +124,13 @@ export default function ProductActions({
   }
 
   const handleIncrement = () => {
-    const next = quantity + 0.1;
+    const next = quantity + step;
     setQuantity(next);
     setDisplayQty(format(next).toString());
   }
 
   const handleDecrement = () => {
-    const next = quantity - 0.1;
+    const next = quantity - step;
     const final = Math.max(next, minQuantity);
     setQuantity(final);
     setDisplayQty(format(final).toString());
@@ -231,9 +238,9 @@ export default function ProductActions({
             </div>
             <span className="text-xs text-muted-foreground font-medium">
                 {user ? (
-                    `Min order ${format(0.250)} ${product.unit || 'Pcs'}`
+                    `Min order ${format(minQuantity)} ${product.unit || 'Pcs'}`
                 ) : (
-                    `সর্বনিম্ন অর্ডার ০.২৫০ ${product.unit || 'Pcs'}`
+                    `সর্বনিম্ন অর্ডার ${format(minQuantity)} ${product.unit || 'Pcs'}`
                 )}
             </span>
         </div>

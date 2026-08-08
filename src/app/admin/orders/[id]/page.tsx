@@ -404,8 +404,8 @@ export default function AdminOrderDetailsPage() {
             </div>
 
             <Dialog open={showPreview} onOpenChange={setShowPreview}>
-                <DialogContent className="max-w-[95vw] sm:max-w-[800px] p-0 overflow-hidden h-[90vh] flex flex-col">
-                    <DialogHeader className="p-4 border-b bg-background flex flex-row items-center justify-between space-y-0">
+                <DialogContent className="max-w-[95vw] sm:max-w-[800px] p-0 h-[90vh] flex flex-col overflow-hidden bg-slate-100">
+                    <DialogHeader className="p-4 border-b bg-background flex flex-row items-center justify-between space-y-0 shrink-0">
                         <DialogTitle>Invoice Review</DialogTitle>
                         <div className="flex gap-2">
                              <Button size="sm" onClick={handleDownloadPDF} disabled={isDownloading}>
@@ -417,13 +417,13 @@ export default function AdminOrderDetailsPage() {
                             </DialogClose>
                         </div>
                     </DialogHeader>
-                    <ScrollArea className="flex-grow bg-slate-100 p-0">
-                         <div className="w-full flex flex-col items-center py-10 min-h-[400px]">
-                            <div className="relative shadow-2xl bg-white scale-[0.42] sm:scale-[0.6] md:scale-[0.8] transform-gpu origin-top"
+                    <ScrollArea className="flex-1 w-full">
+                         <div className="w-full flex justify-center py-10 min-h-full">
+                            <div className="relative shadow-2xl bg-white scale-[0.42] sm:scale-[0.6] md:scale-[0.85] origin-top"
                                  style={{ 
                                      width: '210mm', 
                                      height: '297mm',
-                                     marginBottom: '-165mm'
+                                     marginBottom: '-160mm'
                                  }}>
                                 <PrintableInvoice 
                                     order={order} 
