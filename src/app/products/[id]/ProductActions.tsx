@@ -46,7 +46,7 @@ export default function ProductActions({
   const [isLoading, setIsLoading] = useState(false);
   
   const isDecimal = useMemo(() => {
-    const u = product.unit?.toLowerCase();
+    const u = product.unit?.toLowerCase().trim();
     return u === 'kg' || u === 'meter' || u === 'litre';
   }, [product.unit]);
 
@@ -61,9 +61,10 @@ export default function ProductActions({
   const [displayQty, setDisplayQty] = useState(format(minQuantity).toString());
   
   useEffect(() => {
-    setQuantity(minQuantity);
-    setDisplayQty(format(minQuantity).toString());
-  }, [minQuantity]);
+    const minQ = isDecimal ? 0.250 : 1;
+    setQuantity(minQ);
+    setDisplayQty(format(minQ).toString());
+  }, [isDecimal]);
 
   const uniqueColors = useMemo(() => aggregateVariants(product.colors), [product.colors]);
   const uniqueSizes = useMemo(() => aggregateVariants(product.sizes), [product.sizes]);
