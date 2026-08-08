@@ -228,14 +228,14 @@ export default function AdminOrderManagement() {
                                                     <div className="flex items-center gap-2">
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <Button variant="ghost" className="h-8 w-8 p-0 focus:ring-0">
                                                                     <span className="sr-only">Open menu</span>
                                                                     <MoreHorizontal className="h-4 w-4" />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
                                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                                <DropdownMenuItem onClick={() => router.push(`/admin/orders/${order.id}`)}>
+                                                                <DropdownMenuItem onSelect={() => router.push(`/admin/orders/${order.id}`)}>
                                                                     <Eye className="mr-2 h-4 w-4" />
                                                                     <span>View Details</span>
                                                                 </DropdownMenuItem>
@@ -247,7 +247,7 @@ export default function AdminOrderManagement() {
                                                                         <DropdownMenuPortal>
                                                                             <DropdownMenuSubContent>
                                                                                 {nextStatuses.map(status => (
-                                                                                    <DropdownMenuItem key={status} onClick={() => handleStatusChange(order, status)} className="capitalize">
+                                                                                    <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order, status)} className="capitalize">
                                                                                         {status}
                                                                                     </DropdownMenuItem>
                                                                                 ))}
@@ -258,7 +258,7 @@ export default function AdminOrderManagement() {
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem 
                                                                     className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                                                    onClick={() => setOrderToDelete(order)}
+                                                                    onSelect={() => setOrderToDelete(order)}
                                                                 >
                                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                                     <span>Delete Order</span>

@@ -411,7 +411,7 @@ export default function AdminOrderDetailsPage() {
                     </DialogHeader>
                     <ScrollArea className="flex-1 w-full bg-slate-200">
                          <div className="w-full flex justify-center py-6 sm:py-10 min-h-full">
-                            <div className="absolute left-1/2 -translate-x-1/2 shadow-2xl bg-white scale-[0.42] sm:scale-[0.6] md:scale-[0.85] origin-top"
+                            <div className="relative shadow-2xl bg-white scale-[0.42] sm:scale-[0.6] md:scale-[0.85] origin-top"
                                  style={{ 
                                      width: '210mm', 
                                      height: '297mm',
