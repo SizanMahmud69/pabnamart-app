@@ -16,14 +16,6 @@ const db = getFirestore(app);
 
 const allMenuItems = [
     {
-        title: "Verify Payments",
-        description: "Verify online payments for orders.",
-        icon: CreditCard,
-        href: "/admin/verify-payments",
-        permissionKey: 'canVerifyPayments',
-        badgeKey: 'pendingPayments'
-    },
-    {
         title: "Product Management",
         description: "Add, edit, and remove products.",
         icon: Package,
@@ -45,6 +37,14 @@ const allMenuItems = [
         href: "/admin/quick-orders",
         permissionKey: 'canManageQuickOrders',
         badgeKey: 'pendingQuickOrders'
+    },
+    {
+        title: "Verify Payments",
+        description: "Verify online payments for orders.",
+        icon: CreditCard,
+        href: "/admin/verify-payments",
+        permissionKey: 'canVerifyPayments',
+        badgeKey: 'pendingPayments'
     },
     {
         title: "Banner Management",
@@ -164,7 +164,7 @@ const AdminDashboard = () => {
     return (
         <div className="container mx-auto max-w-2xl p-4">
             <main className="mt-6">
-                <h2 className="text-3xl font-bold mb-6">Welcome, {isAdmin ? 'Admin' : 'Moderator'}!</h2>
+                <h2 className="text-3xl font-bold mb-6 text-primary uppercase italic tracking-tighter">Welcome, {isAdmin ? 'Admin' : 'Moderator'}!</h2>
                 <div className="space-y-4">
                     {menuItems.map((item, index) => {
                         const isLoading = isPending && loadingHref === item.href;
@@ -178,27 +178,27 @@ const AdminDashboard = () => {
                                             <div className="bg-primary/10 p-3 rounded-lg relative">
                                                 <item.icon className="h-6 w-6 text-primary" />
                                                 {badgeCount > 0 && (
-                                                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white border-2 border-white shadow-sm animate-in zoom-in">
+                                                    <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-[10px] font-black text-white border-2 border-white shadow-md animate-in zoom-in">
                                                         {badgeCount}
                                                     </span>
                                                 )}
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <h3 className="text-lg font-semibold">{item.title}</h3>
+                                                    <h3 className="text-lg font-bold">{item.title}</h3>
                                                     {badgeCount > 0 && (
-                                                        <Badge variant="destructive" className="h-5 px-1.5 text-[10px] animate-pulse">
+                                                        <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-black uppercase animate-pulse">
                                                             {badgeCount} New
                                                         </Badge>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-muted-foreground">{item.description}</p>
+                                                <p className="text-xs text-muted-foreground">{item.description}</p>
                                             </div>
                                         </div>
                                         {isLoading ? (
                                             <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
                                         ) : (
-                                            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                                            <ArrowRight className="h-5 w-5 text-muted-foreground opacity-30" />
                                         )}
                                     </CardContent>
                                 </Card>

@@ -327,7 +327,7 @@ export default function AdminOrderDetailsPage() {
                             <CardTitle className="text-xl font-bold">Order Details</CardTitle>
                             <CardDescription>Order #{order.orderNumber}</CardDescription>
                         </div>
-                        <Badge variant={getStatusVariant(order.status)} className="capitalize px-3 py-1">
+                        <Badge variant={getStatusVariant(order.status)} className="capitalize px-3 py-1 font-bold">
                             {order.status.replace('-', ' ')}
                         </Badge>
                     </div>
@@ -335,51 +335,54 @@ export default function AdminOrderDetailsPage() {
                 <CardContent className="space-y-6 pt-6">
                     <OrderStatusStepper currentStatus={order.status} />
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/20 p-4 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/20 p-4 rounded-lg border-2 border-primary/5">
                         <div>
-                            <h3 className="font-bold text-xs uppercase text-muted-foreground mb-2">Shipping</h3>
-                            <p className="font-semibold text-sm">{order.shippingAddress.fullName}</p>
-                            <p className="text-xs text-muted-foreground">{order.shippingAddress.phone}</p>
-                            <p className="text-xs text-muted-foreground">{order.shippingAddress.address}, {order.shippingAddress.area}</p>
+                            <h3 className="font-bold text-[10px] uppercase text-muted-foreground mb-2 tracking-widest">Shipping Information</h3>
+                            <p className="font-bold text-sm">{order.shippingAddress.fullName}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{order.shippingAddress.phone}</p>
+                            <p className="text-xs text-muted-foreground mt-1 leading-tight">{order.shippingAddress.address}, {order.shippingAddress.area}</p>
                         </div>
                         <div>
-                            <h3 className="font-bold text-xs uppercase text-muted-foreground mb-2">Payment</h3>
-                            <p className="text-sm font-semibold capitalize">{order.paymentMethod.replace('-', ' ')}</p>
-                            {order.transactionId && <p className="text-xs font-mono">{order.transactionId}</p>}
+                            <h3 className="font-bold text-[10px] uppercase text-muted-foreground mb-2 tracking-widest">Payment Method</h3>
+                            <p className="text-sm font-bold capitalize text-primary">{order.paymentMethod.replace('-', ' ')}</p>
+                            {order.transactionId && <p className="text-[10px] font-mono mt-1 bg-white p-1 rounded border">Trx: {order.transactionId}</p>}
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         {order.items.map((item, index) => (
                             <div key={index} className="flex items-center gap-4 py-2 border-b last:border-0">
-                                <div className="h-12 w-12 rounded border overflow-hidden flex-shrink-0">
+                                <div className="h-12 w-12 rounded border overflow-hidden flex-shrink-0 bg-white shadow-sm">
                                     <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
                                 </div>
                                 <div className="flex-grow min-w-0">
                                     <p className="font-bold text-sm truncate">{item.name}</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase">Qty: {formatQuantity(item.quantity)} {item.unit}</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">Qty: {formatQuantity(item.quantity)} {item.unit}</p>
                                 </div>
-                                <div className="text-right font-bold text-sm">৳{formatMoney(item.price * item.quantity)}</div>
+                                <div className="text-right font-black text-sm text-primary">৳{formatMoney(item.price * item.quantity)}</div>
                             </div>
                         ))}
                     </div>
 
-                    <div className="bg-slate-900 text-slate-100 p-6 rounded-xl space-y-3">
-                        <div className="flex justify-between text-sm opacity-70">
+                    <div className="bg-slate-900 text-slate-100 p-6 rounded-2xl shadow-xl space-y-3 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Package className="h-16 w-16 rotate-12" />
+                        </div>
+                        <div className="flex justify-between text-sm opacity-60">
                             <span>Subtotal</span>
                             <span>৳{formatMoney(subtotal)}</span>
                         </div>
-                        {voucherDiscount > 0 && <div className="flex justify-between text-sm text-green-400"><span>Voucher</span><span>- ৳{formatMoney(voucherDiscount)}</span></div>}
-                        {coinDiscount > 0 && <div className="flex justify-between text-sm text-yellow-400"><span>Coins</span><span>- ৳{formatMoney(coinDiscount)}</span></div>}
-                        {spinDiscount > 0 && <div className="flex justify-between text-sm text-indigo-400"><span>Spin Win</span><span>- ৳{formatMoney(spinDiscount)}</span></div>}
-                        <div className="flex justify-between text-sm opacity-70">
-                            <span>Delivery</span>
+                        {voucherDiscount > 0 && <div className="flex justify-between text-sm text-green-400 font-bold"><span>Voucher Discount</span><span>- ৳{formatMoney(voucherDiscount)}</span></div>}
+                        {coinDiscount > 0 && <div className="flex justify-between text-sm text-yellow-400 font-bold"><span>Coins Used</span><span>- ৳{formatMoney(coinDiscount)}</span></div>}
+                        {spinDiscount > 0 && <div className="flex justify-between text-sm text-indigo-400 font-bold"><span>Lucky Spin ({order.spinDiscountPercentage}%)</span><span>- ৳{formatMoney(spinDiscount)}</span></div>}
+                        <div className="flex justify-between text-sm opacity-60">
+                            <span>Delivery Fee</span>
                             <span>৳{formatMoney(order.shippingFee)}</span>
                         </div>
                         <Separator className="bg-slate-700" />
-                        <div className="flex justify-between font-black text-2xl pt-2">
-                            <span>Total</span>
-                            <span>৳{formatMoney(order.total)}</span>
+                        <div className="flex justify-between font-black text-2xl pt-2 tracking-tighter">
+                            <span>Total Due</span>
+                            <span className="text-primary-foreground">৳{formatMoney(order.total)}</span>
                         </div>
                     </div>
                 </CardContent>
@@ -397,12 +400,12 @@ export default function AdminOrderDetailsPage() {
 
             <Dialog open={showPreview} onOpenChange={setShowPreview}>
                 <DialogContent className="max-w-[100vw] sm:max-w-[800px] p-0 h-[100dvh] sm:h-[90vh] flex flex-col overflow-hidden bg-slate-100 border-0">
-                    <DialogHeader className="p-4 border-b bg-background flex flex-row items-center justify-between space-y-0 shrink-0">
-                        <DialogTitle>Invoice Review</DialogTitle>
+                    <DialogHeader className="p-4 border-b bg-background flex flex-row items-center justify-between space-y-0 shrink-0 shadow-sm z-50">
+                        <DialogTitle className="font-black italic uppercase tracking-tighter text-primary">Invoice Preview</DialogTitle>
                         <div className="flex gap-2">
-                             <Button size="sm" onClick={handleDownloadPDF} disabled={isDownloading}>
-                                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4 mr-1" />}
-                                Download
+                             <Button size="sm" onClick={handleDownloadPDF} disabled={isDownloading} className="font-bold">
+                                {isDownloading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Download className="mr-1 h-4 w-4" />}
+                                PDF
                             </Button>
                             <DialogClose asChild>
                                 <Button variant="outline" size="icon" className="h-9 w-9"><X className="h-4 w-4" /></Button>
@@ -410,12 +413,12 @@ export default function AdminOrderDetailsPage() {
                         </div>
                     </DialogHeader>
                     <ScrollArea className="flex-1 w-full bg-slate-200">
-                         <div className="w-full flex justify-center py-6 sm:py-10 min-h-full">
-                            <div className="relative shadow-2xl bg-white scale-[0.42] sm:scale-[0.6] md:scale-[0.85] origin-top"
+                         <div className="w-full flex justify-center py-6 sm:py-12 min-h-full">
+                            <div className="relative shadow-2xl bg-white scale-[0.42] sm:scale-[0.6] md:scale-[0.85] origin-top mx-auto"
                                  style={{ 
                                      width: '210mm', 
                                      height: '297mm',
-                                     marginBottom: '20mm'
+                                     marginBottom: '50px'
                                  }}>
                                 <PrintableInvoice 
                                     order={order} 
