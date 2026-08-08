@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { placeOrder } from "@/lib/order-service";
 import { useToast } from "@/hooks/use-toast";
 import type { CartItem, ShippingAddress } from "@/types";
-import { Loader2, ArrowLeft, CreditCard, Truck, AlertCircle, Coins, Ticket, Sparkles } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight, CreditCard, Truck, AlertCircle, Coins, Ticket, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { cn, formatMoney, roundMoney } from "@/lib/utils";
 import { useDeliveryCharge } from "@/hooks/useDeliveryCharge";

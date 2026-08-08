@@ -409,7 +409,7 @@ export default function AdminOrderDetailsPage() {
                         <DialogTitle>Invoice Review</DialogTitle>
                         <div className="flex gap-2">
                              <Button size="sm" onClick={handleDownloadPDF} disabled={isDownloading}>
-                                {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+                                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4 mr-1" />}
                                 Download
                             </Button>
                             <DialogClose asChild>
@@ -418,12 +418,12 @@ export default function AdminOrderDetailsPage() {
                         </div>
                     </DialogHeader>
                     <ScrollArea className="flex-grow bg-slate-100 p-0">
-                         <div className="w-full flex justify-center py-10 min-h-[400px]">
-                            <div className="relative shadow-2xl bg-white scale-[0.38] sm:scale-[0.6] md:scale-[0.8] transform-gpu origin-top"
+                         <div className="w-full flex flex-col items-center py-10 min-h-[400px]">
+                            <div className="relative shadow-2xl bg-white scale-[0.42] sm:scale-[0.6] md:scale-[0.8] transform-gpu origin-top"
                                  style={{ 
                                      width: '210mm', 
                                      height: '297mm',
-                                     marginBottom: '-180mm'
+                                     marginBottom: '-165mm'
                                  }}>
                                 <PrintableInvoice 
                                     order={order} 
