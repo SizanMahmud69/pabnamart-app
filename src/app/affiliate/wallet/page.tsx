@@ -1,3 +1,4 @@
+
 "use client";
 import { useAuth, withAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -77,7 +78,7 @@ function AffiliateWalletPageContent() {
 
         const totalPendingPayout = withdrawals
             .filter(w => w.status === 'pending')
-            .reduce((acc, w) => acc + w.amount, 0);
+            .reduce((acc, w) => acc + (Number(w.amount) || 0), 0);
 
         return {
             affiliateBalance: lockedAffiliateBalance,
@@ -168,7 +169,7 @@ function AffiliateWalletPageContent() {
 
     useEffect(() => {
         if (!user || !appUser) {
-            setLoading(false);
+            if (!user) setLoading(false);
             return;
         }
 
@@ -209,7 +210,8 @@ function AffiliateWalletPageContent() {
             }
         });
 
-        const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid), orderBy('requestedAt', 'desc'));
+        // Removed orderBy to avoid index requirement for filtered query
+        const withdrawalsQuery = query(collection(db, 'withdrawals'), where('affiliateUid', '==', user.uid));
         const unsubWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
             setWithdrawals(snapshot.docs.map(doc => ({...doc.data(), id: doc.id } as Withdrawal)));
         });
@@ -244,17 +246,16 @@ function AffiliateWalletPageContent() {
         return <LoadingSpinner />;
     }
 
-    // Guard: Redirect or show message if not an approved affiliate
     if (appUser.affiliateStatus === 'pending') {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-                <Card className="max-w-lg w-full">
+                <Card className="max-w-lg w-full shadow-lg border-primary/10">
                     <CardHeader>
                         <CardTitle>Request Pending</CardTitle>
                         <CardDescription>Your affiliate program application is under review.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p>We will notify you once the review process is complete. Your wallet will be accessible then.</p>
+                        <p className="text-muted-foreground">We will notify you once the review process is complete. Your wallet will be accessible then.</p>
                         <Button asChild className="mt-6" variant="outline">
                             <Link href="/">Back to Shopping</Link>
                         </Button>
@@ -267,14 +268,14 @@ function AffiliateWalletPageContent() {
     if (appUser.affiliateStatus === 'denied') {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-                <Card className="max-w-lg w-full border-destructive">
+                <Card className="max-w-lg w-full border-destructive shadow-lg">
                     <CardHeader className="text-center">
                         <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
                         <CardTitle className="text-destructive mt-4">Request Denied</CardTitle>
                         <CardDescription>We're sorry, your affiliate application was not approved.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p>Please contact support if you have any questions.</p>
+                        <p className="text-muted-foreground">Please contact support if you have any questions.</p>
                         <Button asChild className="mt-6" variant="outline">
                             <Link href="/">Back to Shopping</Link>
                         </Button>
@@ -287,17 +288,17 @@ function AffiliateWalletPageContent() {
     if (appUser.affiliateStatus !== 'approved' || !appUser.affiliateId) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-                <Card className="max-w-lg w-full">
+                <Card className="max-w-lg w-full shadow-lg border-primary/10">
                     <CardHeader className="text-center">
                         <Users className="mx-auto h-12 w-12 text-primary" />
-                        <CardTitle className="text-3xl mt-2">Join Our Affiliate Program</CardTitle>
+                        <CardTitle className="text-3xl mt-2 font-black uppercase italic tracking-tighter">Join Program</CardTitle>
                         <CardDescription>Earn money by promoting our products.</CardDescription>
                     </CardHeader>
                     <CardContent className="text-center">
                         <p className="text-muted-foreground mb-6">
                             Promote our products and earn a commission on every sale you refer. It's free to join!
                         </p>
-                        <Button size="lg" asChild>
+                        <Button size="lg" asChild className="font-bold">
                             <Link href="/affiliate/join">Join Now for Free</Link>
                         </Button>
                     </CardContent>
@@ -312,71 +313,74 @@ function AffiliateWalletPageContent() {
     return (
         <div className="container mx-auto px-4 py-8 space-y-6">
             <div className="text-center">
-                <h1 className="text-3xl font-bold text-center flex items-center justify-center gap-3">
-                   <Wallet className="h-8 w-8 text-primary" />
+                <h1 className="text-3xl font-black text-center flex items-center justify-center gap-3 uppercase italic tracking-tighter text-primary">
+                   <Wallet className="h-8 w-8" />
                     My Wallet
                 </h1>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Affiliate Balance</CardTitle>
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <Card className="shadow-sm border-primary/5">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
+                        <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground">Affiliate Balance</CardTitle>
                         <Clock className="h-4 w-4 text-primary" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-primary">৳{affiliateBalance.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">Confirmed commissions in 24h waiting period.</p>
+                    <CardContent className="p-4 pt-0">
+                        <div className="text-xl sm:text-2xl font-black text-primary">৳{affiliateBalance.toFixed(2)}</div>
+                        <p className="text-[9px] text-muted-foreground mt-1 leading-tight">Commissions in 24h waiting period.</p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending Earnings</CardTitle>
+                
+                <Card className="shadow-sm border-orange-100">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
+                        <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground">Pending Earnings</CardTitle>
                         <Hourglass className="h-4 w-4 text-orange-500" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-orange-600">৳{pendingEarnings.toFixed(2)}</div>
-                         <p className="text-xs text-muted-foreground">From orders waiting for delivery.</p>
+                    <CardContent className="p-4 pt-0">
+                        <div className="text-xl sm:text-2xl font-black text-orange-600">৳{pendingEarnings.toFixed(2)}</div>
+                         <p className="text-[9px] text-muted-foreground mt-1 leading-tight">Orders waiting for delivery.</p>
                     </CardContent>
                 </Card>
-                <Card className="border-blue-200 bg-blue-50/30">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Withdrawable Balance</CardTitle>
+                
+                <Card className="border-blue-200 bg-blue-50/30 shadow-md">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
+                        <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-blue-700">Withdrawable</CardTitle>
                         <Send className="h-4 w-4 text-blue-500" />
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="p-4 pt-0 space-y-3">
                         <div>
-                            <div className="text-2xl font-bold text-blue-600">৳{withdrawableBalance.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">{withdrawalScheduleText}</p>
+                            <div className="text-xl sm:text-2xl font-black text-blue-600">৳{withdrawableBalance.toFixed(2)}</div>
+                            <p className="text-[9px] text-muted-foreground mt-1 font-medium">{withdrawalScheduleText}</p>
                         </div>
                         <Button 
-                            className="w-full h-8 text-xs bg-blue-600 hover:bg-blue-700" 
+                            className="w-full h-8 text-[10px] font-bold uppercase bg-blue-600 hover:bg-blue-700 shadow-sm" 
                             disabled={!canWithdraw || isWithdrawing}
                             onClick={handleManualWithdraw}
                         >
                             {isWithdrawing ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Send className="h-3 w-3 mr-2" />}
-                            Withdraw Now
+                            Withdraw
                         </Button>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending Payout</CardTitle>
+                
+                <Card className="shadow-sm border-purple-100">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
+                        <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground">Pending Payout</CardTitle>
                         <History className="h-4 w-4 text-purple-500" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-purple-600">৳{pendingPayout.toFixed(2)}</div>
-                         <p className="text-xs text-muted-foreground">Amount currently in processing.</p>
+                    <CardContent className="p-4 pt-0">
+                        <div className="text-xl sm:text-2xl font-black text-purple-600">৳{pendingPayout.toFixed(2)}</div>
+                         <p className="text-[9px] text-muted-foreground mt-1 leading-tight">Currently in processing.</p>
                     </CardContent>
                 </Card>
             </div>
             
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><History className="h-5 w-5" />Transaction History</CardTitle>
+            <Card className="shadow-lg border-primary/10">
+                <CardHeader className="bg-muted/30">
+                    <CardTitle className="flex items-center gap-2 text-lg font-bold"><History className="h-5 w-5 text-primary" />Transaction History</CardTitle>
                     <CardDescription>A complete record of your earnings and withdrawals.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4">
                      {transactionHistory.length > 0 ? (
                         <div className="space-y-2">
                             {transactionHistory.map(item => {
@@ -394,32 +398,38 @@ function AffiliateWalletPageContent() {
                                 }
 
                                 return (
-                                    <div key={item.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-md border border-transparent hover:border-primary/20 transition-all">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-background border">
-                                                <Icon className={cn("h-5 w-5", iconClass)} />
+                                    <div key={item.id} className="flex justify-between items-center p-3 bg-muted/20 rounded-md border border-transparent hover:border-primary/10 transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white border shadow-sm">
+                                                <Icon className={cn("h-4 w-4", iconClass)} />
                                             </div>
                                             <div>
-                                                <p className="font-semibold text-sm">{item.title}</p>
-                                                <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">{item.description}</p>
-                                                <p className="text-[10px] text-muted-foreground">{item.date.toLocaleDateString()} {item.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                                <p className="font-bold text-sm leading-none">{item.title}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <p className="text-[9px] uppercase font-black tracking-widest text-muted-foreground">{item.description}</p>
+                                                    <span className="text-muted-foreground/30">•</span>
+                                                    <p className="text-[9px] text-muted-foreground font-medium">{item.date.toLocaleDateString()}</p>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <p className={cn(
-                                                "font-bold text-sm",
+                                                "font-black text-sm",
                                                 item.isCredit ? "text-green-600" : "text-destructive"
                                             )}>
                                                 {item.isCredit ? '+' : '-'}৳{item.amount.toFixed(2)}
                                             </p>
-                                            <Badge variant={getUnifiedStatusBadgeVariant(item.status)} className="text-[10px] h-5 px-1.5 capitalize mt-1">{item.status}</Badge>
+                                            <Badge variant={getUnifiedStatusBadgeVariant(item.status)} className="text-[8px] h-4 px-1.5 capitalize mt-1 font-bold">{item.status}</Badge>
                                         </div>
                                     </div>
                                 )
                             })}
                         </div>
                      ) : (
-                        <p className="text-muted-foreground text-center py-8">No transaction history yet.</p>
+                        <div className="text-center py-16">
+                            <History className="h-12 w-12 mx-auto mb-2 text-muted-foreground opacity-20" />
+                            <p className="text-muted-foreground text-sm font-medium">No transaction history yet.</p>
+                        </div>
                      )}
                 </CardContent>
             </Card>
