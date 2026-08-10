@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -110,7 +109,7 @@ function MyOrdersPageContent() {
     }
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto max-w-3xl px-4 py-6">
                 <Button asChild variant="ghost" className="mb-4">
                     <Link href="/account">

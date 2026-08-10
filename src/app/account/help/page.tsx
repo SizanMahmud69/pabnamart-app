@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle } from "lucide-react";
@@ -24,7 +23,7 @@ const faqs = [
 
 export default function HelpCenterPage() {
     return (
-        <div className="bg-purple-50/30 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto px-4 py-8">
                 <div className="max-w-3xl mx-auto">
                     <Card>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
@@ -87,7 +86,7 @@ export default function FlashSalePage() {
 
 
     return (
-        <div className="bg-purple-50 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto px-4 py-8">
                 <div className="text-center mb-8 p-8 bg-white rounded-lg shadow-md border-t-4 border-primary">
                     <h1 className="text-4xl font-bold text-primary mb-2">Flash Sale</h1>

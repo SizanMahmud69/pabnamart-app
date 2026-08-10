@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -92,7 +91,7 @@ function AccountInformationPage() {
     };
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto max-w-md px-4 py-6">
                  <Button asChild variant="ghost" className="mb-4">
                     <Link href="/account/settings">
@@ -161,6 +160,3 @@ function AccountInformationPage() {
 
 
 export default withAuth(AccountInformationPage);
-    
-
-    

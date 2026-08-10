@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
@@ -58,7 +57,7 @@ export default function CategoryPage() {
     if (productsLoading || loadingCats) return <LoadingSpinner />;
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-8">
                     <Button asChild variant="ghost" className="mb-4">

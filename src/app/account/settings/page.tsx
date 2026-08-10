@@ -45,7 +45,7 @@ export default function AccountSettingsPage() {
     };
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto max-w-lg px-4 py-6">
                 <div className="relative flex items-center justify-center mb-6">
                     <Button asChild variant="ghost" size="icon" className="absolute left-0">

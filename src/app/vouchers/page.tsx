@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,7 @@ export default function VouchersPage() {
     const returnVouchersToCollect = availableReturnVouchers.filter(v => !isCollected(v.code));
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto max-w-md px-4 py-6 space-y-6">
                 
                 <Link href="/" className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary">

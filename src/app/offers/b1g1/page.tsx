@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useProducts } from '@/hooks/useProducts';
@@ -79,7 +78,7 @@ function B1G1Page() {
     const b1g1Products = allProducts.filter(p => p.isB1G1 === true);
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto px-4 py-8">
                 {banner ? (
                     <Link href={banner.link || '/'} className="block group">

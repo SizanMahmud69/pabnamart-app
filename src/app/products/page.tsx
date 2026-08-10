@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -60,7 +59,7 @@ function ProductsPageContent() {
   const showRecommendations = searchQuery.trim().length > 0;
 
   return (
-    <div className="bg-purple-50/30 min-h-screen">
+    <div className="min-h-screen">
         <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
             <div className="lg:col-span-1">

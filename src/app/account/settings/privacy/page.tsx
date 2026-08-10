@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function PrivacyPolicyPage() {
     return (
-        <div className="bg-purple-50/30 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto max-w-2xl px-4 py-6">
                  <Button asChild variant="ghost" className="mb-4">
                     <Link href="/account/settings">

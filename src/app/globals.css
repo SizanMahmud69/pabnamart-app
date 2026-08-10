@@ -8,8 +8,8 @@ body {
 
 @layer base {
   :root {
-    /* Main Background now has a clearly visible light purple tint based on primary 262 */
-    --background: 262 30% 96%;
+    /* Main Background is now a clearly visible very light purple tint based on primary 262 */
+    --background: 262 80% 98.5%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
