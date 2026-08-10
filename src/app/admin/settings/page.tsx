@@ -54,9 +54,9 @@ const allSettingsItems = [
         permissionKey: 'canManageModeratorSettings'
     },
     {
-        title: "Affiliate Requests",
-        description: "Approve or deny affiliate applications.",
-        icon: Users,
+        title: "Affiliate Settings",
+        description: "Configure withdrawal dates and minimum payouts.",
+        icon: DollarSign,
         href: "/admin/settings/affiliates",
         permissionKey: 'canManageAffiliates'
     },

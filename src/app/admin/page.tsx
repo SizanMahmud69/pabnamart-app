@@ -4,13 +4,12 @@
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2, DollarSign, Coins, Image as ImageIcon, Zap } from "lucide-react";
+import { Package, Users, ArrowRight, Tag, Ticket, Settings, ShoppingCart, CreditCard, Undo2, Star, Loader2, DollarSign, Coins, Image as ImageIcon, Zap, UserPlus } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { ModeratorPermissions, Order } from '@/types';
 import { processWithdrawals } from '@/app/affiliate/actions';
 import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
 import app from '@/lib/firebase';
-import { Badge } from '@/components/ui/badge';
 
 const db = getFirestore(app);
 
@@ -83,11 +82,20 @@ const allMenuItems = [
         permissionKey: 'canManageVouchers'
     },
     {
+        title: "Affiliate Requests",
+        description: "Review and approve affiliate program applications.",
+        icon: UserPlus,
+        href: "/admin/affiliates",
+        permissionKey: 'canManageAffiliates',
+        badgeKey: 'pendingAffiliateRequests'
+    },
+    {
         title: "Withdrawal Requests",
         description: "Manage affiliate payment requests.",
         icon: DollarSign,
         href: "/admin/withdrawals",
-        permissionKey: 'canManageWithdrawals'
+        permissionKey: 'canManageWithdrawals',
+        badgeKey: 'pendingWithdrawals'
     },
 ];
 
@@ -103,7 +111,9 @@ const AdminDashboard = () => {
         pendingPayments: 0,
         pendingOrders: 0,
         pendingQuickOrders: 0,
-        pendingReturns: 0
+        pendingReturns: 0,
+        pendingAffiliateRequests: 0,
+        pendingWithdrawals: 0
     });
 
     useEffect(() => {
@@ -128,18 +138,32 @@ const AdminDashboard = () => {
 
         // Listen for real-time counts
         const ordersRef = collection(db, 'orders');
-        const unsub = onSnapshot(ordersRef, (snapshot) => {
+        const unsubOrders = onSnapshot(ordersRef, (snapshot) => {
             const orders = snapshot.docs.map(doc => doc.data() as Order);
-            
-            setCounts({
+            setCounts(prev => ({
+                ...prev,
                 pendingPayments: orders.filter(o => o.paymentMethod !== 'cash-on-delivery' && o.status === 'pending').length,
                 pendingOrders: orders.filter(o => !o.userId.startsWith('guest_') && o.status === 'pending').length,
                 pendingQuickOrders: orders.filter(o => o.userId.startsWith('guest_') && o.status === 'pending').length,
                 pendingReturns: orders.filter(o => o.status === 'return-requested').length
-            });
+            }));
         });
 
-        return () => unsub();
+        const reqsRef = collection(db, 'affiliateRequests');
+        const unsubReqs = onSnapshot(query(reqsRef, where('status', '==', 'pending')), (snap) => {
+            setCounts(prev => ({ ...prev, pendingAffiliateRequests: snap.size }));
+        });
+
+        const wdRef = collection(db, 'withdrawals');
+        const unsubWd = onSnapshot(query(wdRef, where('status', '==', 'pending')), (snap) => {
+            setCounts(prev => ({ ...prev, pendingWithdrawals: snap.size }));
+        });
+
+        return () => {
+            unsubOrders();
+            unsubReqs();
+            unsubWd();
+        };
     }, []);
 
     const menuItems = useMemo(() => {

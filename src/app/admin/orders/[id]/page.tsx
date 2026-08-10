@@ -414,7 +414,6 @@ export default function AdminOrderDetailsPage() {
                     </DialogHeader>
                     <ScrollArea className="flex-1 w-full bg-slate-200">
                          <div className="w-full flex justify-center py-6 sm:py-12 min-h-full">
-                            {/* Scaled invoice container for proper centering */}
                             <div 
                                 className="relative shrink-0 shadow-2xl"
                                 style={{ 
@@ -424,7 +423,7 @@ export default function AdminOrderDetailsPage() {
                                 } as any}
                             >
                                 <div 
-                                    className="absolute top-0 left-0 origin-top-left scale-[var(--scale)] sm:scale-[0.6] md:scale-[0.85]"
+                                    className="absolute top-0 left-1/2 -translate-x-1/2 origin-top scale-[var(--scale)]"
                                     style={{ 
                                         width: '210mm', 
                                         height: '297mm',
@@ -441,7 +440,6 @@ export default function AdminOrderDetailsPage() {
                                         />
                                     </div>
                                 </div>
-                                {/* Media queries logic for the scaling wrapper using style tags since tailwind is limited for this specific calc */}
                                 <style jsx>{`
                                     @media (min-width: 640px) {
                                         div { --scale: 0.6 !important; }
