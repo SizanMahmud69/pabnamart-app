@@ -1,9 +1,10 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Ticket, Settings, HelpCircle, Star, Users, ShoppingBag, ChevronRight, Package, Truck, CheckCircle, XCircle, Undo2, Phone, Camera, Loader2, CheckCircle2 } from "lucide-react";
+import { Heart, Ticket, Settings, HelpCircle, Star, Users, ShoppingBag, ChevronRight, Package, Truck, CheckCircle, XCircle, Undo2, Phone, Camera, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from 'lucide-react';
 import { useVouchers } from "@/hooks/useVouchers";
@@ -196,6 +197,14 @@ export default function AccountPage() {
         <div className="min-h-screen">
             <div className="container mx-auto max-w-2xl px-4 py-6 space-y-6">
                 
+                {/* Back Button for Desktop */}
+                <Button asChild variant="ghost" className="mb-4 -ml-2">
+                    <Link href="/">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Home
+                    </Link>
+                </Button>
+
                 {/* My Account Header */}
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold">My Account</h1>
