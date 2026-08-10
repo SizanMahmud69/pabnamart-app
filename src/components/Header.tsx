@@ -2,13 +2,15 @@
 "use client";
 
 import Link from 'next/link';
-import { Search, User, LogIn } from 'lucide-react';
+import { Search, User, LogIn, Home, Bell, ShoppingCart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { FormEvent, useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/hooks/useCart';
+import { useNotifications } from '@/hooks/useNotifications';
 
 
 function HeaderContent() {
@@ -18,6 +20,8 @@ function HeaderContent() {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const { user } = useAuth();
+  const { cartCount } = useCart();
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     setSearchQuery(searchParams.get('q') || '');
@@ -71,7 +75,7 @@ function HeaderContent() {
 
       <div className={cn(
         "flex-1 transition-all duration-300 ease-in-out",
-        isSearchFocused ? "max-w-full" : "max-w-xs"
+        isSearchFocused ? "max-w-full" : "max-w-xs md:max-w-md"
       )}>
         <form onSubmit={handleSearch} className="relative flex w-full">
             <Input
@@ -88,10 +92,45 @@ function HeaderContent() {
             </Button>
         </form>
       </div>
-      <div className="hidden md:flex items-center">
-          <Button asChild variant="ghost" size="icon">
+      
+      <div className="hidden md:flex items-center gap-1 lg:gap-2 ml-4">
+          <Button asChild variant="ghost" size="icon" className="relative group">
+              <Link href="/">
+                  <Home className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
+                  <span className="sr-only">Home</span>
+              </Link>
+          </Button>
+
+          <Button asChild variant="ghost" size="icon" className="relative group">
+              <Link href="/notifications">
+                  <Bell className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
+                  {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white font-bold border-2 border-background">
+                        {unreadCount}
+                      </span>
+                  )}
+                  <span className="sr-only">Notifications</span>
+              </Link>
+          </Button>
+
+          <Button asChild variant="ghost" size="icon" className="relative group">
+              <Link href="/cart">
+                  <ShoppingCart className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
+                  {cartCount > 0 && (
+                      <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white font-bold border-2 border-background">
+                        {cartCount}
+                      </span>
+                  )}
+                  <span className="sr-only">Cart</span>
+              </Link>
+          </Button>
+
+          <div className="h-8 w-px bg-border mx-1" />
+
+          <Button asChild variant="ghost" size="icon" className="group">
               <Link href={user ? "/account" : "/login"}>
-                  {user ? <User /> : <LogIn />}
+                  {user ? <User className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" /> : <LogIn className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />}
+                  <span className="sr-only">Account</span>
               </Link>
           </Button>
       </div>
