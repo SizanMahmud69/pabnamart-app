@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { 
     Package, ArrowRight, Tag, Ticket, ShoppingCart, CreditCard, Undo2, 
     Star, Loader2, DollarSign, Coins, Image as ImageIcon, Zap, UserPlus,
-    TrendingUp, TrendingDown, Clock, XCircle, CheckCircle2, BarChart3
+    TrendingUp, TrendingDown, Clock, XCircle, CheckCircle2, BarChart3,
+    MoreVertical, Calendar, Filter
 } from "lucide-react";
 import { cn, formatMoney } from '@/lib/utils';
 import type { ModeratorPermissions, Order, Withdrawal } from '@/types';
@@ -17,6 +18,15 @@ import app from '@/lib/firebase';
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie
 } from 'recharts';
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger,
+    DropdownMenuLabel,
+    DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
+import { startOfDay, startOfMonth, subDays, isAfter, isBefore, parseISO } from 'date-fns';
 
 const db = getFirestore(app);
 
@@ -113,6 +123,9 @@ const AdminDashboard = () => {
     const [permissions, setPermissions] = useState<ModeratorPermissions | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     
+    // Filter State
+    const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | '7days' | '30days' | 'all'>('30days');
+    
     // Data States
     const [orders, setOrders] = useState<Order[]>([]);
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -182,22 +195,54 @@ const AdminDashboard = () => {
     // Statistics Calculations
     const stats = useMemo(() => {
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
+        const todayStart = startOfDay(now);
+        const yesterdayStart = startOfDay(subDays(now, 1));
+        const monthStart = startOfMonth(now);
 
-        const todayOrders = orders.filter(o => o.date.startsWith(todayStr) && o.status !== 'cancelled');
+        // All non-cancelled orders
+        const validOrders = orders.filter(o => o.status !== 'cancelled');
+
+        // Today's Stats
+        const todayOrders = validOrders.filter(o => isAfter(parseISO(o.date), todayStart));
         const todaySales = todayOrders.reduce((acc, o) => acc + o.total, 0);
+
+        // This Month's Stats
+        const monthOrders = validOrders.filter(o => isAfter(parseISO(o.date), monthStart));
+        const monthSales = monthOrders.reduce((acc, o) => acc + o.total, 0);
+
+        // Filtered Stats
+        let filterStart = todayStart;
+        if (dateFilter === 'yesterday') filterStart = yesterdayStart;
+        if (dateFilter === '7days') filterStart = startOfDay(subDays(now, 7));
+        if (dateFilter === '30days') filterStart = startOfDay(subDays(now, 30));
+        if (dateFilter === 'all') filterStart = new Date(0);
+
+        const filteredOrders = validOrders.filter(o => {
+            const orderDate = parseISO(o.date);
+            if (dateFilter === 'yesterday') {
+                return isAfter(orderDate, yesterdayStart) && isBefore(orderDate, todayStart);
+            }
+            return isAfter(orderDate, filterStart);
+        });
+        const filteredSales = filteredOrders.reduce((acc, o) => acc + o.total, 0);
+
         const pendingAmount = orders.filter(o => ['pending', 'processing', 'shipped'].includes(o.status)).reduce((acc, o) => acc + o.total, 0);
         const cancelledCount = orders.filter(o => o.status === 'cancelled').length;
         const totalWithdrawn = withdrawals.filter(w => w.status === 'completed').reduce((acc, w) => acc + w.amount, 0);
 
         return {
             todaySales,
+            todayOrdersCount: todayOrders.length,
+            monthSales,
+            monthOrdersCount: monthOrders.length,
+            filteredSales,
+            filteredOrdersCount: filteredOrders.length,
             totalOrders: orders.length,
             cancelledCount,
             pendingAmount,
             totalWithdrawn
         };
-    }, [orders, withdrawals]);
+    }, [orders, withdrawals, dateFilter]);
 
     const chartData = useMemo(() => {
         const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -230,6 +275,17 @@ const AdminDashboard = () => {
         });
     };
 
+    const getFilterLabel = () => {
+        switch(dateFilter) {
+            case 'today': return 'Today';
+            case 'yesterday': return 'Yesterday';
+            case '7days': return 'Last 7 Days';
+            case '30days': return 'Last 30 Days';
+            case 'all': return 'Lifetime';
+            default: return 'Custom';
+        }
+    };
+
     return (
         <div className="container mx-auto max-w-5xl p-4 space-y-8">
             <header className="mt-4">
@@ -237,77 +293,136 @@ const AdminDashboard = () => {
                     <BarChart3 className="h-8 w-8" />
                     Admin Dashboard
                 </h2>
-                <p className="text-muted-foreground text-sm font-medium">Hello, {isAdmin ? 'Admin' : 'Moderator'}! Here's what's happening today.</p>
+                <p className="text-muted-foreground text-sm font-medium">Hello, {isAdmin ? 'Admin' : 'Moderator'}! Here's what's happening.</p>
             </header>
 
-            {/* Top Summary Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <Card className="bg-primary text-white border-0 shadow-lg">
+            {/* Quick Summary Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Today's Sales */}
+                <Card className="bg-primary text-white border-0 shadow-lg relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-110 transition-transform">
+                        <TrendingUp className="h-12 w-12" />
+                    </div>
                     <CardContent className="p-4 flex flex-col items-center text-center">
-                        <TrendingUp className="h-5 w-5 mb-2 opacity-80" />
-                        <span className="text-[10px] font-bold uppercase opacity-80">Today's Sales</span>
-                        <h3 className="text-xl font-black">৳{formatMoney(stats.todaySales)}</h3>
+                        <span className="text-[10px] font-bold uppercase opacity-80 mb-1">Today's Sales</span>
+                        <h3 className="text-2xl font-black">৳{formatMoney(stats.todaySales)}</h3>
+                        <p className="text-[10px] opacity-70 mt-1">{stats.todayOrdersCount} orders placed</p>
                     </CardContent>
                 </Card>
+
+                {/* This Month's Sales */}
+                <Card className="bg-white border-primary/10 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-2 right-2 z-20">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <MoreVertical className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Filter Range</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => setDateFilter('today')}>Today</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setDateFilter('yesterday')}>Yesterday</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setDateFilter('7days')}>Last 7 Days</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setDateFilter('30days')}>Last 30 Days</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setDateFilter('all')}>Lifetime</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <CardContent className="p-4 flex flex-col items-center text-center">
+                        <span className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{getFilterLabel()}</span>
+                        <h3 className="text-2xl font-black text-primary">৳{formatMoney(stats.filteredSales)}</h3>
+                        <p className="text-[10px] text-muted-foreground mt-1">{stats.filteredOrdersCount} orders processed</p>
+                    </CardContent>
+                </Card>
+
+                {/* Pending Amount */}
                 <Card className="bg-white border-primary/10 shadow-sm">
                     <CardContent className="p-4 flex flex-col items-center text-center">
-                        <ShoppingCart className="h-5 w-5 mb-2 text-primary" />
-                        <span className="text-[10px] font-bold uppercase text-muted-foreground">Total Orders</span>
-                        <h3 className="text-xl font-black text-foreground">{stats.totalOrders}</h3>
+                        <span className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Pending Revenue</span>
+                        <h3 className="text-2xl font-black text-orange-600">৳{formatMoney(stats.pendingAmount)}</h3>
+                        <p className="text-[10px] text-muted-foreground mt-1">From active orders</p>
                     </CardContent>
                 </Card>
+
+                {/* Withdrawn */}
                 <Card className="bg-white border-primary/10 shadow-sm">
                     <CardContent className="p-4 flex flex-col items-center text-center">
-                        <XCircle className="h-5 w-5 mb-2 text-destructive" />
-                        <span className="text-[10px] font-bold uppercase text-muted-foreground">Cancelled</span>
-                        <h3 className="text-xl font-black text-foreground">{stats.cancelledCount}</h3>
+                        <span className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Total Payouts</span>
+                        <h3 className="text-2xl font-black text-green-600">৳{formatMoney(stats.totalWithdrawn)}</h3>
+                        <p className="text-[10px] text-muted-foreground mt-1">To affiliate partners</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white border-primary/10 shadow-sm">
-                    <CardContent className="p-4 flex flex-col items-center text-center">
-                        <Clock className="h-5 w-5 mb-2 text-orange-500" />
-                        <span className="text-[10px] font-bold uppercase text-muted-foreground">Pending Amount</span>
-                        <h3 className="text-xl font-black text-foreground">৳{formatMoney(stats.pendingAmount)}</h3>
-                    </CardContent>
-                </Card>
-                <Card className="bg-white border-primary/10 shadow-sm col-span-2 md:col-span-1">
-                    <CardContent className="p-4 flex flex-col items-center text-center">
-                        <DollarSign className="h-5 w-5 mb-2 text-green-600" />
-                        <span className="text-[10px] font-bold uppercase text-muted-foreground">Total Withdrawn</span>
-                        <h3 className="text-xl font-black text-foreground">৳{formatMoney(stats.totalWithdrawn)}</h3>
-                    </CardContent>
-                </Card>
+            </div>
+
+            {/* Detailed Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                 <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex items-center gap-4">
+                    <div className="bg-indigo-500 p-2 rounded-lg text-white">
+                        <ShoppingCart className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-indigo-600 uppercase">This Month</p>
+                        <p className="font-black text-lg">৳{formatMoney(stats.monthSales)}</p>
+                    </div>
+                </div>
+                <div className="bg-purple-50 border border-purple-100 p-4 rounded-xl flex items-center gap-4">
+                    <div className="bg-purple-500 p-2 rounded-lg text-white">
+                        <Zap className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-purple-600 uppercase">Monthly Orders</p>
+                        <p className="font-black text-lg">{stats.monthOrdersCount}</p>
+                    </div>
+                </div>
+                <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center gap-4">
+                    <div className="bg-red-500 p-2 rounded-lg text-white">
+                        <XCircle className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-red-600 uppercase">Cancelled</p>
+                        <p className="font-black text-lg">{stats.cancelledCount}</p>
+                    </div>
+                </div>
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl flex items-center gap-4">
+                    <div className="bg-slate-500 p-2 rounded-lg text-white">
+                        <Package className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-600 uppercase">Total Items</p>
+                        <p className="font-black text-lg">{stats.totalOrders}</p>
+                    </div>
+                </div>
             </div>
 
             {/* Charts Section */}
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-                <Card className="border-primary/10 shadow-xl overflow-hidden">
-                    <CardHeader className="bg-muted/30 pb-4">
-                        <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4 text-primary" />
-                            Order Status Overview
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6 h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
-                                <XAxis dataKey="name" fontSize={10} fontWeight={700} axisLine={false} tickLine={false} />
-                                <YAxis fontSize={10} axisLine={false} tickLine={false} />
-                                <Tooltip 
-                                    cursor={{fill: 'rgba(139, 92, 246, 0.05)'}}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                />
-                                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                                    {chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-            </div>
+            <Card className="border-primary/10 shadow-xl overflow-hidden bg-white/50 backdrop-blur-sm">
+                <CardHeader className="bg-muted/30 pb-4">
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4 text-primary" />
+                        Live Order Status
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6 h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
+                            <XAxis dataKey="name" fontSize={10} fontWeight={700} axisLine={false} tickLine={false} />
+                            <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                            <Tooltip 
+                                cursor={{fill: 'rgba(139, 92, 246, 0.05)'}}
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                            />
+                            <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                                {chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
 
             {/* Management Menu Grid */}
             <div className="space-y-4">
@@ -315,7 +430,7 @@ const AdminDashboard = () => {
                     <ArrowRight className="h-5 w-5 text-primary" />
                     Quick Actions & Management
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-20">
                     {menuItems.map((item, index) => {
                         const isLoading = isPending && loadingHref === item.href;
                         const badgeCount = item.badgeKey ? counts[item.badgeKey as keyof typeof counts] : 0;
