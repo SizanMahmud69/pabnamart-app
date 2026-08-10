@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Search, User, LogIn, Home, Bell, ShoppingCart, PackageSearch } from 'lucide-react';
+import { Search, User, LogIn, Home, Bell, ShoppingCart, Truck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { FormEvent, useState, useEffect } from 'react';
@@ -116,7 +116,7 @@ function HeaderContent() {
           ) : (
             <Button asChild variant="ghost" size="icon" className="relative group" title="Track Order">
                 <Link href="/track-order">
-                    <Search className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
+                    <Truck className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
                     <span className="sr-only">Track Order</span>
                 </Link>
             </Button>

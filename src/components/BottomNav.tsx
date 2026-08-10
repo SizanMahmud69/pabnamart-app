@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Home, Bell, ShoppingCart, User, LogIn, Search } from 'lucide-react';
+import { Home, Bell, ShoppingCart, User, LogIn, Truck } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -26,7 +26,7 @@ export default function BottomNav() {
     // Show Notifications for logged in users, otherwise show Track
     user 
       ? { href: '/notifications', icon: Bell, label: 'Notifications', count: unreadCount }
-      : { href: '/track-order', icon: Search, label: 'Track' },
+      : { href: '/track-order', icon: Truck, label: 'Track' },
     { href: '/cart', icon: ShoppingCart, label: 'Cart', count: cartCount },
     { 
       href: user ? '/account' : '/login', 
