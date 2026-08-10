@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, Suspense, useMemo, useTransition, useRef } from 'react';
@@ -240,7 +239,7 @@ function HomePageContent() {
     <>
       <FloatingCoin />
       <div 
-        className="bg-purple-50/30 min-h-screen relative"
+        className="min-h-screen relative"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -516,7 +515,7 @@ function SearchPageContent({ searchQuery }: { searchQuery: string }) {
   }, [searchQuery, allProducts]);
 
   return (
-     <div className="bg-purple-50/30 min-h-screen">
+     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6 space-y-8">
         <AiRecommendations searchQuery={searchQuery} currentProducts={products} />
         

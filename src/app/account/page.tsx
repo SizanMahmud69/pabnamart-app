@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -150,7 +149,7 @@ export default function AccountPage() {
 
     if (!user) {
         return (
-            <div className="bg-purple-50/30 min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold mb-4">Please log in</h1>
                     <p className="text-muted-foreground mb-6">You need to be logged in to view your account.</p>
@@ -194,7 +193,7 @@ export default function AccountPage() {
 
 
     return (
-        <div className="bg-purple-50/30 min-h-screen">
+        <div className="min-h-screen">
             <div className="container mx-auto max-w-2xl px-4 py-6 space-y-6">
                 
                 {/* My Account Header */}

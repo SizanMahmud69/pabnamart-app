@@ -39,7 +39,7 @@ function AdminHeader() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure you want to log out?</AlertDialogTitle>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                 <AlertDialogDescription>
                                     You will be returned to the login page.
                                 </AlertDialogDescription>
@@ -76,7 +76,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
 
     return (
-        <div className="bg-slate-50 min-h-screen admin-layout-wrapper">
+        <div className="bg-background min-h-screen admin-layout-wrapper">
             <AdminHeader />
             {children}
         </div>

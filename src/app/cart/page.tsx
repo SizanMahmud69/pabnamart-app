@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -89,7 +88,7 @@ export default function CartPage() {
   const finalTotal = roundMoney(selectedCartTotal + (shippingFee || 0));
 
   return (
-    <div className="bg-purple-50/30 min-h-screen">
+    <div className="min-h-screen">
         <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Your Shopping Cart</h1>
         {cartItems.length > 0 ? (
