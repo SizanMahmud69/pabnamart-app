@@ -4,6 +4,7 @@
 import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
     Package, ArrowRight, Tag, Ticket, ShoppingCart, CreditCard, Undo2, 
     Star, Loader2, DollarSign, Coins, Image as ImageIcon, Zap, UserPlus,
