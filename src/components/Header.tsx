@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Search, User, LogIn, Home, Bell, ShoppingCart, Truck } from 'lucide-react';
+import { Search, User, LogIn, Home, Bell, ShoppingCart, Truck, Wallet, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { FormEvent, useState, useEffect } from 'react';
@@ -49,6 +49,8 @@ function HeaderContent() {
     pathname === '/cart' ||
     pathname === '/checkout';
 
+  const isAffiliatePage = pathname.startsWith('/affiliate');
+
   if (isSimpleHeaderPage) {
     return (
       <div className="flex w-full items-center justify-center">
@@ -59,6 +61,77 @@ function HeaderContent() {
     );
   }
 
+  // Affiliate Context Header
+  if (isAffiliatePage) {
+    return (
+        <>
+          <Link 
+            href="/affiliate" 
+            className={cn(
+                "flex items-center gap-2 transition-all duration-300 ease-in-out",
+                isSearchFocused ? "opacity-0 w-0" : "opacity-100 w-auto"
+            )}
+            aria-hidden={isSearchFocused}
+            tabIndex={isSearchFocused ? -1 : 0}
+          >
+            <div className="flex flex-col leading-none">
+                <span className="text-xl font-black text-primary uppercase italic tracking-tighter">PabnaMart</span>
+                <span className="text-[10px] font-bold text-pink-600 uppercase tracking-widest ml-0.5">Affiliate</span>
+            </div>
+          </Link>
+    
+          <div className={cn(
+            "flex-1 transition-all duration-300 ease-in-out",
+            isSearchFocused ? "max-w-full" : "max-w-xs md:max-w-md"
+          )}>
+            <form onSubmit={handleSearch} className="relative flex w-full">
+                <Input
+                type="search"
+                placeholder="Search affiliate products..."
+                className="w-full rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                />
+                <Button type="submit" className="rounded-l-none bg-pink-600 hover:bg-pink-700">
+                    <Search className="h-5 w-5" />
+                </Button>
+            </form>
+          </div>
+          
+          <div className="hidden md:flex items-center gap-1 lg:gap-2 ml-4">
+              <Button asChild variant="ghost" size="icon" className="relative group" title="Affiliate Home">
+                  <Link href="/affiliate">
+                      <Home className="h-5 w-5 text-gray-700 group-hover:text-pink-600 transition-colors" />
+                  </Link>
+              </Button>
+    
+              <Button asChild variant="ghost" size="icon" className="relative group" title="Wallet">
+                  <Link href="/affiliate/wallet">
+                      <Wallet className="h-5 w-5 text-gray-700 group-hover:text-pink-600 transition-colors" />
+                  </Link>
+              </Button>
+    
+              <Button asChild variant="ghost" size="icon" className="relative group" title="Affiliate Account">
+                  <Link href={user ? "/affiliate/account" : "/login"}>
+                      <User className="h-5 w-5 text-gray-700 group-hover:text-pink-600 transition-colors" />
+                  </Link>
+              </Button>
+    
+              <div className="h-8 w-px bg-border mx-1" />
+    
+              <Button asChild variant="ghost" size="icon" className="group" title="Back to Shop">
+                  <Link href="/">
+                      <ArrowLeft className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
+                  </Link>
+              </Button>
+          </div>
+        </>
+      );
+  }
+
+  // Standard Shopping Header
   return (
     <>
       <Link 
