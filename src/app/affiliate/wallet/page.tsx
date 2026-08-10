@@ -6,7 +6,7 @@ import { getFirestore, collection, query, where, onSnapshot, doc, getDocs, docum
 import app from "@/lib/firebase";
 import type { AffiliateEarning, Withdrawal, AffiliateSettings, Order } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Wallet, DollarSign, Hourglass, History, Send, Loader2, Clock, Undo2 } from "lucide-react";
+import { Wallet, DollarSign, Hourglass, History, Send, Loader2, Clock, Undo2, Users, AlertCircle } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { requestManualWithdrawal } from "@/app/affiliate/actions";
 import { useToast } from "@/hooks/use-toast";
+import Link from 'next/link';
 
 const db = getFirestore(app);
 
@@ -43,6 +44,7 @@ const getOrdinal = (n: number) => {
 function AffiliateWalletPageContent() {
     const { user, appUser } = useAuth();
     const { toast } = useToast();
+    const router = useRouter();
     const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
     const [orders, setOrders] = useState<Record<string, Order>>({});
@@ -241,6 +243,70 @@ function AffiliateWalletPageContent() {
 
     if (loading || !appUser) {
         return <LoadingSpinner />;
+    }
+
+    // Guard: Redirect or show message if not an approved affiliate
+    if (appUser.affiliateStatus === 'pending') {
+        return (
+            <div className="bg-pink-50 min-h-screen">
+                <div className="container mx-auto px-4 py-8 text-center max-w-lg">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Request Pending</CardTitle>
+                            <CardDescription>Your affiliate program application is under review.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>We will notify you once the review process is complete. Your wallet will be accessible then.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        )
+    }
+
+    if (appUser.affiliateStatus === 'denied') {
+        return (
+            <div className="bg-pink-50 min-h-screen">
+                <div className="container mx-auto px-4 py-8 text-center max-w-lg">
+                    <Card className="border-destructive">
+                        <CardHeader className="text-center">
+                            <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+                            <CardTitle className="text-destructive mt-4">Request Denied</CardTitle>
+                            <CardDescription>We're sorry, your affiliate application was not approved.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>Please contact support if you have any questions.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        )
+    }
+
+    if (appUser.affiliateStatus !== 'approved' || !appUser.affiliateId) {
+        return (
+            <div className="bg-pink-50 min-h-screen">
+                <div className="container mx-auto px-4 py-8">
+                    <div className="max-w-3xl mx-auto">
+                        <Card>
+                            <CardHeader className="text-center">
+                                <Users className="mx-auto h-12 w-12 text-primary" />
+                                <CardTitle className="text-3xl mt-2">Join Our Affiliate Program</CardTitle>
+                                <CardDescription>Earn money by promoting our products.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="text-center">
+                                <p className="text-muted-foreground mb-6">
+                                    Promote our products and earn a commission on every sale you refer. It's free to join!
+                                </p>
+                                <Button size="lg" asChild>
+                                    <Link href="/affiliate/join">Join Now for Free</Link>
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     const minAmount = affiliateSettings?.minimumWithdrawal || 100;
