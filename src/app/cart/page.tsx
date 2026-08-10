@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -6,7 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Trash2, ShoppingBag, Minus, Plus, Loader2 } from "lucide-react";
+import { Trash2, ShoppingBag, Minus, Plus, Loader2, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
@@ -90,6 +91,12 @@ export default function CartPage() {
   return (
     <div className="min-h-screen">
         <div className="container mx-auto px-4 py-8">
+        <Button asChild variant="ghost" className="mb-4">
+            <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Shopping
+            </Link>
+        </Button>
         <h1 className="text-3xl font-bold mb-6">Your Shopping Cart</h1>
         {cartItems.length > 0 ? (
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

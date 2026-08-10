@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, CheckCheck } from 'lucide-react';
+import { Bell, CheckCheck, ArrowLeft } from 'lucide-react';
 import { withAuth } from "@/hooks/useAuth";
 import { useNotifications, iconMap } from "@/hooks/useNotifications";
 import type { Notification } from "@/types";
@@ -53,9 +53,15 @@ function NotificationsPage() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   return (
-    <div className="bg-purple-50/30 min-h-screen">
+    <div className="min-h-screen">
         <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
+            <Button asChild variant="ghost" className="mb-4">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Home
+                </Link>
+            </Button>
             <Card>
                 <CardHeader>
                     <div className="flex justify-between items-start">
