@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Search, User, LogIn, Home, Bell, ShoppingCart } from 'lucide-react';
+import { Search, User, LogIn, Home, Bell, ShoppingCart, PackageSearch } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { FormEvent, useState, useEffect } from 'react';
@@ -94,26 +94,35 @@ function HeaderContent() {
       </div>
       
       <div className="hidden md:flex items-center gap-1 lg:gap-2 ml-4">
-          <Button asChild variant="ghost" size="icon" className="relative group">
+          <Button asChild variant="ghost" size="icon" className="relative group" title="Home">
               <Link href="/">
                   <Home className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
                   <span className="sr-only">Home</span>
               </Link>
           </Button>
 
-          <Button asChild variant="ghost" size="icon" className="relative group">
-              <Link href="/notifications">
-                  <Bell className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
-                  {unreadCount > 0 && (
-                      <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white font-bold border-2 border-background">
-                        {unreadCount}
-                      </span>
-                  )}
-                  <span className="sr-only">Notifications</span>
-              </Link>
-          </Button>
+          {user ? (
+            <Button asChild variant="ghost" size="icon" className="relative group" title="Notifications">
+                <Link href="/notifications">
+                    <Bell className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
+                    {unreadCount > 0 && (
+                        <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white font-bold border-2 border-background">
+                          {unreadCount}
+                        </span>
+                    )}
+                    <span className="sr-only">Notifications</span>
+                </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" size="icon" className="relative group" title="Track Order">
+                <Link href="/track-order">
+                    <Search className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
+                    <span className="sr-only">Track Order</span>
+                </Link>
+            </Button>
+          )}
 
-          <Button asChild variant="ghost" size="icon" className="relative group">
+          <Button asChild variant="ghost" size="icon" className="relative group" title="Cart">
               <Link href="/cart">
                   <ShoppingCart className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />
                   {cartCount > 0 && (
@@ -127,7 +136,7 @@ function HeaderContent() {
 
           <div className="h-8 w-px bg-border mx-1" />
 
-          <Button asChild variant="ghost" size="icon" className="group">
+          <Button asChild variant="ghost" size="icon" className="group" title={user ? "My Account" : "Login"}>
               <Link href={user ? "/account" : "/login"}>
                   {user ? <User className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" /> : <LogIn className="h-5 w-5 text-gray-700 group-hover:text-primary transition-colors" />}
                   <span className="sr-only">Account</span>

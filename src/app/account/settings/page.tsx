@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -41,7 +42,7 @@ export default function AccountSettingsPage() {
 
     const handleLogout = async () => {
         await logout();
-        router.push('/login');
+        router.push('/');
     };
 
     return (
