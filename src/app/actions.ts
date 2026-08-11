@@ -18,7 +18,8 @@ import type {
   AffiliateRequest,
   CoinTransaction,
   CoinSettings,
-  ContactMessage
+  ContactMessage,
+  Withdrawal
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 import nodemailer from 'nodemailer';
@@ -220,94 +221,6 @@ export async function dailyCheckInAction(userId: string) {
     } catch (error: any) {
         return { success: false, message: error.message || 'Failed to check in.' };
     }
-}
-
-export async function createModerator(
-  email: string,
-  password: string,
-  permissions: ModeratorPermissions
-) {
-  const adminApp = getFirebaseAdmin();
-  if (!adminApp) {
-    return { success: false, message: serverActionNotAvailableMessage };
-  }
-  const db = getFirestore(adminApp);
-  try {
-    const userRecord = await adminApp.auth().createUser({
-      email,
-      password,
-      displayName: 'Moderator',
-    });
-
-    const moderatorData: Partial<User> = {
-      email,
-      displayName: 'Moderator',
-      role: 'moderator',
-      permissions,
-      status: 'active',
-      joined: new Date().toISOString(),
-    };
-
-    await db.collection('users').doc(userRecord.uid).set(moderatorData);
-    return { success: true, message: 'Moderator created successfully.' };
-  } catch (error: any) {
-    console.error('Error creating moderator:', error);
-    return {
-      success: false,
-      message: error.message || 'Failed to create moderator.',
-    };
-  }
-}
-
-export async function updateModeratorPermissions(
-  uid: string,
-  permissions: ModeratorPermissions
-) {
-  const adminApp = getFirebaseAdmin();
-  if (!adminApp) {
-    return { success: false, message: serverActionNotAvailableMessage };
-  }
-  const db = getFirestore(adminApp);
-  if (!uid) {
-    return { success: false, message: 'Moderator ID is missing.' };
-  }
-  try {
-    const userDocRef = db.collection('users').doc(uid);
-    await userDocRef.update({ permissions });
-    return { success: true, message: 'Permissions updated successfully.' };
-  } catch (error: any) {
-    console.error('Error updating permissions:', error);
-    return {
-      success: false,
-      message: error.message || 'Failed to update permissions.',
-    };
-  }
-}
-
-export async function deleteModerator(uid: string) {
-  return deleteUserAccount(uid);
-}
-
-export async function deleteUserAccount(uid: string) {
-  const adminApp = getFirebaseAdmin();
-  if (!adminApp) {
-    return { success: false, message: serverActionNotAvailableMessage };
-  }
-  const db = getFirestore(adminApp);
-  if (!uid) {
-    return { success: false, message: 'User ID is missing.' };
-  }
-  try {
-    await adminApp.auth().deleteUser(uid);
-
-    const userDocRef = db.collection('users').doc(uid);
-    await userDocRef.delete();
-
-    return { success: true, message: 'User deleted successfully.' };
-  } catch (error: any) {
-    console.error('Error deleting user:', error);
-    return { success: false, message: error.message || 'Failed to delete user.' };
-  }
 }
 
 export async function createAndSendNotification(
@@ -575,14 +488,122 @@ export async function denyWithdrawal(id: string, reason: string) {
     const adminApp = getFirebaseAdmin();
     if (!adminApp) return { success: false, message: serverActionNotAvailableMessage };
     const db = getFirestore(adminApp);
-    const snap = await db.collection('withdrawals').doc(id).get();
-    const data = snap.data();
-    if (data) {
-    }
     await db.collection('withdrawals').doc(id).update({ 
         status: 'failed',
         rejectionReason: reason,
         processedAt: new Date().toISOString()
     });
     return { success: true, message: 'Withdrawal denied.' };
+}
+
+export async function createModerator(
+  email: string,
+  password: string,
+  permissions: ModeratorPermissions
+) {
+  const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+    return { success: false, message: serverActionNotAvailableMessage };
+  }
+  const db = getFirestore(adminApp);
+  try {
+    const userRecord = await adminApp.auth().createUser({
+      email,
+      password,
+      displayName: 'Moderator',
+    });
+
+    const moderatorData: Partial<User> = {
+      email,
+      displayName: 'Moderator',
+      role: 'moderator',
+      permissions,
+      status: 'active',
+      joined: new Date().toISOString(),
+    };
+
+    await db.collection('users').doc(userRecord.uid).set(moderatorData);
+    return { success: true, message: 'Moderator created successfully.' };
+  } catch (error: any) {
+    console.error('Error creating moderator:', error);
+    return {
+      success: false,
+      message: error.message || 'Failed to create moderator.',
+    };
+  }
+}
+
+export async function updateModeratorPermissions(
+  uid: string,
+  permissions: ModeratorPermissions
+) {
+  const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+    return { success: false, message: serverActionNotAvailableMessage };
+  }
+  const db = getFirestore(adminApp);
+  if (!uid) {
+    return { success: false, message: 'Moderator ID is missing.' };
+  }
+  try {
+    const userDocRef = db.collection('users').doc(uid);
+    await userDocRef.update({ permissions });
+    return { success: true, message: 'Permissions updated successfully.' };
+  } catch (error: any) {
+    console.error('Error updating permissions:', error);
+    return {
+      success: false,
+      message: error.message || 'Failed to update permissions.',
+    };
+  }
+}
+
+export async function deleteModerator(uid: string) {
+  return deleteUserAccount(uid);
+}
+
+export async function deleteUserAccount(uid: string) {
+  const adminApp = getFirebaseAdmin();
+  if (!adminApp) {
+    return { success: false, message: serverActionNotAvailableMessage };
+  }
+  const db = getFirestore(adminApp);
+  if (!uid) {
+    return { success: false, message: 'User ID is missing.' };
+  }
+  try {
+    // 1. Delete from Authentication
+    await adminApp.auth().deleteUser(uid).catch(() => {});
+
+    const batch = db.batch();
+
+    // 2. Cleanup linked top-level documents
+    const refs = [
+        db.collection('users').doc(uid),
+        db.collection('carts').doc(uid),
+        db.collection('wishlists').doc(uid),
+        db.collection('userVouchers').doc(uid),
+        db.collection('availableReturnVouchers').doc(uid),
+        db.collection('verificationCodes').doc(uid),
+    ];
+
+    refs.forEach(ref => batch.delete(ref));
+
+    // 3. Cleanup records in shared collections
+    const affReqs = await db.collection('affiliateRequests').where('userId', '==', uid).get();
+    affReqs.forEach(doc => batch.delete(doc.ref));
+
+    const affEarnings = await db.collection('affiliateEarnings').where('affiliateUid', '==', uid).get();
+    affEarnings.forEach(doc => batch.delete(doc.ref));
+
+    const withdrawals = await db.collection('withdrawals').where('affiliateUid', '==', uid).get();
+    withdrawals.forEach(doc => batch.delete(doc.ref));
+
+    await batch.commit();
+
+    return { success: true, message: 'User and all associated affiliate data deleted successfully.' };
+  } catch (error: any) {
+    console.error('Error deleting user:', error);
+    return { success: false, message: error.message || 'Failed to delete user.' };
+  }
 }
