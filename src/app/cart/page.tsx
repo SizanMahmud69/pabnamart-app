@@ -91,7 +91,8 @@ export default function CartPage() {
   return (
     <div className="min-h-screen">
         <div className="container mx-auto px-4 py-8">
-        <Button asChild variant="ghost" className="mb-4">
+        {/* Back Button for Desktop - Hidden on Mobile */}
+        <Button asChild variant="ghost" className="mb-4 hidden md:inline-flex">
             <Link href="/">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Shopping
@@ -157,12 +158,12 @@ export default function CartPage() {
                                             >
                                                 <Minus className="h-4 w-4" />
                                             </Button>
-                                            <Input
+                                            <input
                                                 type="text"
                                                 value={localQtys[item.cartItemId] || formatQuantity(item.quantity)}
                                                 onChange={(e) => handleManualInput(item.cartItemId, e.target.value)}
                                                 onBlur={() => handleBlur(item.cartItemId, item.unit || '')}
-                                                className="h-8 w-24 text-center px-1 font-bold"
+                                                className="h-8 w-24 text-center px-1 font-bold border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                                                 aria-label={`Quantity for ${item.name}`}
                                             />
                                             <Button 

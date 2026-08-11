@@ -56,7 +56,8 @@ function NotificationsPage() {
     <div className="min-h-screen">
         <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-            <Button asChild variant="ghost" className="mb-4">
+            {/* Back Button for Desktop - Hidden on Mobile */}
+            <Button asChild variant="ghost" className="mb-4 hidden md:inline-flex">
                 <Link href="/">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Home
