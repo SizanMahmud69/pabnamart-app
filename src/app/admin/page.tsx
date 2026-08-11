@@ -168,12 +168,15 @@ const AdminDashboard = () => {
             // Calculate action-needed items for badges
             setCounts(prev => ({
                 ...prev,
-                // Online orders that are still 'pending' (Need verification)
-                pendingPayments: ordersData.filter(o => o.paymentMethod !== 'cash-on-delivery' && o.status === 'pending').length,
-                // Registered users orders that are 'pending' or 'processing' (Action required for shipping)
-                pendingOrders: ordersData.filter(o => !o.userId.startsWith('guest_') && (o.status === 'pending' || o.status === 'processing')).length,
-                // Guest orders that are 'pending' or 'processing'
-                pendingQuickOrders: ordersData.filter(o => o.userId.startsWith('guest_') && (o.status === 'pending' || o.status === 'processing')).length,
+                // Only Online orders that are 'pending' (Need verification)
+                pendingPayments: ordersData.filter(o => o.status === 'pending').length,
+                
+                // Registered users orders that are ready for shipping (Must be 'processing')
+                pendingOrders: ordersData.filter(o => !o.userId.startsWith('guest_') && o.status === 'processing').length,
+                
+                // Guest orders that are ready for shipping
+                pendingQuickOrders: ordersData.filter(o => o.userId.startsWith('guest_') && o.status === 'processing').length,
+                
                 // New return requests
                 pendingReturns: ordersData.filter(o => o.status === 'return-requested').length
             }));
@@ -478,4 +481,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-    
