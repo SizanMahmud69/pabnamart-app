@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useMemo, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Users, Truck, CreditCard, Loader2, LayoutGrid, UserCog, Phone, DollarSign, Coins } from "lucide-react";
+import { ArrowLeft, ArrowRight, Users, Truck, CreditCard, Loader2, LayoutGrid, UserCog, Phone, DollarSign, Coins, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
@@ -26,7 +26,7 @@ const allSettingsItems = [
         permissionKey: 'canManagePaymentSettings'
     },
     {
-        title: "Coin Management",
+        title: "Coin Setting",
         description: "Configure points, rewards and conversion rates.",
         icon: Coins,
         href: "/admin/settings/coins",
@@ -40,11 +40,11 @@ const allSettingsItems = [
         permissionKey: 'canManageCategorySettings'
     },
     {
-        title: "User Management",
-        description: "View and manage user accounts.",
-        icon: Users,
-        href: "/admin/users",
-        permissionKey: 'canManageUsers'
+        title: "Banner Management",
+        description: "Add and remove homepage banners.",
+        icon: ImageIcon,
+        href: "/admin/banners",
+        permissionKey: 'canManageBanners'
     },
     {
         title: "Moderator Settings",

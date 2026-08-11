@@ -9,7 +9,7 @@ import {
     Package, ArrowRight, Tag, Ticket, ShoppingCart, CreditCard, Undo2, 
     Star, Loader2, DollarSign, Coins, Image as ImageIcon, Zap, UserPlus,
     TrendingUp, TrendingDown, Clock, XCircle, CheckCircle2, BarChart3,
-    MoreVertical, Calendar, Filter
+    MoreVertical, Calendar, Filter, Users
 } from "lucide-react";
 import { cn, formatMoney } from '@/lib/utils';
 import type { ModeratorPermissions, Order, Withdrawal } from '@/types';
@@ -48,6 +48,13 @@ const allMenuItems = [
         badgeKey: 'pendingOrders'
     },
     {
+        title: "User Management",
+        description: "View and manage user accounts.",
+        icon: Users,
+        href: "/admin/users",
+        permissionKey: 'canManageUsers'
+    },
+    {
         title: "Quick Order Management",
         description: "Manage orders placed by guest users.",
         icon: Zap,
@@ -62,13 +69,6 @@ const allMenuItems = [
         href: "/admin/verify-payments",
         permissionKey: 'canVerifyPayments',
         badgeKey: 'pendingPayments'
-    },
-    {
-        title: "Banner Management",
-        description: "Add and remove homepage banners.",
-        icon: ImageIcon,
-        href: "/admin/banners",
-        permissionKey: 'canManageBanners'
     },
     {
         title: "Return Requests",
