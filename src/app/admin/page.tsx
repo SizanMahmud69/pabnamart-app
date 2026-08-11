@@ -164,11 +164,17 @@ const AdminDashboard = () => {
         const unsubOrders = onSnapshot(ordersRef, (snapshot) => {
             const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
             setOrders(ordersData);
+            
+            // Calculate action-needed items for badges
             setCounts(prev => ({
                 ...prev,
+                // Online orders that are still 'pending' (Need verification)
                 pendingPayments: ordersData.filter(o => o.paymentMethod !== 'cash-on-delivery' && o.status === 'pending').length,
-                pendingOrders: ordersData.filter(o => !o.userId.startsWith('guest_') && o.status === 'pending').length,
-                pendingQuickOrders: ordersData.filter(o => o.userId.startsWith('guest_') && o.status === 'pending').length,
+                // Registered users orders that are 'pending' or 'processing' (Action required for shipping)
+                pendingOrders: ordersData.filter(o => !o.userId.startsWith('guest_') && (o.status === 'pending' || o.status === 'processing')).length,
+                // Guest orders that are 'pending' or 'processing'
+                pendingQuickOrders: ordersData.filter(o => o.userId.startsWith('guest_') && (o.status === 'pending' || o.status === 'processing')).length,
+                // New return requests
                 pendingReturns: ordersData.filter(o => o.status === 'return-requested').length
             }));
         });
@@ -445,7 +451,7 @@ const AdminDashboard = () => {
                                             <div className="bg-primary/10 p-3 rounded-lg relative group-hover:bg-primary group-hover:text-white transition-colors">
                                                 <item.icon className="h-6 w-6" />
                                                 {badgeCount > 0 && (
-                                                    <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-[10px] font-black text-white border-2 border-white shadow-md animate-pulse">
+                                                    <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-[10px] font-black text-white border-2 border-white shadow-md animate-pulse z-20">
                                                         {badgeCount}
                                                     </span>
                                                 )}
@@ -472,3 +478,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+    
