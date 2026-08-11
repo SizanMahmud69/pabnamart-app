@@ -40,19 +40,19 @@ const allMenuItems = [
         permissionKey: 'canManageProducts'
     },
     {
+        title: "User Management",
+        description: "View and manage user accounts.",
+        icon: Users,
+        href: "/admin/users",
+        permissionKey: 'canManageUsers'
+    },
+    {
         title: "Order Management",
         description: "View and process customer orders.",
         icon: ShoppingCart,
         href: "/admin/orders",
         permissionKey: 'canManageOrders',
         badgeKey: 'pendingOrders'
-    },
-    {
-        title: "User Management",
-        description: "View and manage user accounts.",
-        icon: Users,
-        href: "/admin/users",
-        permissionKey: 'canManageUsers'
     },
     {
         title: "Quick Order Management",

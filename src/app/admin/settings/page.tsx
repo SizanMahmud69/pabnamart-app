@@ -40,7 +40,7 @@ const allSettingsItems = [
         permissionKey: 'canManageCategorySettings'
     },
     {
-        title: "Banner Management",
+        title: "Banner Setting",
         description: "Add and remove homepage banners.",
         icon: ImageIcon,
         href: "/admin/banners",
