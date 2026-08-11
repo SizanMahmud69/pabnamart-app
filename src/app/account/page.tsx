@@ -195,10 +195,10 @@ export default function AccountPage() {
 
     return (
         <div className="min-h-screen">
-            <div className="container mx-auto max-w-2xl px-4 py-6 space-y-6">
+            <div className="container mx-auto max-w-2xl px-4 pt-2 pb-8 space-y-4">
                 
                 {/* Back Button for Desktop - Hidden on Mobile */}
-                <Button asChild variant="ghost" className="mb-4 -ml-2 hidden md:inline-flex">
+                <Button asChild variant="ghost" className="-ml-2 hidden md:inline-flex">
                     <Link href="/">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Home
@@ -215,9 +215,11 @@ export default function AccountPage() {
                         </Button>
                         <h1 className="text-2xl font-bold">My Account</h1>
                     </div>
-                    <Link href="/account/settings">
-                        <Settings className="h-6 w-6 text-gray-600" />
-                    </Link>
+                    <Button asChild variant="ghost" size="icon" className="h-10 w-10 text-gray-600">
+                        <Link href="/account/settings">
+                            <Settings className="h-6 w-6" />
+                        </Link>
+                    </Button>
                 </div>
                 
                 {/* User Info */}
@@ -267,7 +269,7 @@ export default function AccountPage() {
 
                 {/* My Orders Section */}
                 <Card className="shadow-sm">
-                    <CardHeader>
+                    <CardHeader className="p-4">
                         <div className="flex justify-between items-center">
                             <CardTitle className="text-lg">My Orders</CardTitle>
                             <Link href="/account/orders" className="flex items-center text-sm font-medium text-primary hover:underline">
@@ -295,7 +297,7 @@ export default function AccountPage() {
 
                 {/* More Services */}
                 <Card className="shadow-sm">
-                     <CardHeader>
+                     <CardHeader className="p-4">
                         <CardTitle className="text-lg">More Services</CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 grid grid-cols-5 gap-4">
@@ -307,4 +309,3 @@ export default function AccountPage() {
         </div>
     );
 }
-
