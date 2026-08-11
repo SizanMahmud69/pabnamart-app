@@ -159,7 +159,7 @@ const AdminDashboard = () => {
         
         triggerWithdrawals();
 
-        // Real-time Orders
+        // Real-time Orders & Counts
         const ordersRef = collection(db, 'orders');
         const unsubOrders = onSnapshot(ordersRef, (snapshot) => {
             const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
@@ -173,7 +173,7 @@ const AdminDashboard = () => {
             }));
         });
 
-        // Real-time Withdrawals
+        // Real-time Withdrawals & Counts
         const wdRef = collection(db, 'withdrawals');
         const unsubWd = onSnapshot(wdRef, (snapshot) => {
             const wdData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Withdrawal));
@@ -181,6 +181,7 @@ const AdminDashboard = () => {
             setCounts(prev => ({ ...prev, pendingWithdrawals: wdData.filter(w => w.status === 'pending').length }));
         });
 
+        // Real-time Affiliate Requests Count
         const reqsRef = collection(db, 'affiliateRequests');
         const unsubReqs = onSnapshot(query(reqsRef, where('status', '==', 'pending')), (snap) => {
             setCounts(prev => ({ ...prev, pendingAffiliateRequests: snap.size }));
@@ -438,13 +439,13 @@ const AdminDashboard = () => {
 
                         return (
                             <div key={index} onClick={() => !isLoading && handleNavigation(item.href)} className="block">
-                                <Card className={cn("hover:border-primary hover:shadow-lg transition-all relative overflow-hidden group", isLoading ? "cursor-wait" : "cursor-pointer")}>
+                                <Card className={cn("hover:border-primary hover:shadow-lg transition-all relative group", isLoading ? "cursor-wait" : "cursor-pointer")}>
                                     <CardContent className="p-4 flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className="bg-primary/10 p-3 rounded-lg relative group-hover:bg-primary group-hover:text-white transition-colors">
                                                 <item.icon className="h-6 w-6" />
                                                 {badgeCount > 0 && (
-                                                    <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-[10px] font-black text-white border-2 border-white shadow-md animate-in zoom-in">
+                                                    <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-[10px] font-black text-white border-2 border-white shadow-md animate-pulse">
                                                         {badgeCount}
                                                     </span>
                                                 )}
