@@ -6,9 +6,9 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Check, X, Eye, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, X, Eye, Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { AffiliateRequest } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { approveAffiliateRequest, denyAffiliateRequest } from '@/app/actions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 const db = getFirestore(app);
 
@@ -32,8 +33,8 @@ function DenyRequestDialog({ request, onDeny }: { request: AffiliateRequest, onD
     return (
         <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
             <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                    <X className="mr-2 h-4 w-4" /> Deny
+                <Button variant="ghost" size="sm" className="w-full justify-start text-destructive focus:text-destructive">
+                    <X className="mr-2 h-4 w-4" /> Deny Request
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -62,6 +63,7 @@ export default function AffiliateRequestsPage() {
     const [requests, setRequests] = useState<AffiliateRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
+    const [requestToDelete, setRequestToDelete] = useState<AffiliateRequest | null>(null);
 
     useEffect(() => {
         const requestsRef = collection(db, 'affiliateRequests');
@@ -84,7 +86,7 @@ export default function AffiliateRequestsPage() {
         } else {
             toast({ title: "Error", description: result.message, variant: "destructive" });
         }
-        setIsProcessing(null);
+        setIsProcessing(requestId);
     };
     
     const handleDeny = async (requestId: string, reason: string) => {
@@ -95,7 +97,20 @@ export default function AffiliateRequestsPage() {
         } else {
             toast({ title: "Error", description: result.message, variant: "destructive" });
         }
-        setIsProcessing(null);
+        setIsProcessing(requestId);
+    };
+
+    const handleDeleteRequest = async (requestId: string) => {
+        setIsProcessing(requestId);
+        try {
+            await deleteDoc(doc(db, 'affiliateRequests', requestId));
+            toast({ title: "Deleted", description: "Request has been permanently deleted." });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to delete request.", variant: "destructive" });
+        } finally {
+            setIsProcessing(null);
+            setRequestToDelete(null);
+        }
     };
 
     if (loading) return <LoadingSpinner />;
@@ -122,7 +137,6 @@ export default function AffiliateRequestsPage() {
                                 <TableRow>
                                     <TableHead>User</TableHead>
                                     <TableHead>NID Number</TableHead>
-                                    <TableHead>NID Images</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -136,36 +150,56 @@ export default function AffiliateRequestsPage() {
                                         </TableCell>
                                         <TableCell>{req.nidNumber}</TableCell>
                                         <TableCell>
-                                            <div className="flex flex-col gap-1">
-                                                <Button asChild variant="link" size="sm" className="p-0 h-auto justify-start">
-                                                    <a href={req.nidFrontImageUrl} target="_blank" rel="noopener noreferrer">
-                                                        <Eye className="mr-1 h-4 w-4"/> View Front
-                                                    </a>
-                                                </Button>
-                                                <Button asChild variant="link" size="sm" className="p-0 h-auto justify-start">
-                                                    <a href={req.nidBackImageUrl} target="_blank" rel="noopener noreferrer">
-                                                        <Eye className="mr-1 h-4 w-4"/> View Back
-                                                    </a>
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
                                             <Badge variant={req.status === 'approved' ? 'default' : req.status === 'denied' ? 'destructive' : 'secondary'} className="capitalize">{req.status}</Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            {isProcessing === req.id ? (
-                                                <Loader2 className="h-5 w-5 animate-spin ml-auto" />
-                                            ) : req.status === 'pending' ? (
-                                                <div className="flex gap-2 justify-end">
-                                                    <Button variant="outline" size="sm" onClick={() => handleApprove(req.id)}><Check className="mr-2 h-4 w-4"/> Approve</Button>
-                                                    <DenyRequestDialog request={req} onDeny={handleDeny} />
-                                                </div>
-                                            ) : null}
+                                            <div className="flex items-center justify-end gap-2">
+                                                {isProcessing === req.id ? (
+                                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                                ) : (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                            <DropdownMenuItem asChild>
+                                                                <a href={req.nidFrontImageUrl} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+                                                                    <Eye className="mr-2 h-4 w-4" /> View NID Front
+                                                                </a>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem asChild>
+                                                                <a href={req.nidBackImageUrl} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+                                                                    <Eye className="mr-2 h-4 w-4" /> View NID Back
+                                                                </a>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            {req.status === 'pending' && (
+                                                                <>
+                                                                    <DropdownMenuItem onSelect={() => handleApprove(req.id)}>
+                                                                        <Check className="mr-2 h-4 w-4 text-green-600" /> Approve Request
+                                                                    </DropdownMenuItem>
+                                                                    <DenyRequestDialog request={req} onDeny={handleDeny} />
+                                                                    <DropdownMenuSeparator />
+                                                                </>
+                                                            )}
+                                                            <DropdownMenuItem 
+                                                                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                                onSelect={() => setRequestToDelete(req)}
+                                                            >
+                                                                <Trash2 className="mr-2 h-4 w-4" /> Permanent Delete
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">No affiliate requests found.</TableCell>
+                                        <TableCell colSpan={4} className="h-24 text-center">No affiliate requests found.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -173,6 +207,27 @@ export default function AffiliateRequestsPage() {
                     </CardContent>
                 </Card>
             </main>
+
+            <AlertDialog open={!!requestToDelete} onOpenChange={(open) => !open && setRequestToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Request Permanently?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the affiliate request for <span className="font-bold">{requestToDelete?.displayName}</span> from the database. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            className="bg-destructive hover:bg-destructive/90"
+                            onClick={() => requestToDelete && handleDeleteRequest(requestToDelete.id)}
+                        >
+                            Delete Permanently
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
+

@@ -6,9 +6,9 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Check, X, Eye, Loader2, DollarSign, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Check, X, Eye, Loader2, DollarSign, ExternalLink, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getFirestore, collection, onSnapshot, query, orderBy, doc } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import app from '@/lib/firebase';
 import type { Withdrawal, User } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -17,6 +17,7 @@ import { approveWithdrawal, denyWithdrawal } from '@/app/actions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 const db = getFirestore(app);
 
@@ -34,8 +35,8 @@ function ApproveWithdrawalDialog({ request, onApprove, isProcessing }: { request
     return (
         <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
             <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200">
-                    <Check className="mr-1 h-4 w-4"/> Approve
+                <Button variant="ghost" size="sm" className="w-full justify-start text-green-600 hover:text-green-700 hover:bg-green-50">
+                    <Check className="mr-2 h-4 w-4"/> Approve Payment
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -83,8 +84,8 @@ function DenyWithdrawalDialog({ request, onDeny, isProcessing }: { request: With
     return (
         <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
             <AlertDialogTrigger asChild>
-                 <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                    <X className="mr-1 h-4 w-4" /> Deny
+                 <Button variant="ghost" size="sm" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <X className="mr-2 h-4 w-4" /> Deny Request
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -123,6 +124,7 @@ export default function WithdrawalRequestsPage() {
     const [users, setUsers] = useState<Record<string, User>>({});
     const [loading, setLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
+    const [withdrawalToDelete, setWithdrawalToDelete] = useState<Withdrawal | null>(null);
 
     useEffect(() => {
         const requestsRef = collection(db, 'withdrawals');
@@ -132,7 +134,6 @@ export default function WithdrawalRequestsPage() {
             const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Withdrawal));
             setWithdrawals(reqs);
 
-            // Fetch user info for each withdrawal
             const uniqueUserIds = Array.from(new Set(reqs.map(r => r.affiliateUid)));
             uniqueUserIds.forEach(uid => {
                 if (!users[uid]) {
@@ -147,7 +148,7 @@ export default function WithdrawalRequestsPage() {
             setLoading(false);
         });
         return () => unsubscribe();
-    }, []); // Removed users from dependency to avoid loop
+    }, []);
 
     const handleApprove = async (withdrawalId: string, trxId: string) => {
         setIsProcessing(withdrawalId);
@@ -178,6 +179,19 @@ export default function WithdrawalRequestsPage() {
             toast({ title: "Error", description: "Failed to process denial.", variant: "destructive" });
         } finally {
             setIsProcessing(null);
+        }
+    };
+
+    const handleDeleteWithdrawal = async (id: string) => {
+        setIsProcessing(id);
+        try {
+            await deleteDoc(doc(db, 'withdrawals', id));
+            toast({ title: "Deleted", description: "Withdrawal request deleted permanently." });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to delete request.", variant: "destructive" });
+        } finally {
+            setIsProcessing(null);
+            setWithdrawalToDelete(null);
         }
     };
 
@@ -257,35 +271,43 @@ export default function WithdrawalRequestsPage() {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    {isProcessing === req.id ? (
-                                                        <div className="flex justify-end pr-4">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        {isProcessing === req.id ? (
                                                             <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                                                        </div>
-                                                    ) : req.status === 'pending' ? (
-                                                        <div className="flex gap-2 justify-end">
-                                                            <ApproveWithdrawalDialog 
-                                                                request={req} 
-                                                                onApprove={handleApprove} 
-                                                                isProcessing={isProcessing === req.id}
-                                                            />
-                                                            <DenyWithdrawalDialog 
-                                                                request={req} 
-                                                                onDeny={handleDeny}
-                                                                isProcessing={isProcessing === req.id}
-                                                            />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex flex-col items-end pr-2">
-                                                            {req.transactionId ? (
-                                                                <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded border">Trx: {req.transactionId}</span>
-                                                            ) : (
-                                                                <span className="text-[10px] text-muted-foreground italic">Processed</span>
-                                                            )}
-                                                            <span className="text-[9px] text-muted-foreground mt-1">
-                                                                {req.processedAt ? new Date(req.processedAt).toLocaleDateString() : ''}
-                                                            </span>
-                                                        </div>
-                                                    )}
+                                                        ) : (
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                                    {req.status === 'pending' && (
+                                                                        <>
+                                                                            <ApproveWithdrawalDialog 
+                                                                                request={req} 
+                                                                                onApprove={handleApprove} 
+                                                                                isProcessing={isProcessing === req.id}
+                                                                            />
+                                                                            <DenyWithdrawalDialog 
+                                                                                request={req} 
+                                                                                onDeny={handleDeny}
+                                                                                isProcessing={isProcessing === req.id}
+                                                                            />
+                                                                            <DropdownMenuSeparator />
+                                                                        </>
+                                                                    )}
+                                                                    <DropdownMenuItem 
+                                                                        className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                                        onSelect={() => setWithdrawalToDelete(req)}
+                                                                    >
+                                                                        <Trash2 className="mr-2 h-4 w-4" /> Permanent Delete
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        )}
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         )
@@ -305,6 +327,26 @@ export default function WithdrawalRequestsPage() {
                     </CardContent>
                 </Card>
             </main>
+
+            <AlertDialog open={!!withdrawalToDelete} onOpenChange={(open) => !open && setWithdrawalToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Withdrawal Request Permanently?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the withdrawal request of <span className="font-bold">৳{withdrawalToDelete?.amount.toFixed(2)}</span> from the database. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            className="bg-destructive hover:bg-destructive/90"
+                            onClick={() => withdrawalToDelete && handleDeleteWithdrawal(withdrawalToDelete.id)}
+                        >
+                            Delete Permanently
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
