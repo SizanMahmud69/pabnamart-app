@@ -119,7 +119,13 @@ export default function AdminOrderManagement() {
         setIsDeleting(true);
         try {
             await runTransaction(db, async (transaction) => {
-                if (!['cancelled', 'returned', 'return-denied'].includes(orderToDelete.status)) {
+                // Determine if stock should be restored upon deletion.
+                // Stock should ONLY be restored if the order is currently in an active, non-delivered state.
+                // If it's already 'cancelled' or 'returned', stock was already restored during status change.
+                // If it's 'delivered', stock should NOT be restored because the product is with the customer.
+                const shouldRestoreStock = ['pending', 'processing', 'shipped'].includes(orderToDelete.status);
+
+                if (shouldRestoreStock) {
                     for (const item of orderToDelete.items) {
                         const productRef = doc(db, 'products', item.id.toString());
                         const productSnap = await transaction.get(productRef);
@@ -147,18 +153,19 @@ export default function AdminOrderManagement() {
                         }
                     }
                 }
+                
                 transaction.delete(doc(db, 'orders', orderToDelete.id));
             });
 
             toast({
                 title: "Order Deleted",
-                description: `Order #${orderToDelete.orderNumber} has been permanently deleted and stock restored.`
+                description: `Order #${orderToDelete.orderNumber} has been permanently deleted.`
             });
         } catch (error) {
             console.error("Delete failed:", error);
             toast({
                 title: "Error",
-                description: "Failed to delete order and restore stock.",
+                description: "Failed to delete order.",
                 variant: "destructive"
             });
         } finally {
@@ -310,7 +317,11 @@ export default function AdminOrderManagement() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete order #{orderToDelete?.orderNumber}. Stock will be automatically restored to the products. This action cannot be undone.
+                            This will permanently delete order #{orderToDelete?.orderNumber}. 
+                            {orderToDelete && ['pending', 'processing', 'shipped'].includes(orderToDelete.status) 
+                                ? " Since this order is not yet delivered, stock will be automatically restored."
+                                : " Since this order is delivered, cancelled, or returned, stock will not be affected."} 
+                            This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

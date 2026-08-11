@@ -340,7 +340,11 @@ export async function updateOrderStatus(
       orderData = currentOrderData;
       if (currentOrderData.status === newStatus) return;
 
-      if (newStatus === 'cancelled' && currentOrderData.status !== 'cancelled') {
+      // Restore stock if the new status is 'cancelled' or 'returned' 
+      // but only if it hasn't been done already.
+      if ((newStatus === 'cancelled' || newStatus === 'returned') && 
+          currentOrderData.status !== 'cancelled' && 
+          currentOrderData.status !== 'returned') {
           await handleOrderCancellationEffects(transaction, db, currentOrderData);
       }
 

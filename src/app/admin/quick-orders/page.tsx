@@ -104,8 +104,11 @@ export default function AdminQuickOrderManagement() {
         setIsDeleting(true);
         try {
             await runTransaction(db, async (transaction) => {
-                // Restore stock if the order was not already cancelled or returned
-                if (!['cancelled', 'returned', 'return-denied'].includes(orderToDelete.status)) {
+                // Determine if stock should be restored.
+                // Same logic as registered orders: Only restore if order was in an active state.
+                const shouldRestoreStock = ['pending', 'processing', 'shipped'].includes(orderToDelete.status);
+
+                if (shouldRestoreStock) {
                     for (const item of orderToDelete.items) {
                         const productRef = doc(db, 'products', item.id.toString());
                         const productSnap = await transaction.get(productRef);
@@ -117,11 +120,11 @@ export default function AdminQuickOrderManagement() {
 
                             if (item.color) {
                                 const idx = newColors.findIndex(c => c.name === item.color);
-                                if (idx !== -1) newColors[idx].stock -= item.quantity;
+                                if (idx !== -1) newColors[idx].stock += item.quantity;
                             }
                             if (item.size) {
                                 const idx = newSizes.findIndex(s => s.name === item.size);
-                                if (idx !== -1) newSizes[idx].stock -= item.quantity;
+                                if (idx !== -1) newSizes[idx].stock += item.quantity;
                             }
 
                             transaction.update(productRef, {
@@ -133,19 +136,19 @@ export default function AdminQuickOrderManagement() {
                         }
                     }
                 }
-                // Finally delete the order document
+                
                 transaction.delete(doc(db, 'orders', orderToDelete.id));
             });
 
             toast({
                 title: "Order Deleted",
-                description: `Quick Order #${orderToDelete.orderNumber} has been permanently deleted and stock restored.`
+                description: `Quick Order #${orderToDelete.orderNumber} has been permanently deleted.`
             });
         } catch (error) {
             console.error("Delete failed:", error);
             toast({
                 title: "Error",
-                description: "Failed to delete quick order and restore stock.",
+                description: "Failed to delete quick order.",
                 variant: "destructive"
             });
         } finally {
@@ -306,7 +309,11 @@ export default function AdminQuickOrderManagement() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete quick order #{orderToDelete?.orderNumber}. Stock will be automatically restored to the products. This action cannot be undone.
+                            This will permanently delete quick order #{orderToDelete?.orderNumber}. 
+                            {orderToDelete && ['pending', 'processing', 'shipped'].includes(orderToDelete.status) 
+                                ? " Since this order is in progress, stock will be automatically restored."
+                                : " Since this order is delivered or finalized, stock will not be affected."}
+                            This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
