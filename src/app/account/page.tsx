@@ -197,17 +197,24 @@ export default function AccountPage() {
         <div className="min-h-screen">
             <div className="container mx-auto max-w-2xl px-4 py-6 space-y-6">
                 
-                {/* Back Button for Desktop */}
-                <Button asChild variant="ghost" className="mb-4 -ml-2">
+                {/* Back Button for Desktop - Hidden on Mobile */}
+                <Button asChild variant="ghost" className="mb-4 -ml-2 hidden md:inline-flex">
                     <Link href="/">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Home
                     </Link>
                 </Button>
 
-                {/* My Account Header */}
+                {/* My Account Header with Back Arrow next to Title */}
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">My Account</h1>
+                    <div className="flex items-center gap-1">
+                        <Button asChild variant="ghost" size="icon" className="h-10 w-10 -ml-2">
+                            <Link href="/">
+                                <ArrowLeft className="h-6 w-6" />
+                            </Link>
+                        </Button>
+                        <h1 className="text-2xl font-bold">My Account</h1>
+                    </div>
                     <Link href="/account/settings">
                         <Settings className="h-6 w-6 text-gray-600" />
                     </Link>
@@ -300,3 +307,4 @@ export default function AccountPage() {
         </div>
     );
 }
+
