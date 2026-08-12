@@ -272,12 +272,12 @@ const AdminDashboard = () => {
     const chartData = useMemo(() => {
         const statuses = [
             { key: 'pending', label: 'Pending', color: '#94a3b8' },
-            { key: 'processing', label: 'Processing', color: '#3b82f6' },
+            { key: 'processing', label: 'Proc', color: '#3b82f6' },
             { key: 'shipped', label: 'Shipped', color: '#8b5cf6' },
-            { key: 'delivered', label: 'Delivered', color: '#10b981' },
-            { key: 'return-requested', label: 'Return Req', color: '#f59e0b' },
-            { key: 'returned', label: 'Returned', color: '#ec4899' },
-            { key: 'cancelled', label: 'Cancelled', color: '#ef4444' }
+            { key: 'delivered', label: 'Delvrd', color: '#10b981' },
+            { key: 'return-requested', label: 'R.Req', color: '#f59e0b' },
+            { key: 'returned', label: 'Retrn', color: '#ec4899' },
+            { key: 'cancelled', label: 'Cancl', color: '#ef4444' }
         ];
         
         return statuses.map(s => ({
@@ -437,10 +437,22 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent className="pt-6 h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData}>
+                        <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
-                            <XAxis dataKey="name" fontSize={9} fontWeights={700} axisLine={false} tickLine={false} />
-                            <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                            <XAxis 
+                                dataKey="name" 
+                                fontSize={8} 
+                                fontWeight={700} 
+                                axisLine={false} 
+                                tickLine={false} 
+                                interval={0}
+                            />
+                            <YAxis 
+                                fontSize={10} 
+                                axisLine={false} 
+                                tickLine={false} 
+                                width={35}
+                            />
                             <Tooltip 
                                 cursor={{fill: 'rgba(139, 92, 246, 0.05)'}}
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
