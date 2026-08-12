@@ -213,7 +213,6 @@ const AdminDashboard = () => {
         const monthStart = startOfMonth(now);
 
         // Combined Revenue: Use Revenue Records (Persisted) + Currently Delivered Orders in list (Fallback)
-        // We use a Map to avoid double counting if an order exists in both
         const revenueMap = new Map();
         
         revenueRecords.forEach(rec => {
@@ -221,6 +220,7 @@ const AdminDashboard = () => {
         });
 
         orders.forEach(o => {
+            // Only count as Delivered revenue if it's NOT returned or cancelled
             if (o.status === 'delivered' && !revenueMap.has(o.id)) {
                 revenueMap.set(o.id, {
                     amount: o.total,
@@ -439,7 +439,7 @@ const AdminDashboard = () => {
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
-                            <XAxis dataKey="name" fontSize={9} fontWeight={700} axisLine={false} tickLine={false} />
+                            <XAxis dataKey="name" fontSize={9} fontWeights={700} axisLine={false} tickLine={false} />
                             <YAxis fontSize={10} axisLine={false} tickLine={false} />
                             <Tooltip 
                                 cursor={{fill: 'rgba(139, 92, 246, 0.05)'}}

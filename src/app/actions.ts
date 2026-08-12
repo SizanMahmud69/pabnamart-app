@@ -334,26 +334,32 @@ export async function updateOrderStatus(
     let orderData: Order | null = null;
     await db.runTransaction(async (transaction) => {
       const orderRef = db.collection('orders').doc(orderId);
+      const revenueRef = db.collection('revenueHistory').doc(orderId);
       const orderDoc = await transaction.get(orderRef);
+      
       if (!orderDoc.exists) throw new Error('Order not found.');
       const currentOrderData = orderDoc.data() as Order;
       orderData = currentOrderData;
+      
       if (currentOrderData.status === newStatus) return;
 
-      // Restore stock if the new status is 'cancelled' or 'returned' 
-      // but only if it hasn't been done already.
+      // Handle Stock and Revenue adjustments
       if ((newStatus === 'cancelled' || newStatus === 'returned') && 
           currentOrderData.status !== 'cancelled' && 
           currentOrderData.status !== 'returned') {
+          
           await handleOrderCancellationEffects(transaction, db, currentOrderData);
+          
+          // Remove persistent revenue record if order is cancelled or returned
+          transaction.delete(revenueRef);
       }
 
       const updatePayload: any = { status: newStatus };
+      
       if (newStatus === 'delivered' && currentOrderData.status !== 'delivered') {
         updatePayload.deliveredAt = new Date().toISOString();
         
-        // Record persistent revenue
-        const revenueRef = db.collection('revenueHistory').doc(orderId);
+        // Record/Update persistent revenue
         transaction.set(revenueRef, {
             orderId,
             orderNumber: currentOrderData.orderNumber,
@@ -377,6 +383,7 @@ export async function updateOrderStatus(
 
     return { success: true, message: `Order status updated to ${newStatus}` };
   } catch (error: any) {
+    console.error('Update status failed:', error);
     return { success: false, message: error.message };
   }
 }
