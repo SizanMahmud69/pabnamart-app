@@ -351,6 +351,16 @@ export async function updateOrderStatus(
       const updatePayload: any = { status: newStatus };
       if (newStatus === 'delivered' && currentOrderData.status !== 'delivered') {
         updatePayload.deliveredAt = new Date().toISOString();
+        
+        // Record persistent revenue
+        const revenueRef = db.collection('revenueHistory').doc(orderId);
+        transaction.set(revenueRef, {
+            orderId,
+            orderNumber: currentOrderData.orderNumber,
+            amount: currentOrderData.total,
+            date: new Date().toISOString(),
+            items: currentOrderData.items.length
+        });
       }
 
       transaction.update(orderRef, updatePayload);

@@ -129,6 +129,7 @@ const AdminDashboard = () => {
     
     // Data States
     const [orders, setOrders] = useState<Order[]>([]);
+    const [revenueRecords, setRevenueRecords] = useState<any[]>([]);
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
     const [counts, setCounts] = useState({
         pendingPayments: 0,
@@ -168,18 +169,18 @@ const AdminDashboard = () => {
             // Calculate action-needed items for badges
             setCounts(prev => ({
                 ...prev,
-                // Only Online orders that are 'pending' (Need verification)
-                pendingPayments: ordersData.filter(o => o.status === 'pending').length,
-                
-                // Registered users orders that are ready for shipping (Must be 'processing')
-                pendingOrders: ordersData.filter(o => !o.userId.startsWith('guest_') && o.status === 'processing').length,
-                
-                // Guest orders that are ready for shipping
-                pendingQuickOrders: ordersData.filter(o => o.userId.startsWith('guest_') && o.status === 'processing').length,
-                
-                // New return requests
+                pendingPayments: ordersData.filter(o => o.status === 'pending' && o.paymentMethod !== 'cash-on-delivery').length,
+                pendingOrders: ordersData.filter(o => !o.userId.startsWith('guest_') && (o.status === 'processing' || (o.status === 'pending' && o.paymentMethod === 'cash-on-delivery'))).length,
+                pendingQuickOrders: ordersData.filter(o => o.userId.startsWith('guest_') && (o.status === 'processing' || (o.status === 'pending' && o.paymentMethod === 'cash-on-delivery'))).length,
                 pendingReturns: ordersData.filter(o => o.status === 'return-requested').length
             }));
+        });
+
+        // Real-time Revenue History (Persistent Records)
+        const revenueRef = collection(db, 'revenueHistory');
+        const unsubRev = onSnapshot(revenueRef, (snapshot) => {
+            const revData = snapshot.docs.map(doc => doc.data());
+            setRevenueRecords(revData);
         });
 
         // Real-time Withdrawals & Counts
@@ -200,6 +201,7 @@ const AdminDashboard = () => {
             unsubOrders();
             unsubReqs();
             unsubWd();
+            unsubRev();
         };
     }, []);
 
@@ -210,16 +212,25 @@ const AdminDashboard = () => {
         const yesterdayStart = startOfDay(subDays(now, 1));
         const monthStart = startOfMonth(now);
 
-        // All non-cancelled orders
-        const validOrders = orders.filter(o => o.status !== 'cancelled');
+        // Combined Revenue: Use Revenue Records (Persisted) + Currently Delivered Orders in list (Fallback)
+        // We use a Map to avoid double counting if an order exists in both
+        const revenueMap = new Map();
+        
+        revenueRecords.forEach(rec => {
+            revenueMap.set(rec.orderId, rec);
+        });
 
-        // Today's Stats
-        const todayOrders = validOrders.filter(o => isAfter(parseISO(o.date), todayStart));
-        const todaySales = todayOrders.reduce((acc, o) => acc + o.total, 0);
+        orders.forEach(o => {
+            if (o.status === 'delivered' && !revenueMap.has(o.id)) {
+                revenueMap.set(o.id, {
+                    amount: o.total,
+                    date: o.deliveredAt || o.date,
+                    orderId: o.id
+                });
+            }
+        });
 
-        // This Month's Stats
-        const monthOrders = validOrders.filter(o => isAfter(parseISO(o.date), monthStart));
-        const monthSales = monthOrders.reduce((acc, o) => acc + o.total, 0);
+        const allRevenue = Array.from(revenueMap.values());
 
         // Filtered Stats
         let filterStart = todayStart;
@@ -228,14 +239,17 @@ const AdminDashboard = () => {
         if (dateFilter === '30days') filterStart = startOfDay(subDays(now, 30));
         if (dateFilter === 'all') filterStart = new Date(0);
 
-        const filteredOrders = validOrders.filter(o => {
-            const orderDate = parseISO(o.date);
+        const filteredRev = allRevenue.filter(r => {
+            const revDate = parseISO(r.date);
             if (dateFilter === 'yesterday') {
-                return isAfter(orderDate, yesterdayStart) && isBefore(orderDate, todayStart);
+                return isAfter(revDate, yesterdayStart) && isBefore(revDate, todayStart);
             }
-            return isAfter(orderDate, filterStart);
+            return isAfter(revDate, filterStart);
         });
-        const filteredSales = filteredOrders.reduce((acc, o) => acc + o.total, 0);
+
+        const todaySales = allRevenue.filter(r => isAfter(parseISO(r.date), todayStart)).reduce((acc, r) => acc + r.amount, 0);
+        const monthSales = allRevenue.filter(r => isAfter(parseISO(r.date), monthStart)).reduce((acc, r) => acc + r.amount, 0);
+        const filteredSales = filteredRev.reduce((acc, r) => acc + r.amount, 0);
 
         const pendingAmount = orders.filter(o => ['pending', 'processing', 'shipped'].includes(o.status)).reduce((acc, o) => acc + o.total, 0);
         const cancelledCount = orders.filter(o => o.status === 'cancelled').length;
@@ -243,27 +257,33 @@ const AdminDashboard = () => {
 
         return {
             todaySales,
-            todayOrdersCount: todayOrders.length,
+            todayOrdersCount: allRevenue.filter(r => isAfter(parseISO(r.date), todayStart)).length,
             monthSales,
-            monthOrdersCount: monthOrders.length,
+            monthOrdersCount: allRevenue.filter(r => isAfter(parseISO(r.date), monthStart)).length,
             filteredSales,
-            filteredOrdersCount: filteredOrders.length,
+            filteredOrdersCount: filteredRev.length,
             totalOrders: orders.length,
             cancelledCount,
             pendingAmount,
             totalWithdrawn
         };
-    }, [orders, withdrawals, dateFilter]);
+    }, [orders, revenueRecords, withdrawals, dateFilter]);
 
     const chartData = useMemo(() => {
-        const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-        return statuses.map(status => ({
-            name: status.charAt(0).toUpperCase() + status.slice(1),
-            count: orders.filter(o => o.status === status).length,
-            color: status === 'delivered' ? '#10b981' : 
-                   status === 'cancelled' ? '#ef4444' : 
-                   status === 'processing' ? '#3b82f6' : 
-                   status === 'shipped' ? '#8b5cf6' : '#94a3b8'
+        const statuses = [
+            { key: 'pending', label: 'Pending', color: '#94a3b8' },
+            { key: 'processing', label: 'Processing', color: '#3b82f6' },
+            { key: 'shipped', label: 'Shipped', color: '#8b5cf6' },
+            { key: 'delivered', label: 'Delivered', color: '#10b981' },
+            { key: 'return-requested', label: 'Return Req', color: '#f59e0b' },
+            { key: 'returned', label: 'Returned', color: '#ec4899' },
+            { key: 'cancelled', label: 'Cancelled', color: '#ef4444' }
+        ];
+        
+        return statuses.map(s => ({
+            name: s.label,
+            count: orders.filter(o => o.status === s.key).length,
+            color: s.color
         }));
     }, [orders]);
 
@@ -317,7 +337,7 @@ const AdminDashboard = () => {
                     <CardContent className="p-4 flex flex-col items-center text-center">
                         <span className="text-[10px] font-bold uppercase opacity-80 mb-1">Today's Sales</span>
                         <h3 className="text-2xl font-black">৳{formatMoney(stats.todaySales)}</h3>
-                        <p className="text-[10px] opacity-70 mt-1">{stats.todayOrdersCount} orders placed</p>
+                        <p className="text-[10px] opacity-70 mt-1">{stats.todayOrdersCount} delivered items</p>
                     </CardContent>
                 </Card>
 
@@ -344,7 +364,7 @@ const AdminDashboard = () => {
                     <CardContent className="p-4 flex flex-col items-center text-center">
                         <span className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{getFilterLabel()}</span>
                         <h3 className="text-2xl font-black text-primary">৳{formatMoney(stats.filteredSales)}</h3>
-                        <p className="text-[10px] text-muted-foreground mt-1">{stats.filteredOrdersCount} orders processed</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">{stats.filteredOrdersCount} items delivered</p>
                     </CardContent>
                 </Card>
 
@@ -374,7 +394,7 @@ const AdminDashboard = () => {
                         <ShoppingCart className="h-5 w-5" />
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-indigo-600 uppercase">This Month</p>
+                        <p className="text-[10px] font-bold text-indigo-600 uppercase">Monthly Income</p>
                         <p className="font-black text-lg">৳{formatMoney(stats.monthSales)}</p>
                     </div>
                 </div>
@@ -383,7 +403,7 @@ const AdminDashboard = () => {
                         <Zap className="h-5 w-5" />
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-purple-600 uppercase">Monthly Orders</p>
+                        <p className="text-[10px] font-bold text-purple-600 uppercase">Monthly Delivered</p>
                         <p className="font-black text-lg">{stats.monthOrdersCount}</p>
                     </div>
                 </div>
@@ -401,7 +421,7 @@ const AdminDashboard = () => {
                         <Package className="h-5 w-5" />
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-slate-600 uppercase">Total Items</p>
+                        <p className="text-[10px] font-bold text-slate-600 uppercase">Current Orders</p>
                         <p className="font-black text-lg">{stats.totalOrders}</p>
                     </div>
                 </div>
@@ -412,20 +432,20 @@ const AdminDashboard = () => {
                 <CardHeader className="bg-muted/30 pb-4">
                     <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
                         <BarChart3 className="h-4 w-4 text-primary" />
-                        Live Order Status
+                        Detailed Order Status
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
-                            <XAxis dataKey="name" fontSize={10} fontWeight={700} axisLine={false} tickLine={false} />
+                            <XAxis dataKey="name" fontSize={9} fontWeight={700} axisLine={false} tickLine={false} />
                             <YAxis fontSize={10} axisLine={false} tickLine={false} />
                             <Tooltip 
                                 cursor={{fill: 'rgba(139, 92, 246, 0.05)'}}
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
                             />
-                            <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                                 {chartData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={entry.color} />
                                 ))}
