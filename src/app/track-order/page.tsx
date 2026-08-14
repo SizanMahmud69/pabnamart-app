@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
@@ -264,7 +265,13 @@ function TrackOrderContent() {
                                         </div>
                                      </div>
                                 </CardContent>
-                                <CardFooter>
+                                <CardFooter className="flex flex-col gap-2">
+                                     {(order.cashOnDeliveryFee ?? 0) > 0 && (
+                                        <div className="flex justify-between w-full text-sm text-orange-600 font-medium">
+                                            <span>COD Surcharge</span>
+                                            <span>৳{order.cashOnDeliveryFee}</span>
+                                        </div>
+                                     )}
                                      <div className="flex justify-between font-bold text-xl w-full">
                                         <span>Total</span>
                                         <span>৳{order.total}</span>

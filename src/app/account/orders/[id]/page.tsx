@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -167,10 +168,10 @@ function OrderDetailsPage() {
                                 <span className="text-muted-foreground font-medium">Delivery Charge</span>
                                 <span className="font-semibold">৳{formatMoney(order.shippingFee)}</span>
                             </div>
-                            {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                            {(order.cashOnDeliveryFee ?? 0) > 0 && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground font-medium">COD Surcharge</span>
-                                    <span className="font-semibold">৳{formatMoney(order.cashOnDeliveryFee)}</span>
+                                    <span className="font-semibold">৳{formatMoney(order.cashOnDeliveryFee!)}</span>
                                 </div>
                             )}
                             <Separator className="my-2" />
