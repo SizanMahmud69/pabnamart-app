@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
@@ -225,6 +226,12 @@ const PrintableInvoice = ({
                         <span>Delivery Charge:</span>
                         <span>৳{formatMoney(order.shippingFee)}</span>
                     </div>
+                    {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                        <div className="totals-row">
+                            <span>COD Surcharge:</span>
+                            <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
+                        </div>
+                    )}
                     <div className="totals-row grand">
                         <span>Amount Due:</span>
                         <span>৳{formatMoney(order.total)}</span>
@@ -378,6 +385,12 @@ export default function AdminOrderDetailsPage() {
                             <span>Delivery Fee</span>
                             <span>৳{formatMoney(order.shippingFee)}</span>
                         </div>
+                        {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                            <div className="flex justify-between text-sm text-orange-400 font-bold">
+                                <span>COD Surcharge</span>
+                                <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
+                            </div>
+                        )}
                         <Separator className="bg-slate-700" />
                         <div className="flex justify-between font-black text-2xl pt-2 tracking-tighter">
                             <span>Total Due</span>
