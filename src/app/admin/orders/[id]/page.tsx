@@ -104,7 +104,7 @@ const PrintableInvoice = ({
                 .payment-info-bar div { font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
                 .payment-info-bar span { color: #0f172a; font-family: monospace; font-size: 12px; margin-left: 6px; font-weight: 600; }
 
-                .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; position: relative; z-index: 10; }
+                .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; position: relative; z-10: 10; }
                 .table th { background: #f1f5f9; padding: 12px 15px; text-align: left; font-size: 9px; text-transform: uppercase; font-weight: 800; color: #475569; border-bottom: 2px solid #e2e8f0; letter-spacing: 1px; }
                 .table td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 12px; vertical-align: middle; }
                 .item-name { font-weight: 700; color: #0f172a; font-size: 13px; }
@@ -227,7 +227,7 @@ const PrintableInvoice = ({
                         <span>৳{formatMoney(order.shippingFee)}</span>
                     </div>
                     {(order.cashOnDeliveryFee ?? 0) > 0 && (
-                        <div className="totals-row">
+                        <div className="totals-row" style={{ color: '#ea580c' }}>
                             <span>COD Surcharge:</span>
                             <span>৳{formatMoney(order.cashOnDeliveryFee!)}</span>
                         </div>
