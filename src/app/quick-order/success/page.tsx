@@ -177,7 +177,7 @@ function SuccessContent() {
 
                         <div className="space-y-2 text-left">
                             <Label htmlFor="guest-comment" className="text-xs font-bold text-muted-foreground uppercase">মতামত লিখুন</Label>
-                            <Testarea 
+                            <Textarea 
                                 id="guest-comment"
                                 placeholder="পণ্যটি কেমন ছিল? ডেলিভারি সার্ভিস কেমন ছিল? এখানে লিখুন..."
                                 className="resize-none h-24"
