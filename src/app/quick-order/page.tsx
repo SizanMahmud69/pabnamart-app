@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Package, Truck, Phone, User, MapPin, Minus, Plus, Zap } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Truck, Phone, User, MapPin, Minus, Plus, Zap, Info, AlertCircle } from "lucide-react";
 import Link from 'next/link';
 import { useDeliveryCharge } from "@/hooks/useDeliveryCharge";
 import { useProducts } from "@/hooks/useProducts";
@@ -17,6 +17,8 @@ import { placeOrder } from "@/lib/order-service";
 import { useToast } from "@/hooks/use-toast";
 import type { Product, CartItem, ShippingAddress } from "@/types";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatQuantity, formatMoney, roundMoney } from "@/lib/utils";
 
 export default function QuickOrderPage() {
     const router = useRouter();
@@ -24,9 +26,8 @@ export default function QuickOrderPage() {
     const { getFlashSalePrice } = useProducts();
     const { 
         chargeInsidePabnaSmall, 
-        chargeInsidePabnaLarge, 
-        chargeOutsidePabnaSmall, 
-        chargeOutsidePabnaLarge 
+        chargeOutsidePabnaSmall,
+        cashOnDeliveryFee
     } = useDeliveryCharge();
 
     const [isPending, startOrder] = useTransition();
@@ -82,11 +83,12 @@ export default function QuickOrderPage() {
         if (!product) return 0;
         if (product.freeShipping) return 0;
         
-        const isInsidePabna = city.toLowerCase().trim() === 'pabna';
+        // Dynamic detection of Pabna to update shipping fee automatically
+        const isInsidePabna = city.toLowerCase().trim() === 'pabna' || city.toLowerCase().trim() === 'পাবনা';
         return isInsidePabna ? chargeInsidePabnaSmall : chargeOutsidePabnaSmall;
     }, [product, city, chargeInsidePabnaSmall, chargeOutsidePabnaSmall]);
 
-    const total = price * quantity + shippingFee;
+    const finalTotal = roundMoney((price * quantity) + shippingFee + cashOnDeliveryFee);
 
     const handleManualInput = (val: string) => {
         setDisplayQty(val);
@@ -168,6 +170,7 @@ export default function QuickOrderPage() {
                 shippingAddress,
                 shippingFee,
                 paymentMethod: 'cash-on-delivery',
+                cashOnDeliveryFee: cashOnDeliveryFee,
             });
 
             if (result.success && result.orderNumber) {
@@ -195,6 +198,16 @@ export default function QuickOrderPage() {
                 <h1 className="text-3xl font-black text-primary mb-6 text-center uppercase italic tracking-tighter">সরাসরি অর্ডার করুন</h1>
 
                 <div className="space-y-6">
+                    {/* Delivery Rates Info Box */}
+                    <Alert className="bg-primary/5 border-primary/20 shadow-sm">
+                        <Info className="h-4 w-4 text-primary" />
+                        <AlertDescription className="text-xs font-bold text-gray-700 flex flex-col sm:flex-row sm:justify-between gap-2">
+                            <span>পাবনার ভেতর ডেলিভারি চার্জ: ৳{chargeInsidePabnaSmall}</span>
+                            <span className="hidden sm:inline text-primary/30">|</span>
+                            <span>পাবনার বাইরে ডেলিভারি চার্জ: ৳{chargeOutsidePabnaSmall}</span>
+                        </AlertDescription>
+                    </Alert>
+
                     <Card className="shadow-lg border-2 border-primary/10 overflow-hidden">
                         <CardHeader className="bg-primary/5 border-b">
                             <CardTitle className="flex items-center gap-2">
@@ -216,7 +229,7 @@ export default function QuickOrderPage() {
                                             <Badge className="bg-pink-100 text-pink-700 text-[10px]">B1G1</Badge>
                                         )}
                                     </div>
-                                    <p className="font-black text-primary mt-1">৳{format(price)}</p>
+                                    <p className="font-black text-primary mt-1">৳{formatMoney(price)}</p>
                                 </div>
                             </div>
 
@@ -246,7 +259,7 @@ export default function QuickOrderPage() {
                                         </Button>
                                     </div>
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase leading-tight max-w-[80px]">
-                                        সর্বনিম্ন অর্ডার {format(minQuantity)} {product.unit}
+                                        সর্বনিম্ন অর্ডার {formatQuantity(minQuantity)} {product.unit}
                                     </span>
                                 </div>
                             </div>
@@ -255,21 +268,27 @@ export default function QuickOrderPage() {
 
                             <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">পণ্যের দাম ({format(quantity)} {product.unit || 'Pcs'})</span>
-                                    <span className="font-bold">৳{format(price * quantity)}</span>
+                                    <span className="text-muted-foreground">পণ্যের দাম ({formatQuantity(quantity)} {product.unit || 'Pcs'})</span>
+                                    <span className="font-bold">৳{formatMoney(price * quantity)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">ডেলিভারি চার্জ</span>
                                     {shippingFee === 0 ? (
                                         <span className="text-green-600 font-bold">ফ্রি ডেলিভারি</span>
                                     ) : (
-                                        <span className="font-bold">৳{format(shippingFee)}</span>
+                                        <span className="font-bold">৳{formatMoney(shippingFee)}</span>
                                     )}
                                 </div>
+                                {cashOnDeliveryFee > 0 && (
+                                    <div className="flex justify-between text-orange-600">
+                                        <span className="font-medium">ক্যাশ অন ডেলিভারি চার্জ</span>
+                                        <span className="font-bold">+ ৳{formatMoney(cashOnDeliveryFee)}</span>
+                                    </div>
+                                )}
                                 <Separator className="my-2" />
                                 <div className="flex justify-between text-xl font-black text-primary">
                                     <span>সর্বমোট</span>
-                                    <span>৳{format(total)}</span>
+                                    <span>৳{formatMoney(finalTotal)}</span>
                                 </div>
                             </div>
 
@@ -331,6 +350,7 @@ export default function QuickOrderPage() {
                                             onChange={(e) => setCity(e.target.value)}
                                             required 
                                         />
+                                        <p className="text-[10px] text-muted-foreground font-bold italic">পাবনা লিখলে চার্জ কমবে</p>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="area" className="font-semibold">উপজেলা / এলাকা</Label>
