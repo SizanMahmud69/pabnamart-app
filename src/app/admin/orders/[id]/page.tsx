@@ -50,6 +50,7 @@ const PrintableInvoice = ({
     const isPaid = order.paymentMethod !== 'cash-on-delivery';
     const stampText = isPaid ? 'PAID' : 'UNPAID';
     const stampClass = isPaid ? 'paid' : 'unpaid';
+    const amountDue = isPaid ? 0 : order.total;
     
     return (
         <div className="invoice-container-pdf">
@@ -226,15 +227,19 @@ const PrintableInvoice = ({
                         <span>Delivery Charge:</span>
                         <span>৳{formatMoney(order.shippingFee)}</span>
                     </div>
-                    {(order.cashOnDeliveryFee ?? 0) > 0 && (
+                    {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
                         <div className="totals-row" style={{ color: '#ea580c' }}>
                             <span>COD Surcharge:</span>
-                            <span>৳{formatMoney(order.cashOnDeliveryFee!)}</span>
+                            <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
                         </div>
                     )}
+                    <div className="totals-row" style={{ fontWeight: 700, marginTop: '5px' }}>
+                        <span>Total Bill:</span>
+                        <span>৳{formatMoney(order.total)}</span>
+                    </div>
                     <div className="totals-row grand">
                         <span>Amount Due:</span>
-                        <span>৳{formatMoney(order.total)}</span>
+                        <span>৳{formatMoney(amountDue)}</span>
                     </div>
                 </div>
             </div>
@@ -313,6 +318,7 @@ export default function AdminOrderDetailsPage() {
     const voucherDiscount = order.voucherDiscount || 0;
     const coinDiscount = order.coinDiscount || 0;
     const spinDiscount = order.spinDiscount || 0;
+    const amountDue = order.paymentMethod === 'cash-on-delivery' ? order.total : 0;
 
     return (
         <div className="container mx-auto max-w-2xl px-4 py-6">
@@ -385,16 +391,20 @@ export default function AdminOrderDetailsPage() {
                             <span>Delivery Fee</span>
                             <span>৳{formatMoney(order.shippingFee)}</span>
                         </div>
-                        {(order.cashOnDeliveryFee ?? 0) > 0 && (
+                        {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
                             <div className="flex justify-between text-sm text-orange-400 font-bold">
                                 <span>COD Surcharge</span>
-                                <span>৳{formatMoney(order.cashOnDeliveryFee!)}</span>
+                                <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
                             </div>
                         )}
+                        <div className="flex justify-between text-xs opacity-40 pt-1">
+                            <span>Total Bill</span>
+                            <span>৳{formatMoney(order.total)}</span>
+                        </div>
                         <Separator className="bg-slate-700" />
                         <div className="flex justify-between font-black text-2xl pt-2 tracking-tighter">
-                            <span>Total Due</span>
-                            <span className="text-primary-foreground">৳{formatMoney(order.total)}</span>
+                            <span>Amount Due</span>
+                            <span className="text-primary-foreground">৳{formatMoney(amountDue)}</span>
                         </div>
                     </div>
                 </CardContent>

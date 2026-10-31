@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useDeliveryCharge } from '@/hooks/useDeliveryCharge';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { formatMoney, formatQuantity } from '@/lib/utils';
 
 const db = getFirestore(app);
 
@@ -233,7 +234,7 @@ function TrackOrderContent() {
                                             </div>
                                             <p className="text-xs">({deliveryDays} days for {deliveryLocation})</p>
                                         </div>
-                                    )}
+                                     )}
 
                                      <Separator />
                                      <div>
@@ -266,15 +267,19 @@ function TrackOrderContent() {
                                      </div>
                                 </CardContent>
                                 <CardFooter className="flex flex-col gap-2">
-                                     {(order.cashOnDeliveryFee ?? 0) > 0 && (
+                                     {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
                                         <div className="flex justify-between w-full text-sm text-orange-600 font-medium">
                                             <span>COD Surcharge</span>
-                                            <span>৳{order.cashOnDeliveryFee}</span>
+                                            <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
                                         </div>
                                      )}
+                                     <div className="flex justify-between w-full text-xs opacity-50">
+                                        <span>Total Bill</span>
+                                        <span>৳{formatMoney(order.total)}</span>
+                                    </div>
                                      <div className="flex justify-between font-bold text-xl w-full">
-                                        <span>Total</span>
-                                        <span>৳{order.total}</span>
+                                        <span>Amount Due</span>
+                                        <span className="text-primary">৳{formatMoney(order.paymentMethod === 'cash-on-delivery' ? order.total : 0)}</span>
                                     </div>
                                 </CardFooter>
                             </Card>
