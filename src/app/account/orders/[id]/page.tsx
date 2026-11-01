@@ -169,10 +169,10 @@ function OrderDetailsPage() {
                                 <span className="text-muted-foreground font-medium">Delivery Charge</span>
                                 <span className="font-semibold">৳{formatMoney(order.shippingFee)}</span>
                             </div>
-                            {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                            {(order.cashOnDeliveryFee || 0) > 0 && (
                                 <div className="flex justify-between text-sm text-orange-600">
                                     <span className="text-muted-foreground font-medium">COD Surcharge</span>
-                                    <span className="font-semibold">৳{formatMoney(order.cashOnDeliveryFee)}</span>
+                                    <span className="font-semibold">৳{formatMoney(order.cashOnDeliveryFee || 0)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between text-xs opacity-50 pt-1">

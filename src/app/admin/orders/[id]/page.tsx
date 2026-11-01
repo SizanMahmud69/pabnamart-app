@@ -227,10 +227,10 @@ const PrintableInvoice = ({
                         <span>Delivery Charge:</span>
                         <span>৳{formatMoney(order.shippingFee)}</span>
                     </div>
-                    {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                    {(order.cashOnDeliveryFee || 0) > 0 && (
                         <div className="totals-row" style={{ color: '#ea580c' }}>
                             <span>COD Surcharge:</span>
-                            <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
+                            <span>৳{formatMoney(order.cashOnDeliveryFee || 0)}</span>
                         </div>
                     )}
                     <div className="totals-row" style={{ fontWeight: 700, marginTop: '5px' }}>
@@ -391,10 +391,10 @@ export default function AdminOrderDetailsPage() {
                             <span>Delivery Fee</span>
                             <span>৳{formatMoney(order.shippingFee)}</span>
                         </div>
-                        {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                        {(order.cashOnDeliveryFee || 0) > 0 && (
                             <div className="flex justify-between text-sm text-orange-400 font-bold">
                                 <span>COD Surcharge</span>
-                                <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
+                                <span>৳{formatMoney(order.cashOnDeliveryFee || 0)}</span>
                             </div>
                         )}
                         <div className="flex justify-between text-xs opacity-40 pt-1">

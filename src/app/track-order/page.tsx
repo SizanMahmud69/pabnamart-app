@@ -267,10 +267,10 @@ function TrackOrderContent() {
                                      </div>
                                 </CardContent>
                                 <CardFooter className="flex flex-col gap-2">
-                                     {order.cashOnDeliveryFee && order.cashOnDeliveryFee > 0 && (
+                                     {(order.cashOnDeliveryFee || 0) > 0 && (
                                         <div className="flex justify-between w-full text-sm text-orange-600 font-medium">
                                             <span>COD Surcharge</span>
-                                            <span>৳{formatMoney(order.cashOnDeliveryFee)}</span>
+                                            <span>৳{formatMoney(order.cashOnDeliveryFee || 0)}</span>
                                         </div>
                                      )}
                                      <div className="flex justify-between w-full text-xs opacity-50">
